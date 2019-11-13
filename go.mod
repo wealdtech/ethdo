@@ -1,6 +1,6 @@
 module github.com/wealdtech/ethdo
 
-go 1.12
+go 1.13
 
 require (
 	github.com/FactomProject/go-bip39 v0.3.5
@@ -24,9 +24,9 @@ require (
 	github.com/wealdtech/go-bytesutil v1.1.0
 	github.com/wealdtech/go-eth2-types v1.0.0
 	github.com/wealdtech/go-eth2-util v1.0.0
-	github.com/wealdtech/go-eth2-wallet v1.2.0
-	github.com/wealdtech/go-eth2-wallet-store-filesystem v1.2.0
-	github.com/wealdtech/go-eth2-wallet-store-s3 v1.1.0
+	github.com/wealdtech/go-eth2-wallet v1.3.0
+	github.com/wealdtech/go-eth2-wallet-store-filesystem v1.3.0
+	github.com/wealdtech/go-eth2-wallet-store-s3 v1.2.0
 	github.com/wealdtech/go-eth2-wallet-types v1.4.0
 	github.com/wealdtech/go-string2eth v1.1.0
 	github.com/wsxiaoys/terminal v0.0.0-20160513160801-0940f3fc43a0 // indirect

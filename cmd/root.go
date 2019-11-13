@@ -26,8 +26,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	types "github.com/wealdtech/go-eth2-types"
-	filesystem "github.com/wealdtech/go-eth2-wallet-store-filesystem"
-	s3 "github.com/wealdtech/go-eth2-wallet-store-s3"
 
 	wallet "github.com/wealdtech/go-eth2-wallet"
 	wtypes "github.com/wealdtech/go-eth2-wallet-types"
@@ -84,16 +82,8 @@ func persistentPreRun(cmd *cobra.Command, args []string) {
 	}
 
 	// Set up our wallet store
-	if rootStore == "s3" {
-		store, err := s3.New(s3.WithPassphrase([]byte(rootStorePassphrase)))
-		errCheck(err, "Failed to access S3 wallet store")
-		wallet.UseStore(store)
-	} else if rootStore == "filesystem" {
-		store := filesystem.New(filesystem.WithPassphrase([]byte(rootStorePassphrase)))
-		wallet.UseStore(store)
-	} else if rootStore != "" {
-		die("Unknown wallet store")
-	}
+	err := wallet.SetStore(rootStore, []byte(rootStorePassphrase))
+	errCheck(err, "Failed to set up wallet store")
 }
 
 // cmdPath recurses up the command information to create a path for this command through commands and subcommands

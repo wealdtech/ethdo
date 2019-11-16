@@ -43,6 +43,7 @@ In quiet mode this will return 0 if the wallet is a hierarchical deterministic w
 		errCheck(err, "Failed to unlock wallet")
 		seed, err := wallet.(types.WalletKeyProvider).Key()
 		errCheck(err, "Failed to obtain wallet key")
+		outputIf(debug, fmt.Sprintf("Seed is %#0x", seed))
 		seedStr, err := bip39.NewMnemonic(seed)
 		errCheck(err, "Failed to generate seed mnemonic")
 

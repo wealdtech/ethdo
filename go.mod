@@ -4,7 +4,7 @@ go 1.13
 
 require (
 	github.com/FactomProject/go-bip39 v0.3.5
-	github.com/aws/aws-sdk-go v1.25.41 // indirect
+	github.com/aws/aws-sdk-go v1.25.42 // indirect
 	github.com/google/uuid v1.1.1
 	github.com/karlseguin/ccache v2.0.3+incompatible // indirect
 	github.com/karlseguin/expect v1.0.1 // indirect
@@ -26,7 +26,7 @@ require (
 	github.com/wealdtech/go-bytesutil v1.1.0
 	github.com/wealdtech/go-eth2-types v1.0.0
 	github.com/wealdtech/go-eth2-util v1.0.0
-	github.com/wealdtech/go-eth2-wallet v1.4.0
+	github.com/wealdtech/go-eth2-wallet v1.5.0
 	github.com/wealdtech/go-eth2-wallet-types v1.5.0
 	github.com/wealdtech/go-string2eth v1.1.0
 	github.com/wsxiaoys/terminal v0.0.0-20160513160801-0940f3fc43a0 // indirect

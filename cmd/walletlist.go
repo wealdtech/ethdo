@@ -33,7 +33,8 @@ In quiet mode this will return 0 if any wallets are found, otherwise 1.`,
 		walletsFound := false
 		for w := range wallet.Wallets() {
 			walletsFound = true
-			outputIf(!quiet, fmt.Sprintf("%s", w.Name()))
+			outputIf(!quiet && !verbose, fmt.Sprintf("%s", w.Name()))
+			outputIf(verbose, fmt.Sprintf("%s\n\tUUID:\t\t%s", w.Name(), w.ID().String()))
 		}
 
 		if !walletsFound {

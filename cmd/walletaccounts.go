@@ -18,6 +18,7 @@ import (
 	"os"
 	"sort"
 
+	"github.com/google/uuid"
 	"github.com/spf13/cobra"
 	types "github.com/wealdtech/go-eth2-types"
 )
@@ -39,7 +40,7 @@ In quiet mode this will return 0 if the wallet holds any addresses, otherwise 1.
 		// List the accounts.  They come to us in random order and we want them in name order, so store them in an array and sort
 		output := make([]addressListResult, 0)
 		for account := range wallet.Accounts() {
-			output = append(output, addressListResult{name: account.Name(), pubkey: account.PublicKey()})
+			output = append(output, addressListResult{id: account.ID(), name: account.Name(), pubkey: account.PublicKey()})
 		}
 
 		if quiet {
@@ -54,7 +55,7 @@ In quiet mode this will return 0 if the wallet holds any addresses, otherwise 1.
 		})
 		for _, out := range output {
 			if verbose {
-				fmt.Printf("%s: 0x%048x\n", out.name, out.pubkey.Marshal())
+				fmt.Printf("%s\n\tUUID:\t\t%s\n\tPublic key:\t0x%048x\n", out.name, out.id, out.pubkey.Marshal())
 			} else if !quiet {
 				fmt.Printf("%s\n", out.name)
 			}
@@ -68,6 +69,7 @@ func init() {
 }
 
 type addressListResult struct {
+	id     uuid.UUID
 	name   string
 	pubkey types.PublicKey
 }

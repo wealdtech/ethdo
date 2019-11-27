@@ -44,17 +44,17 @@ In quiet mode this will return 0 if the the data can be generated correctly, oth
 		assert(validatorDepositDataValidatorAccount != "", "--validatoraccount is required")
 		validatorAccount, err := accountFromPath(validatorDepositDataValidatorAccount)
 		errCheck(err, "Failed to obtain validator account")
-		outputIf(debug, fmt.Sprintf("Validator public key is 0x048%x", validatorAccount.PublicKey().Marshal()))
+		outputIf(debug, fmt.Sprintf("Validator public key is %048x", validatorAccount.PublicKey().Marshal()))
 
 		assert(validatorDepositDataWithdrawalAccount != "", "--withdrawalaccount is required")
 		withdrawalAccount, err := accountFromPath(validatorDepositDataWithdrawalAccount)
 		errCheck(err, "Failed to obtain withdrawal account")
-		outputIf(debug, fmt.Sprintf("Withdrawal public key is 0x048%x", withdrawalAccount.PublicKey().Marshal()))
+		outputIf(debug, fmt.Sprintf("Withdrawal public key is %048x", withdrawalAccount.PublicKey().Marshal()))
 
 		withdrawalCredentials := util.SHA256(withdrawalAccount.PublicKey().Marshal())
 		errCheck(err, "Failed to hash withdrawal credentials")
 		withdrawalCredentials[0] = byte(0) // BLSWithdrawalPrefix
-		outputIf(debug, fmt.Sprintf("Withdrawal credentials are 0x%032x", withdrawalCredentials))
+		outputIf(debug, fmt.Sprintf("Withdrawal credentials are %032x", withdrawalCredentials))
 
 		assert(validatorDepositDataDepositValue != "", "--depositvalue is required")
 		val, err := string2eth.StringToGWei(validatorDepositDataDepositValue)

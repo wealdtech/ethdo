@@ -43,6 +43,7 @@ In quiet mode this will return 0 if the data can be signed, otherwise 1.`,
 			assert(len(domainBytes) == 8, "Domain data invalid")
 		}
 
+		assert(rootAccount != "", "--account is required")
 		account, err := accountFromPath(rootAccount)
 		errCheck(err, "Failed to access account for signing")
 

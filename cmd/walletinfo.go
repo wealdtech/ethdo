@@ -38,6 +38,8 @@ In quiet mode this will return 0 if the wallet exists, otherwise 1.`,
 			os.Exit(0)
 		}
 
+		outputIf(verbose, fmt.Sprintf("UUID: %v", wallet.ID()))
+
 		fmt.Printf("Type: %s\n", wallet.Type())
 
 		// Count the accounts.

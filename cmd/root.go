@@ -14,15 +14,12 @@
 package cmd
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"os"
-	"path/filepath"
 	"strings"
 
 	homedir "github.com/mitchellh/go-homedir"
-	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	types "github.com/wealdtech/go-eth2-types"
@@ -35,8 +32,6 @@ var cfgFile string
 var quiet bool
 var verbose bool
 var debug bool
-
-var err error
 
 // Root variables, present for all commands
 var rootStore string
@@ -86,28 +81,6 @@ func persistentPreRun(cmd *cobra.Command, args []string) {
 	errCheck(err, "Failed to set up wallet store")
 }
 
-// cmdPath recurses up the command information to create a path for this command through commands and subcommands
-func cmdPath(cmd *cobra.Command) string {
-	if cmd.Parent() == nil || cmd.Parent().Name() == "ethdo" {
-		return cmd.Name()
-	}
-	return fmt.Sprintf("%s:%s", cmdPath(cmd.Parent()), cmd.Name())
-}
-
-// setupLogging sets up the logging for commands that wish to write output
-func setupLogging() {
-	logFile := viper.GetString("log")
-	if logFile == "" {
-		home, err := homedir.Dir()
-		errCheck(err, "Failed to access home directory")
-		logFile = filepath.FromSlash(home + "/ethdo.log")
-	}
-	f, err := os.OpenFile(logFile, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0755)
-	errCheck(err, "Failed to open log file")
-	log.SetOutput(f)
-	log.SetFormatter(&log.JSONFormatter{})
-}
-
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
@@ -122,23 +95,41 @@ func init() {
 
 	RootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.ethdo.yaml)")
 	RootCmd.PersistentFlags().String("log", "", "log activity to the named file (default $HOME/ethdo.log).  Logs are written for every action that generates a transaction")
-	viper.BindPFlag("log", RootCmd.PersistentFlags().Lookup("log"))
+	if err := viper.BindPFlag("log", RootCmd.PersistentFlags().Lookup("log")); err != nil {
+		panic(err)
+	}
 	RootCmd.PersistentFlags().String("store", "filesystem", "Store for accounts")
-	viper.BindPFlag("store", RootCmd.PersistentFlags().Lookup("store"))
+	if err := viper.BindPFlag("store", RootCmd.PersistentFlags().Lookup("store")); err != nil {
+		panic(err)
+	}
 	RootCmd.PersistentFlags().String("account", "", "Account name (in format \"wallet/account\")")
-	viper.BindPFlag("account", RootCmd.PersistentFlags().Lookup("account"))
+	if err := viper.BindPFlag("account", RootCmd.PersistentFlags().Lookup("account")); err != nil {
+		panic(err)
+	}
 	RootCmd.PersistentFlags().String("storepassphrase", "", "Passphrase for store (if applicable)")
-	viper.BindPFlag("storepassphrase", RootCmd.PersistentFlags().Lookup("storepassphrase"))
+	if err := viper.BindPFlag("storepassphrase", RootCmd.PersistentFlags().Lookup("storepassphrase")); err != nil {
+		panic(err)
+	}
 	RootCmd.PersistentFlags().String("walletpassphrase", "", "Passphrase for wallet (if applicable)")
-	viper.BindPFlag("walletpassphrase", RootCmd.PersistentFlags().Lookup("walletpassphrase"))
+	if err := viper.BindPFlag("walletpassphrase", RootCmd.PersistentFlags().Lookup("walletpassphrase")); err != nil {
+		panic(err)
+	}
 	RootCmd.PersistentFlags().String("passphrase", "", "Passphrase for account (if applicable)")
-	viper.BindPFlag("passphrase", RootCmd.PersistentFlags().Lookup("passphrase"))
+	if err := viper.BindPFlag("passphrase", RootCmd.PersistentFlags().Lookup("passphrase")); err != nil {
+		panic(err)
+	}
 	RootCmd.PersistentFlags().Bool("quiet", false, "do not generate any output")
-	viper.BindPFlag("quiet", RootCmd.PersistentFlags().Lookup("quiet"))
+	if err := viper.BindPFlag("quiet", RootCmd.PersistentFlags().Lookup("quiet")); err != nil {
+		panic(err)
+	}
 	RootCmd.PersistentFlags().Bool("verbose", false, "generate additional output where appropriate")
-	viper.BindPFlag("verbose", RootCmd.PersistentFlags().Lookup("verbose"))
+	if err := viper.BindPFlag("verbose", RootCmd.PersistentFlags().Lookup("verbose")); err != nil {
+		panic(err)
+	}
 	RootCmd.PersistentFlags().Bool("debug", false, "generate debug output")
-	viper.BindPFlag("debug", RootCmd.PersistentFlags().Lookup("debug"))
+	if err := viper.BindPFlag("debug", RootCmd.PersistentFlags().Lookup("debug")); err != nil {
+		panic(err)
+	}
 }
 
 // initConfig reads in config file and ENV variables if set.
@@ -163,33 +154,20 @@ func initConfig() {
 	viper.AutomaticEnv() // read in environment variables that match
 
 	// If a config file is found, read it in.
-	viper.ReadInConfig()
+	if err := viper.ReadInConfig(); err != nil {
+		fmt.Println(err)
+		os.Exit(_exit_failure)
+	}
 }
 
 //
 // Helpers
 //
 
-// Add flags for commands that carry out transactions
-func addTransactionFlags(cmd *cobra.Command, explanation string) {
-	//	cmd.Flags().String("passphrase", "", fmt.Sprintf("passphrase for %s", explanation))
-	//	cmd.Flags().String("privatekey", "", fmt.Sprintf("private key for %s", explanation))
-	//	cmd.Flags().String("gasprice", "", "Gas price for the transaction")
-	//	cmd.Flags().String("value", "", "Ether to send with the transaction")
-	//	cmd.Flags().Int64("gaslimit", 0, "Gas limit for the transaction; 0 is auto-select")
-	//	cmd.Flags().Int64("nonce", -1, "Nonce for the transaction; -1 is auto-select")
-	//	cmd.Flags().Bool("wait", false, "wait for the transaction to be mined before returning")
-	//	cmd.Flags().Duration("limit", 0, "maximum time to wait for transaction to complete before failing (default forever)")
-}
-
 func outputIf(condition bool, msg string) {
 	if condition {
 		fmt.Println(msg)
 	}
-}
-
-func localContext() (context.Context, context.CancelFunc) {
-	return context.WithTimeout(context.Background(), viper.GetDuration("timeout"))
 }
 
 // walletAndAccountNamesFromPath breaks a path in to wallet and account names.
@@ -262,12 +240,4 @@ func sign(path string, data []byte, domain uint64) (types.Signature, error) {
 	}
 	defer account.Lock()
 	return account.Sign(data, domain)
-}
-
-func verify(path string, data []byte, domain uint64, signature types.Signature) (bool, error) {
-	account, err := accountFromPath(path)
-	if err != nil {
-		return false, err
-	}
-	return signature.Verify(data, account.PublicKey(), domain), nil
 }

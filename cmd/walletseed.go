@@ -47,7 +47,7 @@ In quiet mode this will return 0 if the wallet is a hierarchical deterministic w
 		seedStr, err := bip39.NewMnemonic(seed)
 		errCheck(err, "Failed to generate seed mnemonic")
 
-		outputIf(!quiet, fmt.Sprintf("%s", seedStr))
+		outputIf(!quiet, seedStr)
 		os.Exit(_exit_success)
 	},
 }

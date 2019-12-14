@@ -33,20 +33,20 @@ func errCheck(err error, msg string) {
 }
 
 // errAssert checks a condition and quits if it is false
-func errAssert(condition bool, err error, msg string) {
-	if !condition {
-		if err != nil {
-			if !quiet {
-				if msg == "" {
-					fmt.Fprintf(os.Stderr, "%s\n", err.Error())
-				} else {
-					fmt.Fprintf(os.Stderr, "%s: %s\n", msg, err.Error())
-				}
-			}
-			os.Exit(1)
-		}
-	}
-}
+// func errAssert(condition bool, err error, msg string) {
+// 	if !condition {
+// 		if err != nil {
+// 			if !quiet {
+// 				if msg == "" {
+// 					fmt.Fprintf(os.Stderr, "%s\n", err.Error())
+// 				} else {
+// 					fmt.Fprintf(os.Stderr, "%s: %s\n", msg, err.Error())
+// 				}
+// 			}
+// 			os.Exit(1)
+// 		}
+// 	}
+// }
 
 // assert checks a condition and quits if it is false
 func assert(condition bool, msg string) {
@@ -64,28 +64,28 @@ func die(msg string) {
 }
 
 // warnCheck checks for an error and warns if it is present
-func warnCheck(err error, msg string) {
-	if err != nil {
-		if !quiet {
-			if msg == "" {
-				fmt.Fprintf(os.Stderr, "%s\n", err.Error())
-			} else {
-				fmt.Fprintf(os.Stderr, "%s: %s\n", msg, err.Error())
-			}
-		}
-	}
-}
+// func warnCheck(err error, msg string) {
+// 	if err != nil {
+// 		if !quiet {
+// 			if msg == "" {
+// 				fmt.Fprintf(os.Stderr, "%s\n", err.Error())
+// 			} else {
+// 				fmt.Fprintf(os.Stderr, "%s: %s\n", msg, err.Error())
+// 			}
+// 		}
+// 	}
+// }
 
 // check checks a condition and warns if it is false
-func check(condition bool, msg string) {
-	if !condition {
-		warn(msg)
-	}
-}
+// func check(condition bool, msg string) {
+// 	if !condition {
+// 		warn(msg)
+// 	}
+// }
 
 // Warn prints a warning
-func warn(msg string) {
-	if !quiet {
-		fmt.Fprintf(os.Stderr, "%s\n", msg)
-	}
-}
+// func warn(msg string) {
+// 	if !quiet {
+// 		fmt.Fprintf(os.Stderr, "%s\n", msg)
+// 	}
+// }

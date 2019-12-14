@@ -14,7 +14,6 @@
 package cmd
 
 const (
-	_exit_success   = 0
-	_exit_failure   = 1
-	_exit_not_mined = 2
+	_exit_success = 0
+	_exit_failure = 1
 )

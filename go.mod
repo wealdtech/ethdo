@@ -24,7 +24,7 @@ require (
 	github.com/wealdtech/go-bytesutil v1.1.0
 	github.com/wealdtech/go-eth2-types v1.0.0
 	github.com/wealdtech/go-eth2-util v1.1.0
-	github.com/wealdtech/go-eth2-wallet v1.8.0
+	github.com/wealdtech/go-eth2-wallet v1.8.1
 	github.com/wealdtech/go-eth2-wallet-types v1.8.0
 	github.com/wealdtech/go-string2eth v1.1.0
 	golang.org/x/net v0.0.0-20190628185345-da137c7871d7 // indirect

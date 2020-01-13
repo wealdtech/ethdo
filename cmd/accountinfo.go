@@ -34,10 +34,9 @@ In quiet mode this will return 0 if the account exists, otherwise 1.`,
 		account, err := accountFromPath(rootAccount)
 		errCheck(err, "Failed to access wallet")
 
-		outputIf(!quiet, fmt.Sprintf("Public key: 0x%048x", account.PublicKey().Marshal()))
-		if verbose {
-			outputIf(account.Path() != "", fmt.Sprintf("Path: %s", account.Path()))
-		}
+		outputIf(verbose, fmt.Sprintf("UUID: %v", account.ID()))
+		outputIf(!quiet, fmt.Sprintf("Public key: %#048x", account.PublicKey().Marshal()))
+		outputIf(verbose && account.Path() != "", fmt.Sprintf("Path: %s", account.Path()))
 		os.Exit(_exit_success)
 	},
 }

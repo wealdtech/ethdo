@@ -39,7 +39,6 @@ In quiet mode this will return 0 if the wallet exists, otherwise 1.`,
 		}
 
 		outputIf(verbose, fmt.Sprintf("UUID: %v", wallet.ID()))
-
 		fmt.Printf("Type: %s\n", wallet.Type())
 
 		// Count the accounts.
@@ -47,7 +46,6 @@ In quiet mode this will return 0 if the wallet exists, otherwise 1.`,
 		for range wallet.Accounts() {
 			accounts++
 		}
-
 		fmt.Printf("Accounts: %d\n", accounts)
 	},
 }

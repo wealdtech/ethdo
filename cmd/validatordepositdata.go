@@ -65,27 +65,37 @@ In quiet mode this will return 0 if the the data can be generated correctly, oth
 			PubKey                []byte `ssz-size:"48"`
 			WithdrawalCredentials []byte `ssz-size:"32"`
 			Value                 uint64
-			Signature             []byte `ssz-size:"96"`
 		}{
 			PubKey:                validatorAccount.PublicKey().Marshal(),
 			WithdrawalCredentials: withdrawalCredentials,
 			Value:                 val,
 		}
-
-		signingRoot, err := ssz.SigningRoot(depositData)
+		signingRoot, err := ssz.HashTreeRoot(depositData)
 		errCheck(err, "Failed to generate deposit data signing root")
 		outputIf(debug, fmt.Sprintf("Signing root is %x", signingRoot))
 		domain := types.Domain(types.DomainDeposit, []byte{0, 0, 0, 0})
 		signature, err := sign(validatorDepositDataValidatorAccount, signingRoot[:], domain)
 		errCheck(err, "Failed to sign deposit data signing root")
-		depositData.Signature = signature.Marshal()
-		outputIf(debug, fmt.Sprintf("Deposit data signature is %x", depositData.Signature))
 
-		depositDataRoot, err := ssz.HashTreeRoot(depositData)
+		signedDepositData := struct {
+			PubKey                []byte `ssz-size:"48"`
+			WithdrawalCredentials []byte `ssz-size:"32"`
+			Value                 uint64
+			Signature             []byte `ssz-size:"96"`
+		}{
+			PubKey:                validatorAccount.PublicKey().Marshal(),
+			WithdrawalCredentials: withdrawalCredentials,
+			Value:                 val,
+			Signature:             signature.Marshal(),
+		}
+
+		outputIf(debug, fmt.Sprintf("Deposit data signature is %x", signedDepositData.Signature))
+
+		depositDataRoot, err := ssz.HashTreeRoot(signedDepositData)
 		errCheck(err, "Failed to generate deposit data root")
 		outputIf(debug, fmt.Sprintf("Deposit data root is %x", depositDataRoot))
 
-		outputIf(!quiet, fmt.Sprintf(`{"pubkey":"%048x","withdrawal_credentials":"%032x","signature":"%096x","value":%d,"deposit_data_root":"%032x"}`, depositData.PubKey, depositData.WithdrawalCredentials, depositData.Signature, val, depositDataRoot))
+		outputIf(!quiet, fmt.Sprintf(`{"pubkey":"%048x","withdrawal_credentials":"%032x","signature":"%096x","value":%d,"deposit_data_root":"%032x"}`, signedDepositData.PubKey, signedDepositData.WithdrawalCredentials, signedDepositData.Signature, val, depositDataRoot))
 		os.Exit(0)
 	},
 }

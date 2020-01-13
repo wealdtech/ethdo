@@ -44,7 +44,7 @@ In quiet mode this will return 0 if the wallet is created successfully, otherwis
 		default:
 			die("unknown wallet type")
 		}
-		errCheck(err, "failed to create wallet")
+		errCheck(err, "Failed to create wallet")
 	},
 }
 

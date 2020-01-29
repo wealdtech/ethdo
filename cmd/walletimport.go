@@ -14,7 +14,10 @@
 package cmd
 
 import (
+	"fmt"
+	"io/ioutil"
 	"os"
+	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/wealdtech/go-bytesutil"
@@ -36,6 +39,14 @@ In quiet mode this will return 0 if the wallet is imported successfully, otherwi
 		assert(walletImportData != "", "--walletimportdata is required")
 		assert(walletImportPassphrase != "", "--importpassphrase is required")
 
+		if !strings.HasPrefix(walletImportData, "0x") {
+			outputIf(debug, fmt.Sprintf("Reading wallet import from file %s", walletImportData))
+			// Assume this is a path
+			fileData, err := ioutil.ReadFile(walletImportData)
+			errCheck(err, "Failed to read wallet import data")
+			walletImportData = strings.TrimSpace(string(fileData))
+		}
+		outputIf(debug, fmt.Sprintf("Wallet import data is of length %d", len(walletImportData)))
 		importData, err := bytesutil.FromHexString(walletImportData)
 		errCheck(err, "Failed to decode wallet data")
 
@@ -49,6 +60,6 @@ In quiet mode this will return 0 if the wallet is imported successfully, otherwi
 func init() {
 	walletCmd.AddCommand(walletImportCmd)
 	walletFlags(walletImportCmd)
-	walletImportCmd.Flags().StringVar(&walletImportData, "importdata", "", "The data to import")
+	walletImportCmd.Flags().StringVar(&walletImportData, "importdata", "", "The data to import, or the name of a file to read")
 	walletImportCmd.Flags().StringVar(&walletImportPassphrase, "importpassphrase", "", "Passphrase protecting the data to import")
 }

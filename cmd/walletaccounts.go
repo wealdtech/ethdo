@@ -16,11 +16,8 @@ package cmd
 import (
 	"fmt"
 	"os"
-	"sort"
 
-	"github.com/google/uuid"
 	"github.com/spf13/cobra"
-	types "github.com/wealdtech/go-eth2-types"
 )
 
 var walletAccountsCmd = &cobra.Command{
@@ -37,28 +34,21 @@ In quiet mode this will return 0 if the wallet holds any addresses, otherwise 1.
 		wallet, err := walletFromPath(walletWallet)
 		errCheck(err, "Failed to access wallet")
 
-		// List the accounts.  They come to us in random order and we want them in name order, so store them in an array and sort
-		output := make([]addressListResult, 0)
+		hasAccounts := false
 		for account := range wallet.Accounts() {
-			output = append(output, addressListResult{id: account.ID(), name: account.Name(), pubkey: account.PublicKey()})
+			hasAccounts = true
+			if verbose {
+				fmt.Printf("%s\n\tUUID:\t\t%s\n\tPublic key:\t0x%048x\n", account.Name(), account.ID(), account.PublicKey().Marshal())
+			} else if !quiet {
+				fmt.Printf("%s\n", account.Name())
+			}
 		}
 
 		if quiet {
-			if len(output) == 0 {
-				os.Exit(1)
+			if hasAccounts {
+				os.Exit(_exit_success)
 			}
-			os.Exit(0)
-		}
-
-		sort.Slice(output, func(i, j int) bool {
-			return output[i].name < output[j].name
-		})
-		for _, out := range output {
-			if verbose {
-				fmt.Printf("%s\n\tUUID:\t\t%s\n\tPublic key:\t0x%048x\n", out.name, out.id, out.pubkey.Marshal())
-			} else if !quiet {
-				fmt.Printf("%s\n", out.name)
-			}
+			os.Exit(_exit_failure)
 		}
 	},
 }
@@ -66,10 +56,4 @@ In quiet mode this will return 0 if the wallet holds any addresses, otherwise 1.
 func init() {
 	walletCmd.AddCommand(walletAccountsCmd)
 	walletFlags(walletAccountsCmd)
-}
-
-type addressListResult struct {
-	id     uuid.UUID
-	name   string
-	pubkey types.PublicKey
 }

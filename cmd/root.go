@@ -14,15 +14,18 @@
 package cmd
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	types "github.com/wealdtech/go-eth2-types"
+	"google.golang.org/grpc"
 
 	wallet "github.com/wealdtech/go-eth2-wallet"
 	wtypes "github.com/wealdtech/go-eth2-wallet-types"
@@ -33,12 +36,18 @@ var quiet bool
 var verbose bool
 var debug bool
 
+// For transaction commands
+var wait bool
+var generate bool
+
 // Root variables, present for all commands
 var rootStore string
 var rootAccount string
 var rootStorePassphrase string
 var rootWalletPassphrase string
 var rootAccountPassphrase string
+
+var eth2GRPCConn *grpc.ClientConn
 
 // RootCmd represents the base command when called without any subcommands
 var RootCmd = &cobra.Command{
@@ -69,11 +78,28 @@ func persistentPreRun(cmd *cobra.Command, args []string) {
 	rootWalletPassphrase = viper.GetString("walletpassphrase")
 	rootAccountPassphrase = viper.GetString("passphrase")
 
+	// ...lots of commands have transaction-related flags (e.g.) 'wait'
+	// as options but we want to bind them to this particular command and
+	// this is the first chance we get
+	if cmd.Flags().Lookup("wait") != nil {
+		err := viper.BindPFlag("wait", cmd.Flags().Lookup("wait"))
+		errCheck(err, "Failed to set wait option")
+	}
+	wait = viper.GetBool("wait")
+	if cmd.Flags().Lookup("generate") != nil {
+		err := viper.BindPFlag("generate", cmd.Flags().Lookup("generate"))
+		errCheck(err, "Failed to set generate option")
+	}
+	generate = viper.GetBool("generate")
+
 	if quiet && verbose {
 		die("Cannot supply both quiet and verbose flags")
 	}
 	if quiet && debug {
 		die("Cannot supply both quiet and debug flags")
+	}
+	if generate && wait {
+		die("Cannot supply both generate and wait flags")
 	}
 
 	// Set up our wallet store
@@ -128,6 +154,14 @@ func init() {
 	}
 	RootCmd.PersistentFlags().Bool("debug", false, "generate debug output")
 	if err := viper.BindPFlag("debug", RootCmd.PersistentFlags().Lookup("debug")); err != nil {
+		panic(err)
+	}
+	RootCmd.PersistentFlags().String("connection", "", "connection to Ethereum 2 node via GRPC")
+	if err := viper.BindPFlag("connection", RootCmd.PersistentFlags().Lookup("connection")); err != nil {
+		panic(err)
+	}
+	RootCmd.PersistentFlags().Duration("timeout", 10*time.Second, "the time after which a network request will be considered failed.  Increase this if you are running on an error-prone, high-latency or low-bandwidth connection")
+	if err := viper.BindPFlag("timeout", RootCmd.PersistentFlags().Lookup("timeout")); err != nil {
 		panic(err)
 	}
 }
@@ -230,17 +264,38 @@ func accountFromPath(path string) (wtypes.Account, error) {
 	return wallet.AccountByName(accountName)
 }
 
-func sign(path string, data []byte, domain uint64) (types.Signature, error) {
-	assert(rootAccountPassphrase != "", "--passphrase is required")
+// sign signs data in a domain.
+func sign(account wtypes.Account, data []byte, domain uint64) (types.Signature, error) {
+	if !account.IsUnlocked() {
+		return nil, errors.New("account must be unlocked to sign")
+	}
 
-	account, err := accountFromPath(path)
-	if err != nil {
-		return nil, err
-	}
-	err = account.Unlock([]byte(rootAccountPassphrase))
-	if err != nil {
-		return nil, err
-	}
-	defer account.Lock()
 	return account.Sign(data, domain)
+}
+
+// addTransactionFlags adds flags used in all transactions.
+func addTransactionFlags(cmd *cobra.Command) {
+	cmd.Flags().Bool("generate", false, "Do not send the transaction; generate and output as a hex string only")
+	cmd.Flags().Bool("wait", false, "wait for the transaction to be mined before returning")
+}
+
+// connect connects to an Ethereum 2 endpoint.
+func connect() error {
+	connection := ""
+	if viper.GetString("connection") != "" {
+		connection = viper.GetString("connection")
+	}
+
+	if connection == "" {
+		return errors.New("no connection")
+	}
+	outputIf(debug, fmt.Sprintf("Connecting to %s", connection))
+
+	opts := []grpc.DialOption{grpc.WithInsecure()}
+
+	ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("timeout"))
+	defer cancel()
+	var err error
+	eth2GRPCConn, err = grpc.DialContext(ctx, connection, opts...)
+	return err
 }

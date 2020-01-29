@@ -35,8 +35,6 @@ var validatorDepositDataCmd = &cobra.Command{
 
     ethdo validator depositdata --validatoraccount=primary/validator --withdrawalaccount=primary/current --value="32 Ether"
 
-In quiet mode this will return 0 if the the data can be generated correctly, otherwise 1.
-
 The information generated can be passed to ethereal to create a deposit from the Ethereum 1 chain.
 
 In quiet mode this will return 0 if the the data can be generated correctly, otherwise 1.`,
@@ -74,7 +72,7 @@ In quiet mode this will return 0 if the the data can be generated correctly, oth
 		errCheck(err, "Failed to generate deposit data signing root")
 		outputIf(debug, fmt.Sprintf("Signing root is %x", signingRoot))
 		domain := types.Domain(types.DomainDeposit, []byte{0, 0, 0, 0})
-		signature, err := sign(validatorDepositDataValidatorAccount, signingRoot[:], domain)
+		signature, err := sign(validatorAccount, signingRoot[:], domain)
 		errCheck(err, "Failed to sign deposit data signing root")
 
 		signedDepositData := struct {

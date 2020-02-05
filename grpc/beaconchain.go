@@ -15,7 +15,10 @@ package grpc
 
 import (
 	"context"
+	"strconv"
+	"strings"
 
+	"github.com/pkg/errors"
 	"github.com/spf13/viper"
 	"google.golang.org/grpc"
 
@@ -25,11 +28,48 @@ import (
 )
 
 // FetchChainConfig fetches the chain configuration from the beacon node.
-func FetchChainConfig(conn *grpc.ClientConn) (*ethpb.BeaconConfig, error) {
+// It tweaks the output to make it easier to work with by setting appropriate
+// types.
+func FetchChainConfig(conn *grpc.ClientConn) (map[string]interface{}, error) {
 	beaconClient := ethpb.NewBeaconChainClient(conn)
 	ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("timeout"))
 	defer cancel()
-	return beaconClient.GetBeaconConfig(ctx, &empty.Empty{})
+	config, err := beaconClient.GetBeaconConfig(ctx, &empty.Empty{})
+	if err != nil {
+		return nil, err
+	}
+	results := make(map[string]interface{})
+	for k, v := range config.Config {
+		// Handle integers
+		if v == "0" {
+			results[k] = uint64(0)
+			continue
+		}
+		intVal, err := strconv.ParseUint(v, 10, 64)
+		if err == nil && intVal != 0 {
+			results[k] = intVal
+			continue
+		}
+
+		// Handle byte arrays
+		if strings.HasPrefix(v, "[") {
+			vals := strings.Split(v[1:len(v)-1], " ")
+			res := make([]byte, len(vals))
+			for i, val := range vals {
+				intVal, err := strconv.Atoi(val)
+				if err != nil {
+					return nil, errors.Wrapf(err, "failed to convert value %q for %s", v, k)
+				}
+				res[i] = byte(intVal)
+			}
+			results[k] = res
+			continue
+		}
+
+		// String (or unhandled format)
+		results[k] = v
+	}
+	return results, nil
 }
 
 // FetchValidator fetches validator information from the beacon node.

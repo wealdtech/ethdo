@@ -17,6 +17,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"time"
 
 	ethpb "github.com/prysmaticlabs/ethereumapis/eth/v1alpha1"
 	"github.com/prysmaticlabs/go-ssz"
@@ -44,6 +45,10 @@ In quiet mode this will return 0 if the transaction has been sent, otherwise 1.`
 		err = connect()
 		errCheck(err, "Failed to obtain connect to Ethereum 2 beacon chain node")
 
+		// Beacon chain config required for later work.
+		config, err := grpc.FetchChainConfig(eth2GRPCConn)
+		errCheck(err, "Failed to obtain beacon chain configuration")
+
 		// Fetch the validator's index.
 		index, err := grpc.FetchValidatorIndex(eth2GRPCConn, account)
 		errCheck(err, "Failed to obtain validator index")
@@ -56,26 +61,29 @@ In quiet mode this will return 0 if the transaction has been sent, otherwise 1.`
 		assert(state == ethpb.ValidatorStatus_ACTIVE, "Validator must be active to exit")
 
 		// Ensure the validator has been active long enough to exit.
-		// TODO when we can fetch the current epoch
-		//		config, err := grpc.Config(eth2GRPCConn)
-		//		errCheck(err, "Failed to obtain beacon config")
-		//		fmt.Printf("%+v\n", config)
 		validator, err := grpc.FetchValidator(eth2GRPCConn, account)
 		errCheck(err, "Failed to obtain validator information")
 		outputIf(debug, fmt.Sprintf("Activation epoch is %v", validator.ActivationEpoch))
+		earliestExitEpoch := validator.ActivationEpoch + config["PersistentCommitteePeriod"].(uint64)
 
+		secondsPerEpoch := config["SecondsPerSlot"].(uint64) * config["SlotsPerEpoch"].(uint64)
+		genesisTime, err := grpc.FetchGenesis(eth2GRPCConn)
+		errCheck(err, "Failed to obtain genesis time")
+
+		currentEpoch := uint64(time.Since(genesisTime).Seconds()) / secondsPerEpoch
+		assert(currentEpoch >= earliestExitEpoch, fmt.Sprintf("Validator cannot exit until %s ( epoch %d)", genesisTime.Add(time.Duration(secondsPerEpoch*earliestExitEpoch)*time.Second).Format(time.Stamp), earliestExitEpoch))
 		outputIf(verbose, "Validator confirmed to be in a suitable state")
 
 		// Set up the transaction.
 		exit := &ethpb.VoluntaryExit{
-			// TODO use value from config
-			Epoch:          validator.ActivationEpoch + 2048,
+			Epoch:          currentEpoch,
 			ValidatorIndex: index,
 		}
 		root, err := ssz.HashTreeRoot(exit)
 		errCheck(err, "Failed to generate exit proposal root")
-		// TODO fetch current fork version from config
-		domain := types.Domain(types.DomainVoluntaryExit, []byte{0, 0, 0, 4})
+		// TODO fetch current fork version from config (currently using genesis fork version)
+		currentForkVersion := config["GenesisForkVersion"].([]byte)
+		domain := types.Domain(types.DomainVoluntaryExit, currentForkVersion)
 
 		err = account.Unlock([]byte(rootAccountPassphrase))
 		errCheck(err, "Failed to unlock account; please confirm passphrase is correct")

@@ -18,6 +18,8 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"regexp"
+	"sort"
 	"strings"
 	"time"
 
@@ -262,6 +264,47 @@ func accountFromPath(path string) (wtypes.Account, error) {
 		defer wallet.Lock()
 	}
 	return wallet.AccountByName(accountName)
+}
+
+// accountsFromPath obtains 0 or more accounts given a path specification.
+func accountsFromPath(path string) ([]wtypes.Account, error) {
+	accounts := make([]wtypes.Account, 0)
+
+	// Quick check to see if it's a single account
+	account, err := accountFromPath(path)
+	if err == nil && account != nil {
+		accounts = append(accounts, account)
+		return accounts, nil
+	}
+
+	wallet, err := walletFromPath(path)
+	if err != nil {
+		return nil, err
+	}
+	_, accountSpec, err := walletAndAccountNamesFromPath(path)
+	if err != nil {
+		return nil, err
+	}
+
+	if accountSpec == "" {
+		accountSpec = "^.*$"
+	} else {
+		accountSpec = fmt.Sprintf("^%s$", accountSpec)
+	}
+	re := regexp.MustCompile(accountSpec)
+
+	for account := range wallet.Accounts() {
+		if re.Match([]byte(account.Name())) {
+			accounts = append(accounts, account)
+		}
+	}
+
+	// Tidy up accounts by name.
+	sort.Slice(accounts, func(i, j int) bool {
+		return accounts[i].Name() < accounts[j].Name()
+	})
+
+	return accounts, nil
 }
 
 // sign signs data in a domain.

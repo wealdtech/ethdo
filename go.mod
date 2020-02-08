@@ -4,7 +4,6 @@ go 1.13
 
 require (
 	github.com/FactomProject/go-bip39 v0.3.5
-	github.com/aws/aws-sdk-go v1.28.12 // indirect
 	github.com/dgraph-io/ristretto v0.0.1 // indirect
 	github.com/golang/protobuf v1.3.3
 	github.com/grpc-ecosystem/grpc-gateway v1.12.2 // indirect
@@ -27,13 +26,15 @@ require (
 	github.com/wealdtech/go-eth2-types v1.0.0
 	github.com/wealdtech/go-eth2-util v1.1.0
 	github.com/wealdtech/go-eth2-wallet v1.8.1
-	github.com/wealdtech/go-eth2-wallet-types v1.8.0
+	github.com/wealdtech/go-eth2-wallet-hd v1.10.0 // indirect
+	github.com/wealdtech/go-eth2-wallet-nd v1.8.0 // indirect
+	github.com/wealdtech/go-eth2-wallet-store-filesystem v1.7.0 // indirect
+	github.com/wealdtech/go-eth2-wallet-store-s3 v1.6.0 // indirect
+	github.com/wealdtech/go-eth2-wallet-types v1.10.0
 	github.com/wealdtech/go-string2eth v1.1.0
-	golang.org/x/crypto v0.0.0-20200206161412-a0c6ece9d31a // indirect
 	golang.org/x/net v0.0.0-20200202094626-16171245cfb2 // indirect
-	golang.org/x/sys v0.0.0-20200202164722-d101bd2416d5 // indirect
 	golang.org/x/text v0.3.2 // indirect
-	google.golang.org/genproto v0.0.0-20200205142000-a86caf926a67 // indirect
+	google.golang.org/genproto v0.0.0-20200207204624-4f3edf09f4f6 // indirect
 	google.golang.org/grpc v1.27.1
 	gopkg.in/ini.v1 v1.52.0 // indirect
 	gopkg.in/yaml.v2 v2.2.8 // indirect

@@ -18,6 +18,7 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
+	wtypes "github.com/wealdtech/go-eth2-wallet-types"
 )
 
 var walletInfoCmd = &cobra.Command{
@@ -40,6 +41,15 @@ In quiet mode this will return 0 if the wallet exists, otherwise 1.`,
 
 		outputIf(verbose, fmt.Sprintf("UUID: %v", wallet.ID()))
 		fmt.Printf("Type: %s\n", wallet.Type())
+		if verbose {
+			if storeProvider, ok := wallet.(wtypes.StoreProvider); ok {
+				store := storeProvider.Store()
+				fmt.Printf("Store: %s\n", store.Name())
+				if storeLocationProvider, ok := store.(wtypes.StoreLocationProvider); ok {
+					fmt.Printf("Location: %s\n", storeLocationProvider.Location())
+				}
+			}
+		}
 
 		// Count the accounts.
 		accounts := 0

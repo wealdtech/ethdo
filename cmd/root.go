@@ -158,7 +158,7 @@ func init() {
 	if err := viper.BindPFlag("debug", RootCmd.PersistentFlags().Lookup("debug")); err != nil {
 		panic(err)
 	}
-	RootCmd.PersistentFlags().String("connection", "", "connection to Ethereum 2 node via GRPC")
+	RootCmd.PersistentFlags().String("connection", "localhost:4000", "connection to Ethereum 2 node via GRPC")
 	if err := viper.BindPFlag("connection", RootCmd.PersistentFlags().Lookup("connection")); err != nil {
 		panic(err)
 	}

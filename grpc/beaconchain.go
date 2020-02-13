@@ -72,7 +72,7 @@ func FetchChainConfig(conn *grpc.ClientConn) (map[string]interface{}, error) {
 	return results, nil
 }
 
-// FetchValidator fetches validator information from the beacon node.
+// FetchValidator fetches the validator definition from the beacon node.
 func FetchValidator(conn *grpc.ClientConn, account wtypes.Account) (*ethpb.Validator, error) {
 	beaconClient := ethpb.NewBeaconChainClient(conn)
 	ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("timeout"))
@@ -84,4 +84,26 @@ func FetchValidator(conn *grpc.ClientConn, account wtypes.Account) (*ethpb.Valid
 		},
 	}
 	return beaconClient.GetValidator(ctx, req)
+}
+
+// FetchValidatorInfo fetches current validator info from the beacon node.
+func FetchValidatorInfo(conn *grpc.ClientConn, account wtypes.Account) (*ethpb.ValidatorInfo, error) {
+	beaconClient := ethpb.NewBeaconChainClient(conn)
+	ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("timeout"))
+	defer cancel()
+
+	stream, err := beaconClient.StreamValidatorsInfo(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to contact beacon node")
+	}
+
+	changeSet := &ethpb.ValidatorChangeSet{
+		Action:     ethpb.SetAction_SET_VALIDATOR_KEYS,
+		PublicKeys: [][]byte{account.PublicKey().Marshal()},
+	}
+	err = stream.Send(changeSet)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to send validator public key")
+	}
+	return stream.Recv()
 }

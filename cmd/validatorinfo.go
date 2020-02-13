@@ -74,17 +74,13 @@ In quiet mode this will return 0 if the validator information can be obtained, o
 				fmt.Printf("Inclusion in chain:\t%s\n", transition)
 			}
 		case ethpb.ValidatorStatus_PENDING:
-			// TODO test
 			fmt.Printf("Activation:\t\t%s\n", transition)
-		case ethpb.ValidatorStatus_EXITING:
-		case ethpb.ValidatorStatus_SLASHING:
-			// TODO test
+		case ethpb.ValidatorStatus_EXITING, ethpb.ValidatorStatus_SLASHING:
 			fmt.Printf("Attesting finishes:\t%s\n", transition)
 		case ethpb.ValidatorStatus_EXITED:
 			if transitionPassed {
 				fmt.Printf("Funds withdrawable:\tNow\n")
 			} else {
-				// TODO test
 				fmt.Printf("Funds withdrawable:\t%s\n", transition)
 			}
 		}

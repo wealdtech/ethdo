@@ -70,7 +70,7 @@ In quiet mode this will return 0 if the validator information can be obtained, o
 			os.Exit(_exit_success)
 		}
 
-		outputIf(verbose, fmt.Sprintf("Index:\t\t\t%v", validatorInfo.Index))
+		outputIf(verbose && validatorInfo.Status != ethpb.ValidatorStatus_DEPOSITED, fmt.Sprintf("Index:\t\t\t%v", validatorInfo.Index))
 		outputIf(verbose, fmt.Sprintf("Public key:\t\t%#x", validatorInfo.PublicKey))
 		fmt.Printf("Status:\t\t\t%s\n", strings.Title(strings.ToLower(validatorInfo.Status.String())))
 		fmt.Printf("Balance:\t\t%s\n", string2eth.GWeiToString(validatorInfo.Balance, true))
@@ -79,12 +79,13 @@ In quiet mode this will return 0 if the validator information can be obtained, o
 			validatorInfo.Status == ethpb.ValidatorStatus_SLASHING {
 			fmt.Printf("Effective balance:\t%s\n", string2eth.GWeiToString(validatorInfo.EffectiveBalance, true))
 		}
-		outputIf(verbose, fmt.Sprintf("Withdrawal credentials:\t%#x", validatorDef.WithdrawalCredentials))
+		if validatorDef != nil {
+			outputIf(verbose, fmt.Sprintf("Withdrawal credentials:\t%#x", validatorDef.WithdrawalCredentials))
+		}
 		transition := time.Unix(int64(validatorInfo.TransitionTimestamp), 0)
 		transitionPassed := int64(validatorInfo.TransitionTimestamp) <= time.Now().Unix()
 		switch validatorInfo.Status {
 		case ethpb.ValidatorStatus_DEPOSITED:
-			// TODO test
 			if validatorInfo.TransitionTimestamp != 0 {
 				fmt.Printf("Inclusion in chain:\t%s\n", transition)
 			}

@@ -4,9 +4,11 @@ go 1.13
 
 require (
 	github.com/FactomProject/go-bip39 v0.3.5
+	github.com/OneOfOne/xxhash v1.2.5 // indirect
 	github.com/aws/aws-sdk-go v1.29.2 // indirect
 	github.com/dgraph-io/ristretto v0.0.1 // indirect
 	github.com/golang/protobuf v1.3.3
+	github.com/google/go-cmp v0.3.1 // indirect
 	github.com/google/uuid v1.1.1
 	github.com/grpc-ecosystem/grpc-gateway v1.13.0 // indirect
 	github.com/minio/highwayhash v1.0.0 // indirect
@@ -18,6 +20,7 @@ require (
 	github.com/prysmaticlabs/ethereumapis v0.0.0-20200213224628-b7452dde4ca3
 	github.com/prysmaticlabs/go-bitfield v0.0.0-20191017011753-53b773adde52 // indirect
 	github.com/prysmaticlabs/go-ssz v0.0.0-20200101200214-e24db4d9e963
+	github.com/spaolacci/murmur3 v1.1.0 // indirect
 	github.com/spf13/afero v1.2.2 // indirect
 	github.com/spf13/cast v1.3.1 // indirect
 	github.com/spf13/cobra v0.0.5

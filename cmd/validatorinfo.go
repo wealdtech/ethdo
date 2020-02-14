@@ -14,6 +14,7 @@
 package cmd
 
 import (
+	"encoding/hex"
 	"fmt"
 	"os"
 	"strings"
@@ -22,8 +23,12 @@ import (
 	ethpb "github.com/prysmaticlabs/ethereumapis/eth/v1alpha1"
 	"github.com/spf13/cobra"
 	"github.com/wealdtech/ethdo/grpc"
+	"github.com/wealdtech/ethdo/util"
+	types "github.com/wealdtech/go-eth2-wallet-types"
 	string2eth "github.com/wealdtech/go-string2eth"
 )
+
+var validatorInfoPubKey string
 
 var validatorInfoCmd = &cobra.Command{
 	Use:   "info",
@@ -35,11 +40,21 @@ var validatorInfoCmd = &cobra.Command{
 In quiet mode this will return 0 if the validator information can be obtained, otherwise 1.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		// Sanity checking and setup.
-		assert(rootAccount != "", "--account is required")
-		account, err := accountFromPath(rootAccount)
-		errCheck(err, "Failed to access account")
-		err = connect()
+		assert(rootAccount != "" || validatorInfoPubKey != "", "--account or --pubkey is required")
+
+		err := connect()
 		errCheck(err, "Failed to obtain connection to Ethereum 2 beacon chain node")
+
+		var account types.Account
+		if rootAccount != "" {
+			account, err = accountFromPath(rootAccount)
+			errCheck(err, "Failed to access account")
+		} else {
+			pubKeyBytes, err := hex.DecodeString(strings.TrimPrefix(validatorInfoPubKey, "0x"))
+			errCheck(err, fmt.Sprintf("Failed to decode public key %s", validatorInfoPubKey))
+			account, err = util.NewScratchAccount(pubKeyBytes)
+			errCheck(err, fmt.Sprintf("Invalid public key %s", validatorInfoPubKey))
+		}
 
 		validatorInfo, err := grpc.FetchValidatorInfo(eth2GRPCConn, account)
 		errCheck(err, "Failed to obtain validator information")
@@ -91,5 +106,6 @@ In quiet mode this will return 0 if the validator information can be obtained, o
 
 func init() {
 	validatorCmd.AddCommand(validatorInfoCmd)
+	validatorInfoCmd.Flags().StringVar(&validatorInfoPubKey, "pubkey", "", "Public key for which to obtain status")
 	validatorFlags(validatorInfoCmd)
 }

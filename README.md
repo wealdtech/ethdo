@@ -200,7 +200,7 @@ Public key: 0x8e2f9e8cc29658ff37ecc30e95a0807579b224586c185d128cb7a7490784c1ad9b
 
 Signature commands focus on generation and verification of data signatures.
 
-### `signature sign`
+#### `signature sign`
 
 `ethdo signature sign` signs provided data.  Options include:
   - `data`: the data to sign, as a hex string
@@ -213,7 +213,7 @@ $ ethdo signature sign --data="0x08140077a94642919041503caf5cc1795b23ecf2" --acc
 0x89abe2e544ef3eafe397db036103b1d066ba86497f36ed4ab0264162eadc89c7744a2a08d43cec91df128660e70ecbbe11031b4c2e53682d2b91e67b886429bf8fac9bad8c7b63c5f231cc8d66b1377e06e27138b1ddc64b27c6e593e07ebb4b
 ```
 
-### `signature verify`
+#### `signature verify`
 
 `ethdo signature verify` verifies signed data.  Options include:
   - `data`: the data whose signature to verify, as a hex string
@@ -241,6 +241,55 @@ $ ethdo version
 1.0.0
 ```
 
+### `validator` commands
+
+Validator commands focus on interaction with Ethereum 2 validators.
+
+#### `depositdata`
+
+`validator depositdata` generates the data required to deposit one or more Ethereum 2 validators.
+
+#### `exit`
+
+`validator exit` sends a transaction to the chain to tell an active validator to exit the validation queue.
+
+```sh
+$ ethdo validator exit --account=Validators/1 --passphrase="my validator secret"
+```
+
+#### `info`
+
+`validator info` provides information for a given validator.
+
+```sh
+$ ethdo validator info --account=Validators/1
+Status:            Active
+Balance:           3.203823585 Ether
+Effective balance: 3.1 Ether
+```
+
+Additional information is supplied when using `--verbose`
+
+```sh
+$ ethdo validator info --account=Validators/1 --verbose
+Epoch of data:          3398
+Index:                  26913
+Public key:             0xb3bb6b7a8d809e59544472853d219499765bf01d14de1e0549bd6fc2a86627ac9033264c84cd503b6339e3334726562f
+Status:                 Active
+Balance:                3.204026813 Ether
+Effective balance:      3.1 Ether
+Withdrawal credentials: 0x0033ef3cb10b36d0771ffe8a02bc5bfc7e64ea2f398ce77e25bb78989edbee36
+```
+
+If the validator is not an account it can be queried directly with `--pubkey`.
+
+```sh
+$ ethdo validator info --pubkey=0x842dd66cfeaeff4397fc7c94f7350d2131ca0c4ad14ff727963be9a1edb4526604970df6010c3da6474a9820fa81642b
+Status:            Active
+Balance:           3.201850307 Ether
+Effective balance: 3.1 Ether
+```
+
 ## Maintainers
 
 Jim McDonald: [@mcdee](https://github.com/mcdee).
@@ -251,5 +300,5 @@ Contributions welcome. Please check out [the issues](https://github.com/wealdtec
 
 ## License
 
-[Apache-2.0](LICENSE) © 2019 Weald Technology Trading Ltd
+[Apache-2.0](LICENSE) © 2019, 2020 Weald Technology Trading Ltd
 

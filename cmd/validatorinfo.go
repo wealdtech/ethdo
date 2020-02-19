@@ -70,6 +70,7 @@ In quiet mode this will return 0 if the validator information can be obtained, o
 			os.Exit(_exit_success)
 		}
 
+		outputIf(verbose, fmt.Sprintf("Epoch of data:\t\t%v", validatorInfo.Epoch))
 		outputIf(verbose && validatorInfo.Status != ethpb.ValidatorStatus_DEPOSITED, fmt.Sprintf("Index:\t\t\t%v", validatorInfo.Index))
 		outputIf(verbose, fmt.Sprintf("Public key:\t\t%#x", validatorInfo.PublicKey))
 		fmt.Printf("Status:\t\t\t%s\n", strings.Title(strings.ToLower(validatorInfo.Status.String())))

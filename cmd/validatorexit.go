@@ -71,7 +71,7 @@ In quiet mode this will return 0 if the transaction has been sent, otherwise 1.`
 		errCheck(err, "Failed to obtain genesis time")
 
 		currentEpoch := uint64(time.Since(genesisTime).Seconds()) / secondsPerEpoch
-		assert(currentEpoch >= earliestExitEpoch, fmt.Sprintf("Validator cannot exit until %s ( epoch %d)", genesisTime.Add(time.Duration(secondsPerEpoch*earliestExitEpoch)*time.Second).Format(time.Stamp), earliestExitEpoch))
+		assert(currentEpoch >= earliestExitEpoch, fmt.Sprintf("Validator cannot exit until %s ( epoch %d)", genesisTime.Add(time.Duration(secondsPerEpoch*earliestExitEpoch)*time.Second).Format(time.UnixDate), earliestExitEpoch))
 		outputIf(verbose, "Validator confirmed to be in a suitable state")
 
 		// Set up the transaction.

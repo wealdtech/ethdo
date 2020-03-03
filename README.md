@@ -21,7 +21,7 @@ A command-line tool for managing common tasks in Ethereum 2.
 `ethdo` is a standard Go program which can be installed with:
 
 ```sh
-go get github.com/wealdtech/ethdo
+GO111MODULE=on go get github.com/wealdtech/ethdo@v1.2.1
 ```
 
 ## Usage

@@ -43,10 +43,14 @@ In quiet mode this will return 0 if the chain information can be obtained, other
 			os.Exit(_exit_success)
 		}
 
+		for k, v := range config {
+			fmt.Printf("%v => %v\n", k, v)
+		}
 		fmt.Printf("Genesis time:\t\t%s\n", genesisTime.Format(time.UnixDate))
 		slot := timestampToSlot(genesisTime.Unix(), time.Now().Unix(), config["SecondsPerSlot"].(uint64))
 		fmt.Printf("Current slot:\t\t%d\n", slot)
 		fmt.Printf("Current epoch:\t\t%d\n", slot/int64(config["SlotsPerEpoch"].(uint64)))
+		outputIf(verbose, fmt.Sprintf("Genesis fork version:\t%0x", config["GenesisForkVersion"].([]byte)))
 		outputIf(verbose, fmt.Sprintf("Genesis timestamp:\t%v", genesisTime.Unix()))
 		outputIf(verbose, fmt.Sprintf("Seconds per slot:\t%v", config["SecondsPerSlot"].(uint64)))
 		outputIf(verbose, fmt.Sprintf("Slots per epoch:\t%v", config["SlotsPerEpoch"].(uint64)))

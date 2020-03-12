@@ -22,6 +22,8 @@ import (
 	"github.com/wealdtech/ethdo/grpc"
 )
 
+var chainStatusSlot bool
+
 var chainStatusCmd = &cobra.Command{
 	Use:   "status",
 	Short: "Obtain status about a chain",
@@ -47,20 +49,38 @@ In quiet mode this will return 0 if the chain status can be obtained, otherwise 
 		}
 
 		slot := timestampToSlot(genesisTime.Unix(), time.Now().Unix(), config["SecondsPerSlot"].(uint64))
-		fmt.Printf("Current slot:\t\t%d\n", slot)
-		fmt.Printf("Finalized slot:\t\t%d", info.GetFinalizedSlot())
-		if verbose {
-			distance := slot - info.GetFinalizedSlot()
-			fmt.Printf(" (%d)", distance)
+		if chainStatusSlot {
+			fmt.Printf("Current slot:\t\t%d\n", slot)
+			fmt.Printf("Justified slot:\t\t%d", info.GetJustifiedSlot())
+			if verbose {
+				distance := slot - info.GetJustifiedSlot()
+				fmt.Printf(" (%d)", distance)
+			}
+			fmt.Printf("\n")
+			fmt.Printf("Finalized slot:\t\t%d", info.GetFinalizedSlot())
+			if verbose {
+				distance := slot - info.GetFinalizedSlot()
+				fmt.Printf(" (%d)", distance)
+			}
+			fmt.Printf("\n")
+			outputIf(verbose, fmt.Sprintf("Prior justified slot:\t%v (%d)", info.GetPreviousJustifiedSlot(), slot-info.GetPreviousJustifiedSlot()))
+		} else {
+			slotsPerEpoch := config["SlotsPerEpoch"].(uint64)
+			fmt.Printf("Current epoch:\t\t%d\n", slot/slotsPerEpoch)
+			fmt.Printf("Justified epoch:\t%d", info.GetJustifiedSlot()/slotsPerEpoch)
+			if verbose {
+				distance := (slot - info.GetJustifiedSlot()) / slotsPerEpoch
+				fmt.Printf(" (%d)", distance)
+			}
+			fmt.Printf("\n")
+			fmt.Printf("Finalized epoch:\t%d", info.GetFinalizedSlot()/slotsPerEpoch)
+			if verbose {
+				distance := (slot - info.GetFinalizedSlot()) / slotsPerEpoch
+				fmt.Printf(" (%d)", distance)
+			}
+			fmt.Printf("\n")
+			outputIf(verbose, fmt.Sprintf("Prior justified epoch:\t%v (%d)", info.GetPreviousJustifiedSlot()/slotsPerEpoch, (slot-info.GetPreviousJustifiedSlot())/slotsPerEpoch))
 		}
-		fmt.Printf("\n")
-		fmt.Printf("Justified slot:\t\t%d", info.GetJustifiedSlot())
-		if verbose {
-			distance := slot - info.GetJustifiedSlot()
-			fmt.Printf(" (%d)", distance)
-		}
-		fmt.Printf("\n")
-		outputIf(verbose, fmt.Sprintf("Prior justified slot:\t%v (%d)", info.GetPreviousJustifiedSlot(), slot-info.GetPreviousJustifiedSlot()))
 
 		os.Exit(_exit_success)
 	},
@@ -69,4 +89,6 @@ In quiet mode this will return 0 if the chain status can be obtained, otherwise 
 func init() {
 	chainCmd.AddCommand(chainStatusCmd)
 	chainFlags(chainStatusCmd)
+	chainStatusCmd.Flags().BoolVar(&chainStatusSlot, "slot", false, "Print slot-based values")
+
 }

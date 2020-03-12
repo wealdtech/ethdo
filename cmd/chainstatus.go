@@ -22,14 +22,14 @@ import (
 	"github.com/wealdtech/ethdo/grpc"
 )
 
-var chainInfoCmd = &cobra.Command{
-	Use:   "info",
-	Short: "Obtain information about a chain",
-	Long: `Obtain information about a chain.  For example:
+var chainStatusCmd = &cobra.Command{
+	Use:   "status",
+	Short: "Obtain status about a chain",
+	Long: `Obtain status about a chain.  For example:
 
-    ethdo chain info
+    ethdo chain status
 
-In quiet mode this will return 0 if the chain information can be obtained, otherwise 1.`,
+In quiet mode this will return 0 if the chain status can be obtained, otherwise 1.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		err := connect()
 		errCheck(err, "Failed to obtain connection to Ethereum 2 beacon chain node")
@@ -39,31 +39,34 @@ In quiet mode this will return 0 if the chain information can be obtained, other
 		genesisTime, err := grpc.FetchGenesis(eth2GRPCConn)
 		errCheck(err, "Failed to obtain genesis time")
 
+		info, err := grpc.FetchChainInfo(eth2GRPCConn)
+		errCheck(err, "Failed to obtain chain info")
+
 		if quiet {
 			os.Exit(_exit_success)
 		}
 
-		fmt.Printf("Genesis time:\t\t%s\n", genesisTime.Format(time.UnixDate))
 		slot := timestampToSlot(genesisTime.Unix(), time.Now().Unix(), config["SecondsPerSlot"].(uint64))
 		fmt.Printf("Current slot:\t\t%d\n", slot)
-		fmt.Printf("Current epoch:\t\t%d\n", slot/config["SlotsPerEpoch"].(uint64))
-		outputIf(verbose, fmt.Sprintf("Genesis fork version:\t%0x", config["GenesisForkVersion"].([]byte)))
-		outputIf(verbose, fmt.Sprintf("Genesis timestamp:\t%v", genesisTime.Unix()))
-		outputIf(verbose, fmt.Sprintf("Seconds per slot:\t%v", config["SecondsPerSlot"].(uint64)))
-		outputIf(verbose, fmt.Sprintf("Slots per epoch:\t%v", config["SlotsPerEpoch"].(uint64)))
+		fmt.Printf("Finalized slot:\t\t%d", info.GetFinalizedSlot())
+		if verbose {
+			distance := slot - info.GetFinalizedSlot()
+			fmt.Printf(" (%d)", distance)
+		}
+		fmt.Printf("\n")
+		fmt.Printf("Justified slot:\t\t%d", info.GetJustifiedSlot())
+		if verbose {
+			distance := slot - info.GetJustifiedSlot()
+			fmt.Printf(" (%d)", distance)
+		}
+		fmt.Printf("\n")
+		outputIf(verbose, fmt.Sprintf("Prior justified slot:\t%v (%d)", info.GetPreviousJustifiedSlot(), slot-info.GetPreviousJustifiedSlot()))
 
 		os.Exit(_exit_success)
 	},
 }
 
 func init() {
-	chainCmd.AddCommand(chainInfoCmd)
-	chainFlags(chainInfoCmd)
-}
-
-func timestampToSlot(genesis int64, timestamp int64, secondsPerSlot uint64) uint64 {
-	if timestamp < genesis {
-		return 0
-	}
-	return uint64(timestamp-genesis) / secondsPerSlot
+	chainCmd.AddCommand(chainStatusCmd)
+	chainFlags(chainStatusCmd)
 }

@@ -107,3 +107,12 @@ func FetchValidatorInfo(conn *grpc.ClientConn, account wtypes.Account) (*ethpb.V
 	}
 	return stream.Recv()
 }
+
+// FetchChainInfo fetches current chain info from the beacon node.
+func FetchChainInfo(conn *grpc.ClientConn) (*ethpb.ChainHead, error) {
+	beaconClient := ethpb.NewBeaconChainClient(conn)
+	ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("timeout"))
+	defer cancel()
+
+	return beaconClient.GetChainHead(ctx, &empty.Empty{})
+}

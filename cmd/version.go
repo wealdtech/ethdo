@@ -30,7 +30,7 @@ var versionCmd = &cobra.Command{
 
     ethdo version.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("1.2.5")
+		fmt.Println("1.3.0")
 		if viper.GetBool("verbose") {
 			buildInfo, ok := dbg.ReadBuildInfo()
 			if ok {

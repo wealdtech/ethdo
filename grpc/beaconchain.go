@@ -86,6 +86,20 @@ func FetchValidator(conn *grpc.ClientConn, account wtypes.Account) (*ethpb.Valid
 	return beaconClient.GetValidator(ctx, req)
 }
 
+// FetchValidatorByIndex fetches the validator definition from the beacon node.
+func FetchValidatorByIndex(conn *grpc.ClientConn, index uint64) (*ethpb.Validator, error) {
+	beaconClient := ethpb.NewBeaconChainClient(conn)
+	ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("timeout"))
+	defer cancel()
+
+	req := &ethpb.GetValidatorRequest{
+		QueryFilter: &ethpb.GetValidatorRequest_Index{
+			Index: index,
+		},
+	}
+	return beaconClient.GetValidator(ctx, req)
+}
+
 // FetchValidatorInfo fetches current validator info from the beacon node.
 func FetchValidatorInfo(conn *grpc.ClientConn, account wtypes.Account) (*ethpb.ValidatorInfo, error) {
 	beaconClient := ethpb.NewBeaconChainClient(conn)
@@ -115,4 +129,23 @@ func FetchChainInfo(conn *grpc.ClientConn) (*ethpb.ChainHead, error) {
 	defer cancel()
 
 	return beaconClient.GetChainHead(ctx, &empty.Empty{})
+}
+
+// FetchBlock fetches a block at a given slot from the beacon node.
+func FetchBlock(conn *grpc.ClientConn, slot uint64) (*ethpb.SignedBeaconBlock, error) {
+	beaconClient := ethpb.NewBeaconChainClient(conn)
+	ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("timeout"))
+	defer cancel()
+
+	req := &ethpb.ListBlocksRequest{
+		QueryFilter: &ethpb.ListBlocksRequest_Slot{Slot: slot},
+	}
+	resp, err := beaconClient.ListBlocks(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	if len(resp.BlockContainers) == 0 {
+		return nil, nil
+	}
+	return resp.BlockContainers[0].Block, nil
 }

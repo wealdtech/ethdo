@@ -35,3 +35,27 @@ func FetchGenesis(conn *grpc.ClientConn) (time.Time, error) {
 	}
 	return time.Unix(res.GetGenesisTime().Seconds, 0), nil
 }
+
+// FetchVersion fetches the version and metadata from the server.
+func FetchVersion(conn *grpc.ClientConn) (string, string, error) {
+	client := ethpb.NewNodeClient(conn)
+	ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("timeout"))
+	defer cancel()
+	version, err := client.GetVersion(ctx, &empty.Empty{})
+	if err != nil {
+		return "", "", err
+	}
+	return version.Version, version.Metadata, nil
+}
+
+// FetchSyncing returns true if the node is syncing, otherwise false.
+func FetchSyncing(conn *grpc.ClientConn) (bool, error) {
+	client := ethpb.NewNodeClient(conn)
+	ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("timeout"))
+	defer cancel()
+	syncStatus, err := client.GetSyncStatus(ctx, &empty.Empty{})
+	if err != nil {
+		return false, err
+	}
+	return syncStatus.Syncing, nil
+}

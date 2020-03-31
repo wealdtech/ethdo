@@ -30,17 +30,23 @@ var walletListCmd = &cobra.Command{
 
 In quiet mode this will return 0 if any wallets are found, otherwise 1.`,
 	Run: func(cmd *cobra.Command, args []string) {
+		assert(!remote, "wallet list not available with remote wallets")
+
 		walletsFound := false
-		for w := range wallet.Wallets() {
-			walletsFound = true
-			outputIf(!quiet && !verbose, w.Name())
-			outputIf(verbose, fmt.Sprintf("%s\n\tUUID:\t\t%s", w.Name(), w.ID().String()))
+		if remote {
+			die("Remote wallets cannot be listed")
+		} else {
+			for w := range wallet.Wallets() {
+				walletsFound = true
+				outputIf(!quiet && !verbose, w.Name())
+				outputIf(verbose, fmt.Sprintf("%s\n\tUUID:\t\t%s", w.Name(), w.ID().String()))
+			}
 		}
 
 		if !walletsFound {
-			os.Exit(_exit_failure)
+			os.Exit(_exitFailure)
 		}
-		os.Exit(_exit_success)
+		os.Exit(_exitSuccess)
 	},
 }
 

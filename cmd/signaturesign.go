@@ -1,4 +1,4 @@
-// Copyright © 2017-2019 Weald Technology Trading
+// Copyright © 2017-2020 Weald Technology Trading
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -14,10 +14,13 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"os"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
+	pb "github.com/wealdtech/eth2-signer-api/pb/v1"
 	"github.com/wealdtech/go-bytesutil"
 	types "github.com/wealdtech/go-eth2-types"
 )
@@ -44,18 +47,41 @@ In quiet mode this will return 0 if the data can be signed, otherwise 1.`,
 		}
 
 		assert(rootAccount != "", "--account is required")
-		account, err := accountFromPath(rootAccount)
-		errCheck(err, "Failed to access account for signing")
 
-		err = account.Unlock([]byte(rootAccountPassphrase))
-		errCheck(err, "Failed to unlock account for signing")
-		defer account.Lock()
-
-		signature, err := account.Sign(data, domain)
-		errCheck(err, "Failed to sign data")
+		var signature types.Signature
+		if remote {
+			signClient := pb.NewSignerClient(remoteGRPCConn)
+			domainBytes := bytesutil.Bytes64(domain)
+			signReq := &pb.SignRequest{
+				Id:     &pb.SignRequest_Account{Account: rootAccount},
+				Data:   data,
+				Domain: domainBytes[:],
+			}
+			ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("timeout"))
+			defer cancel()
+			resp, err := signClient.Sign(ctx, signReq)
+			errCheck(err, "Failed to sign")
+			switch resp.State {
+			case pb.ResponseState_DENIED:
+				die("Signing request denied")
+			case pb.ResponseState_FAILED:
+				die("Signing request failed")
+			case pb.ResponseState_SUCCEEDED:
+				signature, err = types.BLSSignatureFromBytes(resp.Signature)
+				errCheck(err, "Invalid signature")
+			}
+		} else {
+			account, err := accountFromPath(rootAccount)
+			errCheck(err, "Failed to access account for signing")
+			err = account.Unlock([]byte(rootAccountPassphrase))
+			errCheck(err, "Failed to unlock account for signing")
+			defer account.Lock()
+			signature, err = account.Sign(data, domain)
+			errCheck(err, "Failed to sign data")
+		}
 
 		outputIf(!quiet, fmt.Sprintf("0x%096x", signature.Marshal()))
-		os.Exit(_exit_success)
+		os.Exit(_exitSuccess)
 	},
 }
 

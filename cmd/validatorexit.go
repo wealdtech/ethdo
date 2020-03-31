@@ -20,7 +20,7 @@ import (
 	"time"
 
 	ethpb "github.com/prysmaticlabs/ethereumapis/eth/v1alpha1"
-	"github.com/prysmaticlabs/go-ssz"
+	ssz "github.com/prysmaticlabs/go-ssz"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/wealdtech/ethdo/grpc"
@@ -102,7 +102,7 @@ In quiet mode this will return 0 if the transaction has been sent, otherwise 1.`
 		errCheck(err, "Failed to propose exit")
 
 		outputIf(!quiet, "Validator exit transaction sent")
-		os.Exit(_exit_success)
+		os.Exit(_exitSuccess)
 	},
 }
 

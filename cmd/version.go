@@ -44,7 +44,7 @@ var versionCmd = &cobra.Command{
 				}
 			}
 		}
-		os.Exit(_exit_success)
+		os.Exit(_exitSuccess)
 	},
 }
 

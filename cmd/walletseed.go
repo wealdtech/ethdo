@@ -31,6 +31,7 @@ var walletSeedCmd = &cobra.Command{
 
 In quiet mode this will return 0 if the wallet is a hierarchical deterministic wallet, otherwise 1.`,
 	Run: func(cmd *cobra.Command, args []string) {
+		assert(!remote, "wallet seed not available with remote wallets")
 		assert(walletWallet != "", "--wallet is required")
 		assert(rootWalletPassphrase != "", "--walletpassphrase is required")
 
@@ -48,7 +49,7 @@ In quiet mode this will return 0 if the wallet is a hierarchical deterministic w
 		errCheck(err, "Failed to generate seed mnemonic")
 
 		outputIf(!quiet, seedStr)
-		os.Exit(_exit_success)
+		os.Exit(_exitSuccess)
 	},
 }
 

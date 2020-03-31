@@ -1,4 +1,4 @@
-// Copyright © 2017-2019 Weald Technology Trading
+// Copyright © 2017-2020 Weald Technology Trading
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -14,9 +14,11 @@
 package cmd
 
 import (
+	"context"
 	"os"
 
 	"github.com/spf13/cobra"
+	pb "github.com/wealdtech/eth2-signer-api/pb/v1"
 	"github.com/wealdtech/go-bytesutil"
 	types "github.com/wealdtech/go-eth2-types"
 )
@@ -54,9 +56,24 @@ In quiet mode this will return 0 if the data can be signed, otherwise 1.`,
 		var pubKey types.PublicKey
 		assert(signatureVerifyPubKey == "" || rootAccount == "", "Either --pubkey or --account should be supplied")
 		if rootAccount != "" {
-			account, err := accountFromPath(rootAccount)
-			errCheck(err, "Unknown account")
-			pubKey = account.PublicKey()
+			if remote {
+				listerClient := pb.NewListerClient(remoteGRPCConn)
+				listAccountsReq := &pb.ListAccountsRequest{
+					Paths: []string{
+						rootAccount,
+					},
+				}
+				resp, err := listerClient.ListAccounts(context.Background(), listAccountsReq)
+				errCheck(err, "Failed to access account")
+				assert(resp.State == pb.ResponseState_SUCCEEDED, "Failed to obtain account")
+				assert(len(resp.Accounts) == 1, "No such account")
+				pubKey, err = types.BLSPublicKeyFromBytes(resp.Accounts[0].PublicKey)
+				errCheck(err, "Invalid public key provided for account")
+			} else {
+				account, err := accountFromPath(rootAccount)
+				errCheck(err, "Unknown account")
+				pubKey = account.PublicKey()
+			}
 		} else {
 			pubKeyBytes, err := bytesutil.FromHexString(signatureVerifyPubKey)
 			errCheck(err, "Invalid public key")
@@ -66,10 +83,10 @@ In quiet mode this will return 0 if the data can be signed, otherwise 1.`,
 		verified := signature.Verify(data, pubKey, domain)
 		if !verified {
 			outputIf(!quiet, "Not verified")
-			os.Exit(_exit_failure)
+			os.Exit(_exitFailure)
 		}
 		outputIf(!quiet, "Verified")
-		os.Exit(_exit_success)
+		os.Exit(_exitSuccess)
 	},
 }
 

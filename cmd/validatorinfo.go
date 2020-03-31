@@ -67,7 +67,7 @@ In quiet mode this will return 0 if the validator information can be obtained, o
 		assert(validatorInfo.Status != ethpb.ValidatorStatus_UNKNOWN_STATUS, "Not known as a validator")
 
 		if quiet {
-			os.Exit(_exit_success)
+			os.Exit(_exitSuccess)
 		}
 
 		outputIf(verbose, fmt.Sprintf("Epoch of data:\t\t%v", validatorInfo.Epoch))
@@ -102,7 +102,7 @@ In quiet mode this will return 0 if the validator information can be obtained, o
 			}
 		}
 
-		os.Exit(_exit_success)
+		os.Exit(_exitSuccess)
 	},
 }
 

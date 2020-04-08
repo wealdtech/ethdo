@@ -17,7 +17,6 @@ import (
 	"context"
 	"crypto/tls"
 	"crypto/x509"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -27,14 +26,15 @@ import (
 	"time"
 
 	homedir "github.com/mitchellh/go-homedir"
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	types "github.com/wealdtech/go-eth2-types"
+	types "github.com/wealdtech/go-eth2-types/v2"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 
 	wallet "github.com/wealdtech/go-eth2-wallet"
-	wtypes "github.com/wealdtech/go-eth2-wallet-types"
+	wtypes "github.com/wealdtech/go-eth2-wallet-types/v2"
 )
 
 var cfgFile string
@@ -336,12 +336,14 @@ func accountsFromPath(path string) ([]wtypes.Account, error) {
 }
 
 // sign signs data in a domain.
-func sign(account wtypes.Account, data []byte, domain uint64) (types.Signature, error) {
+func sign(account wtypes.Account, data []byte, domain []byte) (types.Signature, error) {
 	if !account.IsUnlocked() {
 		return nil, errors.New("account must be unlocked to sign")
 	}
 
-	return account.Sign(data, domain)
+	// TODO combine data and domain for signing.
+
+	return account.Sign(data)
 }
 
 // addTransactionFlags adds flags used in all transactions.
@@ -381,7 +383,7 @@ func initRemote() error {
 	// Load the client certificates.
 	clientPair, err := tls.LoadX509KeyPair(clientCert, clientKey)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "failed to access client certificate/key")
 	}
 
 	tlsCfg := &tls.Config{
@@ -391,11 +393,11 @@ func initRemote() error {
 		// Load the CA for the server certificate.
 		serverCA, err := ioutil.ReadFile(serverCACert)
 		if err != nil {
-			return err
+			return errors.Wrap(err, "failed to access CA certificate")
 		}
 		cp := x509.NewCertPool()
 		if !cp.AppendCertsFromPEM(serverCA) {
-			return err
+			return errors.Wrap(err, "failed to add CA certificate")
 		}
 		tlsCfg.RootCAs = cp
 	}

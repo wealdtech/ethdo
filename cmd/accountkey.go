@@ -18,7 +18,7 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
-	types "github.com/wealdtech/go-eth2-wallet-types"
+	types "github.com/wealdtech/go-eth2-wallet-types/v2"
 )
 
 // accountKeyCmd represents the account key command

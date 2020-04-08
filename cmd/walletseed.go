@@ -19,7 +19,7 @@ import (
 
 	bip39 "github.com/FactomProject/go-bip39"
 	"github.com/spf13/cobra"
-	types "github.com/wealdtech/go-eth2-wallet-types"
+	types "github.com/wealdtech/go-eth2-wallet-types/v2"
 )
 
 var walletSeedCmd = &cobra.Command{

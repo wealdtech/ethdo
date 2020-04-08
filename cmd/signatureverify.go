@@ -20,7 +20,7 @@ import (
 	"github.com/spf13/cobra"
 	pb "github.com/wealdtech/eth2-signer-api/pb/v1"
 	"github.com/wealdtech/go-bytesutil"
-	types "github.com/wealdtech/go-eth2-types"
+	types "github.com/wealdtech/go-eth2-types/v2"
 )
 
 var signatureVerifySignature string
@@ -46,7 +46,7 @@ In quiet mode this will return 0 if the data can be signed, otherwise 1.`,
 		signature, err := types.BLSSignatureFromBytes(signatureBytes)
 		errCheck(err, "Invalid signature")
 
-		domain := types.Domain([]byte{0, 0, 0, 0}, []byte{0, 0, 0, 0})
+		//		domain := types.Domain([]byte{0, 0, 0, 0}, []byte{0, 0, 0, 0})
 		if signatureDomain != "" {
 			domainBytes, err := bytesutil.FromHexString(signatureDomain)
 			errCheck(err, "Failed to parse domain")
@@ -80,7 +80,8 @@ In quiet mode this will return 0 if the data can be signed, otherwise 1.`,
 			pubKey, err = types.BLSPublicKeyFromBytes(pubKeyBytes)
 			errCheck(err, "Invalid public key")
 		}
-		verified := signature.Verify(data, pubKey, domain)
+		// TODO data + domain -> root
+		verified := signature.Verify(data, pubKey)
 		if !verified {
 			outputIf(!quiet, "Not verified")
 			os.Exit(_exitFailure)

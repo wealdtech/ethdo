@@ -24,7 +24,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/wealdtech/ethdo/grpc"
-	types "github.com/wealdtech/go-eth2-types"
 )
 
 var validatorExitEpoch int64
@@ -82,12 +81,13 @@ In quiet mode this will return 0 if the transaction has been sent, otherwise 1.`
 		root, err := ssz.HashTreeRoot(exit)
 		errCheck(err, "Failed to generate exit proposal root")
 		// TODO fetch current fork version from config (currently using genesis fork version)
-		currentForkVersion := config["GenesisForkVersion"].([]byte)
-		domain := types.Domain(types.DomainVoluntaryExit, currentForkVersion)
+		// currentForkVersion := config["GenesisForkVersion"].([]byte)
+		// domain := types.Domain(types.DomainVoluntaryExit, currentForkVersion)
 
 		err = account.Unlock([]byte(rootAccountPassphrase))
 		errCheck(err, "Failed to unlock account; please confirm passphrase is correct")
-		signature, err := sign(account, root[:], domain)
+		// TODO supply domain
+		signature, err := sign(account, root[:], []byte{})
 		errCheck(err, "Failed to sign exit proposal")
 
 		proposal := &ethpb.SignedVoluntaryExit{

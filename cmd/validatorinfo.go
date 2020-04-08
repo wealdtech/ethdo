@@ -24,7 +24,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/wealdtech/ethdo/grpc"
 	"github.com/wealdtech/ethdo/util"
-	types "github.com/wealdtech/go-eth2-wallet-types"
+	types "github.com/wealdtech/go-eth2-wallet-types/v2"
 	string2eth "github.com/wealdtech/go-string2eth"
 )
 

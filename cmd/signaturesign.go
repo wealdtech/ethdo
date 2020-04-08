@@ -22,7 +22,7 @@ import (
 	"github.com/spf13/viper"
 	pb "github.com/wealdtech/eth2-signer-api/pb/v1"
 	"github.com/wealdtech/go-bytesutil"
-	types "github.com/wealdtech/go-eth2-types"
+	types "github.com/wealdtech/go-eth2-types/v2"
 )
 
 // signatureSignCmd represents the signature sign command
@@ -55,7 +55,7 @@ In quiet mode this will return 0 if the data can be signed, otherwise 1.`,
 			signReq := &pb.SignRequest{
 				Id:     &pb.SignRequest_Account{Account: rootAccount},
 				Data:   data,
-				Domain: domainBytes[:],
+				Domain: domainBytes,
 			}
 			ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("timeout"))
 			defer cancel()
@@ -76,7 +76,8 @@ In quiet mode this will return 0 if the data can be signed, otherwise 1.`,
 			err = account.Unlock([]byte(rootAccountPassphrase))
 			errCheck(err, "Failed to unlock account for signing")
 			defer account.Lock()
-			signature, err = account.Sign(data, domain)
+			// TODO fix domain.
+			signature, err = sign(account, data, []byte{})
 			errCheck(err, "Failed to sign data")
 		}
 

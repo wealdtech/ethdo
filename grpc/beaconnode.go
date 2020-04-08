@@ -20,7 +20,7 @@ import (
 	"google.golang.org/grpc"
 
 	ethpb "github.com/prysmaticlabs/ethereumapis/eth/v1alpha1"
-	wtypes "github.com/wealdtech/go-eth2-wallet-types"
+	wtypes "github.com/wealdtech/go-eth2-wallet-types/v2"
 )
 
 // FetchValidatorIndex fetches the index of a validator.

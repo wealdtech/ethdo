@@ -27,9 +27,10 @@ import (
 
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/pkg/errors"
+	"github.com/prysmaticlabs/go-ssz"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	types "github.com/wealdtech/go-eth2-types/v2"
+	e2types "github.com/wealdtech/go-eth2-types/v2"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 
@@ -335,13 +336,41 @@ func accountsFromPath(path string) ([]wtypes.Account, error) {
 	return accounts, nil
 }
 
-// sign signs data in a domain.
-func sign(account wtypes.Account, data []byte, domain []byte) (types.Signature, error) {
+// signStruct signs an arbitrary structure.
+func signStruct(account wtypes.Account, data interface{}, domain []byte) (e2types.Signature, error) {
+	objRoot, err := ssz.HashTreeRoot(data)
+	if err != nil {
+		return nil, err
+	}
+
+	return signRoot(account, objRoot, domain)
+}
+
+// SigningContainer is the container for signing roots with a domain.
+// Contains SSZ sizes to allow for correct calculation of root.
+type SigningContainer struct {
+	Root   []byte `ssz-size:"32"`
+	Domain []byte `ssz-size:"32"`
+}
+
+// signRoot signs a root.
+func signRoot(account wtypes.Account, root [32]byte, domain []byte) (e2types.Signature, error) {
+	container := &SigningContainer{
+		Root:   root[:],
+		Domain: domain,
+	}
+	signingRoot, err := ssz.HashTreeRoot(container)
+	if err != nil {
+		return nil, err
+	}
+	return sign(account, signingRoot[:])
+}
+
+// sign signs arbitrary data.
+func sign(account wtypes.Account, data []byte) (e2types.Signature, error) {
 	if !account.IsUnlocked() {
 		return nil, errors.New("account must be unlocked to sign")
 	}
-
-	// TODO combine data and domain for signing.
 
 	return account.Sign(data)
 }

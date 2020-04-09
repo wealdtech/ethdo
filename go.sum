@@ -215,8 +215,8 @@ github.com/subosito/gotenv v1.2.0/go.mod h1:N0PQaV/YGNqwC0u51sEeR/aUtSLEXKX9iv69
 github.com/tmc/grpc-websocket-proxy v0.0.0-20190109142713-0ad062ec5ee5/go.mod h1:ncp9v5uamzpCO7NfCPTXjqaC+bZgJeR0sMTm6dMHP7U=
 github.com/ugorji/go v1.1.4/go.mod h1:uQMGLiO92mf5W77hV/PUCpI3pbzQx3CRekS0kk+RGrc=
 github.com/urfave/cli v1.20.0/go.mod h1:70zkFmudgCuE/ngEzBv17Jvp/497gISqfk5gWijbERA=
-github.com/wealdtech/eth2-signer-api v1.2.0 h1:AL4bRJDW6lyRc0ROPruVTEHt7Xs+EV2lRBPen2plOr8=
-github.com/wealdtech/eth2-signer-api v1.2.0/go.mod h1:H8OpAoTBl6CaBvZEnhxWDjjWXNc3kwVFKWMAZd6sHlk=
+github.com/wealdtech/eth2-signer-api v1.3.0 h1:Fs0GfrdhboBKW7zaMvIvUHJaOB1ibpAmRG3lkB53in4=
+github.com/wealdtech/eth2-signer-api v1.3.0/go.mod h1:H8OpAoTBl6CaBvZEnhxWDjjWXNc3kwVFKWMAZd6sHlk=
 github.com/wealdtech/go-bytesutil v1.0.0/go.mod h1:jENeMqeTEU8FNZyDFRVc7KqBdRKSnJ9CCh26TcuNb9s=
 github.com/wealdtech/go-bytesutil v1.0.1 h1:6xzMM+VEHf5WNh1PsIFcRwScgcno+CP8Rw1rGvT6Cew=
 github.com/wealdtech/go-bytesutil v1.0.1/go.mod h1:jENeMqeTEU8FNZyDFRVc7KqBdRKSnJ9CCh26TcuNb9s=
@@ -230,6 +230,8 @@ github.com/wealdtech/go-eth2-types v1.0.0 h1:ggrbQ5HeFcxVm20zxVWr8Sc3uCditaetzWB
 github.com/wealdtech/go-eth2-types v1.0.0/go.mod h1:fWUgtKQ7hiNVl6263bGeyjlydYuaxkxcUIPIopgz2CM=
 github.com/wealdtech/go-eth2-types/v2 v2.0.2 h1:L1Eg55aArRpUR2H8dnpSevHlSGRDuRQbQwA4IyYh0Js=
 github.com/wealdtech/go-eth2-types/v2 v2.0.2/go.mod h1:CXyZc4kcDaJ+s2SglGofkbHbSjXC6zFwKLJpEVYm5tw=
+github.com/wealdtech/go-eth2-types/v2 v2.1.0 h1:nGtVjYm4zb/YerzzsKOG48BWLayqJPpZwR1tRkb+PfI=
+github.com/wealdtech/go-eth2-types/v2 v2.1.0/go.mod h1:CXyZc4kcDaJ+s2SglGofkbHbSjXC6zFwKLJpEVYm5tw=
 github.com/wealdtech/go-eth2-util v1.1.2 h1:m56HKJgWSuNy53Gt5GN7HcoFaGRCl1uE3OGWhIhWh1M=
 github.com/wealdtech/go-eth2-util v1.1.2/go.mod h1:6Enc18JSH8FDy0sv/4ydEBbfoh3EOF++3HqLd66sO3M=
 github.com/wealdtech/go-eth2-wallet v1.9.2 h1:H/T1n0SNd0jTsbf4rA4YxigsBPFWRUWgobsTOjzW4Hw=

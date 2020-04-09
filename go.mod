@@ -29,13 +29,12 @@ require (
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/spf13/viper v1.6.2
-	github.com/wealdtech/eth2-signer-api v1.2.0
+	github.com/wealdtech/eth2-signer-api v1.3.0
 	github.com/wealdtech/go-bytesutil v1.1.1
-	github.com/wealdtech/go-eth2-types v1.0.0
-	github.com/wealdtech/go-eth2-types/v2 v2.0.2
+	github.com/wealdtech/go-eth2-types/v2 v2.1.0
 	github.com/wealdtech/go-eth2-util v1.1.2
 	github.com/wealdtech/go-eth2-wallet v1.9.2
-	github.com/wealdtech/go-eth2-wallet-types v1.10.0
+	github.com/wealdtech/go-eth2-wallet-types v1.10.0 // indirect
 	github.com/wealdtech/go-eth2-wallet-types/v2 v2.0.0
 	github.com/wealdtech/go-string2eth v1.1.0
 	golang.org/x/crypto v0.0.0-20200323165209-0ec3e9974c59 // indirect

@@ -40,7 +40,7 @@ In quiet mode this will return 0 if the node information can be obtained, otherw
 		errCheck(err, "Failed to obtain genesis time")
 
 		if quiet {
-			os.Exit(_exit_success)
+			os.Exit(_exitSuccess)
 		}
 
 		if verbose {
@@ -64,7 +64,7 @@ In quiet mode this will return 0 if the node information can be obtained, otherw
 		outputIf(verbose, fmt.Sprintf("Seconds per slot:\t%v", config["SecondsPerSlot"].(uint64)))
 		outputIf(verbose, fmt.Sprintf("Slots per epoch:\t%v", config["SlotsPerEpoch"].(uint64)))
 
-		os.Exit(_exit_success)
+		os.Exit(_exitSuccess)
 	},
 }
 

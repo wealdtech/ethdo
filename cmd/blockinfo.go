@@ -54,7 +54,7 @@ In quiet mode this will return 0 if the block information is present and not ski
 		errCheck(err, "Failed to obtain block")
 		if signedBlock == nil {
 			outputIf(!quiet, "No block at that slot")
-			os.Exit(_exit_failure)
+			os.Exit(_exitFailure)
 		}
 		block := signedBlock.Block
 		body := block.Body
@@ -161,7 +161,7 @@ In quiet mode this will return 0 if the block information is present and not ski
 			}
 		}
 
-		os.Exit(_exit_success)
+		os.Exit(_exitSuccess)
 	},
 }
 

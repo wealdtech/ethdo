@@ -65,12 +65,14 @@ In quiet mode this will return 0 if the the data can be generated correctly, oth
 
 		withdrawalCredentials := util.SHA256(withdrawalAccount.PublicKey().Marshal())
 		errCheck(err, "Failed to hash withdrawal credentials")
+		// TODO fetch this from the node.
 		withdrawalCredentials[0] = byte(0) // BLSWithdrawalPrefix
 		outputIf(debug, fmt.Sprintf("Withdrawal credentials are %032x", withdrawalCredentials))
 
 		assert(validatorDepositDataDepositValue != "", "--depositvalue is required")
 		val, err := string2eth.StringToGWei(validatorDepositDataDepositValue)
 		errCheck(err, "Invalid value")
+		// TODO fetch this from the node.
 		assert(val >= 1000000000, "deposit value must be at least 1 Ether")
 
 		// For each key, generate deposit data
@@ -85,7 +87,9 @@ In quiet mode this will return 0 if the the data can be generated correctly, oth
 				WithdrawalCredentials: withdrawalCredentials,
 				Value:                 val,
 			}
+			outputIf(debug, fmt.Sprintf("Deposit data:\n\tPublic key: %x\n\tWithdrawal credentials: %x\n\tValue: %d", depositData.PubKey, depositData.WithdrawalCredentials, depositData.Value))
 			domain := e2types.Domain(e2types.DomainDeposit, e2types.ZeroForkVersion, e2types.ZeroGenesisValidatorsRoot)
+			outputIf(debug, fmt.Sprintf("Domain is %x", domain))
 			err = validatorAccount.Unlock([]byte(rootAccountPassphrase))
 			errCheck(err, "Failed to unlock validator account")
 			signature, err := signStruct(validatorAccount, depositData, domain)
@@ -103,8 +107,7 @@ In quiet mode this will return 0 if the the data can be generated correctly, oth
 				Value:                 val,
 				Signature:             signature.Marshal(),
 			}
-
-			outputIf(debug, fmt.Sprintf("Deposit data signature is %x", signedDepositData.Signature))
+			outputIf(debug, fmt.Sprintf("Signed deposit data:\n\tPublic key: %x\n\tWithdrawal credentials: %x\n\tValue: %d\n\tSignature: %x", signedDepositData.PubKey, signedDepositData.WithdrawalCredentials, signedDepositData.Value, signedDepositData.Signature))
 
 			depositDataRoot, err := ssz.HashTreeRoot(signedDepositData)
 			errCheck(err, "Failed to generate deposit data root")

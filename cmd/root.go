@@ -138,6 +138,12 @@ func Execute() {
 }
 
 func init() {
+	// Initialise our BLS library.
+	if err := e2types.InitBLS(); err != nil {
+		fmt.Println(err)
+		os.Exit(_exitFailure)
+	}
+
 	cobra.OnInitialize(initConfig)
 
 	RootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.ethdo.yaml)")
@@ -339,6 +345,7 @@ func accountsFromPath(path string) ([]wtypes.Account, error) {
 // signStruct signs an arbitrary structure.
 func signStruct(account wtypes.Account, data interface{}, domain []byte) (e2types.Signature, error) {
 	objRoot, err := ssz.HashTreeRoot(data)
+	outputIf(debug, fmt.Sprintf("Object root is %x", objRoot))
 	if err != nil {
 		return nil, err
 	}
@@ -359,10 +366,12 @@ func signRoot(account wtypes.Account, root [32]byte, domain []byte) (e2types.Sig
 		Root:   root[:],
 		Domain: domain,
 	}
+	outputIf(debug, fmt.Sprintf("Signing container:\n\troot: %x\n\tdomain: %x", container.Root, container.Domain))
 	signingRoot, err := ssz.HashTreeRoot(container)
 	if err != nil {
 		return nil, err
 	}
+	outputIf(debug, fmt.Sprintf("Signing root: %x", signingRoot))
 	return sign(account, signingRoot[:])
 }
 
@@ -372,6 +381,7 @@ func sign(account wtypes.Account, data []byte) (e2types.Signature, error) {
 		return nil, errors.New("account must be unlocked to sign")
 	}
 
+	outputIf(debug, fmt.Sprintf("Signing %x (%d)", data, len(data)))
 	return account.Sign(data)
 }
 

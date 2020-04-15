@@ -45,6 +45,7 @@ In quiet mode this will return 0 if the data can be signed, otherwise 1.`,
 			domainBytes, err := bytesutil.FromHexString(signatureDomain)
 			errCheck(err, "Failed to parse domain")
 			assert(len(domainBytes) == 32, "Domain data invalid")
+			domain = domainBytes
 		}
 
 		assert(rootAccount != "", "--account is required")

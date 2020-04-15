@@ -18,7 +18,7 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
-	types "github.com/wealdtech/go-eth2-wallet-types"
+	types "github.com/wealdtech/go-eth2-wallet-types/v2"
 )
 
 var walletExportPassphrase string
@@ -32,6 +32,7 @@ var walletExportCmd = &cobra.Command{
 
 In quiet mode this will return 0 if the wallet is able to be exported, otherwise 1.`,
 	Run: func(cmd *cobra.Command, args []string) {
+		assert(!remote, "wallet export not available with remote wallets")
 		assert(walletWallet != "", "--wallet is required")
 		assert(walletExportPassphrase != "", "--exportpassphrase is required")
 
@@ -45,7 +46,7 @@ In quiet mode this will return 0 if the wallet is able to be exported, otherwise
 		errCheck(err, "Failed to export wallet")
 
 		outputIf(!quiet, fmt.Sprintf("0x%x", exportData))
-		os.Exit(_exit_success)
+		os.Exit(_exitSuccess)
 	},
 }
 

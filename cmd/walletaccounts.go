@@ -14,10 +14,13 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"os"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
+	pb "github.com/wealdtech/eth2-signer-api/pb/v1"
 )
 
 var walletAccountsCmd = &cobra.Command{
@@ -31,24 +34,49 @@ In quiet mode this will return 0 if the wallet holds any addresses, otherwise 1.
 	Run: func(cmd *cobra.Command, args []string) {
 		assert(walletWallet != "", "wallet is required")
 
-		wallet, err := walletFromPath(walletWallet)
-		errCheck(err, "Failed to access wallet")
-
 		hasAccounts := false
-		for account := range wallet.Accounts() {
-			hasAccounts = true
-			if verbose {
-				fmt.Printf("%s\n\tUUID:\t\t%s\n\tPublic key:\t0x%048x\n", account.Name(), account.ID(), account.PublicKey().Marshal())
-			} else if !quiet {
-				fmt.Printf("%s\n", account.Name())
+
+		if remote {
+			listerClient := pb.NewListerClient(remoteGRPCConn)
+			listAccountsReq := &pb.ListAccountsRequest{
+				Paths: []string{
+					walletWallet,
+				},
+			}
+			ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("timeout"))
+			defer cancel()
+			accountsResp, err := listerClient.ListAccounts(ctx, listAccountsReq)
+			errCheck(err, "Failed to access wallet")
+			assert(accountsResp.State == pb.ResponseState_SUCCEEDED, "Request to list wallet accounts failed")
+			walletPrefixLen := len(walletWallet) + 1
+			for _, account := range accountsResp.Accounts {
+				hasAccounts = true
+				if verbose {
+					fmt.Printf("%s\n", account.Name[walletPrefixLen:])
+					fmt.Printf("\tPublic key: %#048x\n", account.PublicKey)
+				} else if !quiet {
+					fmt.Printf("%s\n", account.Name[walletPrefixLen:])
+				}
+			}
+		} else {
+			wallet, err := walletFromPath(walletWallet)
+			errCheck(err, "Failed to access wallet")
+
+			for account := range wallet.Accounts() {
+				hasAccounts = true
+				if verbose {
+					fmt.Printf("%s\n\tUUID:\t\t%s\n\tPublic key:\t0x%048x\n", account.Name(), account.ID(), account.PublicKey().Marshal())
+				} else if !quiet {
+					fmt.Printf("%s\n", account.Name())
+				}
 			}
 		}
 
 		if quiet {
 			if hasAccounts {
-				os.Exit(_exit_success)
+				os.Exit(_exitSuccess)
 			}
-			os.Exit(_exit_failure)
+			os.Exit(_exitFailure)
 		}
 	},
 }

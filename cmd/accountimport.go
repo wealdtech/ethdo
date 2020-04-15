@@ -19,7 +19,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/wealdtech/go-bytesutil"
-	types "github.com/wealdtech/go-eth2-wallet-types"
+	types "github.com/wealdtech/go-eth2-wallet-types/v2"
 )
 
 var accountImportKey string
@@ -33,6 +33,7 @@ var accountImportCmd = &cobra.Command{
 
 In quiet mode this will return 0 if the account is imported successfully, otherwise 1.`,
 	Run: func(cmd *cobra.Command, args []string) {
+		assert(!remote, "account import not available with remote wallets")
 		assert(rootAccount != "", "--account is required")
 		assert(rootAccountPassphrase != "", "--passphrase is required")
 		assert(accountImportKey != "", "--key is required")
@@ -59,7 +60,7 @@ In quiet mode this will return 0 if the account is imported successfully, otherw
 		errCheck(err, "Failed to create account")
 
 		outputIf(verbose, fmt.Sprintf("0x%048x", account.PublicKey().Marshal()))
-		os.Exit(_exit_success)
+		os.Exit(_exitSuccess)
 	},
 }
 

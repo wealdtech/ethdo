@@ -15,8 +15,10 @@ package cmd
 
 import (
 	"context"
-	"errors"
+	"crypto/tls"
+	"crypto/x509"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"regexp"
 	"sort"
@@ -24,13 +26,16 @@ import (
 	"time"
 
 	homedir "github.com/mitchellh/go-homedir"
+	"github.com/pkg/errors"
+	"github.com/prysmaticlabs/go-ssz"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	types "github.com/wealdtech/go-eth2-types"
+	e2types "github.com/wealdtech/go-eth2-types/v2"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 
 	wallet "github.com/wealdtech/go-eth2-wallet"
-	wtypes "github.com/wealdtech/go-eth2-wallet-types"
+	wtypes "github.com/wealdtech/go-eth2-wallet-types/v2"
 )
 
 var cfgFile string
@@ -38,17 +43,26 @@ var quiet bool
 var verbose bool
 var debug bool
 
-// For transaction commands
+// For transaction commands.
 var wait bool
 var generate bool
 
-// Root variables, present for all commands
+// Root variables, present for all commands.
 var rootStore string
 var rootAccount string
 var rootStorePassphrase string
 var rootWalletPassphrase string
 var rootAccountPassphrase string
 
+// Remote connection.
+var remote bool
+var remoteAddr string
+var clientCert string
+var clientKey string
+var serverCACert string
+var remoteGRPCConn *grpc.ClientConn
+
+// Prysm connection.
 var eth2GRPCConn *grpc.ClientConn
 
 // RootCmd represents the base command when called without any subcommands
@@ -104,9 +118,14 @@ func persistentPreRun(cmd *cobra.Command, args []string) {
 		die("Cannot supply both generate and wait flags")
 	}
 
-	// Set up our wallet store
-	err := wallet.SetStore(rootStore, []byte(rootStorePassphrase))
-	errCheck(err, "Failed to set up wallet store")
+	if viper.GetString("remote") == "" {
+		// Set up our wallet store
+		err := wallet.SetStore(rootStore, []byte(rootStorePassphrase))
+		errCheck(err, "Failed to set up wallet store")
+	} else {
+		err := initRemote()
+		errCheck(err, "Failed to connect to remote wallet")
+	}
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -114,7 +133,7 @@ func persistentPreRun(cmd *cobra.Command, args []string) {
 func Execute() {
 	if err := RootCmd.Execute(); err != nil {
 		fmt.Println(err)
-		os.Exit(_exit_failure)
+		os.Exit(_exitFailure)
 	}
 }
 
@@ -166,6 +185,22 @@ func init() {
 	if err := viper.BindPFlag("timeout", RootCmd.PersistentFlags().Lookup("timeout")); err != nil {
 		panic(err)
 	}
+	RootCmd.PersistentFlags().String("remote", "", "connection to a remote wallet daemon")
+	if err := viper.BindPFlag("remote", RootCmd.PersistentFlags().Lookup("remote")); err != nil {
+		panic(err)
+	}
+	RootCmd.PersistentFlags().String("client-cert", "", "location of a client certificate file when connecting to the remote wallet daemon")
+	if err := viper.BindPFlag("client-cert", RootCmd.PersistentFlags().Lookup("client-cert")); err != nil {
+		panic(err)
+	}
+	RootCmd.PersistentFlags().String("client-key", "", "location of a client key file when connecting to the remote wallet daemon")
+	if err := viper.BindPFlag("client-key", RootCmd.PersistentFlags().Lookup("client-key")); err != nil {
+		panic(err)
+	}
+	RootCmd.PersistentFlags().String("server-ca-cert", "", "location of the server certificate authority certificate when connecting to the remote wallet daemon")
+	if err := viper.BindPFlag("server-ca-cert", RootCmd.PersistentFlags().Lookup("server-ca-cert")); err != nil {
+		panic(err)
+	}
 }
 
 // initConfig reads in config file and ENV variables if set.
@@ -176,10 +211,7 @@ func initConfig() {
 	} else {
 		// Find home directory.
 		home, err := homedir.Dir()
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(_exit_failure)
-		}
+		errCheck(err, "could not find home directory")
 
 		// Search config in home directory with name ".ethdo" (without extension).
 		viper.AddConfigPath(home)
@@ -192,10 +224,7 @@ func initConfig() {
 	// If a config file is found, read it in.
 	if err := viper.ReadInConfig(); err != nil {
 		// Don't report lack of config file...
-		if !strings.Contains(err.Error(), "Not Found") {
-			fmt.Println(err)
-			os.Exit(_exit_failure)
-		}
+		assert(strings.Contains(err.Error(), "Not Found"), "failed to read configuration")
 	}
 }
 
@@ -307,13 +336,43 @@ func accountsFromPath(path string) ([]wtypes.Account, error) {
 	return accounts, nil
 }
 
-// sign signs data in a domain.
-func sign(account wtypes.Account, data []byte, domain uint64) (types.Signature, error) {
+// signStruct signs an arbitrary structure.
+func signStruct(account wtypes.Account, data interface{}, domain []byte) (e2types.Signature, error) {
+	objRoot, err := ssz.HashTreeRoot(data)
+	if err != nil {
+		return nil, err
+	}
+
+	return signRoot(account, objRoot, domain)
+}
+
+// SigningContainer is the container for signing roots with a domain.
+// Contains SSZ sizes to allow for correct calculation of root.
+type SigningContainer struct {
+	Root   []byte `ssz-size:"32"`
+	Domain []byte `ssz-size:"32"`
+}
+
+// signRoot signs a root.
+func signRoot(account wtypes.Account, root [32]byte, domain []byte) (e2types.Signature, error) {
+	container := &SigningContainer{
+		Root:   root[:],
+		Domain: domain,
+	}
+	signingRoot, err := ssz.HashTreeRoot(container)
+	if err != nil {
+		return nil, err
+	}
+	return sign(account, signingRoot[:])
+}
+
+// sign signs arbitrary data.
+func sign(account wtypes.Account, data []byte) (e2types.Signature, error) {
 	if !account.IsUnlocked() {
 		return nil, errors.New("account must be unlocked to sign")
 	}
 
-	return account.Sign(data, domain)
+	return account.Sign(data)
 }
 
 // addTransactionFlags adds flags used in all transactions.
@@ -340,5 +399,46 @@ func connect() error {
 	defer cancel()
 	var err error
 	eth2GRPCConn, err = grpc.DialContext(ctx, connection, opts...)
+	return err
+}
+
+func initRemote() error {
+	remote = true
+	remoteAddr = viper.GetString("remote")
+	clientCert = viper.GetString("client-cert")
+	clientKey = viper.GetString("client-key")
+	serverCACert = viper.GetString("server-ca-cert")
+
+	// Load the client certificates.
+	clientPair, err := tls.LoadX509KeyPair(clientCert, clientKey)
+	if err != nil {
+		return errors.Wrap(err, "failed to access client certificate/key")
+	}
+
+	tlsCfg := &tls.Config{
+		Certificates: []tls.Certificate{clientPair},
+	}
+	if serverCACert != "" {
+		// Load the CA for the server certificate.
+		serverCA, err := ioutil.ReadFile(serverCACert)
+		if err != nil {
+			return errors.Wrap(err, "failed to access CA certificate")
+		}
+		cp := x509.NewCertPool()
+		if !cp.AppendCertsFromPEM(serverCA) {
+			return errors.Wrap(err, "failed to add CA certificate")
+		}
+		tlsCfg.RootCAs = cp
+	}
+
+	clientCreds := credentials.NewTLS(tlsCfg)
+
+	opts := []grpc.DialOption{
+		// Require TLS.
+		grpc.WithTransportCredentials(clientCreds),
+		// Block until server responds.
+		grpc.WithBlock(),
+	}
+	remoteGRPCConn, err = grpc.Dial(remoteAddr, opts...)
 	return err
 }

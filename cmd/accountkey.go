@@ -18,7 +18,7 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
-	types "github.com/wealdtech/go-eth2-wallet-types"
+	types "github.com/wealdtech/go-eth2-wallet-types/v2"
 )
 
 // accountKeyCmd represents the account key command
@@ -31,7 +31,9 @@ var accountKeyCmd = &cobra.Command{
 
 In quiet mode this will return 0 if the key can be obtained, otherwise 1.`,
 	Run: func(cmd *cobra.Command, args []string) {
+		assert(!remote, "account keys not available with remote wallets")
 		assert(rootAccount != "", "--account is required")
+
 		account, err := accountFromPath(rootAccount)
 		errCheck(err, "Failed to access account")
 
@@ -47,7 +49,7 @@ In quiet mode this will return 0 if the key can be obtained, otherwise 1.`,
 		account.Lock()
 
 		outputIf(!quiet, fmt.Sprintf("%#064x", privateKey.Marshal()))
-		os.Exit(_exit_success)
+		os.Exit(_exitSuccess)
 	},
 }
 

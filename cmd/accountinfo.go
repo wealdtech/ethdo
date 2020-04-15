@@ -1,4 +1,4 @@
-// Copyright © 2019 Weald Technology Trading
+// Copyright © 2019, 2020 Weald Technology Trading
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -14,10 +14,12 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"os"
 
 	"github.com/spf13/cobra"
+	pb "github.com/wealdtech/eth2-signer-api/pb/v1"
 )
 
 var accountInfoCmd = &cobra.Command{
@@ -31,13 +33,28 @@ In quiet mode this will return 0 if the account exists, otherwise 1.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		assert(rootAccount != "", "--account is required")
 
-		account, err := accountFromPath(rootAccount)
-		errCheck(err, "Failed to access wallet")
+		if remote {
+			listerClient := pb.NewListerClient(remoteGRPCConn)
+			listAccountsReq := &pb.ListAccountsRequest{
+				Paths: []string{
+					rootAccount,
+				},
+			}
+			resp, err := listerClient.ListAccounts(context.Background(), listAccountsReq)
+			errCheck(err, "Failed to access account")
+			assert(resp.State == pb.ResponseState_SUCCEEDED, "No such account")
+			assert(len(resp.Accounts) == 1, "No such account")
+			fmt.Printf("Public key: %#048x\n", resp.Accounts[0].PublicKey)
 
-		outputIf(verbose, fmt.Sprintf("UUID: %v", account.ID()))
-		outputIf(!quiet, fmt.Sprintf("Public key: %#048x", account.PublicKey().Marshal()))
-		outputIf(verbose && account.Path() != "", fmt.Sprintf("Path: %s", account.Path()))
-		os.Exit(_exit_success)
+		} else {
+			account, err := accountFromPath(rootAccount)
+			errCheck(err, "Failed to access wallet")
+			outputIf(verbose, fmt.Sprintf("UUID: %v", account.ID()))
+			outputIf(!quiet, fmt.Sprintf("Public key: %#048x", account.PublicKey().Marshal()))
+			outputIf(verbose && account.Path() != "", fmt.Sprintf("Path: %s", account.Path()))
+		}
+
+		os.Exit(_exitSuccess)
 	},
 }
 

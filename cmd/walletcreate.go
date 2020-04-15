@@ -31,6 +31,7 @@ var walletCreateCmd = &cobra.Command{
 
 In quiet mode this will return 0 if the wallet is created successfully, otherwise 1.`,
 	Run: func(cmd *cobra.Command, args []string) {
+		assert(!remote, "wallet create not available with remote wallets")
 		assert(walletWallet != "", "--wallet is required")
 		assert(walletCreateType != "", "--type is required")
 

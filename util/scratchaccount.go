@@ -17,7 +17,7 @@ import (
 	"errors"
 
 	"github.com/google/uuid"
-	types "github.com/wealdtech/go-eth2-types"
+	types "github.com/wealdtech/go-eth2-types/v2"
 )
 
 // ScratchAccount is an account that exists temporarily.
@@ -66,6 +66,6 @@ func (a *ScratchAccount) IsUnlocked() bool {
 	return false
 }
 
-func (a *ScratchAccount) Sign(data []byte, domain uint64) (types.Signature, error) {
+func (a *ScratchAccount) Sign(data []byte) (types.Signature, error) {
 	return nil, errors.New("Not implemented")
 }

@@ -40,7 +40,7 @@ In quiet mode this will return 0 if the chain information can be obtained, other
 		errCheck(err, "Failed to obtain genesis time")
 
 		if quiet {
-			os.Exit(_exit_success)
+			os.Exit(_exitSuccess)
 		}
 
 		fmt.Printf("Genesis time:\t\t%s\n", genesisTime.Format(time.UnixDate))
@@ -52,7 +52,7 @@ In quiet mode this will return 0 if the chain information can be obtained, other
 		outputIf(verbose, fmt.Sprintf("Seconds per slot:\t%v", config["SecondsPerSlot"].(uint64)))
 		outputIf(verbose, fmt.Sprintf("Slots per epoch:\t%v", config["SlotsPerEpoch"].(uint64)))
 
-		os.Exit(_exit_success)
+		os.Exit(_exitSuccess)
 	},
 }
 

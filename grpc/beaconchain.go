@@ -24,7 +24,7 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 	ethpb "github.com/prysmaticlabs/ethereumapis/eth/v1alpha1"
-	wtypes "github.com/wealdtech/go-eth2-wallet-types"
+	wtypes "github.com/wealdtech/go-eth2-wallet-types/v2"
 )
 
 // FetchChainConfig fetches the chain configuration from the beacon node.

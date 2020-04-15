@@ -18,7 +18,7 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
-	wtypes "github.com/wealdtech/go-eth2-wallet-types"
+	wtypes "github.com/wealdtech/go-eth2-wallet-types/v2"
 )
 
 var walletInfoCmd = &cobra.Command{
@@ -30,6 +30,7 @@ var walletInfoCmd = &cobra.Command{
 
 In quiet mode this will return 0 if the wallet exists, otherwise 1.`,
 	Run: func(cmd *cobra.Command, args []string) {
+		assert(!remote, "wallet info not available with remote wallets")
 		assert(walletWallet != "", "Wallet is required")
 
 		wallet, err := walletFromPath(walletWallet)

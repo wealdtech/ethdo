@@ -45,7 +45,7 @@ In quiet mode this will return 0 if the chain status can be obtained, otherwise 
 		errCheck(err, "Failed to obtain chain info")
 
 		if quiet {
-			os.Exit(_exit_success)
+			os.Exit(_exitSuccess)
 		}
 
 		slot := timestampToSlot(genesisTime.Unix(), time.Now().Unix(), config["SecondsPerSlot"].(uint64))
@@ -82,7 +82,7 @@ In quiet mode this will return 0 if the chain status can be obtained, otherwise 
 			outputIf(verbose, fmt.Sprintf("Prior justified epoch:\t%v (%d)", info.GetPreviousJustifiedSlot()/slotsPerEpoch, (slot-info.GetPreviousJustifiedSlot())/slotsPerEpoch))
 		}
 
-		os.Exit(_exit_success)
+		os.Exit(_exitSuccess)
 	},
 }
 

@@ -36,6 +36,7 @@ var walletImportCmd = &cobra.Command{
 
 In quiet mode this will return 0 if the wallet is imported successfully, otherwise 1.`,
 	Run: func(cmd *cobra.Command, args []string) {
+		assert(!remote, "wallet import not available with remote wallets")
 		assert(walletImportData != "", "--walletimportdata is required")
 		assert(walletImportPassphrase != "", "--importpassphrase is required")
 
@@ -53,7 +54,7 @@ In quiet mode this will return 0 if the wallet is imported successfully, otherwi
 		_, err = wallet.ImportWallet(importData, []byte(walletImportPassphrase))
 		errCheck(err, "Failed to import wallet")
 
-		os.Exit(_exit_success)
+		os.Exit(_exitSuccess)
 	},
 }
 

@@ -20,11 +20,10 @@ import (
 	"time"
 
 	ethpb "github.com/prysmaticlabs/ethereumapis/eth/v1alpha1"
-	"github.com/prysmaticlabs/go-ssz"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/wealdtech/ethdo/grpc"
-	types "github.com/wealdtech/go-eth2-types"
+	e2types "github.com/wealdtech/go-eth2-types/v2"
 )
 
 var validatorExitEpoch int64
@@ -79,15 +78,15 @@ In quiet mode this will return 0 if the transaction has been sent, otherwise 1.`
 			Epoch:          currentEpoch,
 			ValidatorIndex: index,
 		}
-		root, err := ssz.HashTreeRoot(exit)
-		errCheck(err, "Failed to generate exit proposal root")
 		// TODO fetch current fork version from config (currently using genesis fork version)
 		currentForkVersion := config["GenesisForkVersion"].([]byte)
-		domain := types.Domain(types.DomainVoluntaryExit, currentForkVersion)
+		// TODO fetch genesis validators root from somewhere.
+		//domain := e2types.Domain(e2types.DomainVoluntaryExit, currentForkVersion, genesisValidatorsRoot)
+		domain := e2types.Domain(e2types.DomainVoluntaryExit, currentForkVersion, e2types.ZeroGenesisValidatorsRoot)
 
 		err = account.Unlock([]byte(rootAccountPassphrase))
 		errCheck(err, "Failed to unlock account; please confirm passphrase is correct")
-		signature, err := sign(account, root[:], domain)
+		signature, err := signStruct(account, exit, domain)
 		errCheck(err, "Failed to sign exit proposal")
 
 		proposal := &ethpb.SignedVoluntaryExit{
@@ -102,7 +101,7 @@ In quiet mode this will return 0 if the transaction has been sent, otherwise 1.`
 		errCheck(err, "Failed to propose exit")
 
 		outputIf(!quiet, "Validator exit transaction sent")
-		os.Exit(_exit_success)
+		os.Exit(_exitSuccess)
 	},
 }
 

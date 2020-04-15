@@ -1,4 +1,4 @@
-// Copyright © 2019 Weald Technology Trading
+// Copyright © 2019, 2020 Weald Technology Trading
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -20,7 +20,7 @@ import (
 
 	"github.com/prysmaticlabs/go-ssz"
 	"github.com/spf13/cobra"
-	types "github.com/wealdtech/go-eth2-types"
+	e2types "github.com/wealdtech/go-eth2-types/v2"
 	util "github.com/wealdtech/go-eth2-util"
 	string2eth "github.com/wealdtech/go-string2eth"
 )
@@ -85,15 +85,12 @@ In quiet mode this will return 0 if the the data can be generated correctly, oth
 				WithdrawalCredentials: withdrawalCredentials,
 				Value:                 val,
 			}
-			signingRoot, err := ssz.HashTreeRoot(depositData)
-			errCheck(err, "Failed to generate deposit data signing root")
-			outputIf(debug, fmt.Sprintf("Signing root is %x", signingRoot))
-			domain := types.Domain(types.DomainDeposit, []byte{0, 0, 0, 0})
+			domain := e2types.Domain(e2types.DomainDeposit, e2types.ZeroForkVersion, e2types.ZeroGenesisValidatorsRoot)
 			err = validatorAccount.Unlock([]byte(rootAccountPassphrase))
 			errCheck(err, "Failed to unlock validator account")
-			signature, err := validatorAccount.Sign(signingRoot[:], domain)
+			signature, err := signStruct(validatorAccount, depositData, domain)
 			validatorAccount.Lock()
-			errCheck(err, "Failed to sign deposit data signing root")
+			errCheck(err, "Failed to generate deposit data signature")
 
 			signedDepositData := struct {
 				PubKey                []byte `ssz-size:"48"`

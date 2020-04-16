@@ -22,7 +22,7 @@ This section outlines the process of setting up a configuration with two validat
 
 ### Generating a wallet
 
-To create a non-deterministic wallet (keys generated from random data), issue the command:
+To create a non-deterministic wallet, where keys generated from random data, issue the command:
 ```sh
 ethdo wallet create --wallet=Validators
 ```
@@ -52,7 +52,7 @@ Accounts: 0
 
 ### Generating multiple wallets
 
-To create two seperate wallets with different passphrases, issue the command:
+To create two separate wallets with different passphrases, issue the command:
 ```sh
 ethdo account create --account=Validators/1 --passphrase=validator1secret
 ethdo account create --account=Validators/2 --passphrase=validator2secret
@@ -62,7 +62,7 @@ ethdo account create --account=Validators/2 --passphrase=validator2secret
 
 ### Creating a withdrawal wallet and account
 
-It is recommended to set up seperate wallets for withdrawls and validator nodes. This allows users to have a validator wallet actively running on the node, while a second wallet key can be kept securely offline in cold storage.
+It is recommended to set up separate wallets for withdrawals and validator nodes. This allows users to have a validator wallet actively running on the node, while a second wallet key can be kept securely offline in cold storage.
 
 Creating a withdrawal wallet and account is very similar to the process above to generate validator accounts.  For example:
 
@@ -99,7 +99,7 @@ ethdo validator depositdata \
 {"account":"Validators/1","pubkey":"a9ca9cf7fa2d0ab1d5d52d2d8f79f68c50c5296bfce81546c254df68eaac0418717b2f9fc6655cbbddb145daeb282c00","withdrawal_credentials":"0059a28dc2db987d59bdfc4ab20b9ad4c83888bcd32456a629aece07de6895aa","signature":"9335b872253fdab328678bd3636115681d52b42fe826c6acb7f1cd1327c6bba48e3231d054e4f274cc7c1c184f28263b13083e01db8c08c17b59f22277dff341f7c96e7a0407a0a31c8563bcf479d31136c833712ae3bfd93ee9ea6abdfa52d4","value":3200000000,"deposit_data_root":"14278c9345eeeb7b2d5307a36ed1c72eea5ed09a30cf7c47525e34f39f564ef5"}
 ```
 
-This can be passed to [ethereal](https://github.com/wealdtech/ethereal) to send the deposit:
+This can be passed to [ethereal](https://github.com/wealdtech/ethereal) to send the deposit on Linux/OSX:
 
 ```sh
 DEPOSITDATA=`ethdo validator depositdata \
@@ -114,6 +114,22 @@ ethereal beacon deposit \
       --passphrase=eth1secret
 ```
 
+or on Windows:
+
+```sh
+ethdo validator depositdata \
+      --validatoraccount=Validators/1 \
+      --withdrawalaccount=Withdrawal/Primary \
+      --depositvalue=32Ether \
+      --passphrase=validator1secret >depositdata.json
+ethereal beacon deposit \
+      --network=goerli \
+      --data=depositdata.json \
+      --from=0x21A1A52aba41DB18F9F1D2625e1b19A251F3e0A9 \
+      --passphrase=eth1secret
+erase depositdata.json
+```
+
 The `ethereal` command can either take a `passphrase`, if the `from` address is a local account (confirm with `ethereal --network=goerli account list`) or a `privatekey` if not.
 
 ### Validating
@@ -124,7 +140,7 @@ The next step is to start the validator using the validating keys that have been
 
 Although options for the wallet keymanager can be supplied directly on the command-line this is not considered best practice, as it exposes sensitive information such as passphrases, so it is better to create a file that contains this information and reference that file.
 
-To create the relevant directory run the following for linux/osx:
+To create the relevant directory run the following for Linux/OSX:
 
 ```sh
 mkdir -p ${HOME}/prysm/validator
@@ -154,7 +170,7 @@ and then use your favourite text editor to create a file in this directory calle
 
 #### Starting the validator with Bazel
 
-To start the validator you must supply the desired keymanager and the location of the keymanager options file.   Run the following command for linux/osx:
+To start the validator you must supply the desired keymanager and the location of the keymanager options file.   Run the following command for Linux/OSX:
 
 ```sh
 bazel run //validator:validator -- --keymanager=wallet --keymanageropts=${HOME}/prysm/validator/wallet.json
@@ -223,4 +239,4 @@ When the validator is operational, you should see output similar to:
 [2020-02-07 10:00:59]  INFO node: Validating for public key pubKey=0x8de04b4cd3f0947f4e76fa2f86fa1cfd33cc2500688f2757e406448c36f0f1255758874b46d72002ad206ed560975d39
 ```
 
-The first line states how many keys the validator is validating with, and subsequent lines state the specific public keys.  Confirm that these values match your expectations.
+where each line states a public key that is being used for validating.  Confirm that these values match your expectations.

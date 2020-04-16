@@ -46,23 +46,19 @@ In quiet mode this will return 0 if the node information can be obtained, otherw
 		if verbose {
 			version, metadata, err := grpc.FetchVersion(eth2GRPCConn)
 			errCheck(err, "Failed to obtain version")
-			fmt.Printf("Version:\t\t%s\n", version)
+			fmt.Printf("Version: %s\n", version)
 			if metadata != "" {
-				fmt.Printf("Metadata:\t%s\n", metadata)
+				fmt.Printf("Metadata: %s\n", metadata)
 			}
 		}
 		syncing, err := grpc.FetchSyncing(eth2GRPCConn)
 		errCheck(err, "Failed to obtain syncing state")
-		fmt.Printf("Syncing:\t\t%v\n", syncing)
+		fmt.Printf("Syncing: %v\n", syncing)
 
-		fmt.Printf("Genesis time:\t\t%s\n", genesisTime.Format(time.UnixDate))
 		slot := timestampToSlot(genesisTime.Unix(), time.Now().Unix(), config["SecondsPerSlot"].(uint64))
-		fmt.Printf("Current slot:\t\t%d\n", slot)
-		fmt.Printf("Current epoch:\t\t%d\n", slot/config["SlotsPerEpoch"].(uint64))
-		outputIf(verbose, fmt.Sprintf("Genesis fork version:\t%0x", config["GenesisForkVersion"].([]byte)))
-		outputIf(verbose, fmt.Sprintf("Genesis timestamp:\t%v", genesisTime.Unix()))
-		outputIf(verbose, fmt.Sprintf("Seconds per slot:\t%v", config["SecondsPerSlot"].(uint64)))
-		outputIf(verbose, fmt.Sprintf("Slots per epoch:\t%v", config["SlotsPerEpoch"].(uint64)))
+		fmt.Printf("Current slot: %d\n", slot)
+		fmt.Printf("Current epoch: %d\n", slot/config["SlotsPerEpoch"].(uint64))
+		outputIf(verbose, fmt.Sprintf("Genesis timestamp: %v", genesisTime.Unix()))
 
 		os.Exit(_exitSuccess)
 	},

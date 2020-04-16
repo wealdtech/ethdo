@@ -15,6 +15,7 @@ package cmd
 
 import (
 	"bytes"
+	"encoding/hex"
 	"fmt"
 	"os"
 	"sort"
@@ -62,15 +63,17 @@ In quiet mode this will return 0 if the block information is present and not ski
 		// General info.
 		outputIf(verbose, fmt.Sprintf("Parent root: %#x", block.ParentRoot))
 		outputIf(verbose, fmt.Sprintf("State root: %#x", block.StateRoot))
-		if utf8.Valid(body.Graffiti) {
-			fmt.Printf("Graffiti: %s\n", string(body.Graffiti))
-		} else {
-			fmt.Printf("Graffiti: %#x\n", body.Graffiti)
+		if len(body.Graffiti) > 0 && hex.EncodeToString(body.Graffiti) != "0000000000000000000000000000000000000000000000000000000000000000" {
+			if utf8.Valid(body.Graffiti) {
+				fmt.Printf("Graffiti: %s\n", string(body.Graffiti))
+			} else {
+				fmt.Printf("Graffiti: %#x\n", body.Graffiti)
+			}
 		}
 
 		// Eth1 data.
 		eth1Data := body.Eth1Data
-		fmt.Printf("Ethereum 1 deposit count: %d\n", eth1Data.DepositCount)
+		outputIf(verbose, fmt.Sprintf("Ethereum 1 deposit count: %d", eth1Data.DepositCount))
 		outputIf(verbose, fmt.Sprintf("Ethereum 1 deposit root: %#x", eth1Data.DepositRoot))
 		outputIf(verbose, fmt.Sprintf("Ethereum 1 block hash: %#x", eth1Data.BlockHash))
 

@@ -50,36 +50,41 @@ In quiet mode this will return 0 if the chain status can be obtained, otherwise 
 
 		slot := timestampToSlot(genesisTime.Unix(), time.Now().Unix(), config["SecondsPerSlot"].(uint64))
 		if chainStatusSlot {
-			fmt.Printf("Current slot:\t\t%d\n", slot)
-			fmt.Printf("Justified slot:\t\t%d", info.GetJustifiedSlot())
+			fmt.Printf("Current slot: %d\n", slot)
+			fmt.Printf("Justified slot: %d\n", info.GetJustifiedSlot())
 			if verbose {
 				distance := slot - info.GetJustifiedSlot()
-				fmt.Printf(" (%d)", distance)
+				fmt.Printf("Justified slot distance: %d\n", distance)
 			}
-			fmt.Printf("\n")
-			fmt.Printf("Finalized slot:\t\t%d", info.GetFinalizedSlot())
+			fmt.Printf("Finalized slot: %d\n", info.GetFinalizedSlot())
 			if verbose {
 				distance := slot - info.GetFinalizedSlot()
-				fmt.Printf(" (%d)", distance)
+				fmt.Printf("Finalized slot distance: %d\n", distance)
 			}
-			fmt.Printf("\n")
-			outputIf(verbose, fmt.Sprintf("Prior justified slot:\t%v (%d)", info.GetPreviousJustifiedSlot(), slot-info.GetPreviousJustifiedSlot()))
+			if verbose {
+				fmt.Printf("Prior justified slot: %d\n", info.GetFinalizedSlot())
+				distance := slot - info.GetPreviousJustifiedSlot()
+				fmt.Printf("Prior justified slot distance: %d\n", distance)
+			}
 		} else {
 			slotsPerEpoch := config["SlotsPerEpoch"].(uint64)
-			fmt.Printf("Current epoch:\t\t%d\n", slot/slotsPerEpoch)
-			fmt.Printf("Justified epoch:\t%d", info.GetJustifiedSlot()/slotsPerEpoch)
+			epoch := slot / slotsPerEpoch
+			fmt.Printf("Current epoch: %d\n", epoch)
+			fmt.Printf("Justified epoch: %d\n", info.GetJustifiedSlot()/slotsPerEpoch)
 			if verbose {
 				distance := (slot - info.GetJustifiedSlot()) / slotsPerEpoch
-				fmt.Printf(" (%d)", distance)
+				fmt.Printf("Justified epoch distance %d\n", distance)
 			}
-			fmt.Printf("\n")
-			fmt.Printf("Finalized epoch:\t%d", info.GetFinalizedSlot()/slotsPerEpoch)
+			fmt.Printf("Finalized epoch: %d\n", info.GetFinalizedSlot()/slotsPerEpoch)
 			if verbose {
 				distance := (slot - info.GetFinalizedSlot()) / slotsPerEpoch
-				fmt.Printf(" (%d)", distance)
+				fmt.Printf("Finalized epoch distance: %d\n", distance)
 			}
-			fmt.Printf("\n")
-			outputIf(verbose, fmt.Sprintf("Prior justified epoch:\t%v (%d)", info.GetPreviousJustifiedSlot()/slotsPerEpoch, (slot-info.GetPreviousJustifiedSlot())/slotsPerEpoch))
+			if verbose {
+				fmt.Printf("Prior justified epoch: %d\n", info.GetPreviousJustifiedEpoch())
+				distance := (slot - info.GetPreviousJustifiedEpoch()) / slotsPerEpoch
+				fmt.Printf("Prior justified epoch distance: %d\n", distance)
+			}
 		}
 
 		os.Exit(_exitSuccess)

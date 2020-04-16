@@ -416,8 +416,11 @@ func initRemote() error {
 	remote = true
 	remoteAddr = viper.GetString("remote")
 	clientCert = viper.GetString("client-cert")
+	assert(clientCert != "", "--remote requires --client-cert")
 	clientKey = viper.GetString("client-key")
+	assert(clientKey != "", "--remote requires --client-key")
 	serverCACert = viper.GetString("server-ca-cert")
+	assert(serverCACert != "", "--remote requires --server-ca-cert")
 
 	// Load the client certificates.
 	clientPair, err := tls.LoadX509KeyPair(clientCert, clientKey)

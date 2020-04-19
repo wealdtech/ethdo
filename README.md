@@ -24,13 +24,19 @@ A command-line tool for managing common tasks in Ethereum 2.
 GO111MODULE=on go get github.com/wealdtech/ethdo
 ```
 
+If this does not work please see the [#troubleshooting](troubleshooting section).
+
 ## Usage
 
 ethdo contains a large number of features that are useful for day-to-day interactions with the Ethereum 2 blockchain.
 
 ### Wallets and accounts
 
-ethdo uses the [go-eth2-wallet](https://github.com/wealdtech/go-eth2-wallet) system to provide unified access to different wallet types.
+ethdo uses the [go-eth2-wallet](https://github.com/wealdtech/go-eth2-wallet) system to provide unified access to different wallet types.  When on the filesystem the locations of the created wallets and accounts are:
+
+    - for Linux: $HOME/.config/ethereum2/wallets
+    - for OSX: $HOME/Library/Application Support/ethereum2/wallets
+    - for Windows: %APPDATA%\ethereum2\wallets
 
 All ethdo comands take the following parameters:
 

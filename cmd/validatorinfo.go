@@ -52,7 +52,7 @@ In quiet mode this will return 0 if the validator information can be obtained, o
 		} else {
 			pubKeyBytes, err := hex.DecodeString(strings.TrimPrefix(validatorInfoPubKey, "0x"))
 			errCheck(err, fmt.Sprintf("Failed to decode public key %s", validatorInfoPubKey))
-			account, err = util.NewScratchAccount(pubKeyBytes)
+			account, err = util.NewScratchAccount(nil, pubKeyBytes)
 			errCheck(err, fmt.Sprintf("Invalid public key %s", validatorInfoPubKey))
 		}
 

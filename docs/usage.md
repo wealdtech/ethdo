@@ -339,10 +339,19 @@ Validator commands focus on interaction with Ethereum 2 validators.
 
 #### `exit`
 
-`ethdo validator exit` sends a transaction to the chain to tell an active validator to exit the validation queue.
+`ethdo validator exit` sends a transaction to the chain to tell an active validator to exit the validation queue.  Options include:
+  - `epoch` specify an epoch before which this exit is not valid
+  - `json-output` generate JSON output rather than sending a transaction immediately
+  - `json` use JSON input created by the `--json-output` option rather than generate data from scratch
 
 ```sh
 $ ethdo validator exit --account=Validators/1 --passphrase="my validator secret"
+```
+
+To send a transaction when the account is not accessible to ethdo accout you can use the validator's private key instead:
+
+```sh
+$ ethdo validator exit --key=0x01e748d098d3bcb477d636f19d510399ae18205fadf9814ee67052f88c1f88c0
 ```
 
 #### `info`

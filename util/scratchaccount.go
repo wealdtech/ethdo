@@ -22,17 +22,38 @@ import (
 
 // ScratchAccount is an account that exists temporarily.
 type ScratchAccount struct {
-	id     uuid.UUID
-	pubKey types.PublicKey
+	id       uuid.UUID
+	privKey  types.PrivateKey
+	pubKey   types.PublicKey
+	unlocked bool
 }
 
 // NewScratchAccount creates a new local account.
-func NewScratchAccount(pubKey []byte) (*ScratchAccount, error) {
+func NewScratchAccount(privKey []byte, pubKey []byte) (*ScratchAccount, error) {
+	if len(privKey) > 0 {
+		return newScratchAccountFromPrivKey(privKey)
+	} else {
+		return newScratchAccountFromPubKey(privKey)
+	}
+}
+
+func newScratchAccountFromPrivKey(privKey []byte) (*ScratchAccount, error) {
+	key, err := types.BLSPrivateKeyFromBytes(privKey)
+	if err != nil {
+		return nil, err
+	}
+	return &ScratchAccount{
+		id:      uuid.New(),
+		privKey: key,
+		pubKey:  key.PublicKey(),
+	}, nil
+}
+
+func newScratchAccountFromPubKey(pubKey []byte) (*ScratchAccount, error) {
 	key, err := types.BLSPublicKeyFromBytes(pubKey)
 	if err != nil {
 		return nil, err
 	}
-
 	return &ScratchAccount{
 		id:     uuid.New(),
 		pubKey: key,
@@ -56,16 +77,24 @@ func (a *ScratchAccount) Path() string {
 }
 
 func (a *ScratchAccount) Lock() {
+	a.unlocked = false
 }
 
 func (a *ScratchAccount) Unlock([]byte) error {
+	a.unlocked = true
 	return nil
 }
 
 func (a *ScratchAccount) IsUnlocked() bool {
-	return false
+	return a.unlocked
 }
 
 func (a *ScratchAccount) Sign(data []byte) (types.Signature, error) {
-	return nil, errors.New("Not implemented")
+	if !a.IsUnlocked() {
+		return nil, errors.New("locked")
+	}
+	if a.privKey == nil {
+		return nil, errors.New("no private key")
+	}
+	return a.privKey.Sign(data), nil
 }

@@ -6,7 +6,7 @@ ethdo provides features to manage wallets and accounts, as well as interacting w
 
 #### `accounts`
 
-`ethdo wallet accouts` lists the accounts within a wallet.  
+`ethdo wallet accounts` lists the accounts within a wallet.  
 
 ```sh
 $ ethdo wallet accounts --wallet="Personal wallet"

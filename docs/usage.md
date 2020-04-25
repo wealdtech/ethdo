@@ -2,6 +2,8 @@
 
 ethdo provides features to manage wallets and accounts, as well as interacting with Ethereum 2 nodes and remote signers.  Below are a list of all available commands.
 
+Note that the below provides a list of commands rather than a howto guide.  Please follow the
+
 ### `wallet` commands
 
 #### `accounts`

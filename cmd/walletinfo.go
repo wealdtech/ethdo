@@ -16,6 +16,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/spf13/cobra"
 	wtypes "github.com/wealdtech/go-eth2-wallet-types/v2"
@@ -47,7 +48,7 @@ In quiet mode this will return 0 if the wallet exists, otherwise 1.`,
 				store := storeProvider.Store()
 				fmt.Printf("Store: %s\n", store.Name())
 				if storeLocationProvider, ok := store.(wtypes.StoreLocationProvider); ok {
-					fmt.Printf("Location: %s\n", storeLocationProvider.Location())
+					fmt.Printf("Location: %s\n", filepath.Join(storeLocationProvider.Location(), wallet.ID().String()))
 				}
 			}
 		}

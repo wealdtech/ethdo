@@ -33,7 +33,7 @@ If you prefer to have a hierarchical deterministic wallet, where keys are genera
 ethdo wallet create --wallet=Validators --type=hd --walletpassphrase=walletsecret`
 ```
 
-This creates a wallet called "Validators" in your current directory which contains the newly generated seed data.
+This creates a wallet called "Validators" in the default wallet directory (see https://github.com/wealdtech/ethdo/#wallets-and-accounts for details) which contains the newly generated seed data.
 
 > The `--walletpassphrase` flag and input is required to protect the seed. It is critical that you keep it private and secure.
 
@@ -50,21 +50,21 @@ Type: non-deterministic
 Accounts: 0
 ```
 
-### Generating multiple wallets
+### Generating accounts
 
-To create two separate wallets with different passphrases, issue the command:
+To create two separate accounts with different passphrases, issue the command:
 ```sh
 ethdo account create --account=Validators/1 --passphrase=validator1secret
 ethdo account create --account=Validators/2 --passphrase=validator2secret
 ```
 
- > The two validators are given different passphrases in the above example.  This is not required; all validators can have the same password if you prefer.
+ > The two accounts are given different passphrases in the above example.  This is not required; all accounts can have the same password if you prefer.
 
 ### Creating a withdrawal wallet and account
 
-It is recommended to set up separate wallets for withdrawals and validator nodes. This allows users to have a validator wallet actively running on the node, while a second wallet key can be kept securely offline in cold storage.
+It is recommended to set up separate wallets for withdrawals and validator nodes. This allows users to have a validator wallet actively running on the node, while a second wallet can be kept securely offline in cold storage.
 
-Creating a withdrawal wallet and account is very similar to the process above to generate validator accounts.  For example:
+Creating a withdrawal wallet and account is very similar to the process above to generate the validator wallet.  For example:
 
 ```sh
 ethdo wallet create --wallet=Withdrawal
@@ -99,7 +99,9 @@ ethdo validator depositdata \
 {"account":"Validators/1","pubkey":"a9ca9cf7fa2d0ab1d5d52d2d8f79f68c50c5296bfce81546c254df68eaac0418717b2f9fc6655cbbddb145daeb282c00","withdrawal_credentials":"0059a28dc2db987d59bdfc4ab20b9ad4c83888bcd32456a629aece07de6895aa","signature":"9335b872253fdab328678bd3636115681d52b42fe826c6acb7f1cd1327c6bba48e3231d054e4f274cc7c1c184f28263b13083e01db8c08c17b59f22277dff341f7c96e7a0407a0a31c8563bcf479d31136c833712ae3bfd93ee9ea6abdfa52d4","value":3200000000,"deposit_data_root":"14278c9345eeeb7b2d5307a36ed1c72eea5ed09a30cf7c47525e34f39f564ef5"}
 ```
 
-This can be passed to [ethereal](https://github.com/wealdtech/ethereal) to send the deposit on Linux/OSX:
+This can be passed to [ethereal](https://github.com/wealdtech/ethereal) to send the deposit (replacing `0x21A1A52aba41DB18F9F1D2625e1b19A251F3e0A9` below with your local Göerli account containing the funds and `eth1secret` with that account's passphrase; `ethereal --network=goerli account list --verbose` will provide details of your local accounts and their current funds).
+
+on Linux/OSX:
 
 ```sh
 DEPOSITDATA=`ethdo validator depositdata \
@@ -138,7 +140,7 @@ The next step is to start the validator using the validating keys that have been
 
 #### Keymanager options
 
-Although options for the wallet keymanager can be supplied directly on the command-line this is not considered best practice, as it exposes sensitive information such as passphrases, so it is better to create a file that contains this information and reference that file.
+Although options for the wallet keymanager can be supplied directly on the command-line this is not considered best practice, as it exposes sensitive information such as passphrases, so it is better to create a file that contains this information and references that file.
 
 To create the relevant directory run the following for Linux/OSX:
 

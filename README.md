@@ -82,6 +82,10 @@ Commands will have an exit status of 0 on success and 1 on failure.  The specifi
 
 Command information, along with sample outputs and optional arguments, is available in [the usage section](https://github.com/wealdtech/ethdo/blob/master/docs/usage.md).
 
+# HOWTO
+
+There is a [HOWTO](https://github.com/wealdtech/ethdo/blob/master/docs/howto.md) that covers details about how to carry out various common tasks.
+
 ## Maintainers
 
 Jim McDonald: [@mcdee](https://github.com/mcdee).

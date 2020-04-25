@@ -140,7 +140,7 @@ The next step is to start the validator using the validating keys that have been
 
 #### Keymanager options
 
-Although options for the wallet keymanager can be supplied directly on the command-line this is not considered best practice, as it exposes sensitive information such as passphrases, so it is better to create a file that contains this information and references that file.
+Although options for the wallet keymanager can be supplied directly on the command-line this is not considered best practice, as it exposes sensitive information such as passphrases, so it is better to create a file that contains this information and reference that file.
 
 To create the relevant directory run the following for Linux/OSX:
 

@@ -8,7 +8,7 @@ Note that the below provides a list of commands rather than a howto guide.  Plea
 
 #### `accounts`
 
-`ethdo wallet accouts` lists the accounts within a wallet.  
+`ethdo wallet accounts` lists the accounts within a wallet.  
 
 ```sh
 $ ethdo wallet accounts --wallet="Personal wallet"

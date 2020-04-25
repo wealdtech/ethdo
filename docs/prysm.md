@@ -30,7 +30,7 @@ ethdo wallet create --wallet=Validators
 If you prefer to have a hierarchical deterministic wallet, where keys are generated from a seed, issue the command:
 
 ```sh
-ethdo wallet create --wallet=Validators --type=hd --walletpassphrase=walletsecret`
+ethdo wallet create --wallet=Validators --type=hd --walletpassphrase=walletsecret
 ```
 
 This creates a wallet called "Validators" in your current directory which contains the newly generated seed data.

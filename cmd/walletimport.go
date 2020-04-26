@@ -39,6 +39,7 @@ In quiet mode this will return 0 if the wallet is imported successfully, otherwi
 		assert(!remote, "wallet import not available with remote wallets")
 		assert(walletImportData != "", "--importdata is required")
 		assert(walletImportPassphrase != "", "--importpassphrase is required")
+		assert(walletWallet == "", "--wallet is not allowed (the wallet will retain its name)")
 
 		if !strings.HasPrefix(walletImportData, "0x") {
 			outputIf(debug, fmt.Sprintf("Reading wallet import from file %s", walletImportData))

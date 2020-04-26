@@ -24,7 +24,7 @@ A command-line tool for managing common tasks in Ethereum 2.
 GO111MODULE=on go get github.com/wealdtech/ethdo
 ```
 
-If this does not work please see the [#troubleshooting](troubleshooting section).
+If this does not work please see the [troubleshooting](https://github.com/wealdtech/ethdo/blob/master/docs/troubleshooting.md) page.
 
 ## Usage
 
@@ -40,7 +40,7 @@ ethdo uses the [go-eth2-wallet](https://github.com/wealdtech/go-eth2-wallet) sys
 
 All ethdo comands take the following parameters:
 
-  - `store`: the name of the storage system for wallets.  This can be one of "filesystem" or "s3", and defaults to "filesystem"
+  - `store`: the name of the storage system for wallets.  This can be one of "filesystem" (for local storage of the wallet) or "s3" (for remote storage of the wallet on [Amazon's S3](https://aws.amazon.com/s3/) storage system), and defaults to "filesystem"
   - `storepassphrase`: the passphrase for the store.  If this is empty the store is unencrypted
   - `walletpassphrase`: the passphrase for the wallet.  This is required for some wallet-centric operations such as creating new accounts
   - `accountpassphrase`: the passphrase for the account.  This is required for some account-centric operations such as signing data

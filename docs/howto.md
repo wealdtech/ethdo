@@ -1,5 +1,19 @@
 # How to achieve common tasks with ethdo
 
+## Find out what ethdo can do
+
+To find a list of topics that ethdo can carry out with the `ethdo help` command.
+
+If you want more detailed information about the commands in a topic, they can be seen with the `ethdo help <topic>` command, for example:
+
+```sh
+ethdo help wallet
+```
+
+## List my wallets
+
+The wallets you can currently access can be seen with the `ethdo wallet list` command.
+
 ## Create a new wallet
 
 New wallets can be created with the `ethdo wallet create` command.  Each wallet has to have a unique name, for example:

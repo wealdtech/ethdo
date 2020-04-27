@@ -38,7 +38,7 @@ In quiet mode this will return 0 if the wallet is a hierarchical deterministic w
 		wallet, err := walletFromPath(walletWallet)
 		errCheck(err, "Failed to access wallet")
 		_, ok := wallet.(types.WalletKeyProvider)
-		assert(ok, fmt.Sprintf("wallets of type %q do not provide keys", wallet.Type()))
+		assert(ok, fmt.Sprintf("wallets of type %q do not have a seed", wallet.Type()))
 
 		err = wallet.Unlock([]byte(rootWalletPassphrase))
 		errCheck(err, "Failed to unlock wallet")

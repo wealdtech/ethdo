@@ -17,12 +17,13 @@ A command-line tool for managing common tasks in Ethereum 2.
 
 ## Install
 
-
 `ethdo` is a standard Go program which can be installed with:
 
 ```sh
 GO111MODULE=on go get github.com/wealdtech/ethdo
 ```
+
+Note that `ethdo` requires at least version 1.13 of go to operate.  The version of go can be found with `go version`.
 
 If this does not work please see the [troubleshooting](https://github.com/wealdtech/ethdo/blob/master/docs/troubleshooting.md) page.
 

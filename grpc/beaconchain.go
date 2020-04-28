@@ -18,11 +18,11 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/gogo/protobuf/types"
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
 	"google.golang.org/grpc"
 
-	"github.com/golang/protobuf/ptypes/empty"
 	ethpb "github.com/prysmaticlabs/ethereumapis/eth/v1alpha1"
 	wtypes "github.com/wealdtech/go-eth2-wallet-types/v2"
 )
@@ -34,7 +34,7 @@ func FetchChainConfig(conn *grpc.ClientConn) (map[string]interface{}, error) {
 	beaconClient := ethpb.NewBeaconChainClient(conn)
 	ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("timeout"))
 	defer cancel()
-	config, err := beaconClient.GetBeaconConfig(ctx, &empty.Empty{})
+	config, err := beaconClient.GetBeaconConfig(ctx, &types.Empty{})
 	if err != nil {
 		return nil, err
 	}
@@ -128,7 +128,7 @@ func FetchChainInfo(conn *grpc.ClientConn) (*ethpb.ChainHead, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("timeout"))
 	defer cancel()
 
-	return beaconClient.GetChainHead(ctx, &empty.Empty{})
+	return beaconClient.GetChainHead(ctx, &types.Empty{})
 }
 
 // FetchBlock fetches a block at a given slot from the beacon node.

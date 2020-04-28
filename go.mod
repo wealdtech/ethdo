@@ -5,16 +5,17 @@ go 1.13
 require (
 	github.com/FactomProject/go-bip39 v0.3.5
 	github.com/OneOfOne/xxhash v1.2.5 // indirect
-	github.com/aws/aws-sdk-go v1.30.15 // indirect
+	github.com/ferranbt/fastssz v0.0.0-20200415074633-b062b680417b // indirect
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
-	github.com/golang/protobuf v1.4.0
+	github.com/gogo/protobuf v1.3.1
+	github.com/golang/protobuf v1.4.0 // indirect
 	github.com/google/uuid v1.1.1
 	github.com/grpc-ecosystem/grpc-gateway v1.14.4 // indirect
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mitchellh/mapstructure v1.3.0 // indirect
 	github.com/pelletier/go-toml v1.7.0 // indirect
 	github.com/pkg/errors v0.9.1
-	github.com/prysmaticlabs/ethereumapis v0.0.0-20200414190010-6607cc86ddb7
+	github.com/prysmaticlabs/ethereumapis v0.0.0-20200424214844-ba9042096e9f
 	github.com/prysmaticlabs/go-ssz v0.0.0-20200101200214-e24db4d9e963
 	github.com/spaolacci/murmur3 v1.1.0 // indirect
 	github.com/spf13/afero v1.2.2 // indirect
@@ -26,11 +27,10 @@ require (
 	github.com/wealdtech/eth2-signer-api v1.3.0
 	github.com/wealdtech/go-bytesutil v1.1.1
 	github.com/wealdtech/go-eth2-types/v2 v2.3.1
-	github.com/wealdtech/go-eth2-util v1.1.4
-	github.com/wealdtech/go-eth2-wallet v1.9.3
-	github.com/wealdtech/go-eth2-wallet-types/v2 v2.0.1
+	github.com/wealdtech/go-eth2-util v1.1.5
+	github.com/wealdtech/go-eth2-wallet v1.9.4
+	github.com/wealdtech/go-eth2-wallet-types/v2 v2.0.2
 	github.com/wealdtech/go-string2eth v1.1.0
-	golang.org/x/crypto v0.0.0-20200427165652-729f1e841bcc // indirect
 	golang.org/x/net v0.0.0-20200425230154-ff2c4b7c35a0 // indirect
 	golang.org/x/text v0.3.2 // indirect
 	google.golang.org/genproto v0.0.0-20200428115010-c45acf45369a // indirect

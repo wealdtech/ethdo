@@ -17,10 +17,10 @@ import (
 	"context"
 	"time"
 
+	"github.com/gogo/protobuf/types"
 	"github.com/spf13/viper"
 	"google.golang.org/grpc"
 
-	"github.com/golang/protobuf/ptypes/empty"
 	ethpb "github.com/prysmaticlabs/ethereumapis/eth/v1alpha1"
 )
 
@@ -29,7 +29,7 @@ func FetchGenesis(conn *grpc.ClientConn) (time.Time, error) {
 	client := ethpb.NewNodeClient(conn)
 	ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("timeout"))
 	defer cancel()
-	res, err := client.GetGenesis(ctx, &empty.Empty{})
+	res, err := client.GetGenesis(ctx, &types.Empty{})
 	if err != nil {
 		return time.Now(), err
 	}
@@ -41,7 +41,7 @@ func FetchVersion(conn *grpc.ClientConn) (string, string, error) {
 	client := ethpb.NewNodeClient(conn)
 	ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("timeout"))
 	defer cancel()
-	version, err := client.GetVersion(ctx, &empty.Empty{})
+	version, err := client.GetVersion(ctx, &types.Empty{})
 	if err != nil {
 		return "", "", err
 	}
@@ -53,7 +53,7 @@ func FetchSyncing(conn *grpc.ClientConn) (bool, error) {
 	client := ethpb.NewNodeClient(conn)
 	ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("timeout"))
 	defer cancel()
-	syncStatus, err := client.GetSyncStatus(ctx, &empty.Empty{})
+	syncStatus, err := client.GetSyncStatus(ctx, &types.Empty{})
 	if err != nil {
 		return false, err
 	}

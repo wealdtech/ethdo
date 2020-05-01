@@ -33,7 +33,7 @@ func NewScratchAccount(privKey []byte, pubKey []byte) (*ScratchAccount, error) {
 	if len(privKey) > 0 {
 		return newScratchAccountFromPrivKey(privKey)
 	} else {
-		return newScratchAccountFromPubKey(privKey)
+		return newScratchAccountFromPubKey(pubKey)
 	}
 }
 

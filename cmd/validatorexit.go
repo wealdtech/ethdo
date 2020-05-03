@@ -119,7 +119,7 @@ func validatorExitHandleAccountInput(account e2wtypes.Account) (*ethpb.Voluntary
 		errCheck(err, "Failed to obtain genesis time")
 
 		currentEpoch := uint64(time.Since(genesisTime).Seconds()) / secondsPerEpoch
-		assert(currentEpoch >= earliestExitEpoch, fmt.Sprintf("Validator cannot exit until %s ( epoch %d)", genesisTime.Add(time.Duration(secondsPerEpoch*earliestExitEpoch)*time.Second).Format(time.UnixDate), earliestExitEpoch))
+		assert(currentEpoch >= earliestExitEpoch, fmt.Sprintf("Validator cannot exit until %s ( epoch %d); transaction not sent", genesisTime.Add(time.Duration(secondsPerEpoch*earliestExitEpoch)*time.Second).Format(time.UnixDate), earliestExitEpoch))
 		outputIf(verbose, "Validator confirmed to be in a suitable state")
 		exit.Epoch = currentEpoch
 	} else {

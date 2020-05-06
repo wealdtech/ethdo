@@ -1,8 +1,6 @@
 cloud.google.com/go v0.26.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMTw=
 github.com/BurntSushi/toml v0.3.1 h1:WXkYYl6Yr3qBf1K79EBnL4mak0OimBfB0XUf9Vl28OQ=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
-github.com/FactomProject/go-bip39 v0.3.5 h1:l9g92TeqCkC5NZhm72igTpf5yaYDp3Sy4CvnPYknp6U=
-github.com/FactomProject/go-bip39 v0.3.5/go.mod h1:ygPVOtW424QxnJMze9XYDeh4wT19V3iVDOqVUl/USkE=
 github.com/OneOfOne/xxhash v1.2.2 h1:KMrpdQIwFcEqXDklaen+P1axHaj9BSKzvpUUfnHldSE=
 github.com/OneOfOne/xxhash v1.2.2/go.mod h1:HSdplMjZKSmBqAxg5vPj2TmRDmfkzw+cTzAElWljhcU=
 github.com/OneOfOne/xxhash v1.2.5 h1:zl/OfRA6nftbBK9qTohYBJ5xvw6C/oNKizR7cZGl3cI=
@@ -218,6 +216,8 @@ github.com/stretchr/testify v1.5.1/go.mod h1:5W2xD1RspED5o8YsWQXVCued0rvSQ+mT+I5
 github.com/subosito/gotenv v1.2.0 h1:Slr1R9HxAlEKefgq5jn9U+DnETlIUa6HfgEzj0g5d7s=
 github.com/subosito/gotenv v1.2.0/go.mod h1:N0PQaV/YGNqwC0u51sEeR/aUtSLEXKX9iv69rRypqCw=
 github.com/tmc/grpc-websocket-proxy v0.0.0-20190109142713-0ad062ec5ee5/go.mod h1:ncp9v5uamzpCO7NfCPTXjqaC+bZgJeR0sMTm6dMHP7U=
+github.com/tyler-smith/go-bip39 v1.0.2 h1:+t3w+KwLXO6154GNJY+qUtIxLTmFjfUmpguQT1OlOT8=
+github.com/tyler-smith/go-bip39 v1.0.2/go.mod h1:sJ5fKU0s6JVwZjjcUEX2zFOnvq0ASQ2K9Zr6cf67kNs=
 github.com/ugorji/go v1.1.4/go.mod h1:uQMGLiO92mf5W77hV/PUCpI3pbzQx3CRekS0kk+RGrc=
 github.com/wealdtech/eth2-signer-api v1.3.0 h1:Fs0GfrdhboBKW7zaMvIvUHJaOB1ibpAmRG3lkB53in4=
 github.com/wealdtech/eth2-signer-api v1.3.0/go.mod h1:H8OpAoTBl6CaBvZEnhxWDjjWXNc3kwVFKWMAZd6sHlk=
@@ -235,8 +235,9 @@ github.com/wealdtech/go-eth2-wallet v1.9.4 h1:9XFM1Y7dsyrgNFFCnE3Gd00PAsrpob70SA
 github.com/wealdtech/go-eth2-wallet v1.9.4/go.mod h1:UGd1bAPDEtP+UrFjj3HCbip7jggFGDIQoeGw8/XHMvo=
 github.com/wealdtech/go-eth2-wallet-encryptor-keystorev4 v1.0.0 h1:IcpS4VpXhYz+TVupB5n6C6IQzaKwG+Rc8nvgCa/da4c=
 github.com/wealdtech/go-eth2-wallet-encryptor-keystorev4 v1.0.0/go.mod h1:X8WRO5hEwbjx8ZOqoRmtS1ngyflKs25GkP7qGv7yOqE=
-github.com/wealdtech/go-eth2-wallet-hd/v2 v2.0.3 h1:Oy25/XT42vEGO1g7qZNOztAGVHtVVdlD2YYy4j8/jgU=
 github.com/wealdtech/go-eth2-wallet-hd/v2 v2.0.3/go.mod h1:nNNZNXCP1BrJCu1hLlFUCAQBvCInD4zwE7eslf2U5XQ=
+github.com/wealdtech/go-eth2-wallet-hd/v2 v2.0.4 h1:/nBbza+ZPY1dn455AnZRRpIEjeUmTRQCS5QdKf6nhrg=
+github.com/wealdtech/go-eth2-wallet-hd/v2 v2.0.4/go.mod h1:nNNZNXCP1BrJCu1hLlFUCAQBvCInD4zwE7eslf2U5XQ=
 github.com/wealdtech/go-eth2-wallet-nd/v2 v2.0.3 h1:NfeWHtyjtZt3hmVA7kysNf2w+cB9Y82w6Cv4zWbFRSk=
 github.com/wealdtech/go-eth2-wallet-nd/v2 v2.0.3/go.mod h1:RDXAfay+PL+apCVLnVtWBUb183m4uug93FBZ0c2cVaw=
 github.com/wealdtech/go-eth2-wallet-store-filesystem v1.7.3 h1:2nMDDRULzSSa6LCk3044d5J4rXi2HX61nRLyGLXGI3M=

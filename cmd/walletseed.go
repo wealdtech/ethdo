@@ -1,4 +1,4 @@
-// Copyright © 2019 Weald Technology Trading
+// Copyright © 2019, 2020 Weald Technology Trading
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -14,11 +14,12 @@
 package cmd
 
 import (
+	"bytes"
 	"fmt"
 	"os"
 
-	bip39 "github.com/FactomProject/go-bip39"
 	"github.com/spf13/cobra"
+	bip39 "github.com/tyler-smith/go-bip39"
 	types "github.com/wealdtech/go-eth2-wallet-types/v2"
 )
 
@@ -44,9 +45,17 @@ In quiet mode this will return 0 if the wallet is a hierarchical deterministic w
 		errCheck(err, "Failed to unlock wallet")
 		seed, err := wallet.(types.WalletKeyProvider).Key()
 		errCheck(err, "Failed to obtain wallet key")
-		outputIf(debug, fmt.Sprintf("Seed is %#0x", seed))
+		outputIf(debug, fmt.Sprintf("Seed is %#x", seed))
 		seedStr, err := bip39.NewMnemonic(seed)
 		errCheck(err, "Failed to generate seed mnemonic")
+		// Re-read mnemonimc to ensure correctness.
+		recalcSeed, err := bip39.MnemonicToByteArray(seedStr)
+		// Drop checksum (last byte).
+		errCheck(err, "Failed to recalculate seed")
+		recalcSeed = recalcSeed[:len(recalcSeed)-1]
+		outputIf(debug, fmt.Sprintf("Recalc seed is %#x", recalcSeed))
+		errCheck(err, "Failed to recalculate seed mnemonic")
+		assert(bytes.Equal(recalcSeed, seed), "Generated invalid mnemonic")
 
 		outputIf(!quiet, seedStr)
 		os.Exit(_exitSuccess)

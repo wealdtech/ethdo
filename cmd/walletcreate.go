@@ -43,6 +43,7 @@ In quiet mode this will return 0 if the wallet is created successfully, otherwis
 		var err error
 		switch strings.ToLower(walletCreateType) {
 		case "non-deterministic", "nd":
+			assert(walletCreateSeed == "", "--seed is not allowed with non-deterministic wallets")
 			_, err = wallet.CreateWallet(walletWallet, wallet.WithType("nd"))
 		case "hierarchical deterministic", "hd":
 			assert(rootWalletPassphrase != "", "--walletpassphrase is required for hierarchical deterministic wallets")

@@ -31,6 +31,7 @@ Spending: 0x85dfc6dcee4c9da36f6473ec02fda283d6c920c641fc8e3a76113c5c227d4aeeb100
   - `wallet`: the name of the wallet to create (defaults to "primary")
   - `type`: the type of wallet to create.  This can be either "nd" for a non-deterministic wallet, where private keys are generated randomly, or "hd" for a hierarchical deterministic wallet, where private keys are generated from a seed and path as per [ERC-2333](https://github.com/CarlBeek/EIPs/blob/bls_path/EIPS/eip-2334.md) (defaults to "nd")
   - `walletpassphrase`: the passphrase for of the wallet.  This is required for hierarchical deterministic wallets, to protect the seed
+  - `seed`: for hierarchical deterministic wallets only, use a pre-defined 24-word [BIP-39 seed phrase](https://en.bitcoin.it/wiki/Seed_phrase) to create the wallet.  **Warning** The same seed can be imported in to multiple wallets, in which case they will generate the same keys.  Please ensure that only a single wallet is active with any single seed phrase
 
 ```sh
 $ ethdo wallet create --wallet="Personal wallet" --type="hd" --walletpassphrase="my wallet secret"

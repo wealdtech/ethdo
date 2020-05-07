@@ -24,6 +24,16 @@ ethdo wallet create --wallet="My wallet"
 
 Additional options are available to decide the type of wallet and encryption.
 
+## Create an HD wallet from an existing seed
+
+HD wallets can be created from an existing seed by adding the `--seed` parameter to `ethdo wallet create`, for example:
+
+```sh
+ethdo wallet create --wallet="Recreated wallet" --type=hd --seed="tooth moon mad fun romance athlete envelope next mix divert tip top symbol resemble stock family melody desk sheriff drift bargain need jaguar method"
+```
+
+The seed for an existing HD wallet can be obtained with `ethdo wallet seed`.
+
 ## Back up a wallet
 
 A wallet can be backed up with the `ethdo wallet export` command.  This creates an encrypted backup of the wallet, for example:

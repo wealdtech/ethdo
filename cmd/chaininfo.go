@@ -36,7 +36,7 @@ In quiet mode this will return 0 if the chain information can be obtained, other
 		config, err := grpc.FetchChainConfig(eth2GRPCConn)
 		errCheck(err, "Failed to obtain beacon chain configuration")
 
-		genesisTime, err := grpc.FetchGenesis(eth2GRPCConn)
+		genesisTime, err := grpc.FetchGenesisTime(eth2GRPCConn)
 		errCheck(err, "Failed to obtain genesis time")
 
 		if quiet {

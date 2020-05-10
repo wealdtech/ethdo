@@ -16,6 +16,7 @@ package grpc
 import (
 	"context"
 
+	"github.com/pkg/errors"
 	"github.com/spf13/viper"
 	"google.golang.org/grpc"
 
@@ -25,6 +26,9 @@ import (
 
 // FetchValidatorIndex fetches the index of a validator.
 func FetchValidatorIndex(conn *grpc.ClientConn, account wtypes.Account) (uint64, error) {
+	if conn == nil {
+		return 0, errors.New("no connection to beacon node")
+	}
 	validatorClient := ethpb.NewBeaconNodeValidatorClient(conn)
 	ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("timeout"))
 	defer cancel()
@@ -43,6 +47,9 @@ func FetchValidatorIndex(conn *grpc.ClientConn, account wtypes.Account) (uint64,
 
 // FetchValidatorState fetches the state of a validator.
 func FetchValidatorState(conn *grpc.ClientConn, account wtypes.Account) (ethpb.ValidatorStatus, error) {
+	if conn == nil {
+		return ethpb.ValidatorStatus_UNKNOWN_STATUS, errors.New("no connection to beacon node")
+	}
 	validatorClient := ethpb.NewBeaconNodeValidatorClient(conn)
 	ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("timeout"))
 	defer cancel()
@@ -53,7 +60,7 @@ func FetchValidatorState(conn *grpc.ClientConn, account wtypes.Account) (ethpb.V
 	}
 	resp, err := validatorClient.ValidatorStatus(ctx, req)
 	if err != nil {
-		return 0, err
+		return ethpb.ValidatorStatus_UNKNOWN_STATUS, err
 	}
 
 	return resp.Status, nil

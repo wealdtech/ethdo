@@ -31,6 +31,9 @@ import (
 // It tweaks the output to make it easier to work with by setting appropriate
 // types.
 func FetchChainConfig(conn *grpc.ClientConn) (map[string]interface{}, error) {
+	if conn == nil {
+		return nil, errors.New("no connection to beacon node")
+	}
 	beaconClient := ethpb.NewBeaconChainClient(conn)
 	ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("timeout"))
 	defer cancel()
@@ -74,6 +77,9 @@ func FetchChainConfig(conn *grpc.ClientConn) (map[string]interface{}, error) {
 
 // FetchValidator fetches the validator definition from the beacon node.
 func FetchValidator(conn *grpc.ClientConn, account wtypes.Account) (*ethpb.Validator, error) {
+	if conn == nil {
+		return nil, errors.New("no connection to beacon node")
+	}
 	beaconClient := ethpb.NewBeaconChainClient(conn)
 	ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("timeout"))
 	defer cancel()
@@ -88,6 +94,9 @@ func FetchValidator(conn *grpc.ClientConn, account wtypes.Account) (*ethpb.Valid
 
 // FetchValidatorByIndex fetches the validator definition from the beacon node.
 func FetchValidatorByIndex(conn *grpc.ClientConn, index uint64) (*ethpb.Validator, error) {
+	if conn == nil {
+		return nil, errors.New("no connection to beacon node")
+	}
 	beaconClient := ethpb.NewBeaconChainClient(conn)
 	ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("timeout"))
 	defer cancel()
@@ -102,6 +111,9 @@ func FetchValidatorByIndex(conn *grpc.ClientConn, index uint64) (*ethpb.Validato
 
 // FetchValidatorInfo fetches current validator info from the beacon node.
 func FetchValidatorInfo(conn *grpc.ClientConn, account wtypes.Account) (*ethpb.ValidatorInfo, error) {
+	if conn == nil {
+		return nil, errors.New("no connection to beacon node")
+	}
 	beaconClient := ethpb.NewBeaconChainClient(conn)
 	ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("timeout"))
 	defer cancel()
@@ -124,6 +136,9 @@ func FetchValidatorInfo(conn *grpc.ClientConn, account wtypes.Account) (*ethpb.V
 
 // FetchChainInfo fetches current chain info from the beacon node.
 func FetchChainInfo(conn *grpc.ClientConn) (*ethpb.ChainHead, error) {
+	if conn == nil {
+		return nil, errors.New("no connection to beacon node")
+	}
 	beaconClient := ethpb.NewBeaconChainClient(conn)
 	ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("timeout"))
 	defer cancel()
@@ -133,6 +148,9 @@ func FetchChainInfo(conn *grpc.ClientConn) (*ethpb.ChainHead, error) {
 
 // FetchBlock fetches a block at a given slot from the beacon node.
 func FetchBlock(conn *grpc.ClientConn, slot uint64) (*ethpb.SignedBeaconBlock, error) {
+	if conn == nil {
+		return nil, errors.New("no connection to beacon node")
+	}
 	beaconClient := ethpb.NewBeaconChainClient(conn)
 	ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("timeout"))
 	defer cancel()

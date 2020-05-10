@@ -65,15 +65,15 @@ In quiet mode this will return 0 if the the data can be generated correctly, oth
 
 		withdrawalCredentials := util.SHA256(withdrawalAccount.PublicKey().Marshal())
 		errCheck(err, "Failed to hash withdrawal credentials")
-		// TODO fetch this from the node.
-		withdrawalCredentials[0] = byte(0) // BLSWithdrawalPrefix
+		// This is hard-coded, to allow deposit data to be generated without a connection to the beacon node.
+		withdrawalCredentials[0] = byte(0) // BLS_WITHDRAWAL_PREFIX
 		outputIf(debug, fmt.Sprintf("Withdrawal credentials are %032x", withdrawalCredentials))
 
 		assert(validatorDepositDataDepositValue != "", "--depositvalue is required")
 		val, err := string2eth.StringToGWei(validatorDepositDataDepositValue)
 		errCheck(err, "Invalid value")
-		// TODO fetch this from the node.
-		assert(val >= 1000000000, "deposit value must be at least 1 Ether")
+		// This is hard-coded, to allow deposit data to be generated without a connection to the beacon node.
+		assert(val >= 1000000000, "deposit value must be at least 1 Ether") // MIN_DEPOSIT_AMOUNT
 
 		// For each key, generate deposit data
 		outputs := make([]string, 0)

@@ -115,7 +115,7 @@ func validatorExitHandleAccountInput(account e2wtypes.Account) (*ethpb.Voluntary
 		outputIf(debug, fmt.Sprintf("Activation epoch is %v", validator.ActivationEpoch))
 		earliestExitEpoch := validator.ActivationEpoch + config["PersistentCommitteePeriod"].(uint64)
 
-		genesisTime, err := grpc.FetchGenesis(eth2GRPCConn)
+		genesisTime, err := grpc.FetchGenesisTime(eth2GRPCConn)
 		errCheck(err, "Failed to obtain genesis time")
 
 		currentEpoch := uint64(time.Since(genesisTime).Seconds()) / secondsPerEpoch
@@ -129,13 +129,10 @@ func validatorExitHandleAccountInput(account e2wtypes.Account) (*ethpb.Voluntary
 
 	// TODO fetch current fork version from config (currently using genesis fork version)
 	currentForkVersion := config["GenesisForkVersion"].([]byte)
-	// TODO fetch genesis validators root from API.
-	genesisValidatorsRoot := []byte{
-		0x55, 0x13, 0x8e, 0x46, 0xa2, 0x44, 0x2d, 0x2f,
-		0xfd, 0x89, 0x55, 0x0a, 0x0f, 0x30, 0x56, 0x21,
-		0x27, 0xbc, 0x56, 0xe6, 0x24, 0x4d, 0x0f, 0xa2,
-		0xb5, 0x18, 0xa3, 0xf4, 0xce, 0x19, 0x33, 0x7e,
-	}
+	outputIf(debug, fmt.Sprintf("Current fork version is %x", currentForkVersion))
+	genesisValidatorsRoot, err := grpc.FetchGenesisValidatorsRoot(eth2GRPCConn)
+	outputIf(debug, fmt.Sprintf("Genesis validators root is %x", genesisValidatorsRoot))
+	errCheck(err, "Failed to obtain genesis validators root")
 	domain := e2types.Domain(e2types.DomainVoluntaryExit, currentForkVersion, genesisValidatorsRoot)
 
 	err = account.Unlock([]byte(rootAccountPassphrase))

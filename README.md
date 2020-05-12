@@ -39,6 +39,8 @@ ethdo uses the [go-eth2-wallet](https://github.com/wealdtech/go-eth2-wallet) sys
     - for OSX: $HOME/Library/Application Support/ethereum2/wallets
     - for Windows: %APPDATA%\ethereum2\wallets
 
+If using the filesystem store, the additional parameter `basedir` can be supplied to change this location.
+
 All ethdo comands take the following parameters:
 
   - `store`: the name of the storage system for wallets.  This can be one of "filesystem" (for local storage of the wallet) or "s3" (for remote storage of the wallet on [Amazon's S3](https://aws.amazon.com/s3/) storage system), and defaults to "filesystem"

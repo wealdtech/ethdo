@@ -31,6 +31,8 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	e2types "github.com/wealdtech/go-eth2-types/v2"
+	filesystem "github.com/wealdtech/go-eth2-wallet-store-filesystem"
+	s3 "github.com/wealdtech/go-eth2-wallet-store-s3"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 
@@ -50,6 +52,7 @@ var generate bool
 // Root variables, present for all commands.
 var rootStore string
 var rootAccount string
+var rootBaseDir string
 var rootStorePassphrase string
 var rootWalletPassphrase string
 var rootAccountPassphrase string
@@ -90,6 +93,7 @@ func persistentPreRun(cmd *cobra.Command, args []string) {
 	debug = viper.GetBool("debug")
 	rootStore = viper.GetString("store")
 	rootAccount = viper.GetString("account")
+	rootBaseDir = viper.GetString("basedir")
 	rootStorePassphrase = viper.GetString("storepassphrase")
 	rootWalletPassphrase = viper.GetString("walletpassphrase")
 	rootAccountPassphrase = viper.GetString("passphrase")
@@ -120,8 +124,27 @@ func persistentPreRun(cmd *cobra.Command, args []string) {
 
 	if viper.GetString("remote") == "" {
 		// Set up our wallet store
-		err := wallet.SetStore(rootStore, []byte(rootStorePassphrase))
-		errCheck(err, "Failed to set up wallet store")
+		var store wtypes.Store
+		switch rootStore {
+		case "s3":
+			assert(rootBaseDir == "", "--basedir does not apply for the s3 store")
+			var err error
+			store, err = s3.New(s3.WithPassphrase([]byte(rootStorePassphrase)))
+			errCheck(err, "Failed to access Amazon S3 wallet store")
+		case "filesystem":
+			opts := make([]filesystem.Option, 0)
+			if rootStorePassphrase != "" {
+				opts = append(opts, filesystem.WithPassphrase([]byte(rootStorePassphrase)))
+			}
+			if rootBaseDir != "" {
+				opts = append(opts, filesystem.WithLocation(rootBaseDir))
+			}
+			store = filesystem.New(opts...)
+		default:
+			die(fmt.Sprintf("Unsupported wallet store %s", rootStore))
+		}
+		err := wallet.UseStore(store)
+		errCheck(err, "Failed to use defined wallet store")
 	} else {
 		err := initRemote()
 		errCheck(err, "Failed to connect to remote wallet")
@@ -157,6 +180,10 @@ func init() {
 	}
 	RootCmd.PersistentFlags().String("account", "", "Account name (in format \"wallet/account\")")
 	if err := viper.BindPFlag("account", RootCmd.PersistentFlags().Lookup("account")); err != nil {
+		panic(err)
+	}
+	RootCmd.PersistentFlags().String("basedir", "", "Base directory for filesystem wallets")
+	if err := viper.BindPFlag("basedir", RootCmd.PersistentFlags().Lookup("basedir")); err != nil {
 		panic(err)
 	}
 	RootCmd.PersistentFlags().String("storepassphrase", "", "Passphrase for store (if applicable)")

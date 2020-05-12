@@ -17,6 +17,7 @@ require (
 	github.com/pelletier/go-toml v1.7.0 // indirect
 	github.com/pkg/errors v0.9.1
 	github.com/prysmaticlabs/ethereumapis v0.0.0-20200511212457-3444ffb75440
+	github.com/prysmaticlabs/go-bitfield v0.0.0-20200322041314-62c2aee71669
 	github.com/prysmaticlabs/go-ssz v0.0.0-20200101200214-e24db4d9e963
 	github.com/spaolacci/murmur3 v1.1.0 // indirect
 	github.com/spf13/afero v1.2.2 // indirect

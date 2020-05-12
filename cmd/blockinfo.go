@@ -22,6 +22,7 @@ import (
 	"strings"
 	"unicode/utf8"
 
+	"github.com/prysmaticlabs/go-bitfield"
 	"github.com/spf13/cobra"
 	"github.com/wealdtech/ethdo/grpc"
 	string2eth "github.com/wealdtech/go-string2eth"
@@ -84,7 +85,7 @@ In quiet mode this will return 0 if the block information is present and not ski
 				fmt.Printf("\t%d:\n", i)
 
 				fmt.Printf("\t\tCommittee index: %d\n", att.Data.CommitteeIndex)
-				fmt.Printf("\t\tAttesters: %d\n", countSetBits(att.AggregationBits))
+				fmt.Printf("\t\tAttesters: %d/%d\n", att.AggregationBits.Count(), att.AggregationBits.Len())
 				fmt.Printf("\t\tAggregation bits: %s\n", bitsToString(att.AggregationBits))
 				fmt.Printf("\t\tSlot: %d\n", att.Data.Slot)
 				fmt.Printf("\t\tBeacon block root: %#x\n", att.Data.BeaconBlockRoot)
@@ -99,15 +100,18 @@ In quiet mode this will return 0 if the block information is present and not ski
 		fmt.Printf("Attester slashings: %d\n", len(body.AttesterSlashings))
 		if verbose {
 			for i, slashing := range body.AttesterSlashings {
-				fmt.Printf("\t%d:\n", i)
-
 				// Say what was slashed.
 				att1 := slashing.Attestation_1
+				outputIf(debug, fmt.Sprintf("Attestation 1 attesting indices are %v", att1.AttestingIndices))
 				att2 := slashing.Attestation_2
+				outputIf(debug, fmt.Sprintf("Attestation 2 attesting indices are %v", att2.AttestingIndices))
 				slashedIndices := intersection(att1.AttestingIndices, att2.AttestingIndices)
 				if len(slashedIndices) == 0 {
 					continue
 				}
+
+				fmt.Printf("\t%d:\n", i)
+
 				fmt.Println("\t\tSlashed validators:")
 				for _, slashedIndex := range slashedIndices {
 					validator, err := grpc.FetchValidatorByIndex(eth2GRPCConn, slashedIndex)
@@ -173,24 +177,18 @@ func intersection(set1 []uint64, set2 []uint64) []uint64 {
 	sort.Slice(set1, func(i, j int) bool { return set1[i] < set1[j] })
 	sort.Slice(set2, func(i, j int) bool { return set2[i] < set2[j] })
 	res := make([]uint64, 0)
-	if len(set1) < len(set2) {
-		set1, set2 = set2, set1
-	}
 
+	set1Pos := 0
 	set2Pos := 0
-	set2LastIndex := len(set2) - 1
-	for set1Pos := range set1 {
-		for set1[set1Pos] == set2[set2Pos] {
-			res = append(res, set1[set1Pos])
-			if set2Pos == set2LastIndex {
-				break
-			}
+	for set1Pos < len(set1) && set2Pos < len(set2) {
+		switch {
+		case set1[set1Pos] < set2[set2Pos]:
+			set1Pos++
+		case set2[set2Pos] < set1[set1Pos]:
 			set2Pos++
-		}
-		for set1[set1Pos] > set2[set2Pos] {
-			if set2Pos == set2LastIndex {
-				break
-			}
+		default:
+			res = append(res, set1[set1Pos])
+			set1Pos++
 			set2Pos++
 		}
 	}
@@ -198,43 +196,25 @@ func intersection(set1 []uint64, set2 []uint64) []uint64 {
 	return res
 }
 
-// countSetBits counts the number of bits that are set in the given byte array.
-func countSetBits(input []byte) int {
-	total := 0
-	for _, x := range input {
-		item := uint8(x)
-		for item > 0 {
-			if item&0x01 == 1 {
-				total++
-			}
-			item >>= 1
-		}
-	}
-	return total
-}
+func bitsToString(input bitfield.Bitlist) string {
+	bits := int(input.Len())
 
-func bitsToString(input []byte) string {
-	elements := make([]string, len(input))
-	for i, x := range input {
-		item := uint8(x)
-		mask := uint8(0x80)
-		element := ""
-		for mask > 0 {
-			if item&mask != 0 {
-				element = fmt.Sprintf("%s✓", element)
-			} else {
-				element = fmt.Sprintf("%s✕", element)
-			}
-			mask >>= 1
+	res := ""
+	for i := 0; i < bits; i++ {
+		if input.BitAt(uint64(i)) {
+			res = fmt.Sprintf("%s✓", res)
+		} else {
+			res = fmt.Sprintf("%s✕", res)
 		}
-		elements[i] = element
+		if i%8 == 7 {
+			res = fmt.Sprintf("%s ", res)
+		}
 	}
-	return strings.Join(elements, " ")
+	return strings.TrimSpace(res)
 }
 
 func init() {
 	blockCmd.AddCommand(blockInfoCmd)
 	blockFlags(blockInfoCmd)
 	blockInfoCmd.Flags().Int64Var(&blockInfoSlot, "slot", -1, "the default slot")
-
 }

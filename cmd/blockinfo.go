@@ -23,6 +23,7 @@ import (
 	"unicode/utf8"
 
 	"github.com/prysmaticlabs/go-bitfield"
+	"github.com/prysmaticlabs/go-ssz"
 	"github.com/spf13/cobra"
 	"github.com/wealdtech/ethdo/grpc"
 	string2eth "github.com/wealdtech/go-string2eth"
@@ -62,6 +63,9 @@ In quiet mode this will return 0 if the block information is present and not ski
 		body := block.Body
 
 		// General info.
+		bodyRoot, err := ssz.HashTreeRoot(block)
+		errCheck(err, "Failed to calculate block body root")
+		fmt.Printf("Block root: %#x\n", bodyRoot)
 		outputIf(verbose, fmt.Sprintf("Parent root: %#x", block.ParentRoot))
 		outputIf(verbose, fmt.Sprintf("State root: %#x", block.StateRoot))
 		if len(body.Graffiti) > 0 && hex.EncodeToString(body.Graffiti) != "0000000000000000000000000000000000000000000000000000000000000000" {

@@ -1,6 +1,4 @@
-FROM golang:1.14.2-alpine3.11 as builder
-
-RUN apk add build-base
+FROM golang:1.14-buster as builder
 
 WORKDIR /app
 
@@ -12,9 +10,7 @@ COPY . .
 
 RUN go build
 
-FROM alpine:3.11
-
-RUN apk add libstdc++
+FROM debian:buster-slim
 
 WORKDIR /app
 

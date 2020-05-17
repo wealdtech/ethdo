@@ -82,7 +82,7 @@ In quiet mode this will return 0 if the chain status can be obtained, otherwise 
 			}
 			if verbose {
 				fmt.Printf("Prior justified epoch: %d\n", info.GetPreviousJustifiedEpoch())
-				distance := (slot - info.GetPreviousJustifiedEpoch()) / slotsPerEpoch
+				distance := (slot - info.GetPreviousJustifiedSlot()) / slotsPerEpoch
 				fmt.Printf("Prior justified epoch distance: %d\n", distance)
 			}
 		}

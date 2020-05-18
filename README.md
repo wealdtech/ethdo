@@ -10,6 +10,7 @@ A command-line tool for managing common tasks in Ethereum 2.
 ## Table of Contents
 
 - [Install](#install)
+  - [Docker](#docker)
 - [Usage](#usage)
 - [Maintainers](#maintainers)
 - [Contribute](#contribute)
@@ -26,6 +27,20 @@ GO111MODULE=on go get github.com/wealdtech/ethdo
 Note that `ethdo` requires at least version 1.13 of go to operate.  The version of go can be found with `go version`.
 
 If this does not work please see the [troubleshooting](https://github.com/wealdtech/ethdo/blob/master/docs/troubleshooting.md) page.
+
+### Docker
+
+It is possible to build the tool using docker:
+
+```sh
+docker build -t ethdo .
+```
+
+You can run the tool using docker after that. Example:
+
+```sh
+docker run -it ethdo --help
+```
 
 ## Usage
 

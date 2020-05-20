@@ -59,7 +59,7 @@ If using the filesystem store, the additional parameter `basedir` can be supplie
 > If using docker as above you can make this directory accessible to docker to make wallets and accounts persistent.  For example, for linux you could use the following command to list your wallets on Linux:
 >
 > ```
-> docker run -v $HOME/.config/ethereum2/wallets:/data ethdo --basedir=/data wallet list
+> docker run -v $HOME/.config/ethereum2/wallets:/data ethdo  wallet list
 > ```
 >
 > This will allow you to use `ethdo` with or without docker, with the same location for wallets and accounts.

@@ -14,12 +14,14 @@
 package cmd
 
 import (
+	"encoding/hex"
 	"fmt"
 	"os"
 	"strings"
 
 	"github.com/prysmaticlabs/go-ssz"
 	"github.com/spf13/cobra"
+	"github.com/wealdtech/ethdo/grpc"
 	e2types "github.com/wealdtech/go-eth2-types/v2"
 	util "github.com/wealdtech/go-eth2-util"
 	string2eth "github.com/wealdtech/go-string2eth"
@@ -29,6 +31,7 @@ var validatorDepositDataValidatorAccount string
 var validatorDepositDataWithdrawalAccount string
 var validatorDepositDataDepositValue string
 var validatorDepositDataRaw bool
+var validatorDepositDataForkVersion string
 
 var validatorDepositDataCmd = &cobra.Command{
 	Use:   "depositdata",
@@ -88,7 +91,24 @@ In quiet mode this will return 0 if the the data can be generated correctly, oth
 				Value:                 val,
 			}
 			outputIf(debug, fmt.Sprintf("Deposit data:\n\tPublic key: %x\n\tWithdrawal credentials: %x\n\tValue: %d", depositData.PubKey, depositData.WithdrawalCredentials, depositData.Value))
-			domain := e2types.Domain(e2types.DomainDeposit, e2types.ZeroForkVersion, e2types.ZeroGenesisValidatorsRoot)
+
+			var forkVersion []byte
+			if validatorDepositDataForkVersion != "" {
+				forkVersion, err = hex.DecodeString(strings.TrimPrefix(validatorDepositDataForkVersion, "0x"))
+				errCheck(err, fmt.Sprintf("Failed to decode fork version %s", validatorDepositDataForkVersion))
+				assert(len(forkVersion) == 4, "Fork version must be exactly four bytes")
+			} else {
+				err := connect()
+				errCheck(err, "Failed to connect to beacon node")
+				config, err := grpc.FetchChainConfig(eth2GRPCConn)
+				errCheck(err, "Failed to obtain chain configuration")
+				genesisForkVersion, exists := config["GenesisForkVersion"]
+				assert(exists, "Failed to obtain genesis fork version")
+				forkVersion = genesisForkVersion.([]byte)
+			}
+			outputIf(debug, fmt.Sprintf("Fork version is %x", forkVersion))
+
+			domain := e2types.Domain(e2types.DomainDeposit, forkVersion, e2types.ZeroGenesisValidatorsRoot)
 			outputIf(debug, fmt.Sprintf("Domain is %x", domain))
 			err = validatorAccount.Unlock([]byte(rootAccountPassphrase))
 			errCheck(err, "Failed to unlock validator account")
@@ -161,4 +181,5 @@ func init() {
 	validatorDepositDataCmd.Flags().StringVar(&validatorDepositDataWithdrawalAccount, "withdrawalaccount", "", "Account of the account to which the validator funds will be withdrawn")
 	validatorDepositDataCmd.Flags().StringVar(&validatorDepositDataDepositValue, "depositvalue", "", "Value of the amount to be deposited")
 	validatorDepositDataCmd.Flags().BoolVar(&validatorDepositDataRaw, "raw", false, "Print raw deposit data transaction data")
+	validatorDepositDataCmd.Flags().StringVar(&validatorDepositDataForkVersion, "forkversion", "", "Use a hard-coded fork version (default is to fetch it from the node)")
 }

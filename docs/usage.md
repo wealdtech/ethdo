@@ -347,6 +347,7 @@ Validator commands focus on interaction with Ethereum 2 validators.
   - `epoch` specify an epoch before which this exit is not valid
   - `json-output` generate JSON output rather than sending a transaction immediately
   - `json` use JSON input created by the `--json-output` option rather than generate data from scratch
+  - `forkversion` supply a specific fork version; default is to fetch it from the chain but this can be used when generating offline deposits
 
 ```sh
 $ ethdo validator exit --account=Validators/1 --passphrase="my validator secret"

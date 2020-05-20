@@ -56,6 +56,14 @@ ethdo uses the [go-eth2-wallet](https://github.com/wealdtech/go-eth2-wallet) sys
 
 If using the filesystem store, the additional parameter `basedir` can be supplied to change this location.
 
+> If using docker as above you can make this directory accessible to docker to make wallets and accounts persistent.  For example, for linux you could use the following command to list your wallets on Linux:
+>
+> ```
+> docker run -v $HOME/.config/ethereum2/wallets:/data ethdo --basedir=/data wallet list
+> ```
+>
+> This will allow you to use `ethdo` with or without docker, with the same location for wallets and accounts.
+
 All ethdo comands take the following parameters:
 
   - `store`: the name of the storage system for wallets.  This can be one of "filesystem" (for local storage of the wallet) or "s3" (for remote storage of the wallet on [Amazon's S3](https://aws.amazon.com/s3/) storage system), and defaults to "filesystem"

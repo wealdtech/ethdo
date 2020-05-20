@@ -30,17 +30,31 @@ If this does not work please see the [troubleshooting](https://github.com/wealdt
 
 ### Docker
 
-It is possible to build the tool using docker:
+You can obtain the latest version of `ethdo` using docker with:
+
+```
+docker pull wealdtech/ethdo
+```
+
+Or build `ethdo` using docker:
 
 ```sh
 docker build -t ethdo .
 ```
 
-You can run the tool using docker after that. Example:
+You can run `ethdo` using docker after that. Example:
 
 ```sh
 docker run -it ethdo --help
 ```
+
+Note that that many `ethdo` commands connect to the beacon node to obtain information.  If the beacon node is running directly on the server this requires the `--network=host` command, for example:
+
+```sh
+docker run --network=host ethdo chain status
+```
+
+Alternatively, if the beacon node is running in a separate docker container a shared network can be created with `docker network create eth2` and accessed by adding `--network=eth2` added to both the beacon node and `ethdo` containers.
 
 ## Usage
 

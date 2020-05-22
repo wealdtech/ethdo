@@ -318,7 +318,8 @@ func accountFromPath(path string) (wtypes.Account, error) {
 		return nil, errors.New("no account name")
 	}
 
-	if wallet.Type() == "hierarchical deterministic" && strings.HasPrefix(accountName, "m/") && rootWalletPassphrase != "" {
+	if wallet.Type() == "hierarchical deterministic" && strings.HasPrefix(accountName, "m/") {
+		assert(rootWalletPassphrase != "", "--walletpassphrase is required for direct path derivations")
 		err = wallet.Unlock([]byte(rootWalletPassphrase))
 		if err != nil {
 			return nil, errors.New("invalid wallet passphrase")

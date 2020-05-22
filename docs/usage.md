@@ -339,7 +339,13 @@ Validator commands focus on interaction with Ethereum 2 validators.
 
 #### `depositdata`
 
-`ethdo validator depositdata` generates the data required to deposit one or more Ethereum 2 validators.
+`ethdo validator depositdata` generates the data required to deposit one or more Ethereum 2 validators.  Options include:
+  - `withdrawalaccount` specify the account to be used for the withdrawal credentials (if withdrawalpubkey is not supplied)
+  - `withdrawalpubkey` specify the public key to be used for the withdrawal credentials (if withdrawalaccount is not supplied)
+  - `validatoraccount` specify the account to be used for the validator
+  - `depositvalue` specify the amount of the deposit
+  - `forkversion` specify the fork version for the deposit signature; this should not be included unless the deposit is being generated offline.  Note that supplying an incorrect value could result in the loss of your deposit, so only supply this value if you are sure you know what you are doing
+  - `raw` generate raw hex output that can be supplied as the data to an Ethereum 1 deposit transaction
 
 #### `exit`
 
@@ -347,7 +353,7 @@ Validator commands focus on interaction with Ethereum 2 validators.
   - `epoch` specify an epoch before which this exit is not valid
   - `json-output` generate JSON output rather than sending a transaction immediately
   - `json` use JSON input created by the `--json-output` option rather than generate data from scratch
-  - `forkversion` supply a specific fork version; default is to fetch it from the chain but this can be used when generating offline deposits
+  - `forkversion` specify a specific fork version; default is to fetch it from the chain but this can be used when generating offline deposits
 
 ```sh
 $ ethdo validator exit --account=Validators/1 --passphrase="my validator secret"

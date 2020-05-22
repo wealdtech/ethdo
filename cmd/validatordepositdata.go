@@ -29,6 +29,7 @@ import (
 
 var validatorDepositDataValidatorAccount string
 var validatorDepositDataWithdrawalAccount string
+var validatorDepositDataWithdrawalPubKey string
 var validatorDepositDataDepositValue string
 var validatorDepositDataRaw bool
 var validatorDepositDataForkVersion string
@@ -61,13 +62,23 @@ In quiet mode this will return 0 if the the data can be generated correctly, oth
 			}
 		}
 
-		assert(validatorDepositDataWithdrawalAccount != "", "--withdrawalaccount is required")
-		withdrawalAccount, err := accountFromPath(validatorDepositDataWithdrawalAccount)
-		errCheck(err, "Failed to obtain withdrawal account")
-		outputIf(debug, fmt.Sprintf("Withdrawal public key is %048x", withdrawalAccount.PublicKey().Marshal()))
-
-		withdrawalCredentials := util.SHA256(withdrawalAccount.PublicKey().Marshal())
-		errCheck(err, "Failed to hash withdrawal credentials")
+		assert(validatorDepositDataWithdrawalAccount != "" || validatorDepositDataWithdrawalPubKey != "", "--withdrawalaccount or --withdrawalpubkey is required")
+		var withdrawalCredentials []byte
+		if validatorDepositDataWithdrawalAccount != "" {
+			withdrawalAccount, err := accountFromPath(validatorDepositDataWithdrawalAccount)
+			errCheck(err, "Failed to obtain withdrawal account")
+			outputIf(debug, fmt.Sprintf("Withdrawal public key is %048x", withdrawalAccount.PublicKey().Marshal()))
+			withdrawalCredentials = util.SHA256(withdrawalAccount.PublicKey().Marshal())
+			errCheck(err, "Failed to hash withdrawal credentials")
+		} else {
+			withdrawalPubKeyBytes, err := hex.DecodeString(strings.TrimPrefix(validatorDepositDataWithdrawalPubKey, "0x"))
+			errCheck(err, "Invalid withdrawal public key")
+			assert(len(withdrawalPubKeyBytes) == 48, "Public key should be 48 bytes")
+			withdrawalPubKey, err := e2types.BLSPublicKeyFromBytes(withdrawalPubKeyBytes)
+			errCheck(err, "Value supplied with --withdrawalpubkey is not a valid public key")
+			withdrawalCredentials = util.SHA256(withdrawalPubKey.Marshal())
+			errCheck(err, "Failed to hash withdrawal credentials")
+		}
 		// This is hard-coded, to allow deposit data to be generated without a connection to the beacon node.
 		withdrawalCredentials[0] = byte(0) // BLS_WITHDRAWAL_PREFIX
 		outputIf(debug, fmt.Sprintf("Withdrawal credentials are %032x", withdrawalCredentials))
@@ -179,6 +190,7 @@ func init() {
 	validatorFlags(validatorDepositDataCmd)
 	validatorDepositDataCmd.Flags().StringVar(&validatorDepositDataValidatorAccount, "validatoraccount", "", "Account of the account carrying out the validation")
 	validatorDepositDataCmd.Flags().StringVar(&validatorDepositDataWithdrawalAccount, "withdrawalaccount", "", "Account of the account to which the validator funds will be withdrawn")
+	validatorDepositDataCmd.Flags().StringVar(&validatorDepositDataWithdrawalPubKey, "withdrawalpubkey", "", "Public key of the account to which the validator funds will be withdrawn")
 	validatorDepositDataCmd.Flags().StringVar(&validatorDepositDataDepositValue, "depositvalue", "", "Value of the amount to be deposited")
 	validatorDepositDataCmd.Flags().BoolVar(&validatorDepositDataRaw, "raw", false, "Print raw deposit data transaction data")
 	validatorDepositDataCmd.Flags().StringVar(&validatorDepositDataForkVersion, "forkversion", "", "Use a hard-coded fork version (default is to fetch it from the node)")

@@ -75,6 +75,22 @@ func FetchChainConfig(conn *grpc.ClientConn) (map[string]interface{}, error) {
 	return results, nil
 }
 
+func FetchLatestFilledSlot(conn *grpc.ClientConn) (uint64, error) {
+	if conn == nil {
+		return 0, errors.New("no connection to beacon node")
+	}
+	beaconClient := ethpb.NewBeaconChainClient(conn)
+	ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("timeout"))
+	defer cancel()
+
+	chainHead, err := beaconClient.GetChainHead(ctx, &types.Empty{})
+	if err != nil {
+		return 0, errors.Wrap(err, "failed to obtain latest")
+	}
+
+	return chainHead.HeadSlot, nil
+}
+
 // FetchValidator fetches the validator definition from the beacon node.
 func FetchValidator(conn *grpc.ClientConn, account wtypes.Account) (*ethpb.Validator, error) {
 	if conn == nil {

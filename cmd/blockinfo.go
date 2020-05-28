@@ -22,6 +22,7 @@ import (
 	"strings"
 	"unicode/utf8"
 
+	ethpb "github.com/prysmaticlabs/ethereumapis/eth/v1alpha1"
 	"github.com/prysmaticlabs/go-bitfield"
 	"github.com/prysmaticlabs/go-ssz"
 	"github.com/spf13/cobra"
@@ -47,7 +48,7 @@ In quiet mode this will return 0 if the block information is present and not ski
 
 		var slot uint64
 		if blockInfoSlot < 0 {
-			// TODO latest block.
+			slot, err = grpc.FetchLatestFilledSlot(eth2GRPCConn)
 		} else {
 			slot = uint64(blockInfoSlot)
 		}
@@ -59,121 +60,126 @@ In quiet mode this will return 0 if the block information is present and not ski
 			outputIf(!quiet, "No block at that slot")
 			os.Exit(_exitFailure)
 		}
-		block := signedBlock.Block
-		body := block.Body
-
-		// General info.
-		bodyRoot, err := ssz.HashTreeRoot(block)
-		errCheck(err, "Failed to calculate block body root")
-		fmt.Printf("Block root: %#x\n", bodyRoot)
-		outputIf(verbose, fmt.Sprintf("Parent root: %#x", block.ParentRoot))
-		outputIf(verbose, fmt.Sprintf("State root: %#x", block.StateRoot))
-		if len(body.Graffiti) > 0 && hex.EncodeToString(body.Graffiti) != "0000000000000000000000000000000000000000000000000000000000000000" {
-			if utf8.Valid(body.Graffiti) {
-				fmt.Printf("Graffiti: %s\n", string(body.Graffiti))
-			} else {
-				fmt.Printf("Graffiti: %#x\n", body.Graffiti)
-			}
-		}
-
-		// Eth1 data.
-		eth1Data := body.Eth1Data
-		outputIf(verbose, fmt.Sprintf("Ethereum 1 deposit count: %d", eth1Data.DepositCount))
-		outputIf(verbose, fmt.Sprintf("Ethereum 1 deposit root: %#x", eth1Data.DepositRoot))
-		outputIf(verbose, fmt.Sprintf("Ethereum 1 block hash: %#x", eth1Data.BlockHash))
-
-		// Attestations.
-		fmt.Printf("Attestations: %d\n", len(body.Attestations))
-		if verbose {
-			for i, att := range body.Attestations {
-				fmt.Printf("\t%d:\n", i)
-
-				fmt.Printf("\t\tCommittee index: %d\n", att.Data.CommitteeIndex)
-				fmt.Printf("\t\tAttesters: %d/%d\n", att.AggregationBits.Count(), att.AggregationBits.Len())
-				fmt.Printf("\t\tAggregation bits: %s\n", bitsToString(att.AggregationBits))
-				fmt.Printf("\t\tSlot: %d\n", att.Data.Slot)
-				fmt.Printf("\t\tBeacon block root: %#x\n", att.Data.BeaconBlockRoot)
-				fmt.Printf("\t\tSource epoch: %d\n", att.Data.Source.Epoch)
-				fmt.Printf("\t\tSource root: %#x\n", att.Data.Source.Root)
-				fmt.Printf("\t\tTarget epoch: %d\n", att.Data.Target.Epoch)
-				fmt.Printf("\t\tTarget root: %#x\n", att.Data.Target.Root)
-			}
-		}
-
-		// Attester slashings.
-		fmt.Printf("Attester slashings: %d\n", len(body.AttesterSlashings))
-		if verbose {
-			for i, slashing := range body.AttesterSlashings {
-				// Say what was slashed.
-				att1 := slashing.Attestation_1
-				outputIf(debug, fmt.Sprintf("Attestation 1 attesting indices are %v", att1.AttestingIndices))
-				att2 := slashing.Attestation_2
-				outputIf(debug, fmt.Sprintf("Attestation 2 attesting indices are %v", att2.AttestingIndices))
-				slashedIndices := intersection(att1.AttestingIndices, att2.AttestingIndices)
-				if len(slashedIndices) == 0 {
-					continue
-				}
-
-				fmt.Printf("\t%d:\n", i)
-
-				fmt.Println("\t\tSlashed validators:")
-				for _, slashedIndex := range slashedIndices {
-					validator, err := grpc.FetchValidatorByIndex(eth2GRPCConn, slashedIndex)
-					errCheck(err, "Failed to obtain validator information")
-					fmt.Printf("\t\t\t%#x (%d)\n", validator.PublicKey, slashedIndex)
-				}
-
-				// Say what caused the slashing.
-				if att1.Data.Target.Epoch == att2.Data.Target.Epoch {
-					fmt.Printf("\t\tDouble voted for same target epoch (%d):\n", att1.Data.Target.Epoch)
-					if !bytes.Equal(att1.Data.Target.Root, att2.Data.Target.Root) {
-						fmt.Printf("\t\t\tAttestation 1 target epoch root: %#x\n", att1.Data.Target.Root)
-						fmt.Printf("\t\t\tAttestation 2target epoch root: %#x\n", att2.Data.Target.Root)
-					}
-					if !bytes.Equal(att1.Data.BeaconBlockRoot, att2.Data.BeaconBlockRoot) {
-						fmt.Printf("\t\t\tAttestation 1 beacon block root: %#x\n", att1.Data.BeaconBlockRoot)
-						fmt.Printf("\t\t\tAttestation 2 beacon block root: %#x\n", att2.Data.BeaconBlockRoot)
-					}
-				} else {
-					if att1.Data.Source.Epoch < att2.Data.Source.Epoch &&
-						att1.Data.Target.Epoch > att2.Data.Target.Epoch {
-						fmt.Printf("\t\tSurround voted:\n")
-						fmt.Printf("\t\t\tAttestation 1 vote: %d->%d\n", att1.Data.Source.Epoch, att1.Data.Target.Epoch)
-						fmt.Printf("\t\t\tAttestation 2 vote: %d->%d\n", att2.Data.Source.Epoch, att2.Data.Target.Epoch)
-					}
-				}
-			}
-		}
-
-		// TODO Proposer slashings once proposer slashings exist.
-
-		// Deposits.
-		fmt.Printf("Deposits: %d\n", len(body.Deposits))
-		if verbose {
-			for i, deposit := range body.Deposits {
-				data := deposit.Data
-				fmt.Printf("\t%d:\n", i)
-				fmt.Printf("\t\tPublic key: %#x\n", data.PublicKey)
-				fmt.Printf("\t\tAmount: %s\n", string2eth.GWeiToString(data.Amount, true))
-				fmt.Printf("\t\tWithdrawal credentials: %#x\n", data.WithdrawalCredentials)
-				fmt.Printf("\t\tSignature: %#x\n", data.Signature)
-			}
-		}
-
-		// Voluntary exits.
-		fmt.Printf("Voluntary exits: %d\n", len(body.VoluntaryExits))
-		if verbose {
-			for i, voluntaryExit := range body.VoluntaryExits {
-				fmt.Printf("\t%d:\n", i)
-				validator, err := grpc.FetchValidatorByIndex(eth2GRPCConn, voluntaryExit.Exit.ValidatorIndex)
-				errCheck(err, "Failed to obtain validator information")
-				fmt.Printf("\t\tValidator: %#x (%d)\n", validator.PublicKey, voluntaryExit.Exit.ValidatorIndex)
-				fmt.Printf("\t\tEpoch: %d\n", voluntaryExit.Exit.Epoch)
-			}
-		}
+		outputBlock(signedBlock)
 
 		os.Exit(_exitSuccess)
 	},
+}
+
+func outputBlock(signedBlock *ethpb.SignedBeaconBlock) {
+	block := signedBlock.Block
+	body := block.Body
+
+	// General info.
+	bodyRoot, err := ssz.HashTreeRoot(block)
+	errCheck(err, "Failed to calculate block body root")
+	fmt.Printf("Slot: %d\n", block.Slot)
+	fmt.Printf("Block root: %#x\n", bodyRoot)
+	outputIf(verbose, fmt.Sprintf("Parent root: %#x", block.ParentRoot))
+	outputIf(verbose, fmt.Sprintf("State root: %#x", block.StateRoot))
+	if len(body.Graffiti) > 0 && hex.EncodeToString(body.Graffiti) != "0000000000000000000000000000000000000000000000000000000000000000" {
+		if utf8.Valid(body.Graffiti) {
+			fmt.Printf("Graffiti: %s\n", string(body.Graffiti))
+		} else {
+			fmt.Printf("Graffiti: %#x\n", body.Graffiti)
+		}
+	}
+
+	// Eth1 data.
+	eth1Data := body.Eth1Data
+	outputIf(verbose, fmt.Sprintf("Ethereum 1 deposit count: %d", eth1Data.DepositCount))
+	outputIf(verbose, fmt.Sprintf("Ethereum 1 deposit root: %#x", eth1Data.DepositRoot))
+	outputIf(verbose, fmt.Sprintf("Ethereum 1 block hash: %#x", eth1Data.BlockHash))
+
+	// Attestations.
+	fmt.Printf("Attestations: %d\n", len(body.Attestations))
+	if verbose {
+		for i, att := range body.Attestations {
+			fmt.Printf("\t%d:\n", i)
+
+			fmt.Printf("\t\tCommittee index: %d\n", att.Data.CommitteeIndex)
+			fmt.Printf("\t\tAttesters: %d/%d\n", att.AggregationBits.Count(), att.AggregationBits.Len())
+			fmt.Printf("\t\tAggregation bits: %s\n", bitsToString(att.AggregationBits))
+			fmt.Printf("\t\tSlot: %d\n", att.Data.Slot)
+			fmt.Printf("\t\tBeacon block root: %#x\n", att.Data.BeaconBlockRoot)
+			fmt.Printf("\t\tSource epoch: %d\n", att.Data.Source.Epoch)
+			fmt.Printf("\t\tSource root: %#x\n", att.Data.Source.Root)
+			fmt.Printf("\t\tTarget epoch: %d\n", att.Data.Target.Epoch)
+			fmt.Printf("\t\tTarget root: %#x\n", att.Data.Target.Root)
+		}
+	}
+
+	// Attester slashings.
+	fmt.Printf("Attester slashings: %d\n", len(body.AttesterSlashings))
+	if verbose {
+		for i, slashing := range body.AttesterSlashings {
+			// Say what was slashed.
+			att1 := slashing.Attestation_1
+			outputIf(debug, fmt.Sprintf("Attestation 1 attesting indices are %v", att1.AttestingIndices))
+			att2 := slashing.Attestation_2
+			outputIf(debug, fmt.Sprintf("Attestation 2 attesting indices are %v", att2.AttestingIndices))
+			slashedIndices := intersection(att1.AttestingIndices, att2.AttestingIndices)
+			if len(slashedIndices) == 0 {
+				continue
+			}
+
+			fmt.Printf("\t%d:\n", i)
+
+			fmt.Println("\t\tSlashed validators:")
+			for _, slashedIndex := range slashedIndices {
+				validator, err := grpc.FetchValidatorByIndex(eth2GRPCConn, slashedIndex)
+				errCheck(err, "Failed to obtain validator information")
+				fmt.Printf("\t\t\t%#x (%d)\n", validator.PublicKey, slashedIndex)
+			}
+
+			// Say what caused the slashing.
+			if att1.Data.Target.Epoch == att2.Data.Target.Epoch {
+				fmt.Printf("\t\tDouble voted for same target epoch (%d):\n", att1.Data.Target.Epoch)
+				if !bytes.Equal(att1.Data.Target.Root, att2.Data.Target.Root) {
+					fmt.Printf("\t\t\tAttestation 1 target epoch root: %#x\n", att1.Data.Target.Root)
+					fmt.Printf("\t\t\tAttestation 2target epoch root: %#x\n", att2.Data.Target.Root)
+				}
+				if !bytes.Equal(att1.Data.BeaconBlockRoot, att2.Data.BeaconBlockRoot) {
+					fmt.Printf("\t\t\tAttestation 1 beacon block root: %#x\n", att1.Data.BeaconBlockRoot)
+					fmt.Printf("\t\t\tAttestation 2 beacon block root: %#x\n", att2.Data.BeaconBlockRoot)
+				}
+			} else {
+				if att1.Data.Source.Epoch < att2.Data.Source.Epoch &&
+					att1.Data.Target.Epoch > att2.Data.Target.Epoch {
+					fmt.Printf("\t\tSurround voted:\n")
+					fmt.Printf("\t\t\tAttestation 1 vote: %d->%d\n", att1.Data.Source.Epoch, att1.Data.Target.Epoch)
+					fmt.Printf("\t\t\tAttestation 2 vote: %d->%d\n", att2.Data.Source.Epoch, att2.Data.Target.Epoch)
+				}
+			}
+		}
+	}
+
+	// TODO Proposer slashings once proposer slashings exist.
+
+	// Deposits.
+	fmt.Printf("Deposits: %d\n", len(body.Deposits))
+	if verbose {
+		for i, deposit := range body.Deposits {
+			data := deposit.Data
+			fmt.Printf("\t%d:\n", i)
+			fmt.Printf("\t\tPublic key: %#x\n", data.PublicKey)
+			fmt.Printf("\t\tAmount: %s\n", string2eth.GWeiToString(data.Amount, true))
+			fmt.Printf("\t\tWithdrawal credentials: %#x\n", data.WithdrawalCredentials)
+			fmt.Printf("\t\tSignature: %#x\n", data.Signature)
+		}
+	}
+
+	// Voluntary exits.
+	fmt.Printf("Voluntary exits: %d\n", len(body.VoluntaryExits))
+	if verbose {
+		for i, voluntaryExit := range body.VoluntaryExits {
+			fmt.Printf("\t%d:\n", i)
+			validator, err := grpc.FetchValidatorByIndex(eth2GRPCConn, voluntaryExit.Exit.ValidatorIndex)
+			errCheck(err, "Failed to obtain validator information")
+			fmt.Printf("\t\tValidator: %#x (%d)\n", validator.PublicKey, voluntaryExit.Exit.ValidatorIndex)
+			fmt.Printf("\t\tEpoch: %d\n", voluntaryExit.Exit.Epoch)
+		}
+	}
 }
 
 // intersection returns a list of items common between the two sets.
@@ -220,5 +226,5 @@ func bitsToString(input bitfield.Bitlist) string {
 func init() {
 	blockCmd.AddCommand(blockInfoCmd)
 	blockFlags(blockInfoCmd)
-	blockInfoCmd.Flags().Int64Var(&blockInfoSlot, "slot", -1, "the default slot")
+	blockInfoCmd.Flags().Int64Var(&blockInfoSlot, "slot", -1, "the latest slot with a block")
 }

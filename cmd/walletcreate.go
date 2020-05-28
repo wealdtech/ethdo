@@ -21,7 +21,6 @@ import (
 	wallet "github.com/wealdtech/go-eth2-wallet"
 	keystorev4 "github.com/wealdtech/go-eth2-wallet-encryptor-keystorev4"
 	hd "github.com/wealdtech/go-eth2-wallet-hd/v2"
-	filesystem "github.com/wealdtech/go-eth2-wallet-store-filesystem"
 )
 
 var walletCreateType string
@@ -44,28 +43,40 @@ In quiet mode this will return 0 if the wallet is created successfully, otherwis
 		switch strings.ToLower(walletCreateType) {
 		case "non-deterministic", "nd":
 			assert(walletCreateSeed == "", "--seed is not allowed with non-deterministic wallets")
-			_, err = wallet.CreateWallet(walletWallet, wallet.WithType("nd"))
+			err = walletCreateND(walletWallet)
 		case "hierarchical deterministic", "hd":
 			assert(rootWalletPassphrase != "", "--walletpassphrase is required for hierarchical deterministic wallets")
-			store := filesystem.New()
-			encryptor := keystorev4.New()
-			if walletCreateSeed != "" {
-				// Creating wallet from a seed.
-				var seed []byte
-				seed, err = bip39.MnemonicToByteArray(walletCreateSeed)
-				errCheck(err, "Failed to decode seed")
-				// Strip checksum; last byte
-				seed = seed[:len(seed)-1]
-				assert(len(seed) == 32, "Seed must have 24 words")
-				_, err = hd.CreateWalletFromSeed(walletWallet, []byte(rootWalletPassphrase), store, encryptor, seed)
-			} else {
-				_, err = hd.CreateWallet(walletWallet, []byte(rootWalletPassphrase), store, encryptor)
-			}
+			err = walletCreateHD(walletWallet, rootWalletPassphrase, walletCreateSeed)
 		default:
 			die("unknown wallet type")
 		}
 		errCheck(err, "Failed to create wallet")
 	},
+}
+
+// walletCreateND creates a non-deterministic wallet.
+func walletCreateND(name string) error {
+	_, err := wallet.CreateWallet(name, wallet.WithType("nd"))
+	return err
+}
+
+// walletCreateND creates a hierarchical-deterministic wallet.
+func walletCreateHD(name string, passphrase string, seedPhrase string) error {
+	encryptor := keystorev4.New()
+	if seedPhrase != "" {
+		// Create wallet from a user-supplied seed.
+		var seed []byte
+		seed, err := bip39.MnemonicToByteArray(seedPhrase)
+		errCheck(err, "Failed to decode seed")
+		// Strip checksum; last byte.
+		seed = seed[:len(seed)-1]
+		assert(len(seed) == 32, "Seed must have 24 words")
+		_, err = hd.CreateWalletFromSeed(name, []byte(passphrase), store, encryptor, seed)
+		return err
+	}
+	// Create wallet with a random seed.
+	_, err := hd.CreateWallet(name, []byte(passphrase), store, encryptor)
+	return err
 }
 
 func init() {

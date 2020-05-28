@@ -57,6 +57,9 @@ var rootStorePassphrase string
 var rootWalletPassphrase string
 var rootAccountPassphrase string
 
+// Store for wallet actions.
+var store wtypes.Store
+
 // Remote connection.
 var remote bool
 var remoteAddr string
@@ -124,7 +127,6 @@ func persistentPreRun(cmd *cobra.Command, args []string) {
 
 	if viper.GetString("remote") == "" {
 		// Set up our wallet store
-		var store wtypes.Store
 		switch rootStore {
 		case "s3":
 			assert(rootBaseDir == "", "--basedir does not apply for the s3 store")

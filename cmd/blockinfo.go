@@ -31,6 +31,7 @@ import (
 )
 
 var blockInfoSlot int64
+var blockInfoStream bool
 
 var blockInfoCmd = &cobra.Command{
 	Use:   "info",
@@ -44,23 +45,36 @@ In quiet mode this will return 0 if the block information is present and not ski
 		err := connect()
 		errCheck(err, "Failed to obtain connection to Ethereum 2 beacon chain block")
 
-		assert(blockInfoSlot != 0, "--slot is required")
+		if blockInfoStream {
+			stream, err := grpc.StreamBlocks(eth2GRPCConn)
+			errCheck(err, "Failed to obtain block stream")
+			for {
+				signedBlock, err := stream.Recv()
+				errCheck(err, "Failed to obtain block")
+				if signedBlock != nil {
+					fmt.Println("")
+					outputBlock(signedBlock)
+				}
+			}
 
-		var slot uint64
-		if blockInfoSlot < 0 {
-			slot, err = grpc.FetchLatestFilledSlot(eth2GRPCConn)
 		} else {
-			slot = uint64(blockInfoSlot)
-		}
-		assert(slot > 0, "slot must be greater than 0")
+			assert(blockInfoSlot != 0, "--slot is required")
+			var slot uint64
+			if blockInfoSlot < 0 {
+				slot, err = grpc.FetchLatestFilledSlot(eth2GRPCConn)
+			} else {
+				slot = uint64(blockInfoSlot)
+			}
+			assert(slot > 0, "slot must be greater than 0")
 
-		signedBlock, err := grpc.FetchBlock(eth2GRPCConn, slot)
-		errCheck(err, "Failed to obtain block")
-		if signedBlock == nil {
-			outputIf(!quiet, "No block at that slot")
-			os.Exit(_exitFailure)
+			signedBlock, err := grpc.FetchBlock(eth2GRPCConn, slot)
+			errCheck(err, "Failed to obtain block")
+			if signedBlock == nil {
+				outputIf(!quiet, "No block at that slot")
+				os.Exit(_exitFailure)
+			}
+			outputBlock(signedBlock)
 		}
-		outputBlock(signedBlock)
 
 		os.Exit(_exitSuccess)
 	},
@@ -227,4 +241,5 @@ func init() {
 	blockCmd.AddCommand(blockInfoCmd)
 	blockFlags(blockInfoCmd)
 	blockInfoCmd.Flags().Int64Var(&blockInfoSlot, "slot", -1, "the latest slot with a block")
+	blockInfoCmd.Flags().BoolVar(&blockInfoStream, "stream", false, "continually stream blocks as they arrive")
 }

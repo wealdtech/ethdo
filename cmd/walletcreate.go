@@ -18,9 +18,9 @@ import (
 
 	"github.com/spf13/cobra"
 	bip39 "github.com/tyler-smith/go-bip39"
-	wallet "github.com/wealdtech/go-eth2-wallet"
 	keystorev4 "github.com/wealdtech/go-eth2-wallet-encryptor-keystorev4"
 	hd "github.com/wealdtech/go-eth2-wallet-hd/v2"
+	nd "github.com/wealdtech/go-eth2-wallet-nd/v2"
 )
 
 var walletCreateType string
@@ -56,7 +56,7 @@ In quiet mode this will return 0 if the wallet is created successfully, otherwis
 
 // walletCreateND creates a non-deterministic wallet.
 func walletCreateND(name string) error {
-	_, err := wallet.CreateWallet(name, wallet.WithType("nd"))
+	_, err := nd.CreateWallet(name, store, keystorev4.New())
 	return err
 }
 

@@ -183,3 +183,17 @@ func FetchBlock(conn *grpc.ClientConn, slot uint64) (*ethpb.SignedBeaconBlock, e
 	}
 	return resp.BlockContainers[0].Block, nil
 }
+
+func StreamBlocks(conn *grpc.ClientConn) (ethpb.BeaconChain_StreamBlocksClient, error) {
+	if conn == nil {
+		return nil, errors.New("no connection to beacon node")
+	}
+
+	beaconClient := ethpb.NewBeaconChainClient(conn)
+	stream, err := beaconClient.StreamBlocks(context.Background(), &types.Empty{})
+	if err != nil {
+		return nil, err
+	}
+
+	return stream, nil
+}

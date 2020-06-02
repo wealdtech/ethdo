@@ -54,7 +54,7 @@ In quiet mode this will return 0 if the account is imported successfully, otherw
 		errCheck(err, "Failed to unlock wallet")
 
 		_, accountName, err := walletAndAccountNamesFromPath(rootAccount)
-		errCheck(err, "Failed to obtain accout name")
+		errCheck(err, "Failed to obtain account name")
 
 		account, err := w.(types.WalletAccountImporter).ImportAccount(accountName, key, []byte(rootAccountPassphrase))
 		errCheck(err, "Failed to create account")

@@ -176,7 +176,6 @@ func init() {
 	validatorExitCmd.Flags().StringVar(&validatorExitKey, "key", "", "Private key if account not known by ethdo")
 	validatorExitCmd.Flags().BoolVar(&validatorExitJSONOutput, "json-output", false, "Print JSON transaction; do not broadcast to network")
 	validatorExitCmd.Flags().StringVar(&validatorExitJSON, "json", "", "Use JSON as created by --json-output to exit")
-	addTransactionFlags(validatorExitCmd)
 }
 
 type validatorExitData struct {

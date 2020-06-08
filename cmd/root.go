@@ -101,20 +101,6 @@ func persistentPreRun(cmd *cobra.Command, args []string) {
 	rootWalletPassphrase = viper.GetString("walletpassphrase")
 	rootAccountPassphrase = viper.GetString("passphrase")
 
-	// ...lots of commands have transaction-related flags (e.g.) 'wait'
-	// as options but we want to bind them to this particular command and
-	// this is the first chance we get
-	if cmd.Flags().Lookup("wait") != nil {
-		err := viper.BindPFlag("wait", cmd.Flags().Lookup("wait"))
-		errCheck(err, "Failed to set wait option")
-	}
-	wait = viper.GetBool("wait")
-	if cmd.Flags().Lookup("generate") != nil {
-		err := viper.BindPFlag("generate", cmd.Flags().Lookup("generate"))
-		errCheck(err, "Failed to set generate option")
-	}
-	generate = viper.GetBool("generate")
-
 	if quiet && verbose {
 		die("Cannot supply both quiet and verbose flags")
 	}
@@ -413,12 +399,6 @@ func sign(account wtypes.Account, data []byte) (e2types.Signature, error) {
 
 	outputIf(debug, fmt.Sprintf("Signing %x (%d)", data, len(data)))
 	return account.Sign(data)
-}
-
-// addTransactionFlags adds flags used in all transactions.
-func addTransactionFlags(cmd *cobra.Command) {
-	cmd.Flags().Bool("generate", false, "Do not send the transaction; generate and output as a hex string only")
-	cmd.Flags().Bool("wait", false, "wait for the transaction to be mined before returning")
 }
 
 // connect connects to an Ethereum 2 endpoint.

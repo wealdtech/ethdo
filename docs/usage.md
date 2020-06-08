@@ -28,7 +28,7 @@ Spending: 0x85dfc6dcee4c9da36f6473ec02fda283d6c920c641fc8e3a76113c5c227d4aeeb100
 #### `create`
 
 `ethdo wallet create` creates a new wallet with the given parameters.  Options for creating a wallet include:
-  - `wallet`: the name of the wallet to create (defaults to "primary")
+  - `wallet`: the name of the wallet to create
   - `type`: the type of wallet to create.  This can be either "nd" for a non-deterministic wallet, where private keys are generated randomly, or "hd" for a hierarchical deterministic wallet, where private keys are generated from a seed and path as per [ERC-2333](https://github.com/CarlBeek/EIPs/blob/bls_path/EIPS/eip-2334.md) (defaults to "nd")
   - `walletpassphrase`: the passphrase for of the wallet.  This is required for hierarchical deterministic wallets, to protect the seed
   - `seed`: for hierarchical deterministic wallets only, use a pre-defined 24-word [BIP-39 seed phrase](https://en.bitcoin.it/wiki/Seed_phrase) to create the wallet.  **Warning** The same seed can be imported in to multiple wallets, in which case they will generate the same keys.  Please ensure that only a single wallet is active with any single seed phrase
@@ -36,6 +36,16 @@ Spending: 0x85dfc6dcee4c9da36f6473ec02fda283d6c920c641fc8e3a76113c5c227d4aeeb100
 ```sh
 $ ethdo wallet create --wallet="Personal wallet" --type="hd" --walletpassphrase="my wallet secret"
 ```
+
+#### `delete`
+`ethdo wallet delete` deletes a wallet.  Options for deleting a wallet include:
+  - `wallet`: the name of the wallet to delete
+
+```sh
+$ ethdo wallet delete --wallet="Old wallet"
+```
+
+**Warning** Deleting a wallet is permanent.  Only use this command if you really don't want the wallet, or you have securely backed the wallet up using `wallet export`.
 
 #### `export`
 

@@ -45,10 +45,6 @@ var quiet bool
 var verbose bool
 var debug bool
 
-// For transaction commands.
-var wait bool
-var generate bool
-
 // Root variables, present for all commands.
 var rootStore string
 var rootAccount string
@@ -102,13 +98,10 @@ func persistentPreRun(cmd *cobra.Command, args []string) {
 	rootAccountPassphrase = viper.GetString("passphrase")
 
 	if quiet && verbose {
-		die("Cannot supply both quiet and verbose flags")
+		fmt.Println("Cannot supply both quiet and verbose flags")
 	}
 	if quiet && debug {
-		die("Cannot supply both quiet and debug flags")
-	}
-	if generate && wait {
-		die("Cannot supply both generate and wait flags")
+		fmt.Println("Cannot supply both quiet and debug flags")
 	}
 
 	if viper.GetString("remote") == "" {

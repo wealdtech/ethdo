@@ -69,6 +69,7 @@ $ ethdo wallet export --wallet="Personal wallet" --exportpassphrase="my export s
 `ethdo wallet import` imports a wallet and all of its accounts exported by `ethdo wallet export`.  Options for importing a wallet include:
   - `importdata`: the data exported by `ethdo wallet export`
   - `importpassphrase`: the passphrase that was provided to `ethdo wallet export` to encrypt the data
+  - `verify`: confirm information about the wallet import without importing it
 
 ```sh
 $ ethdo wallet import --importdata="0x01c7a27ad40d45b4ae5be5f..." --importpassphrase="my export secret"

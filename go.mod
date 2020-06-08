@@ -26,6 +26,7 @@ require (
 	github.com/tyler-smith/go-bip39 v1.0.2
 	github.com/wealdtech/eth2-signer-api v1.3.0
 	github.com/wealdtech/go-bytesutil v1.1.1
+	github.com/wealdtech/go-ecodec v1.1.0
 	github.com/wealdtech/go-eth2-types/v2 v2.4.0
 	github.com/wealdtech/go-eth2-util v1.2.0
 	github.com/wealdtech/go-eth2-wallet v1.10.0

@@ -20,6 +20,7 @@ import (
 
 	"github.com/spf13/cobra"
 	pb "github.com/wealdtech/eth2-signer-api/pb/v1"
+	util "github.com/wealdtech/go-eth2-util"
 )
 
 var accountInfoCmd = &cobra.Command{
@@ -33,6 +34,7 @@ In quiet mode this will return 0 if the account exists, otherwise 1.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		assert(rootAccount != "", "--account is required")
 
+		var withdrawalCredentials []byte
 		if remote {
 			listerClient := pb.NewListerClient(remoteGRPCConn)
 			listAccountsReq := &pb.ListAccountsRequest{
@@ -44,13 +46,18 @@ In quiet mode this will return 0 if the account exists, otherwise 1.`,
 			errCheck(err, "Failed to access account")
 			assert(resp.State == pb.ResponseState_SUCCEEDED, "No such account")
 			assert(len(resp.Accounts) == 1, "No such account")
-			fmt.Printf("Public key: %#048x\n", resp.Accounts[0].PublicKey)
-
+			fmt.Printf("Public key: %#x\n", resp.Accounts[0].PublicKey)
+			withdrawalCredentials = util.SHA256(resp.Accounts[0].PublicKey)
+			withdrawalCredentials[0] = byte(0) // BLS_WITHDRAWAL_PREFIX
+			outputIf(verbose, fmt.Sprintf("Withdrawal credentials: %#x", withdrawalCredentials))
 		} else {
 			account, err := accountFromPath(rootAccount)
 			errCheck(err, "Failed to access wallet")
 			outputIf(verbose, fmt.Sprintf("UUID: %v", account.ID()))
-			outputIf(!quiet, fmt.Sprintf("Public key: %#048x", account.PublicKey().Marshal()))
+			outputIf(!quiet, fmt.Sprintf("Public key: %#x", account.PublicKey().Marshal()))
+			withdrawalCredentials = util.SHA256(account.PublicKey().Marshal())
+			withdrawalCredentials[0] = byte(0) // BLS_WITHDRAWAL_PREFIX
+			outputIf(verbose, fmt.Sprintf("Withdrawal credentials: %#x", withdrawalCredentials))
 			outputIf(verbose && account.Path() != "", fmt.Sprintf("Path: %s", account.Path()))
 		}
 

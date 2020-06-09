@@ -112,7 +112,10 @@ In quiet mode this will return 0 if the the data can be generated correctly, oth
 				err := connect()
 				errCheck(err, "Failed to connect to beacon node")
 				config, err := grpc.FetchChainConfig(eth2GRPCConn)
-				errCheck(err, "Failed to obtain chain configuration")
+				if err != nil {
+					outputIf(!quiet, "Could not connect to beacon node; supply a connection with --connection or provide a fork version with --forkversion to generate a deposit")
+					os.Exit(_exitFailure)
+				}
 				genesisForkVersion, exists := config["GenesisForkVersion"]
 				assert(exists, "Failed to obtain genesis fork version")
 				forkVersion = genesisForkVersion.([]byte)

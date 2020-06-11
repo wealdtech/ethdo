@@ -170,7 +170,7 @@ In quiet mode this will return 0 if the the data can be generated correctly, oth
 				txData = append(txData, signedDepositData.Signature...)
 				outputs = append(outputs, fmt.Sprintf("%#x", txData))
 			} else {
-				outputs = append(outputs, fmt.Sprintf(`{"account":"%s","pubkey":"%048x","withdrawal_credentials":"%032x","signature":"%096x","value":%d,"deposit_data_root":"%032x","version":1}`, fmt.Sprintf("%s/%s", validatorWallet.Name(), validatorAccount.Name()), signedDepositData.PubKey, signedDepositData.WithdrawalCredentials, signedDepositData.Signature, val, depositDataRoot))
+				outputs = append(outputs, fmt.Sprintf(`{"account":"%s","pubkey":"%048x","withdrawal_credentials":"%032x","signature":"%096x","value":%d,"deposit_data_root":"%032x","version":2}`, fmt.Sprintf("%s/%s", validatorWallet.Name(), validatorAccount.Name()), signedDepositData.PubKey, signedDepositData.WithdrawalCredentials, signedDepositData.Signature, val, depositDataRoot))
 			}
 		}
 

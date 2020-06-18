@@ -107,7 +107,7 @@ In quiet mode this will return 0 if the the data can be generated correctly, oth
 					failures = true
 				}
 			}
-			outputIf(verbose, fmt.Sprintf("Deposit %d verified", i))
+			outputIf(!quiet, fmt.Sprintf("Deposit for %q verified", deposit.Name))
 		}
 
 		if failures {
@@ -224,6 +224,7 @@ func depositDataFromJSON(input string) ([]*depositData, error) {
 	}
 	return depositData, nil
 }
+
 func init() {
 	depositCmd.AddCommand(depositVerifyCmd)
 	depositFlags(depositVerifyCmd)

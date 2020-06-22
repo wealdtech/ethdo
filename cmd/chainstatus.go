@@ -70,12 +70,12 @@ In quiet mode this will return 0 if the chain status can be obtained, otherwise 
 			slotsPerEpoch := config["SlotsPerEpoch"].(uint64)
 			epoch := slot / slotsPerEpoch
 			fmt.Printf("Current epoch: %d\n", epoch)
-			fmt.Printf("Justified epoch: %d\n", info.GetJustifiedSlot()/slotsPerEpoch)
+			fmt.Printf("Justified epoch: %d\n", info.GetJustifiedEpoch())
 			if verbose {
 				distance := (slot - info.GetJustifiedSlot()) / slotsPerEpoch
 				fmt.Printf("Justified epoch distance %d\n", distance)
 			}
-			fmt.Printf("Finalized epoch: %d\n", info.GetFinalizedSlot()/slotsPerEpoch)
+			fmt.Printf("Finalized epoch: %d\n", info.GetFinalizedEpoch())
 			if verbose {
 				distance := (slot - info.GetFinalizedSlot()) / slotsPerEpoch
 				fmt.Printf("Finalized epoch distance: %d\n", distance)

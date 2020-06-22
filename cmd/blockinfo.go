@@ -66,7 +66,7 @@ In quiet mode this will return 0 if the block information is present and not ski
 			var slot uint64
 			if blockInfoSlot < 0 {
 				slot, err = grpc.FetchLatestFilledSlot(eth2GRPCConn)
-				errCheck(err, "Failed to obtain latest block")
+				errCheck(err, "Failed to obtain slot of latest block")
 			} else {
 				slot = uint64(blockInfoSlot)
 			}

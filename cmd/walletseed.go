@@ -34,14 +34,14 @@ In quiet mode this will return 0 if the wallet is a hierarchical deterministic w
 	Run: func(cmd *cobra.Command, args []string) {
 		assert(!remote, "wallet seed not available with remote wallets")
 		assert(walletWallet != "", "--wallet is required")
-		assert(rootWalletPassphrase != "", "--walletpassphrase is required")
+		assert(getWalletPassphrase() != "", "--walletpassphrase is required")
 
 		wallet, err := walletFromPath(walletWallet)
 		errCheck(err, "Failed to access wallet")
 		_, ok := wallet.(types.WalletKeyProvider)
 		assert(ok, fmt.Sprintf("wallets of type %q do not have a seed", wallet.Type()))
 
-		err = wallet.Unlock([]byte(rootWalletPassphrase))
+		err = wallet.Unlock([]byte(getWalletPassphrase()))
 		errCheck(err, "Failed to unlock wallet")
 		seed, err := wallet.(types.WalletKeyProvider).Key()
 		errCheck(err, "Failed to obtain wallet key")

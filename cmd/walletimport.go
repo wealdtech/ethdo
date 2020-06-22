@@ -24,7 +24,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/wealdtech/go-bytesutil"
 	"github.com/wealdtech/go-ecodec"
-	wallet "github.com/wealdtech/go-eth2-wallet"
+	e2wallet "github.com/wealdtech/go-eth2-wallet"
 )
 
 var walletImportData string
@@ -89,7 +89,7 @@ In quiet mode this will return 0 if the wallet is imported successfully, otherwi
 			}
 
 		} else {
-			_, err = wallet.ImportWallet(importData, []byte(walletImportPassphrase))
+			_, err = e2wallet.ImportWallet(importData, []byte(walletImportPassphrase))
 			errCheck(err, "Failed to import wallet")
 		}
 

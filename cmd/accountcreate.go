@@ -18,6 +18,8 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
+	e2wallet "github.com/wealdtech/go-eth2-wallet"
+	e2wtypes "github.com/wealdtech/go-eth2-wallet-types/v2"
 )
 
 var accountCreateCmd = &cobra.Command{
@@ -31,24 +33,26 @@ In quiet mode this will return 0 if the account is created successfully, otherwi
 	Run: func(cmd *cobra.Command, args []string) {
 		assert(!remote, "account create not available with remote wallets")
 		assert(rootAccount != "", "--account is required")
-		assert(rootAccountPassphrase != "", "--passphrase is required")
 
-		w, err := walletFromPath(rootAccount)
+		wallet, err := walletFromPath(rootAccount)
 		errCheck(err, "Failed to access wallet")
 
-		if w.Type() == "hierarchical deterministic" {
-			assert(rootWalletPassphrase != "", "--walletpassphrase is required to create new accounts with hierarchical deterministic wallets")
+		if wallet.Type() == "hierarchical deterministic" {
+			assert(getWalletPassphrase() != "", "--walletpassphrase is required to create new accounts with hierarchical deterministic wallets")
 		}
 		_, err = accountFromPath(rootAccount)
 		assert(err != nil, "Account already exists")
 
-		err = w.Unlock([]byte(rootWalletPassphrase))
+		err = wallet.Unlock([]byte(getWalletPassphrase()))
 		errCheck(err, "Failed to unlock wallet")
 
-		_, accountName, err := walletAndAccountNamesFromPath(rootAccount)
-		errCheck(err, "Failed to obtain accout name")
+		_, accountName, err := e2wallet.WalletAndAccountNames(rootAccount)
+		errCheck(err, "Failed to obtain account name")
 
-		account, err := w.CreateAccount(accountName, []byte(rootAccountPassphrase))
+		walletAccountCreator, ok := wallet.(e2wtypes.WalletAccountCreator)
+		assert(ok, "wallet does not allow account creation")
+
+		account, err := walletAccountCreator.CreateAccount(accountName, []byte(getPassphrase()))
 		errCheck(err, "Failed to create account")
 
 		outputIf(verbose, fmt.Sprintf("0x%048x", account.PublicKey().Marshal()))

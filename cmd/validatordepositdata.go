@@ -124,8 +124,15 @@ In quiet mode this will return 0 if the the data can be generated correctly, oth
 
 			domain := e2types.Domain(e2types.DomainDeposit, forkVersion, e2types.ZeroGenesisValidatorsRoot)
 			outputIf(debug, fmt.Sprintf("Domain is %x", domain))
-			err = validatorAccount.Unlock([]byte(rootAccountPassphrase))
-			errCheck(err, "Failed to unlock validator account")
+			unlocked := false
+			for _, passphrase := range getPassphrases() {
+				err = validatorAccount.Unlock([]byte(passphrase))
+				if err == nil {
+					unlocked = true
+					break
+				}
+			}
+			assert(unlocked, "Failed to unlock validator account")
 			signature, err := signStruct(validatorAccount, depositData, domain)
 			validatorAccount.Lock()
 			errCheck(err, "Failed to generate deposit data signature")

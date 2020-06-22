@@ -40,9 +40,15 @@ In quiet mode this will return 0 if the key can be obtained, otherwise 1.`,
 		_, ok := account.(types.AccountPrivateKeyProvider)
 		assert(ok, fmt.Sprintf("account %q does not provide its private key", rootAccount))
 
-		assert(rootAccountPassphrase != "", "--passphrase is required")
-		err = account.Unlock([]byte(rootAccountPassphrase))
-		errCheck(err, "Failed to unlock account to obtain private key")
+		unlocked := false
+		for _, passphrase := range getPassphrases() {
+			err = account.Unlock([]byte(passphrase))
+			if err == nil {
+				unlocked = true
+				break
+			}
+		}
+		assert(unlocked, "Failed to unlock account to obtain private key")
 		defer account.Lock()
 		privateKey, err := account.(types.AccountPrivateKeyProvider).PrivateKey()
 		errCheck(err, "Failed to obtain private key")

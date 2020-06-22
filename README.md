@@ -118,6 +118,18 @@ If set, the `--debug` argument will output additional information about the oper
 
 Commands will have an exit status of 0 on success and 1 on failure.  The specific definition of success is specified in the help for each command.
 
+## Rules for account passphrases
+
+Account passphrases are used in various places in `ethdo`.  Where they are used, the following rules apply:
+
+  - commands that require passphrases to operate, for example unlocking an account, can be supplied with multiple passphrases.  If they are, then each passphrase is tried until one succeeds or they all fail
+  - commands that require passphrases to create, for example creating an account, must be supplied with a single passphrase.  If more than one passphrase is supplied the command will fail
+
+In addition, the following rules apply to passphrases supplied on the command line:
+
+  - passphrases **must not** start with `0x`
+  - passphrases **must not** contain the comma (,) character
+
 # Commands
 
 Command information, along with sample outputs and optional arguments, is available in [the usage section](https://github.com/wealdtech/ethdo/blob/master/docs/usage.md).

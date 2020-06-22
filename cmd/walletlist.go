@@ -18,7 +18,7 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
-	wallet "github.com/wealdtech/go-eth2-wallet"
+	e2wallet "github.com/wealdtech/go-eth2-wallet"
 )
 
 var walletListCmd = &cobra.Command{
@@ -36,7 +36,7 @@ In quiet mode this will return 0 if any wallets are found, otherwise 1.`,
 		if remote {
 			die("Remote wallets cannot be listed")
 		} else {
-			for w := range wallet.Wallets() {
+			for w := range e2wallet.Wallets() {
 				walletsFound = true
 				outputIf(!quiet && !verbose, w.Name())
 				outputIf(verbose, fmt.Sprintf("%s\n\tUUID:\t\t%s", w.Name(), w.ID().String()))

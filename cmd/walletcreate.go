@@ -45,8 +45,8 @@ In quiet mode this will return 0 if the wallet is created successfully, otherwis
 			assert(walletCreateSeed == "", "--seed is not allowed with non-deterministic wallets")
 			err = walletCreateND(walletWallet)
 		case "hierarchical deterministic", "hd":
-			assert(rootWalletPassphrase != "", "--walletpassphrase is required for hierarchical deterministic wallets")
-			err = walletCreateHD(walletWallet, rootWalletPassphrase, walletCreateSeed)
+			assert(getWalletPassphrase() != "", "--walletpassphrase is required for hierarchical deterministic wallets")
+			err = walletCreateHD(walletWallet, getWalletPassphrase(), walletCreateSeed)
 		default:
 			die("unknown wallet type")
 		}

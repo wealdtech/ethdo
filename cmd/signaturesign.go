@@ -74,7 +74,7 @@ In quiet mode this will return 0 if the data can be signed, otherwise 1.`,
 		} else {
 			account, err := accountFromPath(rootAccount)
 			errCheck(err, "Failed to access account for signing")
-			err = account.Unlock([]byte(rootAccountPassphrase))
+			err = account.Unlock([]byte(getPassphrase()))
 			errCheck(err, "Failed to unlock account for signing")
 			var fixedSizeData [32]byte
 			copy(fixedSizeData[:], data)

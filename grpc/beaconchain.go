@@ -91,6 +91,39 @@ func FetchLatestFilledSlot(conn *grpc.ClientConn) (uint64, error) {
 	return chainHead.HeadSlot, nil
 }
 
+// FetchValidatorCommittees fetches the validator committees for a given epoch.
+func FetchValidatorCommittees(conn *grpc.ClientConn, epoch uint64) (map[uint64][][]uint64, error) {
+	if conn == nil {
+		return nil, errors.New("no connection to beacon node")
+	}
+	beaconClient := ethpb.NewBeaconChainClient(conn)
+	ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("timeout"))
+	defer cancel()
+
+	req := &ethpb.ListCommitteesRequest{
+		QueryFilter: &ethpb.ListCommitteesRequest_Epoch{
+			Epoch: epoch,
+		},
+	}
+	resp, err := beaconClient.ListBeaconCommittees(ctx, req)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to obtain committees")
+	}
+
+	res := make(map[uint64][][]uint64)
+	for slot, committees := range resp.Committees {
+		res[slot] = make([][]uint64, len(resp.Committees))
+		for i, committee := range committees.Committees {
+			res[slot][uint64(i)] = make([]uint64, len(committee.ValidatorIndices))
+			indices := make([]uint64, len(committee.ValidatorIndices))
+			copy(indices, committee.ValidatorIndices)
+			res[slot][uint64(i)] = indices
+		}
+	}
+
+	return res, nil
+}
+
 // FetchValidator fetches the validator definition from the beacon node.
 func FetchValidator(conn *grpc.ClientConn, account wtypes.Account) (*ethpb.Validator, error) {
 	if conn == nil {
@@ -123,6 +156,54 @@ func FetchValidatorByIndex(conn *grpc.ClientConn, index uint64) (*ethpb.Validato
 		},
 	}
 	return beaconClient.GetValidator(ctx, req)
+}
+
+// FetchValidatorBalance fetches the validator balance from the beacon node.
+func FetchValidatorBalance(conn *grpc.ClientConn, account wtypes.Account) (uint64, error) {
+	if conn == nil {
+		return 0, errors.New("no connection to beacon node")
+	}
+	beaconClient := ethpb.NewBeaconChainClient(conn)
+	ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("timeout"))
+	defer cancel()
+
+	res, err := beaconClient.ListValidatorBalances(ctx, &ethpb.ListValidatorBalancesRequest{
+		PublicKeys: [][]byte{account.PublicKey().Marshal()},
+	})
+	if err != nil {
+		return 0, err
+	}
+	if len(res.Balances) == 0 {
+		return 0, errors.New("unknown validator")
+	}
+	return res.Balances[0].Balance, nil
+}
+
+// FetchValidatorPerformance fetches the validator performance from the beacon node.
+func FetchValidatorPerformance(conn *grpc.ClientConn, account wtypes.Account) (bool, bool, bool, uint64, int64, error) {
+	if conn == nil {
+		return false, false, false, 0, 0, errors.New("no connection to beacon node")
+	}
+	beaconClient := ethpb.NewBeaconChainClient(conn)
+	ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("timeout"))
+	defer cancel()
+
+	req := &ethpb.ValidatorPerformanceRequest{
+		PublicKeys: [][]byte{account.PublicKey().Marshal()},
+	}
+	res, err := beaconClient.GetValidatorPerformance(ctx, req)
+	if err != nil {
+		return false, false, false, 0, 0, err
+	}
+	if len(res.InclusionDistances) == 0 {
+		return false, false, false, 0, 0, errors.New("unknown validator")
+	}
+	return res.CorrectlyVotedHead[0],
+		res.CorrectlyVotedSource[0],
+		res.CorrectlyVotedTarget[0],
+		res.InclusionDistances[0],
+		int64(res.BalancesAfterEpochTransition[0]) - int64(res.BalancesBeforeEpochTransition[0]),
+		err
 }
 
 // FetchValidatorInfo fetches current validator info from the beacon node.

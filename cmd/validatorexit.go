@@ -94,7 +94,11 @@ func validatorExitHandleAccountInput(account e2wtypes.Account) (*ethpb.Voluntary
 	// Beacon chain config required for later work.
 	config, err := grpc.FetchChainConfig(eth2GRPCConn)
 	errCheck(err, "Failed to obtain beacon chain configuration")
-	secondsPerEpoch := config["SecondsPerSlot"].(uint64) * config["SlotsPerEpoch"].(uint64)
+	secondsPerSlot, ok := config["SecondsPerSlot"].(uint64)
+	assert(ok, "Failed to obtain seconds per slot from chain")
+	slotsPerEpoch, ok := config["SlotsPerEpoch"].(uint64)
+	assert(ok, "Failed to obtain slots per epoch from chain")
+	secondsPerEpoch := secondsPerSlot * slotsPerEpoch
 
 	// Fetch the validator's index.
 	index, err := grpc.FetchValidatorIndex(eth2GRPCConn, account)
@@ -113,7 +117,9 @@ func validatorExitHandleAccountInput(account e2wtypes.Account) (*ethpb.Voluntary
 		validator, err := grpc.FetchValidator(eth2GRPCConn, account)
 		errCheck(err, "Failed to obtain validator information")
 		outputIf(debug, fmt.Sprintf("Activation epoch is %v", validator.ActivationEpoch))
-		earliestExitEpoch := validator.ActivationEpoch + config["PersistentCommitteePeriod"].(uint64)
+		shardCommitteePeriod, ok := config["ShardCommitteePeriod"].(uint64)
+		assert(ok, "Failed to obtain shard committee period from chain")
+		earliestExitEpoch := validator.ActivationEpoch + shardCommitteePeriod
 
 		genesisTime, err := grpc.FetchGenesisTime(eth2GRPCConn)
 		errCheck(err, "Failed to obtain genesis time")
@@ -135,8 +141,15 @@ func validatorExitHandleAccountInput(account e2wtypes.Account) (*ethpb.Voluntary
 	errCheck(err, "Failed to obtain genesis validators root")
 	domain := e2types.Domain(e2types.DomainVoluntaryExit, currentForkVersion, genesisValidatorsRoot)
 
-	err = account.Unlock([]byte(rootAccountPassphrase))
-	errCheck(err, "Failed to unlock account; please confirm passphrase is correct")
+	unlocked := false
+	for _, passphrase := range getPassphrases() {
+		err = account.Unlock([]byte(passphrase))
+		if err == nil {
+			unlocked = true
+			break
+		}
+	}
+	assert(unlocked, "Failed to unlock account; please confirm passphrase is correct")
 	signature, err := signStruct(account, exit, domain)
 	errCheck(err, "Failed to sign exit proposal")
 

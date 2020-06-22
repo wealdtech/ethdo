@@ -35,23 +35,23 @@ In quiet mode this will return 0 if the account is unlocked, otherwise 1.`,
 		assert(rootAccount != "", "--account is required")
 
 		client := pb.NewAccountManagerClient(remoteGRPCConn)
-		unlockReq := &pb.UnlockAccountRequest{
-			Account:    rootAccount,
-			Passphrase: []byte(rootAccountPassphrase),
-		}
+		unlocked := false
 		ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("timeout"))
 		defer cancel()
-		resp, err := client.Unlock(ctx, unlockReq)
-		errCheck(err, "Failed in attempt to unlock account")
-		switch resp.State {
-		case pb.ResponseState_DENIED:
-			die("Unlock request denied")
-		case pb.ResponseState_FAILED:
-			die("Unlock request failed")
-		case pb.ResponseState_SUCCEEDED:
-			outputIf(!quiet, "Unlock request succeeded")
-			os.Exit(_exitSuccess)
+		for _, passphrase := range getPassphrases() {
+			unlockReq := &pb.UnlockAccountRequest{
+				Account:    rootAccount,
+				Passphrase: []byte(passphrase),
+			}
+			resp, err := client.Unlock(ctx, unlockReq)
+			errCheck(err, "Failed in attempt to unlock account")
+			if resp.State == pb.ResponseState_SUCCEEDED {
+				unlocked = true
+				break
+			}
 		}
+		assert(unlocked, "Failed to unlock account")
+		os.Exit(_exitSuccess)
 	},
 }
 

@@ -31,13 +31,12 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	e2types "github.com/wealdtech/go-eth2-types/v2"
+	e2wallet "github.com/wealdtech/go-eth2-wallet"
 	filesystem "github.com/wealdtech/go-eth2-wallet-store-filesystem"
 	s3 "github.com/wealdtech/go-eth2-wallet-store-s3"
+	wtypes "github.com/wealdtech/go-eth2-wallet-types/v2"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
-
-	wallet "github.com/wealdtech/go-eth2-wallet"
-	wtypes "github.com/wealdtech/go-eth2-wallet-types/v2"
 )
 
 var cfgFile string
@@ -49,9 +48,6 @@ var debug bool
 var rootStore string
 var rootAccount string
 var rootBaseDir string
-var rootStorePassphrase string
-var rootWalletPassphrase string
-var rootAccountPassphrase string
 
 // Store for wallet actions.
 var store wtypes.Store
@@ -93,9 +89,6 @@ func persistentPreRun(cmd *cobra.Command, args []string) {
 	rootStore = viper.GetString("store")
 	rootAccount = viper.GetString("account")
 	rootBaseDir = viper.GetString("basedir")
-	rootStorePassphrase = viper.GetString("storepassphrase")
-	rootWalletPassphrase = viper.GetString("walletpassphrase")
-	rootAccountPassphrase = viper.GetString("passphrase")
 
 	if quiet && verbose {
 		fmt.Println("Cannot supply both quiet and verbose flags")
@@ -110,12 +103,12 @@ func persistentPreRun(cmd *cobra.Command, args []string) {
 		case "s3":
 			assert(rootBaseDir == "", "--basedir does not apply for the s3 store")
 			var err error
-			store, err = s3.New(s3.WithPassphrase([]byte(rootStorePassphrase)))
+			store, err = s3.New(s3.WithPassphrase([]byte(getStorePassphrase())))
 			errCheck(err, "Failed to access Amazon S3 wallet store")
 		case "filesystem":
 			opts := make([]filesystem.Option, 0)
-			if rootStorePassphrase != "" {
-				opts = append(opts, filesystem.WithPassphrase([]byte(rootStorePassphrase)))
+			if getStorePassphrase() != "" {
+				opts = append(opts, filesystem.WithPassphrase([]byte(getStorePassphrase())))
 			}
 			if rootBaseDir != "" {
 				opts = append(opts, filesystem.WithLocation(rootBaseDir))
@@ -124,7 +117,7 @@ func persistentPreRun(cmd *cobra.Command, args []string) {
 		default:
 			die(fmt.Sprintf("Unsupported wallet store %s", rootStore))
 		}
-		err := wallet.UseStore(store)
+		err := e2wallet.UseStore(store)
 		errCheck(err, "Failed to use defined wallet store")
 	} else {
 		err := initRemote()
@@ -164,18 +157,18 @@ func init() {
 		panic(err)
 	}
 	RootCmd.PersistentFlags().String("basedir", "", "Base directory for filesystem wallets")
-	if err := viper.BindPFlag("basedir", RootCmd.PersistentFlags().Lookup("basedir")); err != nil {
+	if err := viper.BindPFlag("base-dir", RootCmd.PersistentFlags().Lookup("basedir")); err != nil {
 		panic(err)
 	}
 	RootCmd.PersistentFlags().String("storepassphrase", "", "Passphrase for store (if applicable)")
-	if err := viper.BindPFlag("storepassphrase", RootCmd.PersistentFlags().Lookup("storepassphrase")); err != nil {
+	if err := viper.BindPFlag("store-passphrase", RootCmd.PersistentFlags().Lookup("storepassphrase")); err != nil {
 		panic(err)
 	}
 	RootCmd.PersistentFlags().String("walletpassphrase", "", "Passphrase for wallet (if applicable)")
-	if err := viper.BindPFlag("walletpassphrase", RootCmd.PersistentFlags().Lookup("walletpassphrase")); err != nil {
+	if err := viper.BindPFlag("wallet-passphrase", RootCmd.PersistentFlags().Lookup("walletpassphrase")); err != nil {
 		panic(err)
 	}
-	RootCmd.PersistentFlags().String("passphrase", "", "Passphrase for account (if applicable)")
+	RootCmd.PersistentFlags().StringSlice("passphrase", nil, "Passphrase for account (if applicable)")
 	if err := viper.BindPFlag("passphrase", RootCmd.PersistentFlags().Lookup("passphrase")); err != nil {
 		panic(err)
 	}
@@ -252,37 +245,20 @@ func outputIf(condition bool, msg string) {
 	}
 }
 
-// walletAndAccountNamesFromPath breaks a path in to wallet and account names.
-func walletAndAccountNamesFromPath(path string) (string, string, error) {
-	if len(path) == 0 {
-		return "", "", errors.New("invalid account format")
-	}
-	index := strings.Index(path, "/")
-	if index == -1 {
-		// Just the wallet
-		return path, "", nil
-	}
-	if index == len(path)-1 {
-		// Trailing /
-		return path[:index], "", nil
-	}
-	return path[:index], path[index+1:], nil
-}
-
 // walletFromPath obtains a wallet given a path specification.
 func walletFromPath(path string) (wtypes.Wallet, error) {
-	walletName, _, err := walletAndAccountNamesFromPath(path)
+	walletName, _, err := e2wallet.WalletAndAccountNames(path)
 	if err != nil {
 		return nil, err
 	}
-	w, err := wallet.OpenWallet(walletName)
+	wallet, err := e2wallet.OpenWallet(walletName)
 	if err != nil {
 		if strings.Contains(err.Error(), "failed to decrypt wallet") {
 			return nil, errors.New("Incorrect store passphrase")
 		}
 		return nil, err
 	}
-	return w, nil
+	return wallet, nil
 }
 
 // accountFromPath obtains an account given a path specification.
@@ -291,7 +267,7 @@ func accountFromPath(path string) (wtypes.Account, error) {
 	if err != nil {
 		return nil, err
 	}
-	_, accountName, err := walletAndAccountNamesFromPath(path)
+	_, accountName, err := e2wallet.WalletAndAccountNames(path)
 	if err != nil {
 		return nil, err
 	}
@@ -300,8 +276,8 @@ func accountFromPath(path string) (wtypes.Account, error) {
 	}
 
 	if wallet.Type() == "hierarchical deterministic" && strings.HasPrefix(accountName, "m/") {
-		assert(rootWalletPassphrase != "", "--walletpassphrase is required for direct path derivations")
-		err = wallet.Unlock([]byte(rootWalletPassphrase))
+		assert(getWalletPassphrase() != "", "--walletpassphrase is required for direct path derivations")
+		err = wallet.Unlock([]byte(viper.GetString("wallet-passphrase")))
 		if err != nil {
 			return nil, errors.New("invalid wallet passphrase")
 		}
@@ -325,7 +301,7 @@ func accountsFromPath(path string) ([]wtypes.Account, error) {
 	if err != nil {
 		return nil, err
 	}
-	_, accountSpec, err := walletAndAccountNamesFromPath(path)
+	_, accountSpec, err := e2wallet.WalletAndAccountNames(path)
 	if err != nil {
 		return nil, err
 	}

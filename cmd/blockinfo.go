@@ -45,6 +45,10 @@ In quiet mode this will return 0 if the block information is present and not ski
 		err := connect()
 		errCheck(err, "Failed to obtain connection to Ethereum 2 beacon chain block")
 
+		config, err := grpc.FetchChainConfig(eth2GRPCConn)
+		errCheck(err, "Failed to obtain beacon chain configuration")
+		slotsPerEpoch := config["SlotsPerEpoch"].(uint64)
+
 		if blockInfoStream {
 			stream, err := grpc.StreamBlocks(eth2GRPCConn)
 			errCheck(err, "Failed to obtain block stream")
@@ -53,7 +57,7 @@ In quiet mode this will return 0 if the block information is present and not ski
 				errCheck(err, "Failed to obtain block")
 				if signedBlock != nil {
 					fmt.Println("")
-					outputBlock(signedBlock)
+					outputBlock(signedBlock, slotsPerEpoch)
 				}
 			}
 
@@ -62,6 +66,7 @@ In quiet mode this will return 0 if the block information is present and not ski
 			var slot uint64
 			if blockInfoSlot < 0 {
 				slot, err = grpc.FetchLatestFilledSlot(eth2GRPCConn)
+				errCheck(err, "Failed to obtain latest block")
 			} else {
 				slot = uint64(blockInfoSlot)
 			}
@@ -73,14 +78,14 @@ In quiet mode this will return 0 if the block information is present and not ski
 				outputIf(!quiet, "No block at that slot")
 				os.Exit(_exitFailure)
 			}
-			outputBlock(signedBlock)
+			outputBlock(signedBlock, slotsPerEpoch)
 		}
 
 		os.Exit(_exitSuccess)
 	},
 }
 
-func outputBlock(signedBlock *ethpb.SignedBeaconBlock) {
+func outputBlock(signedBlock *ethpb.SignedBeaconBlock, slotsPerEpoch uint64) {
 	block := signedBlock.Block
 	body := block.Body
 
@@ -88,6 +93,7 @@ func outputBlock(signedBlock *ethpb.SignedBeaconBlock) {
 	bodyRoot, err := ssz.HashTreeRoot(block)
 	errCheck(err, "Failed to calculate block body root")
 	fmt.Printf("Slot: %d\n", block.Slot)
+	fmt.Printf("Epoch: %d\n", block.Slot/slotsPerEpoch)
 	fmt.Printf("Block root: %#x\n", bodyRoot)
 	outputIf(verbose, fmt.Sprintf("Parent root: %#x", block.ParentRoot))
 	outputIf(verbose, fmt.Sprintf("State root: %#x", block.StateRoot))
@@ -105,15 +111,30 @@ func outputBlock(signedBlock *ethpb.SignedBeaconBlock) {
 	outputIf(verbose, fmt.Sprintf("Ethereum 1 deposit root: %#x", eth1Data.DepositRoot))
 	outputIf(verbose, fmt.Sprintf("Ethereum 1 block hash: %#x", eth1Data.BlockHash))
 
+	validatorCommittees := make(map[uint64][][]uint64)
+
 	// Attestations.
 	fmt.Printf("Attestations: %d\n", len(body.Attestations))
 	if verbose {
 		for i, att := range body.Attestations {
 			fmt.Printf("\t%d:\n", i)
 
+			// Fetch committees for this epoch if not already obtained.
+			committees, exists := validatorCommittees[att.Data.Slot]
+			if !exists {
+				attestationEpoch := att.Data.Slot / slotsPerEpoch
+				epochCommittees, err := grpc.FetchValidatorCommittees(eth2GRPCConn, attestationEpoch)
+				errCheck(err, "Failed to obtain committees")
+				for k, v := range epochCommittees {
+					validatorCommittees[k] = v
+				}
+				committees = validatorCommittees[att.Data.Slot]
+			}
+
 			fmt.Printf("\t\tCommittee index: %d\n", att.Data.CommitteeIndex)
 			fmt.Printf("\t\tAttesters: %d/%d\n", att.AggregationBits.Count(), att.AggregationBits.Len())
 			fmt.Printf("\t\tAggregation bits: %s\n", bitsToString(att.AggregationBits))
+			fmt.Printf("\t\tAttesting indices: %s\n", attestingIndices(att.AggregationBits, committees[att.Data.CommitteeIndex]))
 			fmt.Printf("\t\tSlot: %d\n", att.Data.Slot)
 			fmt.Printf("\t\tBeacon block root: %#x\n", att.Data.BeaconBlockRoot)
 			fmt.Printf("\t\tSource epoch: %d\n", att.Data.Source.Epoch)
@@ -157,18 +178,17 @@ func outputBlock(signedBlock *ethpb.SignedBeaconBlock) {
 					fmt.Printf("\t\t\tAttestation 1 beacon block root: %#x\n", att1.Data.BeaconBlockRoot)
 					fmt.Printf("\t\t\tAttestation 2 beacon block root: %#x\n", att2.Data.BeaconBlockRoot)
 				}
-			} else {
-				if att1.Data.Source.Epoch < att2.Data.Source.Epoch &&
-					att1.Data.Target.Epoch > att2.Data.Target.Epoch {
-					fmt.Printf("\t\tSurround voted:\n")
-					fmt.Printf("\t\t\tAttestation 1 vote: %d->%d\n", att1.Data.Source.Epoch, att1.Data.Target.Epoch)
-					fmt.Printf("\t\t\tAttestation 2 vote: %d->%d\n", att2.Data.Source.Epoch, att2.Data.Target.Epoch)
-				}
+			} else if att1.Data.Source.Epoch < att2.Data.Source.Epoch &&
+				att1.Data.Target.Epoch > att2.Data.Target.Epoch {
+				fmt.Printf("\t\tSurround voted:\n")
+				fmt.Printf("\t\t\tAttestation 1 vote: %d->%d\n", att1.Data.Source.Epoch, att1.Data.Target.Epoch)
+				fmt.Printf("\t\t\tAttestation 2 vote: %d->%d\n", att2.Data.Source.Epoch, att2.Data.Target.Epoch)
 			}
 		}
 	}
 
-	// TODO Proposer slashings once proposer slashings exist.
+	fmt.Printf("Proposer slashings: %d\n", len(body.ProposerSlashings))
+	// TODO verbose proposer slashings.
 
 	// Deposits.
 	fmt.Printf("Deposits: %d\n", len(body.Deposits))
@@ -232,6 +252,17 @@ func bitsToString(input bitfield.Bitlist) string {
 		}
 		if i%8 == 7 {
 			res = fmt.Sprintf("%s ", res)
+		}
+	}
+	return strings.TrimSpace(res)
+}
+
+func attestingIndices(input bitfield.Bitlist, indices []uint64) string {
+	bits := int(input.Len())
+	res := ""
+	for i := 0; i < bits; i++ {
+		if input.BitAt(uint64(i)) {
+			res = fmt.Sprintf("%s%d ", res, indices[i])
 		}
 	}
 	return strings.TrimSpace(res)

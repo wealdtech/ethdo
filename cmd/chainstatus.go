@@ -73,7 +73,7 @@ In quiet mode this will return 0 if the chain status can be obtained, otherwise 
 			fmt.Printf("Justified epoch: %d\n", info.GetJustifiedEpoch())
 			if verbose {
 				distance := (slot - info.GetJustifiedSlot()) / slotsPerEpoch
-				fmt.Printf("Justified epoch distance %d\n", distance)
+				fmt.Printf("Justified epoch distance: %d\n", distance)
 			}
 			fmt.Printf("Finalized epoch: %d\n", info.GetFinalizedEpoch())
 			if verbose {

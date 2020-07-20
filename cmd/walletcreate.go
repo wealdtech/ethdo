@@ -14,10 +14,13 @@
 package cmd
 
 import (
+	"context"
 	"strings"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 	bip39 "github.com/tyler-smith/go-bip39"
+	distributed "github.com/wealdtech/go-eth2-wallet-distributed"
 	keystorev4 "github.com/wealdtech/go-eth2-wallet-encryptor-keystorev4"
 	hd "github.com/wealdtech/go-eth2-wallet-hd/v2"
 	nd "github.com/wealdtech/go-eth2-wallet-nd/v2"
@@ -35,18 +38,24 @@ var walletCreateCmd = &cobra.Command{
 
 In quiet mode this will return 0 if the wallet is created successfully, otherwise 1.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		assert(!remote, "wallet create not available with remote wallets")
-		assert(walletWallet != "", "--wallet is required")
+		ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("timeout"))
+		defer cancel()
+
+		assert(viper.GetString("remote") == "", "wallet create not available with remote wallets")
+		assert(viper.GetString("wallet") != "", "--wallet is required")
 		assert(walletCreateType != "", "--type is required")
 
 		var err error
 		switch strings.ToLower(walletCreateType) {
 		case "non-deterministic", "nd":
 			assert(walletCreateSeed == "", "--seed is not allowed with non-deterministic wallets")
-			err = walletCreateND(walletWallet)
+			err = walletCreateND(ctx, viper.GetString("wallet"))
 		case "hierarchical deterministic", "hd":
 			assert(getWalletPassphrase() != "", "--walletpassphrase is required for hierarchical deterministic wallets")
-			err = walletCreateHD(walletWallet, getWalletPassphrase(), walletCreateSeed)
+			err = walletCreateHD(ctx, viper.GetString("wallet"), getWalletPassphrase(), walletCreateSeed)
+		case "distributed":
+			assert(walletCreateSeed == "", "--seed is not allowed with distributed wallets")
+			err = walletCreateDistributed(ctx, viper.GetString("wallet"))
 		default:
 			die("unknown wallet type")
 		}
@@ -55,13 +64,19 @@ In quiet mode this will return 0 if the wallet is created successfully, otherwis
 }
 
 // walletCreateND creates a non-deterministic wallet.
-func walletCreateND(name string) error {
-	_, err := nd.CreateWallet(name, store, keystorev4.New())
+func walletCreateND(ctx context.Context, name string) error {
+	_, err := nd.CreateWallet(ctx, name, store, keystorev4.New())
+	return err
+}
+
+// walletCreateDistributed creates a distributed wallet.
+func walletCreateDistributed(ctx context.Context, name string) error {
+	_, err := distributed.CreateWallet(ctx, name, store, keystorev4.New())
 	return err
 }
 
 // walletCreateND creates a hierarchical-deterministic wallet.
-func walletCreateHD(name string, passphrase string, seedPhrase string) error {
+func walletCreateHD(ctx context.Context, name string, passphrase string, seedPhrase string) error {
 	encryptor := keystorev4.New()
 	if seedPhrase != "" {
 		// Create wallet from a user-supplied seed.
@@ -71,11 +86,11 @@ func walletCreateHD(name string, passphrase string, seedPhrase string) error {
 		// Strip checksum; last byte.
 		seed = seed[:len(seed)-1]
 		assert(len(seed) == 32, "Seed must have 24 words")
-		_, err = hd.CreateWalletFromSeed(name, []byte(passphrase), store, encryptor, seed)
+		_, err = hd.CreateWalletFromSeed(ctx, name, []byte(passphrase), store, encryptor, seed)
 		return err
 	}
 	// Create wallet with a random seed.
-	_, err := hd.CreateWallet(name, []byte(passphrase), store, encryptor)
+	_, err := hd.CreateWallet(ctx, name, []byte(passphrase), store, encryptor)
 	return err
 }
 

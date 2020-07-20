@@ -20,6 +20,7 @@ import (
 	"os"
 	"sort"
 	"strings"
+	"time"
 	"unicode/utf8"
 
 	ethpb "github.com/prysmaticlabs/ethereumapis/eth/v1alpha1"
@@ -48,44 +49,49 @@ In quiet mode this will return 0 if the block information is present and not ski
 		config, err := grpc.FetchChainConfig(eth2GRPCConn)
 		errCheck(err, "Failed to obtain beacon chain configuration")
 		slotsPerEpoch := config["SlotsPerEpoch"].(uint64)
+		secondsPerSlot := config["SecondsPerSlot"].(uint64)
+
+		genesisTime, err := grpc.FetchGenesisTime(eth2GRPCConn)
+		errCheck(err, "Failed to obtain beacon chain genesis")
+
+		assert(blockInfoStream || blockInfoSlot != 0, "--slot or --stream is required")
+		assert(!blockInfoStream || blockInfoSlot == -1, "--slot and --stream are not supported together")
+
+		var slot uint64
+		if blockInfoSlot < 0 {
+			slot, err = grpc.FetchLatestFilledSlot(eth2GRPCConn)
+			errCheck(err, "Failed to obtain slot of latest block")
+		} else {
+			slot = uint64(blockInfoSlot)
+		}
+		assert(slot > 0, "slot must be greater than 0")
+
+		signedBlock, err := grpc.FetchBlock(eth2GRPCConn, slot)
+		errCheck(err, "Failed to obtain block")
+		if signedBlock == nil {
+			outputIf(!quiet, "No block at that slot")
+			os.Exit(_exitFailure)
+		}
+		outputBlock(signedBlock, genesisTime, secondsPerSlot, slotsPerEpoch)
 
 		if blockInfoStream {
 			stream, err := grpc.StreamBlocks(eth2GRPCConn)
 			errCheck(err, "Failed to obtain block stream")
 			for {
+				fmt.Println()
 				signedBlock, err := stream.Recv()
 				errCheck(err, "Failed to obtain block")
 				if signedBlock != nil {
-					fmt.Println("")
-					outputBlock(signedBlock, slotsPerEpoch)
+					outputBlock(signedBlock, genesisTime, secondsPerSlot, slotsPerEpoch)
 				}
 			}
-
-		} else {
-			assert(blockInfoSlot != 0, "--slot is required")
-			var slot uint64
-			if blockInfoSlot < 0 {
-				slot, err = grpc.FetchLatestFilledSlot(eth2GRPCConn)
-				errCheck(err, "Failed to obtain slot of latest block")
-			} else {
-				slot = uint64(blockInfoSlot)
-			}
-			assert(slot > 0, "slot must be greater than 0")
-
-			signedBlock, err := grpc.FetchBlock(eth2GRPCConn, slot)
-			errCheck(err, "Failed to obtain block")
-			if signedBlock == nil {
-				outputIf(!quiet, "No block at that slot")
-				os.Exit(_exitFailure)
-			}
-			outputBlock(signedBlock, slotsPerEpoch)
 		}
 
 		os.Exit(_exitSuccess)
 	},
 }
 
-func outputBlock(signedBlock *ethpb.SignedBeaconBlock, slotsPerEpoch uint64) {
+func outputBlock(signedBlock *ethpb.SignedBeaconBlock, genesisTime time.Time, secondsPerSlot uint64, slotsPerEpoch uint64) {
 	block := signedBlock.Block
 	body := block.Body
 
@@ -94,6 +100,7 @@ func outputBlock(signedBlock *ethpb.SignedBeaconBlock, slotsPerEpoch uint64) {
 	errCheck(err, "Failed to calculate block body root")
 	fmt.Printf("Slot: %d\n", block.Slot)
 	fmt.Printf("Epoch: %d\n", block.Slot/slotsPerEpoch)
+	fmt.Printf("Timestamp: %v\n", time.Unix(genesisTime.Unix()+int64(block.Slot*secondsPerSlot), 0))
 	fmt.Printf("Block root: %#x\n", bodyRoot)
 	outputIf(verbose, fmt.Sprintf("Parent root: %#x", block.ParentRoot))
 	outputIf(verbose, fmt.Sprintf("State root: %#x", block.StateRoot))

@@ -46,30 +46,33 @@ var validatorExitCmd = &cobra.Command{
 
 In quiet mode this will return 0 if the transaction has been generated, otherwise 1.`,
 	Run: func(cmd *cobra.Command, args []string) {
+		ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("timeout"))
+		defer cancel()
+
 		err := connect()
 		errCheck(err, "Failed to obtain connect to Ethereum 2 beacon chain node")
 
-		exit, signature := validatorExitHandleInput()
-		validatorExitHandleExit(exit, signature)
+		exit, signature := validatorExitHandleInput(ctx)
+		validatorExitHandleExit(ctx, exit, signature)
 		os.Exit(_exitSuccess)
 	},
 }
 
-func validatorExitHandleInput() (*ethpb.VoluntaryExit, e2types.Signature) {
+func validatorExitHandleInput(ctx context.Context) (*ethpb.VoluntaryExit, e2types.Signature) {
 	if validatorExitJSON != "" {
 		return validatorExitHandleJSONInput(validatorExitJSON)
 	}
-	if rootAccount != "" {
-		account, err := accountFromPath(rootAccount)
+	if viper.GetString("account") != "" {
+		account, err := accountFromPath(ctx, viper.GetString("account"))
 		errCheck(err, "Failed to access account")
-		return validatorExitHandleAccountInput(account)
+		return validatorExitHandleAccountInput(ctx, account)
 	}
 	if validatorExitKey != "" {
 		privKeyBytes, err := hex.DecodeString(strings.TrimPrefix(validatorExitKey, "0x"))
 		errCheck(err, fmt.Sprintf("Failed to decode key %s", validatorExitKey))
 		account, err := util.NewScratchAccount(privKeyBytes, nil)
 		errCheck(err, "Invalid private key")
-		return validatorExitHandleAccountInput(account)
+		return validatorExitHandleAccountInput(ctx, account)
 	}
 	die("one of --json, --account or --key is required")
 	return nil, nil
@@ -88,7 +91,7 @@ func validatorExitHandleJSONInput(input string) (*ethpb.VoluntaryExit, e2types.S
 	return exit, signature
 }
 
-func validatorExitHandleAccountInput(account e2wtypes.Account) (*ethpb.VoluntaryExit, e2types.Signature) {
+func validatorExitHandleAccountInput(ctx context.Context, account e2wtypes.Account) (*ethpb.VoluntaryExit, e2types.Signature) {
 	exit := &ethpb.VoluntaryExit{}
 
 	// Beacon chain config required for later work.
@@ -141,23 +144,19 @@ func validatorExitHandleAccountInput(account e2wtypes.Account) (*ethpb.Voluntary
 	errCheck(err, "Failed to obtain genesis validators root")
 	domain := e2types.Domain(e2types.DomainVoluntaryExit, currentForkVersion, genesisValidatorsRoot)
 
-	unlocked := false
-	for _, passphrase := range getPassphrases() {
-		err = account.Unlock([]byte(passphrase))
-		if err == nil {
-			unlocked = true
-			break
-		}
-	}
-	assert(unlocked, "Failed to unlock account; please confirm passphrase is correct")
+	alreadyUnlocked, err := unlock(account)
+	errCheck(err, "Failed to unlock account; please confirm passphrase is correct")
 	signature, err := signStruct(account, exit, domain)
+	if !alreadyUnlocked {
+		errCheck(lock(account), "Failed to re-lock account")
+	}
 	errCheck(err, "Failed to sign exit proposal")
 
 	return exit, signature
 }
 
 // validatorExitHandleExit handles the exit request.
-func validatorExitHandleExit(exit *ethpb.VoluntaryExit, signature e2types.Signature) {
+func validatorExitHandleExit(ctx context.Context, exit *ethpb.VoluntaryExit, signature e2types.Signature) {
 	if validatorExitJSONOutput {
 		data := &validatorExitData{
 			Epoch:          exit.Epoch,
@@ -174,8 +173,6 @@ func validatorExitHandleExit(exit *ethpb.VoluntaryExit, signature e2types.Signat
 		}
 
 		validatorClient := ethpb.NewBeaconNodeValidatorClient(eth2GRPCConn)
-		ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("timeout"))
-		defer cancel()
 		_, err := validatorClient.ProposeExit(ctx, proposal)
 		errCheck(err, "Failed to propose exit")
 		outputIf(!quiet, "Validator exit transaction sent")

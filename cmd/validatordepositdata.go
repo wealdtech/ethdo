@@ -14,6 +14,7 @@
 package cmd
 
 import (
+	"context"
 	"encoding/hex"
 	"fmt"
 	"os"
@@ -21,9 +22,11 @@ import (
 
 	"github.com/prysmaticlabs/go-ssz"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 	"github.com/wealdtech/ethdo/grpc"
 	e2types "github.com/wealdtech/go-eth2-types/v2"
 	util "github.com/wealdtech/go-eth2-util"
+	e2wallet "github.com/wealdtech/go-eth2-wallet"
 	string2eth "github.com/wealdtech/go-string2eth"
 )
 
@@ -47,28 +50,34 @@ The information generated can be passed to ethereal to create a deposit from the
 
 In quiet mode this will return 0 if the the data can be generated correctly, otherwise 1.`,
 	Run: func(cmd *cobra.Command, args []string) {
+		ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("timeout"))
+		defer cancel()
+
 		assert(validatorDepositDataValidatorAccount != "", "--validatoraccount is required")
-		validatorWallet, err := walletFromPath(validatorDepositDataValidatorAccount)
+		validatorWalletName, validatorAccountSpec, err := e2wallet.WalletAndAccountNames(validatorDepositDataValidatorAccount)
+		errCheck(err, "Failed to obtain wallet and account names")
+		validatorWallet, err := openNamedWallet(validatorWalletName)
 		errCheck(err, "Failed to obtain validator wallet")
-		validatorAccounts, err := accountsFromPath(validatorDepositDataValidatorAccount)
+		validatorAccounts, err := accountsFromPath(ctx, validatorWallet, validatorAccountSpec)
 		errCheck(err, "Failed to obtain validator account")
 		assert(len(validatorAccounts) > 0, "Failed to obtain validator account")
-		if len(validatorAccounts) == 1 {
-			outputIf(debug, fmt.Sprintf("Validator public key is %048x", validatorAccounts[0].PublicKey().Marshal()))
-		} else {
-			for _, validatorAccount := range validatorAccounts {
-				outputIf(verbose, fmt.Sprintf("Creating deposit for %s/%s", validatorWallet.Name(), validatorAccount.Name()))
-				outputIf(debug, fmt.Sprintf("Validator public key is %048x", validatorAccount.PublicKey().Marshal()))
-			}
+
+		for _, validatorAccount := range validatorAccounts {
+			outputIf(verbose, fmt.Sprintf("Creating deposit for %s/%s", validatorWallet.Name(), validatorAccount.Name()))
+			pubKey, err := bestPublicKey(validatorAccount)
+			errCheck(err, "Validator account does not provide a public key")
+			outputIf(debug, fmt.Sprintf("Validator public key is %#x", pubKey.Marshal()))
 		}
 
 		assert(validatorDepositDataWithdrawalAccount != "" || validatorDepositDataWithdrawalPubKey != "", "--withdrawalaccount or --withdrawalpubkey is required")
 		var withdrawalCredentials []byte
 		if validatorDepositDataWithdrawalAccount != "" {
-			withdrawalAccount, err := accountFromPath(validatorDepositDataWithdrawalAccount)
+			withdrawalAccount, err := accountFromPath(ctx, validatorDepositDataWithdrawalAccount)
 			errCheck(err, "Failed to obtain withdrawal account")
-			outputIf(debug, fmt.Sprintf("Withdrawal public key is %048x", withdrawalAccount.PublicKey().Marshal()))
-			withdrawalCredentials = util.SHA256(withdrawalAccount.PublicKey().Marshal())
+			pubKey, err := bestPublicKey(withdrawalAccount)
+			errCheck(err, "Withdrawal account does not provide a public key")
+			outputIf(debug, fmt.Sprintf("Withdrawal public key is %#x", pubKey.Marshal()))
+			withdrawalCredentials = util.SHA256(pubKey.Marshal())
 			errCheck(err, "Failed to hash withdrawal credentials")
 		} else {
 			withdrawalPubKeyBytes, err := hex.DecodeString(strings.TrimPrefix(validatorDepositDataWithdrawalPubKey, "0x"))
@@ -81,7 +90,7 @@ In quiet mode this will return 0 if the the data can be generated correctly, oth
 		}
 		// This is hard-coded, to allow deposit data to be generated without a connection to the beacon node.
 		withdrawalCredentials[0] = byte(0) // BLS_WITHDRAWAL_PREFIX
-		outputIf(debug, fmt.Sprintf("Withdrawal credentials are %032x", withdrawalCredentials))
+		outputIf(debug, fmt.Sprintf("Withdrawal credentials are %#x", withdrawalCredentials))
 
 		assert(validatorDepositDataDepositValue != "", "--depositvalue is required")
 		val, err := string2eth.StringToGWei(validatorDepositDataDepositValue)
@@ -92,12 +101,14 @@ In quiet mode this will return 0 if the the data can be generated correctly, oth
 		// For each key, generate deposit data
 		outputs := make([]string, 0)
 		for _, validatorAccount := range validatorAccounts {
+			validatorPubKey, err := bestPublicKey(validatorAccount)
+			errCheck(err, "Validator account does not provide a public key")
 			depositData := struct {
 				PubKey                []byte `ssz-size:"48"`
 				WithdrawalCredentials []byte `ssz-size:"32"`
 				Value                 uint64
 			}{
-				PubKey:                validatorAccount.PublicKey().Marshal(),
+				PubKey:                validatorPubKey.Marshal(),
 				WithdrawalCredentials: withdrawalCredentials,
 				Value:                 val,
 			}
@@ -124,17 +135,7 @@ In quiet mode this will return 0 if the the data can be generated correctly, oth
 
 			domain := e2types.Domain(e2types.DomainDeposit, forkVersion, e2types.ZeroGenesisValidatorsRoot)
 			outputIf(debug, fmt.Sprintf("Domain is %x", domain))
-			unlocked := false
-			for _, passphrase := range getPassphrases() {
-				err = validatorAccount.Unlock([]byte(passphrase))
-				if err == nil {
-					unlocked = true
-					break
-				}
-			}
-			assert(unlocked, "Failed to unlock validator account")
 			signature, err := signStruct(validatorAccount, depositData, domain)
-			validatorAccount.Lock()
 			errCheck(err, "Failed to generate deposit data signature")
 
 			signedDepositData := struct {
@@ -143,12 +144,18 @@ In quiet mode this will return 0 if the the data can be generated correctly, oth
 				Value                 uint64
 				Signature             []byte `ssz-size:"96"`
 			}{
-				PubKey:                validatorAccount.PublicKey().Marshal(),
+				PubKey:                validatorPubKey.Marshal(),
 				WithdrawalCredentials: withdrawalCredentials,
 				Value:                 val,
 				Signature:             signature.Marshal(),
 			}
-			outputIf(debug, fmt.Sprintf("Signed deposit data:\n\tPublic key: %x\n\tWithdrawal credentials: %x\n\tValue: %d\n\tSignature: %x", signedDepositData.PubKey, signedDepositData.WithdrawalCredentials, signedDepositData.Value, signedDepositData.Signature))
+			if debug {
+				fmt.Printf("Signed deposit data:\n")
+				fmt.Printf(" Public key: %#x\n", signedDepositData.PubKey)
+				fmt.Printf(" Withdrawal credentials: %#x\n", signedDepositData.WithdrawalCredentials)
+				fmt.Printf(" Value: %d\n", signedDepositData.Value)
+				fmt.Printf(" Signature: %#x\n", signedDepositData.Signature)
+			}
 
 			depositDataRoot, err := ssz.HashTreeRoot(signedDepositData)
 			errCheck(err, "Failed to generate deposit data root")
@@ -167,7 +174,7 @@ In quiet mode this will return 0 if the the data can be generated correctly, oth
 				txData = append(txData, depositDataRoot[:]...)
 				// Validator public key (pad to 32-byte boundary)
 				txData = append(txData, []byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x30}...)
-				txData = append(txData, validatorAccount.PublicKey().Marshal()...)
+				txData = append(txData, validatorPubKey.Marshal()...)
 				txData = append(txData, []byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}...)
 				// Withdrawal credentials
 				txData = append(txData, []byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x20}...)
@@ -177,7 +184,7 @@ In quiet mode this will return 0 if the the data can be generated correctly, oth
 				txData = append(txData, signedDepositData.Signature...)
 				outputs = append(outputs, fmt.Sprintf("%#x", txData))
 			} else {
-				outputs = append(outputs, fmt.Sprintf(`{"account":"%s","pubkey":"%048x","withdrawal_credentials":"%032x","signature":"%096x","value":%d,"deposit_data_root":"%032x","version":2}`, fmt.Sprintf("%s/%s", validatorWallet.Name(), validatorAccount.Name()), signedDepositData.PubKey, signedDepositData.WithdrawalCredentials, signedDepositData.Signature, val, depositDataRoot))
+				outputs = append(outputs, fmt.Sprintf(`{"name":"Deposit for %s","account":"%s","pubkey":"%#x","withdrawal_credentials":"%#x","signature":"%#x","value":%d,"deposit_data_root":"%#x","version":2}`, fmt.Sprintf("%s/%s", validatorWallet.Name(), validatorAccount.Name()), fmt.Sprintf("%s/%s", validatorWallet.Name(), validatorAccount.Name()), signedDepositData.PubKey, signedDepositData.WithdrawalCredentials, signedDepositData.Signature, val, depositDataRoot))
 			}
 		}
 

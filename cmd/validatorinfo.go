@@ -14,6 +14,7 @@
 package cmd
 
 import (
+	"context"
 	"encoding/hex"
 	"fmt"
 	"os"
@@ -22,9 +23,11 @@ import (
 
 	ethpb "github.com/prysmaticlabs/ethereumapis/eth/v1alpha1"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 	"github.com/wealdtech/ethdo/grpc"
 	"github.com/wealdtech/ethdo/util"
-	types "github.com/wealdtech/go-eth2-wallet-types/v2"
+	e2wallet "github.com/wealdtech/go-eth2-wallet"
+	e2wtypes "github.com/wealdtech/go-eth2-wallet-types/v2"
 	string2eth "github.com/wealdtech/go-string2eth"
 )
 
@@ -40,15 +43,23 @@ var validatorInfoCmd = &cobra.Command{
 In quiet mode this will return 0 if the validator information can be obtained, otherwise 1.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		// Sanity checking and setup.
-		assert(rootAccount != "" || validatorInfoPubKey != "", "--account or --pubkey is required")
+		assert(viper.GetString("account") != "" || validatorInfoPubKey != "", "--account or --pubkey is required")
 
 		err := connect()
 		errCheck(err, "Failed to obtain connection to Ethereum 2 beacon chain node")
 
-		var account types.Account
-		if rootAccount != "" {
-			account, err = accountFromPath(rootAccount)
-			errCheck(err, "Failed to access account")
+		var account e2wtypes.Account
+		if viper.GetString("account") != "" {
+			wallet, err := openWallet()
+			errCheck(err, "Failed to access wallet")
+			_, accountName, err := e2wallet.WalletAndAccountNames(viper.GetString("account"))
+			errCheck(err, "Failed to obtain account name")
+			accountByNameProvider, isAccountByNameProvider := wallet.(e2wtypes.WalletAccountByNameProvider)
+			assert(isAccountByNameProvider, "wallet cannot obtain accounts by name")
+			ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("timeout"))
+			defer cancel()
+			account, err = accountByNameProvider.AccountByName(ctx, accountName)
+			errCheck(err, "Failed to obtain account")
 		} else {
 			pubKeyBytes, err := hex.DecodeString(strings.TrimPrefix(validatorInfoPubKey, "0x"))
 			errCheck(err, fmt.Sprintf("Failed to decode public key %s", validatorInfoPubKey))

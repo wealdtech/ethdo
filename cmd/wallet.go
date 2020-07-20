@@ -15,9 +15,9 @@ package cmd
 
 import (
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
+	"github.com/spf13/viper"
 )
-
-var walletWallet string
 
 // walletCmd represents the wallet command
 var walletCmd = &cobra.Command{
@@ -30,6 +30,16 @@ func init() {
 	RootCmd.AddCommand(walletCmd)
 }
 
+var walletFlag *pflag.Flag
+
 func walletFlags(cmd *cobra.Command) {
-	cmd.Flags().StringVar(&walletWallet, "wallet", "", "Name of the wallet")
+	if walletFlag == nil {
+		cmd.Flags().String("wallet", "", "Name of the wallet")
+		walletFlag = cmd.Flags().Lookup("wallet")
+		if err := viper.BindPFlag("wallet", walletFlag); err != nil {
+			panic(err)
+		}
+	} else {
+		cmd.Flags().AddFlag(walletFlag)
+	}
 }

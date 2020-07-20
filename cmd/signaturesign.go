@@ -20,9 +20,10 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	pb "github.com/wealdtech/eth2-signer-api/pb/v1"
 	"github.com/wealdtech/go-bytesutil"
 	e2types "github.com/wealdtech/go-eth2-types/v2"
+	e2wallet "github.com/wealdtech/go-eth2-wallet"
+	e2wtypes "github.com/wealdtech/go-eth2-wallet-types/v2"
 )
 
 // signatureSignCmd represents the signature sign command
@@ -31,59 +32,46 @@ var signatureSignCmd = &cobra.Command{
 	Short: "Sign a 32-byte piece of data",
 	Long: `Sign presented data.  For example:
 
-    ethereal signature sign --data=0x5f24e819400c6a8ee2bfc014343cd971b7eb707320025a7bcd83e621e26c35b7 --account="Personal wallet/Operations" --passphrase="my account passphrase"
+    ethdo signature sign --data=0x5f24e819400c6a8ee2bfc014343cd971b7eb707320025a7bcd83e621e26c35b7 --account="Personal wallet/Operations" --passphrase="my account passphrase"
 
 In quiet mode this will return 0 if the data can be signed, otherwise 1.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		assert(signatureData != "", "--data is required")
-		data, err := bytesutil.FromHexString(signatureData)
+		ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("timeout"))
+		defer cancel()
+
+		assert(viper.GetString("signature-data") != "", "--data is required")
+		data, err := bytesutil.FromHexString(viper.GetString("signature-data"))
 		errCheck(err, "Failed to parse data")
 		assert(len(data) == 32, "data to sign must be 32 bytes")
 
 		domain := e2types.Domain(e2types.DomainType([4]byte{0, 0, 0, 0}), e2types.ZeroForkVersion, e2types.ZeroGenesisValidatorsRoot)
-		if signatureDomain != "" {
-			domainBytes, err := bytesutil.FromHexString(signatureDomain)
+		if viper.GetString("signature-domain") != "" {
+			domain, err = bytesutil.FromHexString(viper.GetString("signature-domain"))
 			errCheck(err, "Failed to parse domain")
-			assert(len(domainBytes) == 32, "Domain data invalid")
-			domain = domainBytes
+			assert(len(domain) == 32, "Domain data invalid")
 		}
+		outputIf(debug, fmt.Sprintf("Domain is %#x", domain))
 
-		assert(rootAccount != "", "--account is required")
+		assert(viper.GetString("account") != "", "--account is required")
 
-		var signature e2types.Signature
-		if remote {
-			signClient := pb.NewSignerClient(remoteGRPCConn)
-			signReq := &pb.SignRequest{
-				Id:     &pb.SignRequest_Account{Account: rootAccount},
-				Data:   data,
-				Domain: domain,
-			}
-			ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("timeout"))
-			defer cancel()
-			resp, err := signClient.Sign(ctx, signReq)
-			errCheck(err, "Failed to sign")
-			switch resp.State {
-			case pb.ResponseState_DENIED:
-				die("Signing request denied")
-			case pb.ResponseState_FAILED:
-				die("Signing request failed")
-			case pb.ResponseState_SUCCEEDED:
-				signature, err = e2types.BLSSignatureFromBytes(resp.Signature)
-				errCheck(err, "Invalid signature")
-			}
-		} else {
-			account, err := accountFromPath(rootAccount)
-			errCheck(err, "Failed to access account for signing")
-			err = account.Unlock([]byte(getPassphrase()))
-			errCheck(err, "Failed to unlock account for signing")
-			var fixedSizeData [32]byte
-			copy(fixedSizeData[:], data)
-			defer account.Lock()
-			signature, err = signRoot(account, fixedSizeData, domain)
-			errCheck(err, "Failed to sign data")
-		}
+		wallet, err := openWallet()
+		errCheck(err, "Failed to access wallet")
 
-		outputIf(!quiet, fmt.Sprintf("0x%096x", signature.Marshal()))
+		_, accountName, err := e2wallet.WalletAndAccountNames(viper.GetString("account"))
+		errCheck(err, "Failed to obtain account name")
+
+		accountByNameProvider, isAccountByNameProvider := wallet.(e2wtypes.WalletAccountByNameProvider)
+		assert(isAccountByNameProvider, "wallet does not support obtaining accounts by name")
+
+		account, err := accountByNameProvider.AccountByName(ctx, accountName)
+		errCheck(err, "Failed to obtain account")
+
+		var fixedSizeData [32]byte
+		copy(fixedSizeData[:], data)
+		signature, err := signRoot(account, fixedSizeData, domain)
+		errCheck(err, "Failed to sign")
+
+		outputIf(!quiet, fmt.Sprintf("%#x", signature.Marshal()))
 		os.Exit(_exitSuccess)
 	},
 }

@@ -14,10 +14,12 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"os"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 	"github.com/wealdtech/go-bytesutil"
 	e2wallet "github.com/wealdtech/go-eth2-wallet"
 	e2wtypes "github.com/wealdtech/go-eth2-wallet-types/v2"
@@ -35,32 +37,41 @@ var accountImportCmd = &cobra.Command{
 In quiet mode this will return 0 if the account is imported successfully, otherwise 1.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		assert(!remote, "account import not available with remote wallets")
-		assert(rootAccount != "", "--account is required")
+		assert(viper.GetString("account") != "", "--account is required")
 		passphrase := getPassphrase()
 		assert(accountImportKey != "", "--key is required")
+
+		ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("timeout"))
+		defer cancel()
 
 		key, err := bytesutil.FromHexString(accountImportKey)
 		errCheck(err, "Invalid key")
 
-		w, err := walletFromPath(rootAccount)
+		w, err := walletFromPath(viper.GetString("account"))
 		errCheck(err, "Failed to access wallet")
 
 		_, ok := w.(e2wtypes.WalletAccountImporter)
 		assert(ok, fmt.Sprintf("wallets of type %q do not allow importing accounts", w.Type()))
 
-		_, err = accountFromPath(rootAccount)
+		_, err = accountFromPath(ctx, viper.GetString("account"))
 		assert(err != nil, "Account already exists")
 
-		err = w.Unlock([]byte(getWalletPassphrase()))
-		errCheck(err, "Failed to unlock wallet")
+		locker, isLocker := w.(e2wtypes.WalletLocker)
+		if isLocker {
+			errCheck(locker.Unlock(ctx, []byte(getWalletPassphrase())), "Failed to unlock wallet")
+		}
 
-		_, accountName, err := e2wallet.WalletAndAccountNames(rootAccount)
+		_, accountName, err := e2wallet.WalletAndAccountNames(viper.GetString("account"))
 		errCheck(err, "Failed to obtain account name")
 
-		account, err := w.(e2wtypes.WalletAccountImporter).ImportAccount(accountName, key, []byte(passphrase))
+		account, err := w.(e2wtypes.WalletAccountImporter).ImportAccount(ctx, accountName, key, []byte(passphrase))
 		errCheck(err, "Failed to create account")
 
-		outputIf(verbose, fmt.Sprintf("0x%048x", account.PublicKey().Marshal()))
+		pubKey, err := bestPublicKey(account)
+		if err == nil {
+			outputIf(verbose, fmt.Sprintf("%#x", pubKey.Marshal()))
+		}
+
 		os.Exit(_exitSuccess)
 	},
 }

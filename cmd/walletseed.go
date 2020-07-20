@@ -15,12 +15,14 @@ package cmd
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"os"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 	bip39 "github.com/tyler-smith/go-bip39"
-	types "github.com/wealdtech/go-eth2-wallet-types/v2"
+	e2wtypes "github.com/wealdtech/go-eth2-wallet-types/v2"
 )
 
 var walletSeedCmd = &cobra.Command{
@@ -32,18 +34,25 @@ var walletSeedCmd = &cobra.Command{
 
 In quiet mode this will return 0 if the wallet is a hierarchical deterministic wallet, otherwise 1.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		assert(!remote, "wallet seed not available with remote wallets")
-		assert(walletWallet != "", "--wallet is required")
+		ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("timeout"))
+		defer cancel()
+
+		assert(viper.GetString("remote") == "", "wallet seed not available with remote wallets")
+		assert(viper.GetString("wallet") != "", "--wallet is required")
 		assert(getWalletPassphrase() != "", "--walletpassphrase is required")
 
-		wallet, err := walletFromPath(walletWallet)
+		wallet, err := walletFromPath(viper.GetString("wallet"))
 		errCheck(err, "Failed to access wallet")
-		_, ok := wallet.(types.WalletKeyProvider)
+		_, ok := wallet.(e2wtypes.WalletKeyProvider)
 		assert(ok, fmt.Sprintf("wallets of type %q do not have a seed", wallet.Type()))
 
-		err = wallet.Unlock([]byte(getWalletPassphrase()))
-		errCheck(err, "Failed to unlock wallet")
-		seed, err := wallet.(types.WalletKeyProvider).Key()
+		locker, isLocker := wallet.(e2wtypes.WalletLocker)
+		if isLocker {
+			errCheck(locker.Unlock(ctx, []byte(getWalletPassphrase())), "Failed to unlock wallet")
+		}
+		keyProvider, isKeyProvider := wallet.(e2wtypes.WalletKeyProvider)
+		assert(isKeyProvider, "Wallet does not provide key")
+		seed, err := keyProvider.Key(ctx)
 		errCheck(err, "Failed to obtain wallet key")
 		outputIf(debug, fmt.Sprintf("Seed is %#x", seed))
 		seedStr, err := bip39.NewMnemonic(seed)

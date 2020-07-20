@@ -20,11 +20,10 @@ import (
 
 	"github.com/gogo/protobuf/types"
 	"github.com/pkg/errors"
-	"github.com/spf13/viper"
-	"google.golang.org/grpc"
-
 	ethpb "github.com/prysmaticlabs/ethereumapis/eth/v1alpha1"
-	wtypes "github.com/wealdtech/go-eth2-wallet-types/v2"
+	"github.com/spf13/viper"
+	e2wtypes "github.com/wealdtech/go-eth2-wallet-types/v2"
+	"google.golang.org/grpc"
 )
 
 // FetchChainConfig fetches the chain configuration from the beacon node.
@@ -125,7 +124,7 @@ func FetchValidatorCommittees(conn *grpc.ClientConn, epoch uint64) (map[uint64][
 }
 
 // FetchValidator fetches the validator definition from the beacon node.
-func FetchValidator(conn *grpc.ClientConn, account wtypes.Account) (*ethpb.Validator, error) {
+func FetchValidator(conn *grpc.ClientConn, account e2wtypes.Account) (*ethpb.Validator, error) {
 	if conn == nil {
 		return nil, errors.New("no connection to beacon node")
 	}
@@ -133,9 +132,18 @@ func FetchValidator(conn *grpc.ClientConn, account wtypes.Account) (*ethpb.Valid
 	ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("timeout"))
 	defer cancel()
 
+	var pubKey []byte
+	if pubKeyProvider, ok := account.(e2wtypes.AccountCompositePublicKeyProvider); ok {
+		pubKey = pubKeyProvider.CompositePublicKey().Marshal()
+	} else if pubKeyProvider, ok := account.(e2wtypes.AccountPublicKeyProvider); ok {
+		pubKey = pubKeyProvider.PublicKey().Marshal()
+	} else {
+		return nil, errors.New("Unable to obtain public key")
+	}
+
 	req := &ethpb.GetValidatorRequest{
 		QueryFilter: &ethpb.GetValidatorRequest_PublicKey{
-			PublicKey: account.PublicKey().Marshal(),
+			PublicKey: pubKey,
 		},
 	}
 	return beaconClient.GetValidator(ctx, req)
@@ -159,7 +167,7 @@ func FetchValidatorByIndex(conn *grpc.ClientConn, index uint64) (*ethpb.Validato
 }
 
 // FetchValidatorBalance fetches the validator balance from the beacon node.
-func FetchValidatorBalance(conn *grpc.ClientConn, account wtypes.Account) (uint64, error) {
+func FetchValidatorBalance(conn *grpc.ClientConn, account e2wtypes.Account) (uint64, error) {
 	if conn == nil {
 		return 0, errors.New("no connection to beacon node")
 	}
@@ -167,8 +175,17 @@ func FetchValidatorBalance(conn *grpc.ClientConn, account wtypes.Account) (uint6
 	ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("timeout"))
 	defer cancel()
 
+	var pubKey []byte
+	if pubKeyProvider, ok := account.(e2wtypes.AccountCompositePublicKeyProvider); ok {
+		pubKey = pubKeyProvider.CompositePublicKey().Marshal()
+	} else if pubKeyProvider, ok := account.(e2wtypes.AccountPublicKeyProvider); ok {
+		pubKey = pubKeyProvider.PublicKey().Marshal()
+	} else {
+		return 0, errors.New("Unable to obtain public key")
+	}
+
 	res, err := beaconClient.ListValidatorBalances(ctx, &ethpb.ListValidatorBalancesRequest{
-		PublicKeys: [][]byte{account.PublicKey().Marshal()},
+		PublicKeys: [][]byte{pubKey},
 	})
 	if err != nil {
 		return 0, err
@@ -180,7 +197,7 @@ func FetchValidatorBalance(conn *grpc.ClientConn, account wtypes.Account) (uint6
 }
 
 // FetchValidatorPerformance fetches the validator performance from the beacon node.
-func FetchValidatorPerformance(conn *grpc.ClientConn, account wtypes.Account) (bool, bool, bool, uint64, int64, error) {
+func FetchValidatorPerformance(conn *grpc.ClientConn, account e2wtypes.Account) (bool, bool, bool, uint64, int64, error) {
 	if conn == nil {
 		return false, false, false, 0, 0, errors.New("no connection to beacon node")
 	}
@@ -188,8 +205,17 @@ func FetchValidatorPerformance(conn *grpc.ClientConn, account wtypes.Account) (b
 	ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("timeout"))
 	defer cancel()
 
+	var pubKey []byte
+	if pubKeyProvider, ok := account.(e2wtypes.AccountCompositePublicKeyProvider); ok {
+		pubKey = pubKeyProvider.CompositePublicKey().Marshal()
+	} else if pubKeyProvider, ok := account.(e2wtypes.AccountPublicKeyProvider); ok {
+		pubKey = pubKeyProvider.PublicKey().Marshal()
+	} else {
+		return false, false, false, 0, 0, errors.New("Unable to obtain public key")
+	}
+
 	req := &ethpb.ValidatorPerformanceRequest{
-		PublicKeys: [][]byte{account.PublicKey().Marshal()},
+		PublicKeys: [][]byte{pubKey},
 	}
 	res, err := beaconClient.GetValidatorPerformance(ctx, req)
 	if err != nil {
@@ -207,7 +233,7 @@ func FetchValidatorPerformance(conn *grpc.ClientConn, account wtypes.Account) (b
 }
 
 // FetchValidatorInfo fetches current validator info from the beacon node.
-func FetchValidatorInfo(conn *grpc.ClientConn, account wtypes.Account) (*ethpb.ValidatorInfo, error) {
+func FetchValidatorInfo(conn *grpc.ClientConn, account e2wtypes.Account) (*ethpb.ValidatorInfo, error) {
 	if conn == nil {
 		return nil, errors.New("no connection to beacon node")
 	}
@@ -220,9 +246,18 @@ func FetchValidatorInfo(conn *grpc.ClientConn, account wtypes.Account) (*ethpb.V
 		return nil, errors.Wrap(err, "failed to contact beacon node")
 	}
 
+	var pubKey []byte
+	if pubKeyProvider, ok := account.(e2wtypes.AccountCompositePublicKeyProvider); ok {
+		pubKey = pubKeyProvider.CompositePublicKey().Marshal()
+	} else if pubKeyProvider, ok := account.(e2wtypes.AccountPublicKeyProvider); ok {
+		pubKey = pubKeyProvider.PublicKey().Marshal()
+	} else {
+		return nil, errors.New("Unable to obtain public key")
+	}
+
 	changeSet := &ethpb.ValidatorChangeSet{
 		Action:     ethpb.SetAction_SET_VALIDATOR_KEYS,
-		PublicKeys: [][]byte{account.PublicKey().Marshal()},
+		PublicKeys: [][]byte{pubKey},
 	}
 	err = stream.Send(changeSet)
 	if err != nil {

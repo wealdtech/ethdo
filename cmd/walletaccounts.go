@@ -20,7 +20,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	pb "github.com/wealdtech/eth2-signer-api/pb/v1"
+	e2wtypes "github.com/wealdtech/go-eth2-wallet-types/v2"
 )
 
 var walletAccountsCmd = &cobra.Command{
@@ -32,52 +32,35 @@ var walletAccountsCmd = &cobra.Command{
 
 In quiet mode this will return 0 if the wallet holds any addresses, otherwise 1.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		assert(walletWallet != "", "--wallet is required")
+		ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("timeout"))
+		defer cancel()
+
+		assert(viper.GetString("wallet") != "", "wallet is required")
+
+		wallet, err := openWallet()
+		errCheck(err, "Failed to access wallet")
 
 		hasAccounts := false
-
-		if remote {
-			listerClient := pb.NewListerClient(remoteGRPCConn)
-			listAccountsReq := &pb.ListAccountsRequest{
-				Paths: []string{
-					walletWallet,
-				},
-			}
-			ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("timeout"))
-			defer cancel()
-			accountsResp, err := listerClient.ListAccounts(ctx, listAccountsReq)
-			errCheck(err, "Failed to access wallet")
-			assert(accountsResp.State == pb.ResponseState_SUCCEEDED, "Request to list wallet accounts failed")
-			walletPrefixLen := len(walletWallet) + 1
-			for _, account := range accountsResp.Accounts {
-				hasAccounts = true
-				if verbose {
-					fmt.Printf("%s\n", account.Name[walletPrefixLen:])
-					fmt.Printf("\tPublic key: %#048x\n", account.PublicKey)
-				} else if !quiet {
-					fmt.Printf("%s\n", account.Name[walletPrefixLen:])
+		for account := range wallet.Accounts(ctx) {
+			hasAccounts = true
+			outputIf(!quiet, account.Name())
+			if verbose {
+				fmt.Printf(" UUID: %v\n", account.ID())
+				pubKeyProvider, isProvider := account.(e2wtypes.AccountPublicKeyProvider)
+				if isProvider {
+					fmt.Printf(" Public key: %#x\n", pubKeyProvider.PublicKey().Marshal())
 				}
-			}
-		} else {
-			wallet, err := walletFromPath(walletWallet)
-			errCheck(err, "Failed to access wallet")
-
-			for account := range wallet.Accounts() {
-				hasAccounts = true
-				if verbose {
-					fmt.Printf("%s\n\tUUID:\t\t%s\n\tPublic key:\t0x%048x\n", account.Name(), account.ID(), account.PublicKey().Marshal())
-				} else if !quiet {
-					fmt.Printf("%s\n", account.Name())
+				compositePubKeyProvider, isProvider := account.(e2wtypes.AccountCompositePublicKeyProvider)
+				if isProvider {
+					fmt.Printf(" Composite public key: %#x\n", compositePubKeyProvider.CompositePublicKey().Marshal())
 				}
 			}
 		}
 
-		if quiet {
-			if hasAccounts {
-				os.Exit(_exitSuccess)
-			}
-			os.Exit(_exitFailure)
+		if hasAccounts {
+			os.Exit(_exitSuccess)
 		}
+		os.Exit(_exitFailure)
 	},
 }
 

@@ -55,10 +55,14 @@ In quiet mode this will return 0 if the node information can be obtained, otherw
 		errCheck(err, "Failed to obtain syncing state")
 		fmt.Printf("Syncing: %v\n", syncing)
 
-		slot := timestampToSlot(genesisTime.Unix(), time.Now().Unix(), config["SecondsPerSlot"].(uint64))
-		fmt.Printf("Current slot: %d\n", slot)
-		fmt.Printf("Current epoch: %d\n", slot/config["SlotsPerEpoch"].(uint64))
-		outputIf(verbose, fmt.Sprintf("Genesis timestamp: %v", genesisTime.Unix()))
+		if genesisTime.Unix() == 0 {
+			fmt.Println("Not reached genesis")
+		} else {
+			slot := timestampToSlot(genesisTime.Unix(), time.Now().Unix(), config["SecondsPerSlot"].(uint64))
+			fmt.Printf("Current slot: %d\n", slot)
+			fmt.Printf("Current epoch: %d\n", slot/config["SlotsPerEpoch"].(uint64))
+			outputIf(verbose, fmt.Sprintf("Genesis timestamp: %v", genesisTime.Unix()))
+		}
 
 		os.Exit(_exitSuccess)
 	},

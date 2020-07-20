@@ -14,11 +14,13 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 	wtypes "github.com/wealdtech/go-eth2-wallet-types/v2"
 )
 
@@ -31,10 +33,13 @@ var walletInfoCmd = &cobra.Command{
 
 In quiet mode this will return 0 if the wallet exists, otherwise 1.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		assert(!remote, "wallet info not available with remote wallets")
-		assert(walletWallet != "", "--wallet is required")
+		ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("timeout"))
+		defer cancel()
 
-		wallet, err := walletFromPath(walletWallet)
+		assert(viper.GetString("remote") == "", "wallet info not available with remote wallets")
+		assert(viper.GetString("wallet") != "", "--wallet is required")
+
+		wallet, err := walletFromPath(viper.GetString("wallet"))
 		errCheck(err, "unknown wallet")
 
 		if quiet {
@@ -55,7 +60,7 @@ In quiet mode this will return 0 if the wallet exists, otherwise 1.`,
 
 		// Count the accounts.
 		accounts := 0
-		for range wallet.Accounts() {
+		for range wallet.Accounts(ctx) {
 			accounts++
 		}
 		fmt.Printf("Accounts: %d\n", accounts)

@@ -33,9 +33,18 @@ func FetchValidatorIndex(conn *grpc.ClientConn, account wtypes.Account) (uint64,
 	ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("timeout"))
 	defer cancel()
 
+	var pubKey []byte
+	if pubKeyProvider, ok := account.(wtypes.AccountCompositePublicKeyProvider); ok {
+		pubKey = pubKeyProvider.CompositePublicKey().Marshal()
+	} else if pubKeyProvider, ok := account.(wtypes.AccountPublicKeyProvider); ok {
+		pubKey = pubKeyProvider.PublicKey().Marshal()
+	} else {
+		return 0, errors.New("Unable to obtain public key")
+	}
+
 	// Fetch the account.
 	req := &ethpb.ValidatorIndexRequest{
-		PublicKey: account.PublicKey().Marshal(),
+		PublicKey: pubKey,
 	}
 	resp, err := validatorClient.ValidatorIndex(ctx, req)
 	if err != nil {
@@ -54,9 +63,18 @@ func FetchValidatorState(conn *grpc.ClientConn, account wtypes.Account) (ethpb.V
 	ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("timeout"))
 	defer cancel()
 
+	var pubKey []byte
+	if pubKeyProvider, ok := account.(wtypes.AccountCompositePublicKeyProvider); ok {
+		pubKey = pubKeyProvider.CompositePublicKey().Marshal()
+	} else if pubKeyProvider, ok := account.(wtypes.AccountPublicKeyProvider); ok {
+		pubKey = pubKeyProvider.PublicKey().Marshal()
+	} else {
+		return ethpb.ValidatorStatus_UNKNOWN_STATUS, errors.New("Unable to obtain public key")
+	}
+
 	// Fetch the account.
 	req := &ethpb.ValidatorStatusRequest{
-		PublicKey: account.PublicKey().Marshal(),
+		PublicKey: pubKey,
 	}
 	resp, err := validatorClient.ValidatorStatus(ctx, req)
 	if err != nil {

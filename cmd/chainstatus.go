@@ -48,7 +48,8 @@ In quiet mode this will return 0 if the chain status can be obtained, otherwise 
 			os.Exit(_exitSuccess)
 		}
 
-		slot := timestampToSlot(genesisTime.Unix(), time.Now().Unix(), config["SecondsPerSlot"].(uint64))
+		now := time.Now()
+		slot := timestampToSlot(genesisTime.Unix(), now.Unix(), config["SecondsPerSlot"].(uint64))
 		if chainStatusSlot {
 			fmt.Printf("Current slot: %d\n", slot)
 			fmt.Printf("Justified slot: %d\n", info.GetJustifiedSlot())
@@ -85,6 +86,18 @@ In quiet mode this will return 0 if the chain status can be obtained, otherwise 
 				distance := (slot - info.GetPreviousJustifiedSlot()) / slotsPerEpoch
 				fmt.Printf("Prior justified epoch distance: %d\n", distance)
 			}
+		}
+
+		if verbose {
+			slotsPerEpoch := config["SlotsPerEpoch"].(uint64)
+			secondsPerSlot := config["SecondsPerSlot"].(uint64)
+			epochStartSlot := (slot / slotsPerEpoch) * slotsPerEpoch
+			fmt.Printf("Epoch slots: %d-%d\n", epochStartSlot, epochStartSlot+slotsPerEpoch-1)
+			nextSlot := slotToTimestamp(genesisTime.Unix(), slot+1, secondsPerSlot)
+			fmt.Printf("Time until next slot: %2.1fs\n", float64(time.Until(time.Unix(nextSlot, 0)).Milliseconds())/1000)
+			nextEpoch := epochToTimestamp(genesisTime.Unix(), slot/slotsPerEpoch+1, secondsPerSlot, slotsPerEpoch)
+			fmt.Printf("Slots until next epoch: %d\n", (slot/slotsPerEpoch+1)*slotsPerEpoch-slot)
+			fmt.Printf("Time until next epoch: %2.1fs\n", float64(time.Until(time.Unix(nextEpoch, 0)).Milliseconds())/1000)
 		}
 
 		os.Exit(_exitSuccess)

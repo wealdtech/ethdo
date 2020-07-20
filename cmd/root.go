@@ -15,28 +15,25 @@ package cmd
 
 import (
 	"context"
-	"crypto/tls"
-	"crypto/x509"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/pkg/errors"
-	"github.com/prysmaticlabs/go-ssz"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	e2types "github.com/wealdtech/go-eth2-types/v2"
 	e2wallet "github.com/wealdtech/go-eth2-wallet"
+	dirk "github.com/wealdtech/go-eth2-wallet-dirk"
 	filesystem "github.com/wealdtech/go-eth2-wallet-store-filesystem"
 	s3 "github.com/wealdtech/go-eth2-wallet-store-s3"
-	wtypes "github.com/wealdtech/go-eth2-wallet-types/v2"
+	e2wtypes "github.com/wealdtech/go-eth2-wallet-types/v2"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials"
 )
 
 var cfgFile string
@@ -46,19 +43,12 @@ var debug bool
 
 // Root variables, present for all commands.
 var rootStore string
-var rootAccount string
-var rootBaseDir string
 
 // Store for wallet actions.
-var store wtypes.Store
+var store e2wtypes.Store
 
 // Remote connection.
 var remote bool
-var remoteAddr string
-var clientCert string
-var clientKey string
-var serverCACert string
-var remoteGRPCConn *grpc.ClientConn
 
 // Prysm connection.
 var eth2GRPCConn *grpc.ClientConn
@@ -87,8 +77,6 @@ func persistentPreRun(cmd *cobra.Command, args []string) {
 	verbose = viper.GetBool("verbose")
 	debug = viper.GetBool("debug")
 	rootStore = viper.GetString("store")
-	rootAccount = viper.GetString("account")
-	rootBaseDir = viper.GetString("basedir")
 
 	if quiet && verbose {
 		fmt.Println("Cannot supply both quiet and verbose flags")
@@ -101,7 +89,7 @@ func persistentPreRun(cmd *cobra.Command, args []string) {
 		// Set up our wallet store
 		switch rootStore {
 		case "s3":
-			assert(rootBaseDir == "", "--basedir does not apply for the s3 store")
+			assert(viper.GetString("base-dir") == "", "--basedir does not apply for the s3 store")
 			var err error
 			store, err = s3.New(s3.WithPassphrase([]byte(getStorePassphrase())))
 			errCheck(err, "Failed to access Amazon S3 wallet store")
@@ -110,8 +98,8 @@ func persistentPreRun(cmd *cobra.Command, args []string) {
 			if getStorePassphrase() != "" {
 				opts = append(opts, filesystem.WithPassphrase([]byte(getStorePassphrase())))
 			}
-			if rootBaseDir != "" {
-				opts = append(opts, filesystem.WithLocation(rootBaseDir))
+			if viper.GetString("base-dir") != "" {
+				opts = append(opts, filesystem.WithLocation(viper.GetString("base-dir")))
 			}
 			store = filesystem.New(opts...)
 		default:
@@ -120,8 +108,7 @@ func persistentPreRun(cmd *cobra.Command, args []string) {
 		err := e2wallet.UseStore(store)
 		errCheck(err, "Failed to use defined wallet store")
 	} else {
-		err := initRemote()
-		errCheck(err, "Failed to connect to remote wallet")
+		remote = true
 	}
 }
 
@@ -226,6 +213,7 @@ func initConfig() {
 	}
 
 	viper.SetEnvPrefix("ETHDO")
+	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
 	viper.AutomaticEnv() // read in environment variables that match
 
 	// If a config file is found, read it in.
@@ -246,7 +234,7 @@ func outputIf(condition bool, msg string) {
 }
 
 // walletFromPath obtains a wallet given a path specification.
-func walletFromPath(path string) (wtypes.Wallet, error) {
+func walletFromPath(path string) (e2wtypes.Wallet, error) {
 	walletName, _, err := e2wallet.WalletAndAccountNames(path)
 	if err != nil {
 		return nil, err
@@ -262,7 +250,7 @@ func walletFromPath(path string) (wtypes.Wallet, error) {
 }
 
 // accountFromPath obtains an account given a path specification.
-func accountFromPath(path string) (wtypes.Account, error) {
+func accountFromPath(ctx context.Context, path string) (e2wtypes.Account, error) {
 	wallet, err := walletFromPath(path)
 	if err != nil {
 		return nil, err
@@ -277,34 +265,27 @@ func accountFromPath(path string) (wtypes.Account, error) {
 
 	if wallet.Type() == "hierarchical deterministic" && strings.HasPrefix(accountName, "m/") {
 		assert(getWalletPassphrase() != "", "--walletpassphrase is required for direct path derivations")
-		err = wallet.Unlock([]byte(viper.GetString("wallet-passphrase")))
-		if err != nil {
-			return nil, errors.New("invalid wallet passphrase")
+
+		locker, isLocker := wallet.(e2wtypes.WalletLocker)
+		if isLocker {
+			err = locker.Unlock(ctx, []byte(viper.GetString("wallet-passphrase")))
+			if err != nil {
+				return nil, errors.New("invalid wallet passphrase")
+			}
+			defer errCheck(locker.Lock(context.Background()), "failed to re-lock account")
 		}
-		defer wallet.Lock()
 	}
-	return wallet.AccountByName(accountName)
+
+	accountByNameProvider, isAccountByNameProvider := wallet.(e2wtypes.WalletAccountByNameProvider)
+	if !isAccountByNameProvider {
+		return nil, errors.New("wallet cannot obtain accounts by name")
+	}
+	return accountByNameProvider.AccountByName(ctx, accountName)
 }
 
 // accountsFromPath obtains 0 or more accounts given a path specification.
-func accountsFromPath(path string) ([]wtypes.Account, error) {
-	accounts := make([]wtypes.Account, 0)
-
-	// Quick check to see if it's a single account
-	account, err := accountFromPath(path)
-	if err == nil && account != nil {
-		accounts = append(accounts, account)
-		return accounts, nil
-	}
-
-	wallet, err := walletFromPath(path)
-	if err != nil {
-		return nil, err
-	}
-	_, accountSpec, err := e2wallet.WalletAndAccountNames(path)
-	if err != nil {
-		return nil, err
-	}
+func accountsFromPath(ctx context.Context, wallet e2wtypes.Wallet, accountSpec string) ([]e2wtypes.Account, error) {
+	accounts := make([]e2wtypes.Account, 0)
 
 	if accountSpec == "" {
 		accountSpec = "^.*$"
@@ -313,7 +294,7 @@ func accountsFromPath(path string) ([]wtypes.Account, error) {
 	}
 	re := regexp.MustCompile(accountSpec)
 
-	for account := range wallet.Accounts() {
+	for account := range wallet.Accounts(ctx) {
 		if re.Match([]byte(account.Name())) {
 			accounts = append(accounts, account)
 		}
@@ -325,49 +306,6 @@ func accountsFromPath(path string) ([]wtypes.Account, error) {
 	})
 
 	return accounts, nil
-}
-
-// signStruct signs an arbitrary structure.
-func signStruct(account wtypes.Account, data interface{}, domain []byte) (e2types.Signature, error) {
-	objRoot, err := ssz.HashTreeRoot(data)
-	outputIf(debug, fmt.Sprintf("Object root is %x", objRoot))
-	if err != nil {
-		return nil, err
-	}
-
-	return signRoot(account, objRoot, domain)
-}
-
-// SigningContainer is the container for signing roots with a domain.
-// Contains SSZ sizes to allow for correct calculation of root.
-type SigningContainer struct {
-	Root   []byte `ssz-size:"32"`
-	Domain []byte `ssz-size:"32"`
-}
-
-// signRoot signs a root.
-func signRoot(account wtypes.Account, root [32]byte, domain []byte) (e2types.Signature, error) {
-	container := &SigningContainer{
-		Root:   root[:],
-		Domain: domain,
-	}
-	outputIf(debug, fmt.Sprintf("Signing container:\n\troot: %x\n\tdomain: %x", container.Root, container.Domain))
-	signingRoot, err := ssz.HashTreeRoot(container)
-	if err != nil {
-		return nil, err
-	}
-	outputIf(debug, fmt.Sprintf("Signing root: %x", signingRoot))
-	return sign(account, signingRoot[:])
-}
-
-// sign signs arbitrary data.
-func sign(account wtypes.Account, data []byte) (e2types.Signature, error) {
-	if !account.IsUnlocked() {
-		return nil, errors.New("account must be unlocked to sign")
-	}
-
-	outputIf(debug, fmt.Sprintf("Signing %x (%d)", data, len(data)))
-	return account.Sign(data)
 }
 
 // connect connects to an Ethereum 2 endpoint.
@@ -391,46 +329,77 @@ func connect() error {
 	return err
 }
 
-func initRemote() error {
-	remote = true
-	remoteAddr = viper.GetString("remote")
-	clientCert = viper.GetString("client-cert")
-	assert(clientCert != "", "--remote requires --client-cert")
-	clientKey = viper.GetString("client-key")
-	assert(clientKey != "", "--remote requires --client-key")
-	serverCACert = viper.GetString("server-ca-cert")
-	assert(serverCACert != "", "--remote requires --server-ca-cert")
-
-	// Load the client certificates.
-	clientPair, err := tls.LoadX509KeyPair(clientCert, clientKey)
-	if err != nil {
-		return errors.Wrap(err, "failed to access client certificate/key")
+// bestPublicKey returns the best public key for operations.
+// It prefers the composite public key if present, otherwise the public key.
+func bestPublicKey(account e2wtypes.Account) (e2types.PublicKey, error) {
+	var pubKey e2types.PublicKey
+	publicKeyProvider, isCompositePublicKeyProvider := account.(e2wtypes.AccountCompositePublicKeyProvider)
+	if isCompositePublicKeyProvider {
+		pubKey = publicKeyProvider.CompositePublicKey()
+	} else {
+		publicKeyProvider, isPublicKeyProvider := account.(e2wtypes.AccountPublicKeyProvider)
+		if isPublicKeyProvider {
+			pubKey = publicKeyProvider.PublicKey()
+		} else {
+			return nil, errors.New("account does not provide a public key")
+		}
 	}
+	return pubKey, nil
+}
 
-	tlsCfg := &tls.Config{
-		Certificates: []tls.Certificate{clientPair},
-	}
-	if serverCACert != "" {
-		// Load the CA for the server certificate.
-		serverCA, err := ioutil.ReadFile(serverCACert)
+// remotesToEndpoints generates endpoints from remote addresses.
+func remotesToEndpoints(remotes []string) ([]*dirk.Endpoint, error) {
+	endpoints := make([]*dirk.Endpoint, 0)
+	for _, remote := range remotes {
+		parts := strings.Split(remote, ":")
+		if len(parts) != 2 {
+			return nil, fmt.Errorf("invalid remote %q", remote)
+		}
+		port, err := strconv.ParseUint(parts[1], 10, 32)
 		if err != nil {
-			return errors.Wrap(err, "failed to access CA certificate")
+			return nil, errors.Wrap(err, fmt.Sprintf("invalid port in remote %q", remote))
 		}
-		cp := x509.NewCertPool()
-		if !cp.AppendCertsFromPEM(serverCA) {
-			return errors.Wrap(err, "failed to add CA certificate")
-		}
-		tlsCfg.RootCAs = cp
+		endpoints = append(endpoints, dirk.NewEndpoint(parts[0], uint32(port)))
+	}
+	return endpoints, nil
+}
+
+// Oepn a wallet, local or remote.
+func openWallet() (e2wtypes.Wallet, error) {
+	var err error
+	// Obtain the name of the wallet.
+	walletName := viper.GetString("wallet")
+	if walletName == "" {
+		walletName, _, err = e2wallet.WalletAndAccountNames(viper.GetString("account"))
+	}
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to obtain wallet name")
+	}
+	if walletName == "" {
+		return nil, errors.New("no wallet name provided")
 	}
 
-	clientCreds := credentials.NewTLS(tlsCfg)
+	return openNamedWallet(walletName)
+}
 
-	opts := []grpc.DialOption{
-		// Require TLS.
-		grpc.WithTransportCredentials(clientCreds),
-		// Block until server responds.
-		grpc.WithBlock(),
+// Open a named wallet, local or remote.
+func openNamedWallet(walletName string) (e2wtypes.Wallet, error) {
+	if viper.GetString("remote") != "" {
+		ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("timeout"))
+		defer cancel()
+		assert(viper.GetString("client-cert") != "", "remote connections require client-cert")
+		assert(viper.GetString("client-key") != "", "remote connections require client-key")
+		credentials, err := dirk.ComposeCredentials(ctx, viper.GetString("client-cert"), viper.GetString("client-key"), viper.GetString("server-ca-cert"))
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to build dirk credentials")
+		}
+
+		endpoints, err := remotesToEndpoints([]string{viper.GetString("remote")})
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to parse remote servers")
+		}
+
+		return dirk.OpenWallet(ctx, walletName, credentials, endpoints)
 	}
-	remoteGRPCConn, err = grpc.Dial(remoteAddr, opts...)
-	return err
+	return walletFromPath(walletName)
 }

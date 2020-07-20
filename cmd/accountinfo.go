@@ -19,8 +19,11 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
-	pb "github.com/wealdtech/eth2-signer-api/pb/v1"
+	"github.com/spf13/viper"
+	e2types "github.com/wealdtech/go-eth2-types/v2"
 	util "github.com/wealdtech/go-eth2-util"
+	e2wallet "github.com/wealdtech/go-eth2-wallet"
+	e2wtypes "github.com/wealdtech/go-eth2-wallet-types/v2"
 )
 
 var accountInfoCmd = &cobra.Command{
@@ -32,33 +35,49 @@ var accountInfoCmd = &cobra.Command{
 
 In quiet mode this will return 0 if the account exists, otherwise 1.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		assert(rootAccount != "", "--account is required")
+		assert(viper.GetString("account") != "", "--account is required")
 
-		var withdrawalCredentials []byte
-		if remote {
-			listerClient := pb.NewListerClient(remoteGRPCConn)
-			listAccountsReq := &pb.ListAccountsRequest{
-				Paths: []string{
-					rootAccount,
-				},
+		wallet, err := openWallet()
+		errCheck(err, "Failed to access wallet")
+
+		_, accountName, err := e2wallet.WalletAndAccountNames(viper.GetString("account"))
+		errCheck(err, "Failed to obtain account name")
+
+		accountByNameProvider, isAccountByNameProvider := wallet.(e2wtypes.WalletAccountByNameProvider)
+		assert(isAccountByNameProvider, "wallet cannot obtain accounts by name")
+		ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("timeout"))
+		defer cancel()
+		account, err := accountByNameProvider.AccountByName(ctx, accountName)
+		errCheck(err, "Failed to obtain account")
+
+		// Disallow wildcards (for now)
+		assert(fmt.Sprintf("%s/%s", wallet.Name(), account.Name()) == viper.GetString("account"), "Mismatched account name")
+
+		if quiet {
+			os.Exit(_exitSuccess)
+		}
+
+		outputIf(verbose, fmt.Sprintf("UUID: %v", account.ID()))
+		var withdrawalPubKey e2types.PublicKey
+		if pubKeyProvider, ok := account.(e2wtypes.AccountPublicKeyProvider); ok {
+			fmt.Printf("Public key: %#x\n", pubKeyProvider.PublicKey().Marshal())
+			// May be overwritten later, but grab it for now.
+			withdrawalPubKey = pubKeyProvider.PublicKey()
+		}
+		if distributedAccount, ok := account.(e2wtypes.DistributedAccount); ok {
+			fmt.Printf("Composite public key: %#x\n", distributedAccount.CompositePublicKey().Marshal())
+			fmt.Printf("Signing threshold: %d/%d\n", distributedAccount.SigningThreshold(), len(distributedAccount.Participants()))
+			withdrawalPubKey = distributedAccount.CompositePublicKey()
+		}
+		if verbose {
+			withdrawalCredentials := util.SHA256(withdrawalPubKey.Marshal())
+			withdrawalCredentials[0] = byte(0) // BLS_WITHDRAWAL_PREFIX
+			fmt.Printf("Withdrawal credentials: %#x\n", withdrawalCredentials)
+		}
+		if pathProvider, ok := account.(e2wtypes.AccountPathProvider); ok {
+			if pathProvider.Path() != "" {
+				fmt.Printf("Path: %s\n", pathProvider.Path())
 			}
-			resp, err := listerClient.ListAccounts(context.Background(), listAccountsReq)
-			errCheck(err, "Failed to access account")
-			assert(resp.State == pb.ResponseState_SUCCEEDED, "No such account")
-			assert(len(resp.Accounts) == 1, "No such account")
-			fmt.Printf("Public key: %#x\n", resp.Accounts[0].PublicKey)
-			withdrawalCredentials = util.SHA256(resp.Accounts[0].PublicKey)
-			withdrawalCredentials[0] = byte(0) // BLS_WITHDRAWAL_PREFIX
-			outputIf(verbose, fmt.Sprintf("Withdrawal credentials: %#x", withdrawalCredentials))
-		} else {
-			account, err := accountFromPath(rootAccount)
-			errCheck(err, "Failed to access wallet")
-			outputIf(verbose, fmt.Sprintf("UUID: %v", account.ID()))
-			outputIf(!quiet, fmt.Sprintf("Public key: %#x", account.PublicKey().Marshal()))
-			withdrawalCredentials = util.SHA256(account.PublicKey().Marshal())
-			withdrawalCredentials[0] = byte(0) // BLS_WITHDRAWAL_PREFIX
-			outputIf(verbose, fmt.Sprintf("Withdrawal credentials: %#x", withdrawalCredentials))
-			outputIf(verbose && account.Path() != "", fmt.Sprintf("Path: %s", account.Path()))
 		}
 
 		os.Exit(_exitSuccess)

@@ -15,17 +15,20 @@ package cmd
 
 import (
 	"context"
+	"fmt"
 	"os"
 
 	"github.com/prysmaticlabs/go-ssz"
 	"github.com/spf13/cobra"
-	pb "github.com/wealdtech/eth2-signer-api/pb/v1"
+	"github.com/spf13/viper"
 	"github.com/wealdtech/go-bytesutil"
 	e2types "github.com/wealdtech/go-eth2-types/v2"
+	e2wallet "github.com/wealdtech/go-eth2-wallet"
+	e2wtypes "github.com/wealdtech/go-eth2-wallet-types/v2"
 )
 
 var signatureVerifySignature string
-var signatureVerifyPubKey string
+var signatureVerifySigner string
 
 // signatureVerifyCmd represents the signature verify command
 var signatureVerifyCmd = &cobra.Command{
@@ -33,12 +36,12 @@ var signatureVerifyCmd = &cobra.Command{
 	Short: "Verify signed data",
 	Long: `Verify signed data.  For example:
 
-    ethereal signature verify --data=0x5f24e819400c6a8ee2bfc014343cd971b7eb707320025a7bcd83e621e26c35b7 --signature=0x8888... --account="Personal wallet/Operations"
+    ethdo signature verify --data=0x5f24e819400c6a8ee2bfc014343cd971b7eb707320025a7bcd83e621e26c35b7 --signature=0x8888... --account="Personal wallet/Operations"
 
 In quiet mode this will return 0 if the data can be signed, otherwise 1.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		assert(signatureData != "", "--data is required")
-		data, err := bytesutil.FromHexString(signatureData)
+		assert(viper.GetString("signature-data") != "", "--data is required")
+		data, err := bytesutil.FromHexString(viper.GetString("signature-data"))
 		errCheck(err, "Failed to parse data")
 		assert(len(data) == 32, "data to verify must be 32 bytes")
 
@@ -49,45 +52,44 @@ In quiet mode this will return 0 if the data can be signed, otherwise 1.`,
 		errCheck(err, "Invalid signature")
 
 		domain := e2types.Domain(e2types.DomainType([4]byte{0, 0, 0, 0}), e2types.ZeroForkVersion, e2types.ZeroGenesisValidatorsRoot)
-		if signatureDomain != "" {
-			domainBytes, err := bytesutil.FromHexString(signatureDomain)
+		if viper.GetString("signature-domain") != "" {
+			domain, err = bytesutil.FromHexString(viper.GetString("signature-domain"))
 			errCheck(err, "Failed to parse domain")
-			assert(len(domainBytes) == 32, "Domain data invalid")
+			assert(len(domain) == 32, "Domain data invalid")
 		}
 
 		var pubKey e2types.PublicKey
-		assert(signatureVerifyPubKey == "" || rootAccount == "", "Either --pubkey or --account should be supplied")
-		if rootAccount != "" {
-			if remote {
-				listerClient := pb.NewListerClient(remoteGRPCConn)
-				listAccountsReq := &pb.ListAccountsRequest{
-					Paths: []string{
-						rootAccount,
-					},
-				}
-				resp, err := listerClient.ListAccounts(context.Background(), listAccountsReq)
-				errCheck(err, "Failed to access account")
-				assert(resp.State == pb.ResponseState_SUCCEEDED, "Failed to obtain account")
-				assert(len(resp.Accounts) == 1, "No such account")
-				pubKey, err = e2types.BLSPublicKeyFromBytes(resp.Accounts[0].PublicKey)
-				errCheck(err, "Invalid public key provided for account")
-			} else {
-				account, err := accountFromPath(rootAccount)
-				errCheck(err, "Unknown account")
-				pubKey = account.PublicKey()
-			}
+		assert(signatureVerifySigner != "" || viper.GetString("account") != "", "Either --signer or --account should be supplied")
+		if viper.GetString("account") != "" {
+			wallet, err := openWallet()
+			errCheck(err, "Failed to access wallet")
+			_, accountName, err := e2wallet.WalletAndAccountNames(viper.GetString("account"))
+			errCheck(err, "Failed to obtain account name")
+
+			accountByNameProvider, isAccountByNameProvider := wallet.(e2wtypes.WalletAccountByNameProvider)
+			assert(isAccountByNameProvider, "wallet cannot obtain accounts by name")
+			ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("timeout"))
+			defer cancel()
+			account, err := accountByNameProvider.AccountByName(ctx, accountName)
+			errCheck(err, "Failed to obtain account")
+			pubKey, err = bestPublicKey(account)
+			errCheck(err, "Failed to obtain account's public key")
 		} else {
-			pubKeyBytes, err := bytesutil.FromHexString(signatureVerifyPubKey)
+			pubKeyBytes, err := bytesutil.FromHexString(signatureVerifySigner)
 			errCheck(err, "Invalid public key")
 			pubKey, err = e2types.BLSPublicKeyFromBytes(pubKeyBytes)
 			errCheck(err, "Invalid public key")
 		}
-		container := &SigningContainer{
+		outputIf(debug, fmt.Sprintf("Public key is %#x", pubKey.Marshal()))
+		container := &signingContainer{
 			Root:   data,
 			Domain: domain,
 		}
+		outputIf(debug, fmt.Sprintf("Data root is %#x", data))
+		outputIf(debug, fmt.Sprintf("Domain is %#x", domain))
 		root, err := ssz.HashTreeRoot(container)
 		errCheck(err, "Failed to create signing root")
+		outputIf(debug, fmt.Sprintf("Signing root is %#x", root))
 
 		verified := signature.Verify(root[:], pubKey)
 		if !verified {
@@ -103,5 +105,5 @@ func init() {
 	signatureCmd.AddCommand(signatureVerifyCmd)
 	signatureFlags(signatureVerifyCmd)
 	signatureVerifyCmd.Flags().StringVar(&signatureVerifySignature, "signature", "", "the signature to verify")
-	signatureVerifyCmd.Flags().StringVar(&signatureVerifyPubKey, "signer", "", "the public key of the signer (only if --account is not supplied)")
+	signatureVerifyCmd.Flags().StringVar(&signatureVerifySigner, "signer", "", "the public key of the signer (only if --account is not supplied)")
 }

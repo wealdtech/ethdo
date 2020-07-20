@@ -15,11 +15,11 @@ package cmd
 
 import (
 	"context"
-	"os"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	pb "github.com/wealdtech/eth2-signer-api/pb/v1"
+	e2wallet "github.com/wealdtech/go-eth2-wallet"
+	e2wtypes "github.com/wealdtech/go-eth2-wallet-types/v2"
 )
 
 var accountLockCmd = &cobra.Command{
@@ -31,26 +31,28 @@ var accountLockCmd = &cobra.Command{
 
 In quiet mode this will return 0 if the account is locked, otherwise 1.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		assert(remote, "account lock only works with remote wallets")
-		assert(rootAccount != "", "--account is required")
+		assert(viper.GetString("account") != "", "--account is required")
 
-		client := pb.NewAccountManagerClient(remoteGRPCConn)
-		lockReq := &pb.LockAccountRequest{
-			Account: rootAccount,
-		}
+		wallet, err := openWallet()
+		errCheck(err, "Failed to access wallet")
+
+		_, accountName, err := e2wallet.WalletAndAccountNames(viper.GetString("account"))
+		errCheck(err, "Failed to obtain account name")
+
+		accountByNameProvider, isAccountByNameProvider := wallet.(e2wtypes.WalletAccountByNameProvider)
+		assert(isAccountByNameProvider, "wallet cannot obtain accounts by name")
 		ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("timeout"))
 		defer cancel()
-		resp, err := client.Lock(ctx, lockReq)
-		errCheck(err, "Failed in attempt to lock account")
-		switch resp.State {
-		case pb.ResponseState_DENIED:
-			die("Lock request denied")
-		case pb.ResponseState_FAILED:
-			die("Lock request failed")
-		case pb.ResponseState_SUCCEEDED:
-			outputIf(!quiet, "Lock request succeeded")
-			os.Exit(_exitSuccess)
-		}
+		account, err := accountByNameProvider.AccountByName(ctx, accountName)
+		errCheck(err, "Failed to obtain account")
+
+		locker, isLocker := account.(e2wtypes.AccountLocker)
+		assert(isLocker, "Account does not support locking")
+
+		ctx, cancel = context.WithTimeout(context.Background(), viper.GetDuration("timeout"))
+		err = locker.Lock(ctx)
+		cancel()
+		errCheck(err, "Failed to lock account")
 	},
 }
 

@@ -43,8 +43,12 @@ In quiet mode this will return 0 if the chain information can be obtained, other
 			os.Exit(_exitSuccess)
 		}
 
-		fmt.Printf("Genesis time: %s\n", genesisTime.Format(time.UnixDate))
-		outputIf(verbose, fmt.Sprintf("Genesis timestamp: %v", genesisTime.Unix()))
+		if genesisTime.Unix() == 0 {
+			fmt.Println("Genesis time: undefined")
+		} else {
+			fmt.Printf("Genesis time: %s\n", genesisTime.Format(time.UnixDate))
+			outputIf(verbose, fmt.Sprintf("Genesis timestamp: %v", genesisTime.Unix()))
+		}
 		outputIf(verbose, fmt.Sprintf("Genesis fork version: %0x", config["GenesisForkVersion"].([]byte)))
 		outputIf(verbose, fmt.Sprintf("Seconds per slot: %v", config["SecondsPerSlot"].(uint64)))
 		outputIf(verbose, fmt.Sprintf("Slots per epoch: %v", config["SlotsPerEpoch"].(uint64)))
@@ -63,4 +67,12 @@ func timestampToSlot(genesis int64, timestamp int64, secondsPerSlot uint64) uint
 		return 0
 	}
 	return uint64(timestamp-genesis) / secondsPerSlot
+}
+
+func slotToTimestamp(genesis int64, slot uint64, secondsPerSlot uint64) int64 {
+	return genesis + int64(slot*secondsPerSlot)
+}
+
+func epochToTimestamp(genesis int64, slot uint64, secondsPerSlot uint64, slotsPerEpoch uint64) int64 {
+	return genesis + int64(slot*secondsPerSlot*slotsPerEpoch)
 }

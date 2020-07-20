@@ -18,6 +18,7 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 	e2wallet "github.com/wealdtech/go-eth2-wallet"
 )
 
@@ -30,17 +31,14 @@ var walletListCmd = &cobra.Command{
 
 In quiet mode this will return 0 if any wallets are found, otherwise 1.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		assert(!remote, "wallet list not available with remote wallets")
+		assert(viper.GetString("remote") == "", "wallet list not available with remote wallets")
+		assert(viper.GetString("wallet") == "", "wallet list does not take a --wallet parameter")
 
 		walletsFound := false
-		if remote {
-			die("Remote wallets cannot be listed")
-		} else {
-			for w := range e2wallet.Wallets() {
-				walletsFound = true
-				outputIf(!quiet && !verbose, w.Name())
-				outputIf(verbose, fmt.Sprintf("%s\n\tUUID:\t\t%s", w.Name(), w.ID().String()))
-			}
+		for w := range e2wallet.Wallets() {
+			walletsFound = true
+			outputIf(!quiet && !verbose, w.Name())
+			outputIf(verbose, fmt.Sprintf("%s\n UUID: %s", w.Name(), w.ID().String()))
 		}
 
 		if !walletsFound {

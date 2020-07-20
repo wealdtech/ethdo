@@ -107,7 +107,7 @@ In quiet mode this will return 0 if the the data can be generated correctly, oth
 					failures = true
 				}
 			}
-			outputIf(!quiet, fmt.Sprintf("Deposit for %q verified", deposit.Name))
+			outputIf(!quiet, fmt.Sprintf("Deposit %q verified", deposit.Name))
 		}
 
 		if failures {

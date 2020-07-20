@@ -14,11 +14,13 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"os"
 
 	"github.com/spf13/cobra"
-	types "github.com/wealdtech/go-eth2-wallet-types/v2"
+	"github.com/spf13/viper"
+	e2wtypes "github.com/wealdtech/go-eth2-wallet-types/v2"
 )
 
 // accountKeyCmd represents the account key command
@@ -32,29 +34,33 @@ var accountKeyCmd = &cobra.Command{
 In quiet mode this will return 0 if the key can be obtained, otherwise 1.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		assert(!remote, "account keys not available with remote wallets")
-		assert(rootAccount != "", "--account is required")
+		assert(viper.GetString("account") != "", "--account is required")
 
-		account, err := accountFromPath(rootAccount)
+		ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("timeout"))
+		defer cancel()
+
+		account, err := accountFromPath(ctx, viper.GetString("account"))
 		errCheck(err, "Failed to access account")
 
-		_, ok := account.(types.AccountPrivateKeyProvider)
-		assert(ok, fmt.Sprintf("account %q does not provide its private key", rootAccount))
+		privateKeyProvider, isPrivateKeyProvider := account.(e2wtypes.AccountPrivateKeyProvider)
+		assert(isPrivateKeyProvider, fmt.Sprintf("account %q does not provide its private key", viper.GetString("account")))
 
-		unlocked := false
-		for _, passphrase := range getPassphrases() {
-			err = account.Unlock([]byte(passphrase))
-			if err == nil {
-				unlocked = true
-				break
+		if locker, isLocker := account.(e2wtypes.AccountLocker); isLocker {
+			unlocked := false
+			for _, passphrase := range getPassphrases() {
+				err = locker.Unlock(ctx, []byte(passphrase))
+				if err == nil {
+					unlocked = true
+					break
+				}
 			}
+			assert(unlocked, "Failed to unlock account to obtain private key")
+			defer errCheck(locker.Lock(context.Background()), "failed to re-lock account")
 		}
-		assert(unlocked, "Failed to unlock account to obtain private key")
-		defer account.Lock()
-		privateKey, err := account.(types.AccountPrivateKeyProvider).PrivateKey()
+		privateKey, err := privateKeyProvider.PrivateKey(ctx)
 		errCheck(err, "Failed to obtain private key")
-		account.Lock()
 
-		outputIf(!quiet, fmt.Sprintf("%#064x", privateKey.Marshal()))
+		outputIf(!quiet, fmt.Sprintf("%#x", privateKey.Marshal()))
 		os.Exit(_exitSuccess)
 	},
 }

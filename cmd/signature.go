@@ -15,10 +15,9 @@ package cmd
 
 import (
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
+	"github.com/spf13/viper"
 )
-
-var signatureData string
-var signatureDomain string
 
 // signatureCmd represents the signature command
 var signatureCmd = &cobra.Command{
@@ -32,7 +31,23 @@ func init() {
 	RootCmd.AddCommand(signatureCmd)
 }
 
+var dataFlag *pflag.Flag
+var domainFlag *pflag.Flag
+
 func signatureFlags(cmd *cobra.Command) {
-	cmd.Flags().StringVar(&signatureData, "data", "", "the hex string of data")
-	cmd.Flags().StringVar(&signatureDomain, "domain", "", "the hex string of the BLS domain (defaults to 0x0000000000000000)")
+	if dataFlag == nil {
+		cmd.Flags().String("data", "", "the data, as a hex string")
+		dataFlag = cmd.Flags().Lookup("data")
+		if err := viper.BindPFlag("signature-data", dataFlag); err != nil {
+			panic(err)
+		}
+		cmd.Flags().String("domain", "0x0000000000000000000000000000000000000000000000000000000000000000", "the BLS domain, as a hex string")
+		domainFlag = cmd.Flags().Lookup("domain")
+		if err := viper.BindPFlag("signature-domain", domainFlag); err != nil {
+			panic(err)
+		}
+	} else {
+		cmd.Flags().AddFlag(dataFlag)
+		cmd.Flags().AddFlag(domainFlag)
+	}
 }

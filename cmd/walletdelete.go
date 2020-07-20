@@ -18,6 +18,7 @@ import (
 	"path/filepath"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 	wtypes "github.com/wealdtech/go-eth2-wallet-types/v2"
 )
 
@@ -30,10 +31,10 @@ var walletDeleteCmd = &cobra.Command{
 
 In quiet mode this will return 0 if the wallet has been deleted, otherwise 1.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		assert(!remote, "wallet delete not available with remote wallets")
-		assert(walletWallet != "", "--wallet is required")
+		assert(viper.GetString("remote") == "", "wallet delete not available with remote wallets")
+		assert(viper.GetString("wallet") != "", "--wallet is required")
 
-		wallet, err := walletFromPath(walletWallet)
+		wallet, err := walletFromPath(viper.GetString("wallet"))
 		errCheck(err, "Failed to access wallet")
 
 		storeProvider, ok := wallet.(wtypes.StoreProvider)

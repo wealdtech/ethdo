@@ -22,6 +22,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 	"github.com/wealdtech/go-bytesutil"
 	"github.com/wealdtech/go-ecodec"
 	e2wallet "github.com/wealdtech/go-eth2-wallet"
@@ -40,10 +41,10 @@ var walletImportCmd = &cobra.Command{
 
 In quiet mode this will return 0 if the wallet is imported successfully, otherwise 1.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		assert(!remote, "wallet import not available with remote wallets")
+		assert(viper.GetString("remote") == "", "wallet import not available with remote wallets")
 		assert(walletImportData != "", "--importdata is required")
 		assert(walletImportPassphrase != "", "--importpassphrase is required")
-		assert(walletWallet == "", "--wallet is not allowed (the wallet will retain its name)")
+		assert(viper.GetString("wallet") == "", "--wallet is not allowed (the wallet will retain its name)")
 
 		if !strings.HasPrefix(walletImportData, "0x") {
 			outputIf(debug, fmt.Sprintf("Reading wallet import from file %s", walletImportData))

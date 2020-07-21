@@ -53,7 +53,7 @@ jobs:
        go get github.com/suburbandad/xgo
 
     - name: Cross-compile
-      run: xgo -v -x --targets="linux/amd64,linux/arm64,windows/amd64" github.com/wealdtech/ethdo
+      run: xgo -v -x -ldflags="-X github.com/wealdtech/ethdo/cmd.ReleaseVersion=${RELEASE_VERSION}" --targets="linux/amd64,linux/arm64,windows/amd64" github.com/wealdtech/ethdo
 
     - name: Create windows zip file
       run: |

@@ -49,20 +49,19 @@ jobs:
       run: |
        env
        echo ${GITHUB_REF}
-       echo 1
+       echo $(git describe --abbrev=0)
        mv ethdo-windows-4.0-amd64.exe ethdo.exe
-       echo 2
-       zip --junk-paths ethdo-${GITHUB_REF}-windows-exe.zip ethdo.exe
+       zip --junk-paths ethdo-$(git describe --abbrev=0)-windows-exe.zip ethdo.exe
 
     - name: Create linux AMD64 tgz file
       run: |
        mv ethdo-linux-amd64 ethdo
-       tar zcf ethdo-${GITHUB_REF}-linux-amd64.tar.gz ethdo
+       tar zcf ethdo-$(git describe --abbrev=0)-linux-amd64.tar.gz ethdo
 
     - name: Create linux ARM64 tgz file
       run: |
        mv ethdo-linux-arm64 ethdo
-       tar zcf ethdo-${GITHUB_REF}-linux-arm64.tar.gz ethdo
+       tar zcf ethdo-$(git describe --abbrev=0)-linux-arm64.tar.gz ethdo
 
     - name: Create release
       id: create_release

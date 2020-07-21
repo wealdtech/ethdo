@@ -47,7 +47,11 @@ jobs:
 
     - name: Create windows zip file
       run: |
+       env
+       echo ${GITHUB_REF}
+       echo 1
        mv ethdo-windows-4.0-amd64.exe ethdo.exe
+       echo 2
        zip --junk-paths ethdo-${GITHUB_REF}-windows-exe.zip ethdo.exe
 
     - name: Create linux AMD64 tgz file

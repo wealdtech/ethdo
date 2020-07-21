@@ -55,7 +55,7 @@ In quiet mode this will return 0 if the key can be obtained, otherwise 1.`,
 				}
 			}
 			assert(unlocked, "Failed to unlock account to obtain private key")
-			defer errCheck(locker.Lock(context.Background()), "failed to re-lock account")
+			defer relockAccount(locker)
 		}
 		privateKey, err := privateKeyProvider.PrivateKey(ctx)
 		errCheck(err, "Failed to obtain private key")

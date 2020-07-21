@@ -272,7 +272,7 @@ func accountFromPath(ctx context.Context, path string) (e2wtypes.Account, error)
 			if err != nil {
 				return nil, errors.New("invalid wallet passphrase")
 			}
-			defer errCheck(locker.Lock(context.Background()), "failed to re-lock account")
+			defer relockAccount(locker)
 		}
 	}
 
@@ -402,4 +402,9 @@ func openNamedWallet(walletName string) (e2wtypes.Wallet, error) {
 		return dirk.OpenWallet(ctx, walletName, credentials, endpoints)
 	}
 	return walletFromPath(walletName)
+}
+
+// relockAccount locks an account; generally called as a defer after an account is unlocked.
+func relockAccount(locker e2wtypes.AccountLocker) {
+	errCheck(locker.Lock(context.Background()), "failed to re-lock account")
 }

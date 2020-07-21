@@ -35,3 +35,14 @@ jobs:
 
     - name: Test
       run: go test -v .
+
+    - name: Set env
+      run: |
+       echo '::set-env name=GO111MODULE::on'
+
+    - name: Fetch xgo
+      run: go get github.com/suburbandad/xgo
+
+    - name: Cross-compile
+      run: xgo -v -x --targets="linux/amd64,linux/arm64,windows/amd64" github.com/wealdtech/ethdo
+

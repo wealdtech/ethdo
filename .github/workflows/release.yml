@@ -28,12 +28,6 @@ jobs:
          dep ensure
        fi
 
-    - name: Build
-      run: go build -v .
-
-    - name: Test
-      run: go test -v .
-
     - name: Set env
       run: |
        echo '::set-env name=GO111MODULE::on'
@@ -47,6 +41,12 @@ jobs:
        RELEASE_VERSION=$(echo ${GITHUB_REF} | sed -e 's!.*/v!!')
        echo "::set-env name=RELEASE_VERSION::${RELEASE_VERSION}"
        echo "::set-output name=RELEASE_VERSION::${RELEASE_VERSION}"
+
+    - name: Build
+      run: go build -v -ldflags="-X cmd.ReleaseVersion=${RELEASE_VERSION}" .
+
+    - name: Test
+      run: go test -v .
 
     - name: Fetch xgo
       run: |

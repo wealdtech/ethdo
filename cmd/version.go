@@ -1,4 +1,4 @@
-// Copyright © 2019 Weald Technology Trading
+// Copyright © 2019, 2020 Weald Technology Trading
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -22,15 +22,17 @@ import (
 	"github.com/spf13/viper"
 )
 
+var ReleaseVersion = "local build"
+
 // versionCmd represents the version command
 var versionCmd = &cobra.Command{
 	Use:   "version",
-	Short: "Version of Ethdo",
-	Long: `Obtain the version of Ethdo.  For example:
+	Short: "Version of ethdo",
+	Long: `Obtain the version of ethdo.  For example:
 
-    ethdo version.`,
+    ethdo version`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("1.5.0-prerelease")
+		fmt.Println(ReleaseVersion)
 		if viper.GetBool("verbose") {
 			buildInfo, ok := dbg.ReadBuildInfo()
 			if ok {

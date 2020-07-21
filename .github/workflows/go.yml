@@ -72,7 +72,7 @@ jobs:
         prerelease: true
        
     - name: Upload windows zip file
-      id: upload-release-asset
+      id: upload-release-asset-windows
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -83,7 +83,7 @@ jobs:
         asset_content_type: application/zip
        
     - name: Upload linux AMD64 tgz file
-      id: upload-release-asset
+      id: upload-release-asset-linux-amd64
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -94,7 +94,7 @@ jobs:
         asset_content_type: application/gzip
        
     - name: Upload linux ARM64 tgz file
-      id: upload-release-asset
+      id: upload-release-asset-linux-arm64
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

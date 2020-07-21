@@ -40,6 +40,8 @@ jobs:
        echo '::set-env name=GO111MODULE::on'
        RELEASE_TAG=$(echo ${GITHUB_REF} | sed -e 's!.*/!!')
        echo "::set-env name=RELEASE_TAG::${RELEASE_TAG}"
+       # Ensure the release tag is set and a version.
+       echo "${RELEASE_TAG}" | grep -q '^v' || exit 1
 
     - name: Fetch xgo
       run: |

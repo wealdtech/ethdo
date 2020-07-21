@@ -2,9 +2,9 @@ name: Go
 
 on:
   push:
-    branches: [ master ]
-    # tags:
-    #  - 'v*'
+    # branches: [ master ]
+    tags:
+    - 'v*'
 
 jobs:
   build:
@@ -48,17 +48,17 @@ jobs:
     - name: Create windows zip file
       run: |
        mv ethdo-windows-4.0-amd64.exe ethdo.exe
-       zip --junk-paths ethdo-windows-exe.zip ethdo.exe
+       zip --junk-paths ethdo-${{ github.ref }}-windows-exe.zip ethdo.exe
 
     - name: Create linux AMD64 tgz file
       run: |
        mv ethdo-linux-amd64 ethdo
-       tar zcf ethdo-linux-amd64.tar.gz ethdo
+       tar zcf ethdo-${{ github.ref }}-linux-amd64.tar.gz ethdo
 
     - name: Create linux ARM64 tgz file
       run: |
        mv ethdo-linux-arm64 ethdo
-       tar zcf ethdo-linux-arm64.tar.gz ethdo
+       tar zcf ethdo-${{ github.ref }}-linux-arm64.tar.gz ethdo
 
     - name: Create release
       id: create_release
@@ -78,8 +78,8 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./ethdo-windows-exe.zip
-        asset_name: ethdo-windows-exe.zip
+        asset_path: ./ethdo-${{ github.ref }}-windows-exe.zip
+        asset_name: ethdo-${{ github.ref }}-windows-exe.zip
         asset_content_type: application/zip
        
     - name: Upload linux AMD64 tgz file
@@ -89,8 +89,8 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./ethdo-linux-amd64.tar.gz
-        asset_name: ethdo-linux-amd64.tar.gz
+        asset_path: ./ethdo-${{ github.ref }}-linux-amd64.tar.gz
+        asset_name: ethdo-${{ github.ref }}-linux-amd64.tar.gz
         asset_content_type: application/gzip
        
     - name: Upload linux ARM64 tgz file
@@ -100,6 +100,6 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./ethdo-linux-arm64.tar.gz
-        asset_name: ethdo-linux-arm64.tar.gz
+        asset_path: ./ethdo-${{ github.ref }}-linux-arm64.tar.gz
+        asset_name: ethdo-${{ github.ref }}-linux-arm64.tar.gz
         asset_content_type: application/gzip

@@ -39,16 +39,12 @@ jobs:
       run: |
        echo '::set-env name=GO111MODULE::on'
        RELEASE_TAG=$(echo ${GITHUB_REF} | sed -e 's!.*/!!')
-       env
        echo "::set-env name=RELEASE_TAG::${RELEASE_TAG}"
        # Ensure the release tag is set and a version.
-       echo ${RELEASE_TAG}
-       echo "${RELEASE_TAG}"
        echo ${RELEASE_TAG} | grep -q '^v' || exit 1
 
     - name: Fetch xgo
       run: |
-       env
        go get github.com/suburbandad/xgo
 
     - name: Cross-compile
@@ -87,8 +83,8 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./ethdo-${{ github.ref }}-windows-exe.zip
-        asset_name: ethdo-${{ github.ref }}-windows-exe.zip
+        asset_path: ./ethdo-${RELEASE_TAG}-windows-exe.zip
+        asset_name: ethdo-${RELEASE_TAG}-windows-exe.zip
         asset_content_type: application/zip
        
     - name: Upload linux AMD64 tgz file
@@ -98,8 +94,8 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./ethdo-${{ github.ref }}-linux-amd64.tar.gz
-        asset_name: ethdo-${{ github.ref }}-linux-amd64.tar.gz
+        asset_path: ./ethdo-${RELEASE_TAG}-linux-amd64.tar.gz
+        asset_name: ethdo-${RELEASE_TAG}-linux-amd64.tar.gz
         asset_content_type: application/gzip
        
     - name: Upload linux ARM64 tgz file
@@ -109,6 +105,6 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./ethdo-${{ github.ref }}-linux-arm64.tar.gz
-        asset_name: ethdo-${{ github.ref }}-linux-arm64.tar.gz
+        asset_path: ./ethdo-${RELEASE_TAG}-linux-arm64.tar.gz
+        asset_name: ethdo-${RELEASE_TAG}-linux-arm64.tar.gz
         asset_content_type: application/gzip

@@ -23,11 +23,11 @@ jobs:
 
     - name: Get dependencies
       run: |
-        go get -v -t -d ./...
-        if [ -f Gopkg.toml ]; then
-            curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
-            dep ensure
-        fi
+       go get -v -t -d ./...
+       if [ -f Gopkg.toml ]; then
+         curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
+         dep ensure
+       fi
 
     - name: Build
       run: go build -v .
@@ -38,30 +38,31 @@ jobs:
     - name: Set env
       run: |
        echo '::set-env name=GO111MODULE::on'
+       RELEASE_TAG=$(echo ${GITHUB_REF} | sed -e 's!.*/!!')
+       echo "::set-env name=RELEASE_TAG::${RELEASE_TAG}"
 
     - name: Fetch xgo
-      run: go get github.com/suburbandad/xgo
+      run: |
+       env
+       go get github.com/suburbandad/xgo
 
     - name: Cross-compile
       run: xgo -v -x --targets="linux/amd64,linux/arm64,windows/amd64" github.com/wealdtech/ethdo
 
     - name: Create windows zip file
       run: |
-       env
-       echo ${GITHUB_REF}
-       echo $(git describe --tags --abbrev=0)
        mv ethdo-windows-4.0-amd64.exe ethdo.exe
-       zip --junk-paths ethdo-$(git describe --tags --abbrev=0)-windows-exe.zip ethdo.exe
+       zip --junk-paths ethdo-${RELEASE_TAG}-windows-exe.zip ethdo.exe
 
     - name: Create linux AMD64 tgz file
       run: |
        mv ethdo-linux-amd64 ethdo
-       tar zcf ethdo-$(git describe --tags --abbrev=0)-linux-amd64.tar.gz ethdo
+       tar zcf ethdo-${RELEASE_TAG}-linux-amd64.tar.gz ethdo
 
     - name: Create linux ARM64 tgz file
       run: |
        mv ethdo-linux-arm64 ethdo
-       tar zcf ethdo-$(git describe --tags --abbrev=0)-linux-arm64.tar.gz ethdo
+       tar zcf ethdo-${RELEASE_TAG}-linux-arm64.tar.gz ethdo
 
     - name: Create release
       id: create_release
@@ -71,7 +72,7 @@ jobs:
       with:
         tag_name: ${{ github.ref }}
         release_name: Release ${{ github.ref }}
-        draft: false
+        draft: true
         prerelease: true
        
     - name: Upload windows zip file

@@ -48,17 +48,17 @@ jobs:
     - name: Create windows zip file
       run: |
        mv ethdo-windows-4.0-amd64.exe ethdo.exe
-       zip --junk-paths ethdo-${{ github.ref }}-windows-exe.zip ethdo.exe
+       zip --junk-paths ethdo-${GITHUB_REF}-windows-exe.zip ethdo.exe
 
     - name: Create linux AMD64 tgz file
       run: |
        mv ethdo-linux-amd64 ethdo
-       tar zcf ethdo-${{ github.ref }}-linux-amd64.tar.gz ethdo
+       tar zcf ethdo-${GITHUB_REF}-linux-amd64.tar.gz ethdo
 
     - name: Create linux ARM64 tgz file
       run: |
        mv ethdo-linux-arm64 ethdo
-       tar zcf ethdo-${{ github.ref }}-linux-arm64.tar.gz ethdo
+       tar zcf ethdo-${GITHUB_REF}-linux-arm64.tar.gz ethdo
 
     - name: Create release
       id: create_release

@@ -43,7 +43,7 @@ jobs:
        echo "::set-output name=RELEASE_VERSION::${RELEASE_VERSION}"
 
     - name: Build
-      run: go build -v -ldflags="-X cmd.ReleaseVersion=${RELEASE_VERSION}" .
+      run: go build -v -ldflags="-X github.com/wealdtech/ethdo/cmd.ReleaseVersion=${RELEASE_VERSION}" .
 
     - name: Test
       run: go test -v .

@@ -2,19 +2,7 @@
 
 ## Installing ethdo
 
-1. To install `ethdo`, issue the following command:
-
-```sh
-GO111MODULE=on go get github.com/wealdtech/ethdo@latest
-```
-
-2. Ensure `ethdo` is installed properly by issuing the command:
-
-```sh
-ethdo version
-```
-
-Ensure the output matches the most recent version listed on the repository's [release history](https://github.com/wealdtech/ethdo/releases/).
+1. To install `ethdo`, use the instructions on the [main page](https://github.com/wealdtech/ethdo).
 
 ## Typical validating setups
 

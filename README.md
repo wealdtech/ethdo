@@ -10,7 +10,9 @@ A command-line tool for managing common tasks in Ethereum 2.
 ## Table of Contents
 
 - [Install](#install)
+  - [Binaries](#binaries)
   - [Docker](#docker)
+  - [Source](#source)
 - [Usage](#usage)
 - [Maintainers](#maintainers)
 - [Contribute](#contribute)
@@ -18,6 +20,19 @@ A command-line tool for managing common tasks in Ethereum 2.
 
 ## Install
 
+### Binaries
+
+Binaries for the latest version of `ethdo` can be obtained from [the releases page](https://github.com/wealdtech/ethdo/releases).
+
+### Docker
+
+You can obtain the latest version of `ethdo` using docker with:
+
+```
+docker pull wealdtech/ethdo
+```
+
+### Source
 `ethdo` is a standard Go program which can be installed with:
 
 ```sh
@@ -28,15 +43,7 @@ Note that `ethdo` requires at least version 1.13 of go to operate.  The version 
 
 If this does not work please see the [troubleshooting](https://github.com/wealdtech/ethdo/blob/master/docs/troubleshooting.md) page.
 
-### Docker
-
-You can obtain the latest version of `ethdo` using docker with:
-
-```
-docker pull wealdtech/ethdo
-```
-
-Or build `ethdo` using docker:
+The docker image can be build locally with:
 
 ```sh
 docker build -t ethdo .
@@ -141,6 +148,8 @@ There is a [HOWTO](https://github.com/wealdtech/ethdo/blob/master/docs/howto.md)
 ## Maintainers
 
 Jim McDonald: [@mcdee](https://github.com/mcdee).
+
+Special thanks to [@SuburbanDad](https://github.com/SuburbanDad) for updating xgo to allow for cross-compilation of `ethdo` releaes.
 
 ## Contribute
 

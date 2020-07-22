@@ -1,17 +1,23 @@
 # Troubleshooting
 
-## Compilation problems
+## Compilation problems on Linux
 
 ### gcc not found
 ### cannot find -lstdc++
 
-This is usually an error on linux systems.  If you receive errors of this type your computer is missing some files to allow `ethdo` to build.  To resolve this run the following command:
+If you receive errors of this type your computer is missing some files to allow `ethdo` to build.  To resolve this, run the following command:
 
 ```sh
 sudo apt install build-essential libstdc++6
 ```
 
 and then try to install `ethdo` again.
+
+## Compilation problems on Windows
+
+### gcc not found
+
+If you receive errors of this type your computer is missing some files to allow `ethdo` to build.  To resolve this install gcc by following the instructions at http://mingw-w64.org/doku.php
 
 ## ethdo not found after installing
 

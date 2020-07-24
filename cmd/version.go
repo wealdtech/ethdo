@@ -22,7 +22,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-var ReleaseVersion = "local build from v1.5.0"
+var ReleaseVersion = "local build from v1.5.1"
 
 // versionCmd represents the version command
 var versionCmd = &cobra.Command{

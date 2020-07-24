@@ -56,6 +56,19 @@ In quiet mode this will return 0 if the validator information can be obtained, o
 		account, err := validatorInfoAccount()
 		errCheck(err, "Failed to obtain validator account")
 
+		if verbose {
+			network := network()
+			outputIf(debug, fmt.Sprintf("Network is %s", network))
+			pubKey, err := bestPublicKey(account)
+			if err == nil {
+				deposits, totalDeposited, err := graphData(network, pubKey.Marshal())
+				if err == nil {
+					fmt.Printf("Number of deposits: %d\n", deposits)
+					fmt.Printf("Total deposited: %s\n", string2eth.GWeiToString(totalDeposited, true))
+				}
+			}
+		}
+
 		validatorInfo, err := grpc.FetchValidatorInfo(eth2GRPCConn, account)
 		errCheck(err, "Failed to obtain validator information")
 		validator, err := grpc.FetchValidator(eth2GRPCConn, account)
@@ -78,16 +91,6 @@ In quiet mode this will return 0 if the validator information can be obtained, o
 		outputIf(verbose, fmt.Sprintf("Public key: %#x", validatorInfo.PublicKey))
 		fmt.Printf("Status: %s\n", strings.Title(strings.ToLower(validatorInfo.Status.String())))
 		fmt.Printf("Balance: %s\n", string2eth.GWeiToString(validatorInfo.Balance, true))
-
-		if verbose {
-			network := network()
-			outputIf(debug, fmt.Sprintf("Network is %s", network))
-			deposits, totalDeposited, err := graphData(network, validator.PublicKey)
-			if err == nil {
-				fmt.Printf("Number of deposits: %d\n", deposits)
-				fmt.Printf("Total deposited: %s\n", string2eth.GWeiToString(totalDeposited, true))
-			}
-		}
 
 		if validatorInfo.Status == ethpb.ValidatorStatus_ACTIVE ||
 			validatorInfo.Status == ethpb.ValidatorStatus_EXITING ||

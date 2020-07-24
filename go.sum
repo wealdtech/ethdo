@@ -159,6 +159,8 @@ github.com/herumi/bls-eth-go-binary v0.0.0-20200719025738-3e30d132e8f6 h1:xOOHoK
 github.com/herumi/bls-eth-go-binary v0.0.0-20200719025738-3e30d132e8f6/go.mod h1:luAnRm3OsMQeokhGzpYmc0ZKwawY7o87PUEP11Z7r7U=
 github.com/herumi/bls-eth-go-binary v0.0.0-20200721081051-e31ced8c0204 h1:owpf19DI+vvpSOetnfE1NsLykSxZt8dSag7SDsJd8F0=
 github.com/herumi/bls-eth-go-binary v0.0.0-20200721081051-e31ced8c0204/go.mod h1:luAnRm3OsMQeokhGzpYmc0ZKwawY7o87PUEP11Z7r7U=
+github.com/herumi/bls-eth-go-binary v0.0.0-20200722032157-41fc56eba7b4 h1:TfBVK1MJ9vhrMXWVHu5p/MlVHZTeCGgDAEu5RykVZeI=
+github.com/herumi/bls-eth-go-binary v0.0.0-20200722032157-41fc56eba7b4/go.mod h1:luAnRm3OsMQeokhGzpYmc0ZKwawY7o87PUEP11Z7r7U=
 github.com/inconshreveable/mousetrap v1.0.0 h1:Z8tu5sraLXCXIcARxBp/8cbvlwVa7Z1NHg9XEKhtSvM=
 github.com/inconshreveable/mousetrap v1.0.0/go.mod h1:PxqpIevigyE2G7u3NXJIT2ANytuPF1OarO4DADm73n8=
 github.com/jackc/puddle v1.1.1 h1:PJAw7H/9hoWC4Kf3J8iNmL1SwA6E8vfsLqBiL+F6CtI=
@@ -334,6 +336,8 @@ github.com/wealdtech/go-eth2-wallet v1.12.0 h1:nrwI3jPhehUhJGlBtNv/UmIo/57llvuVZ
 github.com/wealdtech/go-eth2-wallet v1.12.0/go.mod h1:ouV+YSMbzk2dyecmofm8jhaMKdSigdIPMSnSqmWEfW8=
 github.com/wealdtech/go-eth2-wallet-dirk v1.0.0 h1:1QUcWILF3h4OLCgTPpWklvRSuPu0fqrt15jwSm7CSC4=
 github.com/wealdtech/go-eth2-wallet-dirk v1.0.0/go.mod h1:VTzjJ51dedvYPr4huI7g7KXZVTpGR6ZrCDQwBxJpLck=
+github.com/wealdtech/go-eth2-wallet-dirk v1.0.1 h1:YUE1QlJPun8b+xbz0JM71/3t1i9zp9KjcZdJvtJQL+E=
+github.com/wealdtech/go-eth2-wallet-dirk v1.0.1/go.mod h1:5jK/aEAjYAVRBKKjYAvJWSmOWxiECs4asYXHwloNI+w=
 github.com/wealdtech/go-eth2-wallet-distributed v1.0.1 h1:3BxMII8T6t16g6lWcYWXjfdvaw8rXuwMQx9h0TG5wRg=
 github.com/wealdtech/go-eth2-wallet-distributed v1.0.1/go.mod h1:Ha/8S+SCLEuSfXHdvhTLwnKaEF47o6gzQ+FURKwftvU=
 github.com/wealdtech/go-eth2-wallet-distributed v1.1.0 h1:OZjjuxcIYo+EhAfph7lYP1z+VeNs9ruOI32kqtYe1Jg=

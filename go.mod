@@ -9,7 +9,7 @@ require (
 	github.com/gogo/protobuf v1.3.1
 	github.com/google/uuid v1.1.1
 	github.com/grpc-ecosystem/grpc-gateway v1.14.6 // indirect
-	github.com/herumi/bls-eth-go-binary v0.0.0-20200721081051-e31ced8c0204
+	github.com/herumi/bls-eth-go-binary v0.0.0-20200722032157-41fc56eba7b4
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mitchellh/mapstructure v1.3.3 // indirect
 	github.com/pelletier/go-toml v1.8.0 // indirect
@@ -31,7 +31,7 @@ require (
 	github.com/wealdtech/go-eth2-types/v2 v2.5.0
 	github.com/wealdtech/go-eth2-util v1.5.0
 	github.com/wealdtech/go-eth2-wallet v1.12.0
-	github.com/wealdtech/go-eth2-wallet-dirk v1.0.0
+	github.com/wealdtech/go-eth2-wallet-dirk v1.0.1
 	github.com/wealdtech/go-eth2-wallet-distributed v1.1.0
 	github.com/wealdtech/go-eth2-wallet-encryptor-keystorev4 v1.1.0
 	github.com/wealdtech/go-eth2-wallet-hd/v2 v2.3.0

@@ -17,6 +17,9 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"sort"
+	"strconv"
+	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -40,27 +43,66 @@ In quiet mode this will return 0 if the wallet holds any addresses, otherwise 1.
 		wallet, err := openWallet()
 		errCheck(err, "Failed to access wallet")
 
-		hasAccounts := false
+		accounts := make([]e2wtypes.Account, 0, 128)
 		for account := range wallet.Accounts(ctx) {
-			hasAccounts = true
+			accounts = append(accounts, account)
+		}
+		assert(len(accounts) > 0, "")
+
+		if _, isPathProvider := accounts[0].(e2wtypes.AccountPathProvider); isPathProvider {
+			// Order accounts by their path components.
+			sort.Slice(accounts, func(i int, j int) bool {
+				iBits := strings.Split(accounts[i].(e2wtypes.AccountPathProvider).Path(), "/")
+				jBits := strings.Split(accounts[j].(e2wtypes.AccountPathProvider).Path(), "/")
+				for index := range iBits {
+					if iBits[index] == "m" && jBits[index] == "m" {
+						continue
+					}
+					if len(jBits) <= index {
+						return false
+					}
+					iBit, err := strconv.ParseUint(iBits[index], 10, 64)
+					if err != nil {
+						return true
+					}
+					jBit, err := strconv.ParseUint(jBits[index], 10, 64)
+					if err != nil {
+						return false
+					}
+					if iBit < jBit {
+						return true
+					}
+					if iBit > jBit {
+						return false
+					}
+				}
+				return len(jBits) > len(iBits)
+			})
+		} else {
+			// Order accounts by their name.
+			sort.Slice(accounts, func(i int, j int) bool {
+				return strings.Compare(accounts[i].Name(), accounts[j].Name()) < 0
+			})
+		}
+
+		for _, account := range accounts {
 			outputIf(!quiet, account.Name())
 			if verbose {
 				fmt.Printf(" UUID: %v\n", account.ID())
-				pubKeyProvider, isProvider := account.(e2wtypes.AccountPublicKeyProvider)
-				if isProvider {
+				if pathProvider, isProvider := account.(e2wtypes.AccountPathProvider); isProvider {
+					if pathProvider.Path() != "" {
+						fmt.Printf("Path: %s\n", pathProvider.Path())
+					}
+				}
+				if pubKeyProvider, isProvider := account.(e2wtypes.AccountPublicKeyProvider); isProvider {
 					fmt.Printf(" Public key: %#x\n", pubKeyProvider.PublicKey().Marshal())
 				}
-				compositePubKeyProvider, isProvider := account.(e2wtypes.AccountCompositePublicKeyProvider)
-				if isProvider {
+				if compositePubKeyProvider, isProvider := account.(e2wtypes.AccountCompositePublicKeyProvider); isProvider {
 					fmt.Printf(" Composite public key: %#x\n", compositePubKeyProvider.CompositePublicKey().Marshal())
 				}
 			}
 		}
-
-		if hasAccounts {
-			os.Exit(_exitSuccess)
-		}
-		os.Exit(_exitFailure)
+		os.Exit(_exitSuccess)
 	},
 }
 

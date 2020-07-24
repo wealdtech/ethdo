@@ -310,6 +310,11 @@ func accountsFromPath(ctx context.Context, wallet e2wtypes.Wallet, accountSpec s
 
 // connect connects to an Ethereum 2 endpoint.
 func connect() error {
+	if eth2GRPCConn != nil {
+		// Already connected.
+		return nil
+	}
+
 	connection := ""
 	if viper.GetString("connection") != "" {
 		connection = viper.GetString("connection")

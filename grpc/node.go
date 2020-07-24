@@ -55,6 +55,21 @@ func FetchGenesisValidatorsRoot(conn *grpc.ClientConn) ([]byte, error) {
 	return res.GetGenesisValidatorsRoot(), nil
 }
 
+// FetchDepositContractAddress fetches the address of the deposit contract.
+func FetchDepositContractAddress(conn *grpc.ClientConn) ([]byte, error) {
+	if conn == nil {
+		return nil, errors.New("no connection to beacon node")
+	}
+	client := ethpb.NewNodeClient(conn)
+	ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("timeout"))
+	defer cancel()
+	res, err := client.GetGenesis(ctx, &types.Empty{})
+	if err != nil {
+		return nil, err
+	}
+	return res.DepositContractAddress, nil
+}
+
 // FetchVersion fetches the version and metadata from the server.
 func FetchVersion(conn *grpc.ClientConn) (string, string, error) {
 	if conn == nil {

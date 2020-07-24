@@ -31,7 +31,7 @@ Spending: 0x85dfc6dcee4c9da36f6473ec02fda283d6c920c641fc8e3a76113c5c227d4aeeb100
   - `wallet`: the name of the wallet to create
   - `type`: the type of wallet to create.  This can be either "nd" for a non-deterministic wallet, where private keys are generated randomly, or "hd" for a hierarchical deterministic wallet, where private keys are generated from a seed and path as per [ERC-2333](https://github.com/CarlBeek/EIPs/blob/bls_path/EIPS/eip-2334.md) (defaults to "nd")
   - `walletpassphrase`: the passphrase for of the wallet.  This is required for hierarchical deterministic wallets, to protect the seed
-  - `seed`: for hierarchical deterministic wallets only, use a pre-defined 24-word [BIP-39 seed phrase](https://en.bitcoin.it/wiki/Seed_phrase) to create the wallet.  **Warning** The same seed can be imported in to multiple wallets, in which case they will generate the same keys.  Please ensure that only a single wallet is active with any single seed phrase
+  - `mnemonic`: for hierarchical deterministic wallets only, use a pre-defined 24-word [BIP-39 seed phrase](https://en.bitcoin.it/wiki/Seed_phrase) to create the wallet, along with an additional "seed extension" phrase if required.  **Warning** The same mnemonic can be used to create multiple wallets, in which case they will generate the same keys.
 
 ```sh
 $ ethdo wallet create --wallet="Personal wallet" --type="hd" --walletpassphrase="my wallet secret"
@@ -102,17 +102,6 @@ Personal wallet
 ```
 
 **N.B.** encrypted wallets will not show up in this list unless the correct passphrase for the store is supplied.
-
-#### `seed`
-
-`ethdo wallet seed` provides the seed for hierarchical deterministic wallets.  Options include:
-  - `wallet`: the name of the wallet
-  - `walletpassphrase`: the passphrase for the wallet
-
-```sh
-$ ethdo wallet seed --wallet="Personal wallet" --walletpassphrase="my wallet secret"
-decorate false mail domain gain later motion chair tank muffin smoke involve witness bean shell urge team solve share truly shadow decorate jeans hen
-```
 
 ### `account` commands
 

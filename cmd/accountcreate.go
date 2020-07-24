@@ -61,6 +61,7 @@ In quiet mode this will return 0 if the account is created successfully, otherwi
 			defer cancel()
 			account, err = distributedCreator.CreateDistributedAccount(ctx, accountName, viper.GetUint32("participants"), viper.GetUint32("signing-threshold"), []byte(getPassphrase()))
 		} else {
+			// Want a standard account.
 			creator, isCreator := wallet.(e2wtypes.WalletAccountCreator)
 			assert(isCreator, "Wallet does not support account creation")
 			ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("timeout"))

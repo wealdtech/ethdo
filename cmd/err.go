@@ -57,10 +57,10 @@ func assert(condition bool, msg string) {
 
 // die prints an error and quits
 func die(msg string) {
-	if !quiet {
+	if msg != "" && !quiet {
 		fmt.Fprintf(os.Stderr, "%s\n", msg)
 	}
-	os.Exit(1)
+	os.Exit(_exitFailure)
 }
 
 // warnCheck checks for an error and warns if it is present

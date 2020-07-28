@@ -137,6 +137,17 @@ func validatorInfoAccount() (e2wtypes.Account, error) {
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to obtain account name")
 		}
+
+		if wallet.Type() == "hierarchical deterministic" && strings.HasPrefix(accountName, "m/") {
+			assert(getWalletPassphrase() != "", "walletpassphrase is required to obtain information about validators with dynamically generated hierarchical deterministic accounts")
+			locker, isLocker := wallet.(e2wtypes.WalletLocker)
+			if isLocker {
+				ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("timeout"))
+				defer cancel()
+				errCheck(locker.Unlock(ctx, []byte(getWalletPassphrase())), "Failed to unlock wallet")
+			}
+		}
+
 		accountByNameProvider, isProvider := wallet.(e2wtypes.WalletAccountByNameProvider)
 		if !isProvider {
 			return nil, errors.New("failed to ask wallet for account by name")

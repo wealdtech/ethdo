@@ -17,9 +17,11 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	e2wallet "github.com/wealdtech/go-eth2-wallet"
 	e2wtypes "github.com/wealdtech/go-eth2-wallet-types/v2"
 )
 
@@ -36,22 +38,43 @@ In quiet mode this will return 0 if the key can be obtained, otherwise 1.`,
 		assert(!remote, "account keys not available with remote wallets")
 		assert(viper.GetString("account") != "", "--account is required")
 
+		wallet, err := openWallet()
+		errCheck(err, "Failed to access wallet")
+		outputIf(debug, fmt.Sprintf("Opened wallet %q of type %s", wallet.Name(), wallet.Type()))
+
+		_, accountName, err := e2wallet.WalletAndAccountNames(viper.GetString("account"))
+		errCheck(err, "Failed to obtain account name")
+
+		if wallet.Type() == "hierarchical deterministic" && strings.HasPrefix(accountName, "m/") {
+			assert(getWalletPassphrase() != "", "walletpassphrase is required to show information about dynamically generated hierarchical deterministic accounts")
+			locker, isLocker := wallet.(e2wtypes.WalletLocker)
+			if isLocker {
+				ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("timeout"))
+				defer cancel()
+				errCheck(locker.Unlock(ctx, []byte(getWalletPassphrase())), "Failed to unlock wallet")
+			}
+		}
+
+		accountByNameProvider, isAccountByNameProvider := wallet.(e2wtypes.WalletAccountByNameProvider)
+		assert(isAccountByNameProvider, "wallet cannot obtain accounts by name")
 		ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("timeout"))
 		defer cancel()
-
-		account, err := accountFromPath(ctx, viper.GetString("account"))
-		errCheck(err, "Failed to access account")
+		account, err := accountByNameProvider.AccountByName(ctx, accountName)
+		errCheck(err, "Failed to obtain account")
 
 		privateKeyProvider, isPrivateKeyProvider := account.(e2wtypes.AccountPrivateKeyProvider)
 		assert(isPrivateKeyProvider, fmt.Sprintf("account %q does not provide its private key", viper.GetString("account")))
 
 		if locker, isLocker := account.(e2wtypes.AccountLocker); isLocker {
-			unlocked := false
-			for _, passphrase := range getPassphrases() {
-				err = locker.Unlock(ctx, []byte(passphrase))
-				if err == nil {
-					unlocked = true
-					break
+			unlocked, err := locker.IsUnlocked(ctx)
+			errCheck(err, "Failed to find out if account is locked")
+			if !unlocked {
+				for _, passphrase := range getPassphrases() {
+					err = locker.Unlock(ctx, []byte(passphrase))
+					if err == nil {
+						unlocked = true
+						break
+					}
 				}
 			}
 			assert(unlocked, "Failed to unlock account to obtain private key")

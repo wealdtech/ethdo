@@ -14,6 +14,7 @@
 package cmd
 
 import (
+	"context"
 	"os"
 	"path/filepath"
 
@@ -34,7 +35,10 @@ In quiet mode this will return 0 if the wallet has been deleted, otherwise 1.`,
 		assert(viper.GetString("remote") == "", "wallet delete not available with remote wallets")
 		assert(viper.GetString("wallet") != "", "--wallet is required")
 
-		wallet, err := walletFromPath(viper.GetString("wallet"))
+		ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("timeout"))
+		defer cancel()
+
+		wallet, err := walletFromPath(ctx, viper.GetString("wallet"))
 		errCheck(err, "Failed to access wallet")
 
 		storeProvider, ok := wallet.(wtypes.StoreProvider)

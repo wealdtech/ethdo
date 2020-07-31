@@ -39,7 +39,7 @@ In quiet mode this will return 0 if the wallet exists, otherwise 1.`,
 		assert(viper.GetString("remote") == "", "wallet info not available with remote wallets")
 		assert(viper.GetString("wallet") != "", "--wallet is required")
 
-		wallet, err := walletFromPath(viper.GetString("wallet"))
+		wallet, err := walletFromPath(ctx, viper.GetString("wallet"))
 		errCheck(err, "unknown wallet")
 
 		if quiet {

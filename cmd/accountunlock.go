@@ -19,7 +19,6 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	e2wallet "github.com/wealdtech/go-eth2-wallet"
 	e2wtypes "github.com/wealdtech/go-eth2-wallet-types/v2"
 )
 
@@ -32,19 +31,12 @@ var accountUnlockCmd = &cobra.Command{
 
 In quiet mode this will return 0 if the account is unlocked, otherwise 1.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		assert(viper.GetString("account") != "", "--account is required")
-
-		wallet, err := openWallet()
-		errCheck(err, "Failed to access wallet")
-
-		_, accountName, err := e2wallet.WalletAndAccountNames(viper.GetString("account"))
-		errCheck(err, "Failed to obtain account name")
-
-		accountByNameProvider, isAccountByNameProvider := wallet.(e2wtypes.WalletAccountByNameProvider)
-		assert(isAccountByNameProvider, "wallet cannot obtain accounts by name")
 		ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("timeout"))
 		defer cancel()
-		account, err := accountByNameProvider.AccountByName(ctx, accountName)
+
+		assert(viper.GetString("account") != "", "--account is required")
+
+		_, account, err := walletAndAccountFromInput(ctx)
 		errCheck(err, "Failed to obtain account")
 
 		locker, isLocker := account.(e2wtypes.AccountLocker)

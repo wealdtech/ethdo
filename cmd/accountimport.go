@@ -47,13 +47,13 @@ In quiet mode this will return 0 if the account is imported successfully, otherw
 		key, err := bytesutil.FromHexString(accountImportKey)
 		errCheck(err, "Invalid key")
 
-		w, err := walletFromPath(viper.GetString("account"))
+		w, err := walletFromPath(ctx, viper.GetString("account"))
 		errCheck(err, "Failed to access wallet")
 
 		_, ok := w.(e2wtypes.WalletAccountImporter)
 		assert(ok, fmt.Sprintf("wallets of type %q do not allow importing accounts", w.Type()))
 
-		_, err = accountFromPath(ctx, viper.GetString("account"))
+		_, _, err = walletAndAccountFromPath(ctx, viper.GetString("account"))
 		assert(err != nil, "Account already exists")
 
 		locker, isLocker := w.(e2wtypes.WalletLocker)

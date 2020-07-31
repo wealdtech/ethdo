@@ -32,7 +32,6 @@ import (
 	"github.com/spf13/viper"
 	"github.com/wealdtech/ethdo/grpc"
 	"github.com/wealdtech/ethdo/util"
-	e2wallet "github.com/wealdtech/go-eth2-wallet"
 	e2wtypes "github.com/wealdtech/go-eth2-wallet-types/v2"
 	string2eth "github.com/wealdtech/go-string2eth"
 )
@@ -128,33 +127,11 @@ In quiet mode this will return 0 if the validator information can be obtained, o
 // validatorInfoAccount obtains the account for the validator info command.
 func validatorInfoAccount() (e2wtypes.Account, error) {
 	var account e2wtypes.Account
+	var err error
 	if viper.GetString("account") != "" {
-		wallet, err := openWallet()
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to open wallet")
-		}
-		_, accountName, err := e2wallet.WalletAndAccountNames(viper.GetString("account"))
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to obtain account name")
-		}
-
-		if wallet.Type() == "hierarchical deterministic" && strings.HasPrefix(accountName, "m/") {
-			assert(getWalletPassphrase() != "", "walletpassphrase is required to obtain information about validators with dynamically generated hierarchical deterministic accounts")
-			locker, isLocker := wallet.(e2wtypes.WalletLocker)
-			if isLocker {
-				ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("timeout"))
-				defer cancel()
-				errCheck(locker.Unlock(ctx, []byte(getWalletPassphrase())), "Failed to unlock wallet")
-			}
-		}
-
-		accountByNameProvider, isProvider := wallet.(e2wtypes.WalletAccountByNameProvider)
-		if !isProvider {
-			return nil, errors.New("failed to ask wallet for account by name")
-		}
 		ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("timeout"))
 		defer cancel()
-		account, err = accountByNameProvider.AccountByName(ctx, accountName)
+		_, account, err = walletAndAccountFromPath(ctx, viper.GetString("account"))
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to obtain account")
 		}

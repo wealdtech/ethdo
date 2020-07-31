@@ -70,7 +70,7 @@ jobs:
        mv ethdo-linux-arm64 ethdo
        tar zcf ethdo-${RELEASE_VERSION}-linux-arm64.tar.gz ethdo
 
-    - name: Create draft release
+    - name: Create release
       id: create_release
       uses: actions/create-release@v1
       env:
@@ -78,7 +78,7 @@ jobs:
       with:
         tag_name: ${{ github.ref }}
         release_name: Release ${{ env.RELEASE_VERSION }}
-        draft: true
+        draft: false
         prerelease: false
        
     - name: Upload windows zip file

@@ -40,8 +40,8 @@ In quiet mode this will return 0 if the wallet holds any addresses, otherwise 1.
 
 		assert(viper.GetString("wallet") != "", "wallet is required")
 
-		wallet, err := openWallet()
-		errCheck(err, "Failed to access wallet")
+		wallet, err := walletFromInput(ctx)
+		errCheck(err, "Failed to obtain wallet")
 
 		accounts := make([]e2wtypes.Account, 0, 128)
 		for account := range wallet.Accounts(ctx) {

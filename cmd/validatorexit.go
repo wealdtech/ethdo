@@ -52,19 +52,20 @@ In quiet mode this will return 0 if the transaction has been generated, otherwis
 		err := connect()
 		errCheck(err, "Failed to obtain connect to Ethereum 2 beacon chain node")
 
-		exit, signature := validatorExitHandleInput(ctx)
-		validatorExitHandleExit(ctx, exit, signature)
+		exit, signature, forkVersion := validatorExitHandleInput(ctx)
+		validatorExitHandleExit(ctx, exit, signature, forkVersion)
 		os.Exit(_exitSuccess)
 	},
 }
 
-func validatorExitHandleInput(ctx context.Context) (*ethpb.VoluntaryExit, e2types.Signature) {
+func validatorExitHandleInput(ctx context.Context) (*ethpb.VoluntaryExit, e2types.Signature, []byte) {
 	if validatorExitJSON != "" {
 		return validatorExitHandleJSONInput(validatorExitJSON)
 	}
 	if viper.GetString("account") != "" {
-		account, err := accountFromPath(ctx, viper.GetString("account"))
-		errCheck(err, "Failed to access account")
+		_, account, err := walletAndAccountFromInput(ctx)
+		errCheck(err, "Failed to obtain account")
+		outputIf(debug, fmt.Sprintf("Account %s obtained", account.Name()))
 		return validatorExitHandleAccountInput(ctx, account)
 	}
 	if validatorExitKey != "" {
@@ -75,10 +76,10 @@ func validatorExitHandleInput(ctx context.Context) (*ethpb.VoluntaryExit, e2type
 		return validatorExitHandleAccountInput(ctx, account)
 	}
 	die("one of --json, --account or --key is required")
-	return nil, nil
+	return nil, nil, nil
 }
 
-func validatorExitHandleJSONInput(input string) (*ethpb.VoluntaryExit, e2types.Signature) {
+func validatorExitHandleJSONInput(input string) (*ethpb.VoluntaryExit, e2types.Signature, []byte) {
 	data := &validatorExitData{}
 	err := json.Unmarshal([]byte(input), data)
 	errCheck(err, "Invalid JSON input")
@@ -88,10 +89,10 @@ func validatorExitHandleJSONInput(input string) (*ethpb.VoluntaryExit, e2types.S
 	}
 	signature, err := e2types.BLSSignatureFromBytes(data.Signature)
 	errCheck(err, "Invalid signature")
-	return exit, signature
+	return exit, signature, data.ForkVersion
 }
 
-func validatorExitHandleAccountInput(ctx context.Context, account e2wtypes.Account) (*ethpb.VoluntaryExit, e2types.Signature) {
+func validatorExitHandleAccountInput(ctx context.Context, account e2wtypes.Account) (*ethpb.VoluntaryExit, e2types.Signature, []byte) {
 	exit := &ethpb.VoluntaryExit{}
 
 	// Beacon chain config required for later work.
@@ -137,12 +138,12 @@ func validatorExitHandleAccountInput(ctx context.Context, account e2wtypes.Accou
 	}
 
 	// TODO fetch current fork version from config (currently using genesis fork version)
-	currentForkVersion := config["GenesisForkVersion"].([]byte)
-	outputIf(debug, fmt.Sprintf("Current fork version is %x", currentForkVersion))
+	forkVersion := config["GenesisForkVersion"].([]byte)
+	outputIf(debug, fmt.Sprintf("Current fork version is %x", forkVersion))
 	genesisValidatorsRoot, err := grpc.FetchGenesisValidatorsRoot(eth2GRPCConn)
 	outputIf(debug, fmt.Sprintf("Genesis validators root is %x", genesisValidatorsRoot))
 	errCheck(err, "Failed to obtain genesis validators root")
-	domain := e2types.Domain(e2types.DomainVoluntaryExit, currentForkVersion, genesisValidatorsRoot)
+	domain := e2types.Domain(e2types.DomainVoluntaryExit, forkVersion, genesisValidatorsRoot)
 
 	alreadyUnlocked, err := unlock(account)
 	errCheck(err, "Failed to unlock account; please confirm passphrase is correct")
@@ -152,16 +153,17 @@ func validatorExitHandleAccountInput(ctx context.Context, account e2wtypes.Accou
 	}
 	errCheck(err, "Failed to sign exit proposal")
 
-	return exit, signature
+	return exit, signature, forkVersion
 }
 
 // validatorExitHandleExit handles the exit request.
-func validatorExitHandleExit(ctx context.Context, exit *ethpb.VoluntaryExit, signature e2types.Signature) {
+func validatorExitHandleExit(ctx context.Context, exit *ethpb.VoluntaryExit, signature e2types.Signature, forkVersion []byte) {
 	if validatorExitJSONOutput {
 		data := &validatorExitData{
 			Epoch:          exit.Epoch,
 			ValidatorIndex: exit.ValidatorIndex,
 			Signature:      signature.Marshal(),
+			ForkVersion:    forkVersion,
 		}
 		res, err := json.Marshal(data)
 		errCheck(err, "Failed to generate JSON")
@@ -192,11 +194,12 @@ type validatorExitData struct {
 	Epoch          uint64 `json:"epoch"`
 	ValidatorIndex uint64 `json:"validator_index"`
 	Signature      []byte `json:"signature"`
+	ForkVersion    []byte `json:"fork_version"`
 }
 
 // MarshalJSON implements custom JSON marshaller.
 func (d *validatorExitData) MarshalJSON() ([]byte, error) {
-	return []byte(fmt.Sprintf(`{"epoch":%d,"validator_index":%d,"signature":"%#x"}`, d.Epoch, d.ValidatorIndex, d.Signature)), nil
+	return []byte(fmt.Sprintf(`{"epoch":%d,"validator_index":%d,"signature":"%#x","fork_version":"%#x"}`, d.Epoch, d.ValidatorIndex, d.Signature, d.ForkVersion)), nil
 }
 
 // UnmarshalJSON implements custom JSON unmarshaller.
@@ -240,6 +243,20 @@ func (d *validatorExitData) UnmarshalJSON(data []byte) error {
 		d.Signature = signature
 	} else {
 		return errors.New("signature missing")
+	}
+
+	if val, exists := v["fork_version"]; exists {
+		forkVersionBytes, ok := val.(string)
+		if !ok {
+			return errors.New("fork version invalid")
+		}
+		forkVersion, err := hex.DecodeString(strings.TrimPrefix(forkVersionBytes, "0x"))
+		if err != nil {
+			return errors.Wrap(err, "fork version invalid")
+		}
+		d.ForkVersion = forkVersion
+	} else {
+		return errors.New("fork version missing")
 	}
 
 	return nil

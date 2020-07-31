@@ -41,7 +41,7 @@ In quiet mode this will return 0 if the wallet is able to be exported, otherwise
 		assert(viper.GetString("wallet") != "", "--wallet is required")
 		assert(walletExportPassphrase != "", "--exportpassphrase is required")
 
-		wallet, err := walletFromPath(viper.GetString("wallet"))
+		wallet, err := walletFromPath(ctx, viper.GetString("wallet"))
 		errCheck(err, "Failed to access wallet")
 
 		_, ok := wallet.(types.WalletExporter)

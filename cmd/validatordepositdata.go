@@ -26,7 +26,6 @@ import (
 	"github.com/wealdtech/ethdo/grpc"
 	e2types "github.com/wealdtech/go-eth2-types/v2"
 	util "github.com/wealdtech/go-eth2-util"
-	e2wallet "github.com/wealdtech/go-eth2-wallet"
 	string2eth "github.com/wealdtech/go-string2eth"
 )
 
@@ -54,12 +53,8 @@ In quiet mode this will return 0 if the the data can be generated correctly, oth
 		defer cancel()
 
 		assert(validatorDepositDataValidatorAccount != "", "--validatoraccount is required")
-		validatorWalletName, validatorAccountSpec, err := e2wallet.WalletAndAccountNames(validatorDepositDataValidatorAccount)
-		errCheck(err, "Failed to obtain wallet and account names")
-		validatorWallet, err := openNamedWallet(validatorWalletName)
-		errCheck(err, "Failed to obtain validator wallet")
-		validatorAccounts, err := accountsFromPath(ctx, validatorWallet, validatorAccountSpec)
-		errCheck(err, "Failed to obtain validator account")
+		validatorWallet, validatorAccounts, err := walletAndAccountsFromPath(ctx, validatorDepositDataValidatorAccount)
+		errCheck(err, "Failed to obtain validator accounts")
 		assert(len(validatorAccounts) > 0, "Failed to obtain validator account")
 
 		for _, validatorAccount := range validatorAccounts {
@@ -72,7 +67,7 @@ In quiet mode this will return 0 if the the data can be generated correctly, oth
 		assert(validatorDepositDataWithdrawalAccount != "" || validatorDepositDataWithdrawalPubKey != "", "--withdrawalaccount or --withdrawalpubkey is required")
 		var withdrawalCredentials []byte
 		if validatorDepositDataWithdrawalAccount != "" {
-			withdrawalAccount, err := accountFromPath(ctx, validatorDepositDataWithdrawalAccount)
+			_, withdrawalAccount, err := walletAndAccountFromPath(ctx, validatorDepositDataWithdrawalAccount)
 			errCheck(err, "Failed to obtain withdrawal account")
 			pubKey, err := bestPublicKey(withdrawalAccount)
 			errCheck(err, "Withdrawal account does not provide a public key")

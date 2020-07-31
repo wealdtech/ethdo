@@ -17,13 +17,11 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	e2types "github.com/wealdtech/go-eth2-types/v2"
 	util "github.com/wealdtech/go-eth2-util"
-	e2wallet "github.com/wealdtech/go-eth2-wallet"
 	e2wtypes "github.com/wealdtech/go-eth2-wallet-types/v2"
 )
 
@@ -36,30 +34,11 @@ var accountInfoCmd = &cobra.Command{
 
 In quiet mode this will return 0 if the account exists, otherwise 1.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		assert(viper.GetString("account") != "", "--account is required")
-
-		wallet, err := openWallet()
-		errCheck(err, "Failed to access wallet")
-		outputIf(debug, fmt.Sprintf("Opened wallet %q of type %s", wallet.Name(), wallet.Type()))
-
-		_, accountName, err := e2wallet.WalletAndAccountNames(viper.GetString("account"))
-		errCheck(err, "Failed to obtain account name")
-
-		if wallet.Type() == "hierarchical deterministic" && strings.HasPrefix(accountName, "m/") {
-			assert(getWalletPassphrase() != "", "walletpassphrase is required to show information about dynamically generated hierarchical deterministic accounts")
-			locker, isLocker := wallet.(e2wtypes.WalletLocker)
-			if isLocker {
-				ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("timeout"))
-				defer cancel()
-				errCheck(locker.Unlock(ctx, []byte(getWalletPassphrase())), "Failed to unlock wallet")
-			}
-		}
-
-		accountByNameProvider, isAccountByNameProvider := wallet.(e2wtypes.WalletAccountByNameProvider)
-		assert(isAccountByNameProvider, "wallet cannot obtain accounts by name")
 		ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("timeout"))
 		defer cancel()
-		account, err := accountByNameProvider.AccountByName(ctx, accountName)
+
+		assert(viper.GetString("account") != "", "--account is required")
+		wallet, account, err := walletAndAccountFromInput(ctx)
 		errCheck(err, "Failed to obtain account")
 
 		// Disallow wildcards (for now)

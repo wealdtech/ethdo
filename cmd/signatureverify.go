@@ -15,15 +15,17 @@ package cmd
 
 import (
 	"context"
+	"encoding/hex"
 	"fmt"
 	"os"
+	"strings"
 
-	"github.com/prysmaticlabs/go-ssz"
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"github.com/wealdtech/ethdo/util"
 	"github.com/wealdtech/go-bytesutil"
 	e2types "github.com/wealdtech/go-eth2-types/v2"
-	e2wallet "github.com/wealdtech/go-eth2-wallet"
 	e2wtypes "github.com/wealdtech/go-eth2-wallet-types/v2"
 )
 
@@ -58,49 +60,44 @@ In quiet mode this will return 0 if the data can be signed, otherwise 1.`,
 			assert(len(domain) == 32, "Domain data invalid")
 		}
 
-		var pubKey e2types.PublicKey
-		assert(signatureVerifySigner != "" || viper.GetString("account") != "", "Either --signer or --account should be supplied")
-		if viper.GetString("account") != "" {
-			wallet, err := openWallet()
-			errCheck(err, "Failed to access wallet")
-			_, accountName, err := e2wallet.WalletAndAccountNames(viper.GetString("account"))
-			errCheck(err, "Failed to obtain account name")
+		account, err := signatureVerifyAccount()
+		errCheck(err, "Failed to obtain account")
+		outputIf(debug, fmt.Sprintf("Public key is %#x", account.PublicKey().Marshal()))
 
-			accountByNameProvider, isAccountByNameProvider := wallet.(e2wtypes.WalletAccountByNameProvider)
-			assert(isAccountByNameProvider, "wallet cannot obtain accounts by name")
-			ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("timeout"))
-			defer cancel()
-			account, err := accountByNameProvider.AccountByName(ctx, accountName)
-			errCheck(err, "Failed to obtain account")
-			pubKey, err = bestPublicKey(account)
-			errCheck(err, "Failed to obtain account's public key")
-		} else {
-			pubKeyBytes, err := bytesutil.FromHexString(signatureVerifySigner)
-			errCheck(err, "Invalid public key")
-			pubKey, err = e2types.BLSPublicKeyFromBytes(pubKeyBytes)
-			errCheck(err, "Invalid public key")
-		}
-		outputIf(debug, fmt.Sprintf("Public key is %#x", pubKey.Marshal()))
-		container := &signingContainer{
-			Root:   data,
-			Domain: domain,
-		}
-		outputIf(debug, fmt.Sprintf("Data root is %#x", data))
-		outputIf(debug, fmt.Sprintf("Domain is %#x", domain))
-		root, err := ssz.HashTreeRoot(container)
-		errCheck(err, "Failed to create signing root")
-		outputIf(debug, fmt.Sprintf("Signing root is %#x", root))
+		var root [32]byte
+		copy(root[:], data)
+		verified, err := verifyRoot(account, root, domain, signature)
+		errCheck(err, "Failed to verify data")
+		assert(verified, "Failed to verify")
 
-		verified := signature.Verify(root[:], pubKey)
-		if !verified {
-			outputIf(!quiet, "Not verified")
-			os.Exit(_exitFailure)
-		}
-		outputIf(!quiet, "Verified")
+		outputIf(verbose, "Verified")
 		os.Exit(_exitSuccess)
 	},
 }
 
+// signatureVerifyAccount obtains the account for the signature verify command.
+func signatureVerifyAccount() (e2wtypes.Account, error) {
+	var account e2wtypes.Account
+	var err error
+	if viper.GetString("account") != "" {
+		ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("timeout"))
+		defer cancel()
+		_, account, err = walletAndAccountFromPath(ctx, viper.GetString("account"))
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to obtain account")
+		}
+	} else {
+		pubKeyBytes, err := hex.DecodeString(strings.TrimPrefix(signatureVerifySigner, "0x"))
+		if err != nil {
+			return nil, errors.Wrap(err, fmt.Sprintf("failed to decode public key %s", signatureVerifySigner))
+		}
+		account, err = util.NewScratchAccount(nil, pubKeyBytes)
+		if err != nil {
+			return nil, errors.Wrap(err, fmt.Sprintf("invalid public key %s", signatureVerifySigner))
+		}
+	}
+	return account, nil
+}
 func init() {
 	signatureCmd.AddCommand(signatureVerifyCmd)
 	signatureFlags(signatureVerifyCmd)

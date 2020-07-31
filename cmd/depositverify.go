@@ -60,18 +60,17 @@ In quiet mode this will return 0 if the the data can be generated correctly, oth
 		deposits, err := depositDataFromJSON(depositVerifyData)
 		errCheck(err, "Failed to fetch deposit data")
 
-		withdrawalCredentials := ""
+		var withdrawalCredentials []byte
 		if depositVerifyWithdrawalPubKey != "" {
 			withdrawalPubKeyBytes, err := hex.DecodeString(strings.TrimPrefix(depositVerifyWithdrawalPubKey, "0x"))
 			errCheck(err, "Invalid withdrawal public key")
 			assert(len(withdrawalPubKeyBytes) == 48, "Public key should be 48 bytes")
 			withdrawalPubKey, err := e2types.BLSPublicKeyFromBytes(withdrawalPubKeyBytes)
 			errCheck(err, "Value supplied with --withdrawalpubkey is not a valid public key")
-			withdrawalBytes := util.SHA256(withdrawalPubKey.Marshal())
-			withdrawalBytes[0] = 0 // BLS_WITHDRAWAL_PREFIX
-			withdrawalCredentials = fmt.Sprintf("%x", withdrawalBytes)
+			withdrawalCredentials = util.SHA256(withdrawalPubKey.Marshal())
+			withdrawalCredentials[0] = 0 // BLS_WITHDRAWAL_PREFIX
 		}
-		outputIf(debug, fmt.Sprintf("Withdrawal credentials are %s", withdrawalCredentials))
+		outputIf(debug, fmt.Sprintf("Withdrawal credentials are %#x", withdrawalCredentials))
 
 		depositValue := uint64(0)
 		if depositVerifyDepositValue != "" {
@@ -81,7 +80,7 @@ In quiet mode this will return 0 if the the data can be generated correctly, oth
 			assert(depositValue >= 1000000000, "deposit value must be at least 1 Ether") // MIN_DEPOSIT_AMOUNT
 		}
 
-		validatorPubKeys := make(map[string]bool)
+		validatorPubKeys := make(map[[48]byte]bool)
 		if depositVerifyValidatorPubKey != "" {
 			validatorPubKeys, err = validatorPubKeysFromInput(depositVerifyValidatorPubKey)
 			errCheck(err, "Failed to obtain validator public key(s))")
@@ -89,8 +88,10 @@ In quiet mode this will return 0 if the the data can be generated correctly, oth
 
 		failures := false
 		for i, deposit := range deposits {
-			if withdrawalCredentials != "" {
-				if deposit.WithdrawalCredentials != withdrawalCredentials {
+			if withdrawalCredentials != nil {
+				depositWithdrawalCredentials, err := hex.DecodeString(strings.TrimPrefix(deposit.WithdrawalCredentials, "0x"))
+				errCheck(err, fmt.Sprintf("Invalid withdrawal public key for deposit %d", i))
+				if !bytes.Equal(depositWithdrawalCredentials, withdrawalCredentials) {
 					outputIf(!quiet, fmt.Sprintf("Invalid withdrawal credentials for deposit %d", i))
 					failures = true
 				}
@@ -102,7 +103,11 @@ In quiet mode this will return 0 if the the data can be generated correctly, oth
 				}
 			}
 			if len(validatorPubKeys) != 0 {
-				if _, exists := validatorPubKeys[deposit.PublicKey]; !exists {
+				depositValidatorPubKey, err := hex.DecodeString(strings.TrimPrefix(deposit.PublicKey, "0x"))
+				errCheck(err, fmt.Sprintf("Invalid validator public key for deposit %d", i))
+				var key [48]byte
+				copy(key[:], depositValidatorPubKey)
+				if _, exists := validatorPubKeys[key]; !exists {
 					outputIf(!quiet, fmt.Sprintf("Unknown validator public key for deposit %d", i))
 					failures = true
 				}
@@ -117,8 +122,8 @@ In quiet mode this will return 0 if the the data can be generated correctly, oth
 	},
 }
 
-func validatorPubKeysFromInput(input string) (map[string]bool, error) {
-	pubKeys := make(map[string]bool)
+func validatorPubKeysFromInput(input string) (map[[48]byte]bool, error) {
+	pubKeys := make(map[[48]byte]bool)
 	var err error
 	var data []byte
 	// Input could be a public key or a path to public keys.
@@ -135,7 +140,9 @@ func validatorPubKeysFromInput(input string) (map[string]bool, error) {
 		if err != nil {
 			return nil, errors.Wrap(err, "invalid public key")
 		}
-		pubKeys[fmt.Sprintf("%x", pubKey.Marshal())] = true
+		var key [48]byte
+		copy(key[:], pubKey.Marshal())
+		pubKeys[key] = true
 	} else {
 		// Assume it's a path to a file of public keys.
 		data, err = ioutil.ReadFile(input)
@@ -161,7 +168,9 @@ func validatorPubKeysFromInput(input string) (map[string]bool, error) {
 			if err != nil {
 				return nil, errors.Wrap(err, "invalid public key")
 			}
-			pubKeys[fmt.Sprintf("%x", pubKey.Marshal())] = true
+			var key [48]byte
+			copy(key[:], pubKey.Marshal())
+			pubKeys[key] = true
 		}
 	}
 

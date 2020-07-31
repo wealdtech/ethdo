@@ -33,9 +33,12 @@ var accountCreateCmd = &cobra.Command{
 
 In quiet mode this will return 0 if the account is created successfully, otherwise 1.`,
 	Run: func(cmd *cobra.Command, args []string) {
+		ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("timeout"))
+		defer cancel()
+
 		assert(viper.GetString("account") != "", "--account is required")
 
-		wallet, err := openWallet()
+		wallet, err := walletFromInput(ctx)
 		errCheck(err, "Failed to access wallet")
 		outputIf(debug, fmt.Sprintf("Opened wallet %q of type %s", wallet.Name(), wallet.Type()))
 		if wallet.Type() == "hierarchical deterministic" {
@@ -43,8 +46,6 @@ In quiet mode this will return 0 if the account is created successfully, otherwi
 		}
 		locker, isLocker := wallet.(e2wtypes.WalletLocker)
 		if isLocker {
-			ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("timeout"))
-			defer cancel()
 			errCheck(locker.Unlock(ctx, []byte(getWalletPassphrase())), "Failed to unlock wallet")
 		}
 

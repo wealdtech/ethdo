@@ -23,8 +23,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	util "github.com/wealdtech/go-eth2-util"
-	e2wallet "github.com/wealdtech/go-eth2-wallet"
-	e2wtypes "github.com/wealdtech/go-eth2-wallet-types/v2"
 )
 
 var accountWithdrawalCredentialsCmd = &cobra.Command{
@@ -47,15 +45,7 @@ In quiet mode this will return 0 if the account exists, otherwise 1.`,
 			pubKey, err = hex.DecodeString(strings.TrimPrefix(viper.GetString("pubkey"), "0x"))
 			errCheck(err, "Failed to decode supplied public key")
 		} else {
-			wallet, err := openWallet()
-			errCheck(err, "Failed to access wallet")
-
-			_, accountName, err := e2wallet.WalletAndAccountNames(viper.GetString("account"))
-			errCheck(err, "Failed to obtain account name")
-
-			accountByNameProvider, isAccountByNameProvider := wallet.(e2wtypes.WalletAccountByNameProvider)
-			assert(isAccountByNameProvider, "wallet cannot obtain accounts by name")
-			account, err := accountByNameProvider.AccountByName(ctx, accountName)
+			_, account, err := walletAndAccountFromInput(ctx)
 			errCheck(err, "Failed to obtain account")
 
 			key, err := bestPublicKey(account)

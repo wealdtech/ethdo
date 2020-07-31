@@ -233,11 +233,31 @@ func outputIf(condition bool, msg string) {
 	}
 }
 
+// walletFromInput obtains a wallet given the information in the viper variable "wallet".
+func walletFromInput(ctx context.Context) (e2wtypes.Wallet, error) {
+	return walletFromPath(ctx, viper.GetString("wallet"))
+}
+
 // walletFromPath obtains a wallet given a path specification.
-func walletFromPath(path string) (e2wtypes.Wallet, error) {
+func walletFromPath(ctx context.Context, path string) (e2wtypes.Wallet, error) {
 	walletName, _, err := e2wallet.WalletAndAccountNames(path)
 	if err != nil {
 		return nil, err
+	}
+	if viper.GetString("remote") != "" {
+		assert(viper.GetString("client-cert") != "", "remote connections require client-cert")
+		assert(viper.GetString("client-key") != "", "remote connections require client-key")
+		credentials, err := dirk.ComposeCredentials(ctx, viper.GetString("client-cert"), viper.GetString("client-key"), viper.GetString("server-ca-cert"))
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to build dirk credentials")
+		}
+
+		endpoints, err := remotesToEndpoints([]string{viper.GetString("remote")})
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to parse remote servers")
+		}
+
+		return dirk.OpenWallet(ctx, walletName, credentials, endpoints)
 	}
 	wallet, err := e2wallet.OpenWallet(walletName)
 	if err != nil {
@@ -249,18 +269,23 @@ func walletFromPath(path string) (e2wtypes.Wallet, error) {
 	return wallet, nil
 }
 
-// accountFromPath obtains an account given a path specification.
-func accountFromPath(ctx context.Context, path string) (e2wtypes.Account, error) {
-	wallet, err := walletFromPath(path)
+// walletAndAccountFromInput obtains the wallet and account given the information in the viper variable "account".
+func walletAndAccountFromInput(ctx context.Context) (e2wtypes.Wallet, e2wtypes.Account, error) {
+	return walletAndAccountFromPath(ctx, viper.GetString("account"))
+}
+
+// walletAndAccountFromPath obtains the wallet and account given a path specification.
+func walletAndAccountFromPath(ctx context.Context, path string) (e2wtypes.Wallet, e2wtypes.Account, error) {
+	wallet, err := walletFromPath(ctx, path)
 	if err != nil {
-		return nil, err
+		return nil, nil, errors.Wrap(err, "faild to open wallet for account")
 	}
 	_, accountName, err := e2wallet.WalletAndAccountNames(path)
 	if err != nil {
-		return nil, err
+		return nil, nil, errors.Wrap(err, "failed to obtain accout name")
 	}
 	if accountName == "" {
-		return nil, errors.New("no account name")
+		return nil, nil, errors.New("no account name")
 	}
 
 	if wallet.Type() == "hierarchical deterministic" && strings.HasPrefix(accountName, "m/") {
@@ -270,7 +295,7 @@ func accountFromPath(ctx context.Context, path string) (e2wtypes.Account, error)
 		if isLocker {
 			err = locker.Unlock(ctx, []byte(viper.GetString("wallet-passphrase")))
 			if err != nil {
-				return nil, errors.New("invalid wallet passphrase")
+				return nil, nil, errors.New("failed to unlock wallet")
 			}
 			defer relockAccount(locker)
 		}
@@ -278,21 +303,30 @@ func accountFromPath(ctx context.Context, path string) (e2wtypes.Account, error)
 
 	accountByNameProvider, isAccountByNameProvider := wallet.(e2wtypes.WalletAccountByNameProvider)
 	if !isAccountByNameProvider {
-		return nil, errors.New("wallet cannot obtain accounts by name")
+		return nil, nil, errors.New("wallet cannot obtain accounts by name")
 	}
-	return accountByNameProvider.AccountByName(ctx, accountName)
+	account, err := accountByNameProvider.AccountByName(ctx, accountName)
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "failed to obtain account")
+	}
+	return wallet, account, nil
 }
 
-// accountsFromPath obtains 0 or more accounts given a path specification.
-func accountsFromPath(ctx context.Context, wallet e2wtypes.Wallet, accountSpec string) ([]e2wtypes.Account, error) {
+// walletAndAccountsFromPath obtains the wallet and matching accounts given a path specification.
+func walletAndAccountsFromPath(ctx context.Context, path string) (e2wtypes.Wallet, []e2wtypes.Account, error) {
+	wallet, err := walletFromPath(ctx, path)
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "faild to open wallet for account")
+	}
+
 	accounts := make([]e2wtypes.Account, 0)
 
-	if accountSpec == "" {
-		accountSpec = "^.*$"
+	if path == "" {
+		path = "^.*$"
 	} else {
-		accountSpec = fmt.Sprintf("^%s$", accountSpec)
+		path = fmt.Sprintf("^%s$", path)
 	}
-	re := regexp.MustCompile(accountSpec)
+	re := regexp.MustCompile(path)
 
 	for account := range wallet.Accounts(ctx) {
 		if re.Match([]byte(account.Name())) {
@@ -305,7 +339,7 @@ func accountsFromPath(ctx context.Context, wallet e2wtypes.Wallet, accountSpec s
 		return accounts[i].Name() < accounts[j].Name()
 	})
 
-	return accounts, nil
+	return wallet, accounts, nil
 }
 
 // connect connects to an Ethereum 2 endpoint.
@@ -367,46 +401,6 @@ func remotesToEndpoints(remotes []string) ([]*dirk.Endpoint, error) {
 		endpoints = append(endpoints, dirk.NewEndpoint(parts[0], uint32(port)))
 	}
 	return endpoints, nil
-}
-
-// Oepn a wallet, local or remote.
-func openWallet() (e2wtypes.Wallet, error) {
-	var err error
-	// Obtain the name of the wallet.
-	walletName := viper.GetString("wallet")
-	if walletName == "" {
-		walletName, _, err = e2wallet.WalletAndAccountNames(viper.GetString("account"))
-	}
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to obtain wallet name")
-	}
-	if walletName == "" {
-		return nil, errors.New("no wallet name provided")
-	}
-
-	return openNamedWallet(walletName)
-}
-
-// Open a named wallet, local or remote.
-func openNamedWallet(walletName string) (e2wtypes.Wallet, error) {
-	if viper.GetString("remote") != "" {
-		ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("timeout"))
-		defer cancel()
-		assert(viper.GetString("client-cert") != "", "remote connections require client-cert")
-		assert(viper.GetString("client-key") != "", "remote connections require client-key")
-		credentials, err := dirk.ComposeCredentials(ctx, viper.GetString("client-cert"), viper.GetString("client-key"), viper.GetString("server-ca-cert"))
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to build dirk credentials")
-		}
-
-		endpoints, err := remotesToEndpoints([]string{viper.GetString("remote")})
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to parse remote servers")
-		}
-
-		return dirk.OpenWallet(ctx, walletName, credentials, endpoints)
-	}
-	return walletFromPath(walletName)
 }
 
 // relockAccount locks an account; generally called as a defer after an account is unlocked.

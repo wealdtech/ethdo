@@ -36,6 +36,17 @@ func signStruct(account wtypes.Account, data interface{}, domain []byte) (e2type
 	return signRoot(account, objRoot, domain)
 }
 
+// verifyStruct verifies the signature of an arbitrary structure.
+func verifyStruct(account wtypes.Account, data interface{}, domain []byte, signature e2types.Signature) (bool, error) {
+	objRoot, err := ssz.HashTreeRoot(data)
+	outputIf(debug, fmt.Sprintf("Object root is %#x", objRoot))
+	if err != nil {
+		return false, err
+	}
+
+	return verifyRoot(account, objRoot, domain, signature)
+}
+
 // SigningContainer is the container for signing roots with a domain.
 // Contains SSZ sizes to allow for correct calculation of root.
 type signingContainer struct {
@@ -62,6 +73,21 @@ func signRoot(account wtypes.Account, root [32]byte, domain []byte) (e2types.Sig
 	}
 	outputIf(debug, fmt.Sprintf("Signing root: %#x", signingRoot))
 	return sign(account, signingRoot[:])
+}
+
+func verifyRoot(account wtypes.Account, root [32]byte, domain []byte, signature e2types.Signature) (bool, error) {
+	// Build the signing data manually.
+	container := &signingContainer{
+		Root:   root[:],
+		Domain: domain,
+	}
+	outputIf(debug, fmt.Sprintf("Signing container:\n root: %#x\n domain: %#x", container.Root, container.Domain))
+	signingRoot, err := ssz.HashTreeRoot(container)
+	if err != nil {
+		return false, err
+	}
+	outputIf(debug, fmt.Sprintf("Signing root: %#x", signingRoot))
+	return verify(account, signingRoot[:], signature)
 }
 
 func signGeneric(account wtypes.Account, data []byte, domain []byte) (e2types.Signature, error) {
@@ -111,6 +137,15 @@ func sign(account wtypes.Account, data []byte) (e2types.Signature, error) {
 		}
 	}
 	return signature, err
+}
+
+// verify the signature of arbitrary data.
+func verify(account wtypes.Account, data []byte, signature e2types.Signature) (bool, error) {
+	pubKey, err := bestPublicKey(account)
+	if err != nil {
+		return false, errors.Wrap(err, "failed to obtain account public key")
+	}
+	return signature.Verify(data, pubKey), nil
 }
 
 // unlock attempts to unlock an account.  It returns true if the account was already unlocked.

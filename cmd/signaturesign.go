@@ -22,8 +22,6 @@ import (
 	"github.com/spf13/viper"
 	"github.com/wealdtech/go-bytesutil"
 	e2types "github.com/wealdtech/go-eth2-types/v2"
-	e2wallet "github.com/wealdtech/go-eth2-wallet"
-	e2wtypes "github.com/wealdtech/go-eth2-wallet-types/v2"
 )
 
 // signatureSignCmd represents the signature sign command
@@ -53,17 +51,7 @@ In quiet mode this will return 0 if the data can be signed, otherwise 1.`,
 		outputIf(debug, fmt.Sprintf("Domain is %#x", domain))
 
 		assert(viper.GetString("account") != "", "--account is required")
-
-		wallet, err := openWallet()
-		errCheck(err, "Failed to access wallet")
-
-		_, accountName, err := e2wallet.WalletAndAccountNames(viper.GetString("account"))
-		errCheck(err, "Failed to obtain account name")
-
-		accountByNameProvider, isAccountByNameProvider := wallet.(e2wtypes.WalletAccountByNameProvider)
-		assert(isAccountByNameProvider, "wallet does not support obtaining accounts by name")
-
-		account, err := accountByNameProvider.AccountByName(ctx, accountName)
+		_, account, err := walletAndAccountFromInput(ctx)
 		errCheck(err, "Failed to obtain account")
 
 		var fixedSizeData [32]byte

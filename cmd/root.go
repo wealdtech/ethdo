@@ -319,15 +319,18 @@ func walletAndAccountsFromPath(ctx context.Context, path string) (e2wtypes.Walle
 		return nil, nil, errors.Wrap(err, "faild to open wallet for account")
 	}
 
-	accounts := make([]e2wtypes.Account, 0)
-
-	if path == "" {
-		path = "^.*$"
-	} else {
-		path = fmt.Sprintf("^%s$", path)
+	_, accountSpec, err := e2wallet.WalletAndAccountNames(path)
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "failed to obtain account specification")
 	}
-	re := regexp.MustCompile(path)
+	if accountSpec == "" {
+		accountSpec = "^.*$"
+	} else {
+		accountSpec = fmt.Sprintf("^%s$", accountSpec)
+	}
+	re := regexp.MustCompile(accountSpec)
 
+	accounts := make([]e2wtypes.Account, 0)
 	for account := range wallet.Accounts(ctx) {
 		if re.Match([]byte(account.Name())) {
 			accounts = append(accounts, account)

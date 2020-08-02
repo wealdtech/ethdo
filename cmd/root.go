@@ -233,8 +233,12 @@ func outputIf(condition bool, msg string) {
 	}
 }
 
-// walletFromInput obtains a wallet given the information in the viper variable "wallet".
+// walletFromInput obtains a wallet given the information in the viper variable
+// "account", or if not present the viper variable "wallet".
 func walletFromInput(ctx context.Context) (e2wtypes.Wallet, error) {
+	if viper.GetString("account") != "" {
+		return walletFromPath(ctx, viper.GetString("account"))
+	}
 	return walletFromPath(ctx, viper.GetString("wallet"))
 }
 

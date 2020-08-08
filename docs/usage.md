@@ -112,8 +112,11 @@ Account commands focus on information about local accounts, generally those used
 `ethdo account create` creates a new account with the given parameters.  Options for creating an account include:
   - `account`: the name of the account to create
   - `passphrase`: the passphrase for the account
+  - `path`: the HD path for the account (only for hierarchical deterministic accounts)
 
 Note that for hierarchical deterministic wallets you will also need to supply `--walletpassphrase` to unlock the wallet seed.
+
+For distributed accounts you will also need to supply `--participants` and `--signing-threshold`.
 
 ```sh
 $ ethdo account create --account="Personal wallet/Operations" --walletpassphrase="my wallet secret" --passphrase="my account secret"

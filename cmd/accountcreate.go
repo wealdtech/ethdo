@@ -17,6 +17,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"regexp"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -62,12 +63,25 @@ In quiet mode this will return 0 if the account is created successfully, otherwi
 			defer cancel()
 			account, err = distributedCreator.CreateDistributedAccount(ctx, accountName, viper.GetUint32("participants"), viper.GetUint32("signing-threshold"), []byte(getPassphrase()))
 		} else {
-			// Want a standard account.
-			creator, isCreator := wallet.(e2wtypes.WalletAccountCreator)
-			assert(isCreator, "Wallet does not support account creation")
-			ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("timeout"))
-			defer cancel()
-			account, err = creator.CreateAccount(ctx, accountName, []byte(getPassphrase()))
+			if viper.GetString("path") != "" {
+				// Want a pathed account
+				creator, isCreator := wallet.(e2wtypes.WalletPathedAccountCreator)
+				assert(isCreator, "Wallet does not support account creation with an explicit path")
+				var match bool
+				match, err = regexp.Match("^m/[0-9]+/[0-9]+(/[0-9+])+", []byte(viper.GetString("path")))
+				errCheck(err, "Unable to match path to regular expression")
+				assert(match, "Path does not match expected format m/...")
+				ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("timeout"))
+				defer cancel()
+				account, err = creator.CreatePathedAccount(ctx, viper.GetString("path"), accountName, []byte(getPassphrase()))
+			} else {
+				// Want a standard account.
+				creator, isCreator := wallet.(e2wtypes.WalletAccountCreator)
+				assert(isCreator, "Wallet does not support account creation")
+				ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("timeout"))
+				defer cancel()
+				account, err = creator.CreateAccount(ctx, accountName, []byte(getPassphrase()))
+			}
 		}
 		errCheck(err, "Failed to create account")
 
@@ -90,6 +104,10 @@ func init() {
 	}
 	accountCreateCmd.Flags().Uint32("signing-threshold", 0, "Signing threshold (for distributed accounts)")
 	if err := viper.BindPFlag("signing-threshold", accountCreateCmd.Flags().Lookup("signing-threshold")); err != nil {
+		panic(err)
+	}
+	accountCreateCmd.Flags().String("path", "", "path of account (for hierarchical deterministic accounts)")
+	if err := viper.BindPFlag("path", accountCreateCmd.Flags().Lookup("path")); err != nil {
 		panic(err)
 	}
 }

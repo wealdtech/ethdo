@@ -65,3 +65,21 @@ ethdo wallet info --verbose --wallet="My wallet"
 ```
 
 This will provide, amongst other information, a `Location` line giving the directory where the wallet information resides.
+
+## Recreate launchpad wallet and accounts
+
+Recreating launchpad accounts requires two steps: recreating the wallet, and recreating the individual accounts.  All that is required is the mnemonic from the launchpad process.
+
+To recreate the wallet with the given mnemonic run the following command (changing the wallet name, passphrase and mnemonic as required):
+
+```sh
+ethdo wallet create --wallet="Launchpad" --type=hd --walletpassphrase=walletsecret --mnemonic="faculty key lamp panel appear choose express off absent dance strike twenty elephant expect swift that resist bicycle kind sun favorite evoke engage thumb"
+```
+
+Launchpad accounts are identified by their path.  The path can be seen in the filename of the keystore, for example the filename `keystore-m_12381_3600_1_0_0-1596891358.json` relates to a path of `m/12381/3600/1/0/0`.  It is also present directly in the keystore under the `path` key.
+
+To create an account corresponding to this key you would use the command:
+
+```sh
+ethdo account create --wallet="Launchpad" --walletpassphrase=walletsecret --passphrase=secret --path=m/12381/3600/1/0/0
+```

@@ -39,6 +39,9 @@ In quiet mode this will return 0 if the chain information can be obtained, other
 		genesisTime, err := grpc.FetchGenesisTime(eth2GRPCConn)
 		errCheck(err, "Failed to obtain genesis time")
 
+		genesisValidatorsRoot, err := grpc.FetchGenesisValidatorsRoot(eth2GRPCConn)
+		errCheck(err, "Failed to obtain genesis validators root")
+
 		if quiet {
 			os.Exit(_exitSuccess)
 		}
@@ -49,9 +52,10 @@ In quiet mode this will return 0 if the chain information can be obtained, other
 			fmt.Printf("Genesis time: %s\n", genesisTime.Format(time.UnixDate))
 			outputIf(verbose, fmt.Sprintf("Genesis timestamp: %v", genesisTime.Unix()))
 		}
-		outputIf(verbose, fmt.Sprintf("Genesis fork version: %0x", config["GenesisForkVersion"].([]byte)))
-		outputIf(verbose, fmt.Sprintf("Seconds per slot: %v", config["SecondsPerSlot"].(uint64)))
-		outputIf(verbose, fmt.Sprintf("Slots per epoch: %v", config["SlotsPerEpoch"].(uint64)))
+		fmt.Printf("Genesis validators root: %#x\n", genesisValidatorsRoot)
+		fmt.Printf("Genesis fork version: %#x\n", config["GenesisForkVersion"].([]byte))
+		fmt.Printf("Seconds per slot: %d\n", config["SecondsPerSlot"].(uint64))
+		fmt.Printf("Slots per epoch: %d\n", config["SlotsPerEpoch"].(uint64))
 
 		os.Exit(_exitSuccess)
 	},

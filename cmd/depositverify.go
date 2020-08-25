@@ -16,48 +16,60 @@ package cmd
 import (
 	"bytes"
 	"encoding/hex"
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"strings"
 
 	"github.com/pkg/errors"
+	ethpb "github.com/prysmaticlabs/ethereumapis/eth/v1alpha1"
 	"github.com/spf13/cobra"
+	"github.com/wealdtech/ethdo/util"
 	e2types "github.com/wealdtech/go-eth2-types/v2"
-	util "github.com/wealdtech/go-eth2-util"
+	eth2util "github.com/wealdtech/go-eth2-util"
 	string2eth "github.com/wealdtech/go-string2eth"
 )
-
-type depositData struct {
-	Name                  string `json:"name,omitempty"`
-	Account               string `json:"account,omitempty"`
-	PublicKey             string `json:"pubkey"`
-	WithdrawalCredentials string `json:"withdrawal_credentials"`
-	Signature             string `json:"signature"`
-	DepositDataRoot       string `json:"deposit_data_root"`
-	Value                 uint64 `json:"value"`
-	Version               uint64 `json:"version"`
-}
 
 var depositVerifyData string
 var depositVerifyWithdrawalPubKey string
 var depositVerifyValidatorPubKey string
-var depositVerifyDepositValue string
+var depositVerifyDepositAmount string
 
 var depositVerifyCmd = &cobra.Command{
 	Use:   "verify",
-	Short: "Verify deposit data matches requirements",
-	Long: `Verify deposit data matches requirements.  For example:
+	Short: "Verify deposit data matches the provided data",
+	Long: `Verify deposit data matches the provided input data.  For example:
 
     ethdo deposit verify --data=depositdata.json --withdrawalaccount=primary/current --value="32 Ether"
 
-The information generated can be passed to ethereal to create a deposit from the Ethereum 1 chain.
+The deposit data is compared to the supplied withdrawal account/public key, validator public key, and value to ensure they match.
 
-In quiet mode this will return 0 if the the data can be generated correctly, otherwise 1.`,
+In quiet mode this will return 0 if the the data is verified correctly, otherwise 1.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		assert(depositVerifyData != "", "--data is required")
-		deposits, err := depositDataFromJSON(depositVerifyData)
+		var data []byte
+		var err error
+		// Input could be JSON or a path to JSON.
+		switch {
+		case strings.HasPrefix(depositVerifyData, "0x"):
+			// Looks like raw binary.
+			data = []byte(depositVerifyData)
+		case strings.HasPrefix(depositVerifyData, "{"):
+			// Looks like JSON.
+			data = []byte("[" + depositVerifyData + "]")
+		case strings.HasPrefix(depositVerifyData, "["):
+			// Looks like JSON array.
+			data = []byte(depositVerifyData)
+		default:
+			// Assume it's a path to JSON.
+			data, err = ioutil.ReadFile(depositVerifyData)
+			errCheck(err, "Failed to read deposit data file")
+			if data[0] == '{' {
+				data = []byte("[" + string(data) + "]")
+			}
+		}
+
+		deposits, err := util.DepositInfoFromJSON(data)
 		errCheck(err, "Failed to fetch deposit data")
 
 		var withdrawalCredentials []byte
@@ -67,17 +79,16 @@ In quiet mode this will return 0 if the the data can be generated correctly, oth
 			assert(len(withdrawalPubKeyBytes) == 48, "Public key should be 48 bytes")
 			withdrawalPubKey, err := e2types.BLSPublicKeyFromBytes(withdrawalPubKeyBytes)
 			errCheck(err, "Value supplied with --withdrawalpubkey is not a valid public key")
-			withdrawalCredentials = util.SHA256(withdrawalPubKey.Marshal())
+			withdrawalCredentials = eth2util.SHA256(withdrawalPubKey.Marshal())
 			withdrawalCredentials[0] = 0 // BLS_WITHDRAWAL_PREFIX
 		}
 		outputIf(debug, fmt.Sprintf("Withdrawal credentials are %#x", withdrawalCredentials))
 
-		depositValue := uint64(0)
-		if depositVerifyDepositValue != "" {
-			depositValue, err = string2eth.StringToGWei(depositVerifyDepositValue)
+		depositAmount := uint64(0)
+		if depositVerifyDepositAmount != "" {
+			depositAmount, err = string2eth.StringToGWei(depositVerifyDepositAmount)
 			errCheck(err, "Invalid value")
-			// This is hard-coded, to allow deposit data to be generated without a connection to the beacon node.
-			assert(depositValue >= 1000000000, "deposit value must be at least 1 Ether") // MIN_DEPOSIT_AMOUNT
+			assert(depositAmount >= 1000000000, "deposit amount must be at least 1 Ether") // MIN_DEPOSIT_AMOUNT
 		}
 
 		validatorPubKeys := make(map[[48]byte]bool)
@@ -88,31 +99,17 @@ In quiet mode this will return 0 if the the data can be generated correctly, oth
 
 		failures := false
 		for i, deposit := range deposits {
-			if withdrawalCredentials != nil {
-				depositWithdrawalCredentials, err := hex.DecodeString(strings.TrimPrefix(deposit.WithdrawalCredentials, "0x"))
-				errCheck(err, fmt.Sprintf("Invalid withdrawal public key for deposit %d", i))
-				if !bytes.Equal(depositWithdrawalCredentials, withdrawalCredentials) {
-					outputIf(!quiet, fmt.Sprintf("Invalid withdrawal credentials for deposit %d", i))
-					failures = true
-				}
+			if deposit.Amount == 0 {
+				deposit.Amount = depositAmount
 			}
-			if depositValue != 0 {
-				if deposit.Value != depositValue {
-					outputIf(!quiet, fmt.Sprintf("Invalid deposit value for deposit %d", i))
-					failures = true
-				}
+			verified, err := verifyDeposit(deposit, withdrawalCredentials, validatorPubKeys, depositAmount)
+			errCheck(err, fmt.Sprintf("Error attempting to verify deposit %d", i))
+			if !verified {
+				failures = true
+				outputIf(!quiet, fmt.Sprintf("Deposit %q failed verification", deposit.Name))
+			} else {
+				outputIf(quiet, fmt.Sprintf("Deposit %q verified", deposit.Name))
 			}
-			if len(validatorPubKeys) != 0 {
-				depositValidatorPubKey, err := hex.DecodeString(strings.TrimPrefix(deposit.PublicKey, "0x"))
-				errCheck(err, fmt.Sprintf("Invalid validator public key for deposit %d", i))
-				var key [48]byte
-				copy(key[:], depositValidatorPubKey)
-				if _, exists := validatorPubKeys[key]; !exists {
-					outputIf(!quiet, fmt.Sprintf("Unknown validator public key for deposit %d", i))
-					failures = true
-				}
-			}
-			outputIf(!quiet, fmt.Sprintf("Deposit %q verified", deposit.Name))
 		}
 
 		if failures {
@@ -177,61 +174,47 @@ func validatorPubKeysFromInput(input string) (map[[48]byte]bool, error) {
 	return pubKeys, nil
 }
 
-func depositDataFromJSON(input string) ([]*depositData, error) {
-	var err error
-	var data []byte
-	// Input could be JSON or a path to JSON
-	switch {
-	case strings.HasPrefix(input, "{"):
-		// Looks like JSON
-		data = []byte("[" + input + "]")
-	case strings.HasPrefix(input, "["):
-		// Looks like JSON array
-		data = []byte(input)
-	default:
-		// Assume it's a path to JSON
-		data, err = ioutil.ReadFile(input)
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to find deposit data file")
+func verifyDeposit(deposit *util.DepositInfo, withdrawalCredentials []byte, validatorPubKeys map[[48]byte]bool, amount uint64) (bool, error) {
+	if withdrawalCredentials != nil {
+		if !bytes.Equal(deposit.WithdrawalCredentials, withdrawalCredentials) {
+			return false, errors.New("withdrawal credentials incorrect")
 		}
-		if data[0] == '{' {
-			data = []byte("[" + string(data) + "]")
-		}
+		outputIf(verbose, "Withdrawal credentials verified")
 	}
-	var depositData []*depositData
-	err = json.Unmarshal(data, &depositData)
+	if amount != 0 {
+		if deposit.Amount != amount {
+			return false, errors.New("deposit value incorrect")
+		}
+		outputIf(verbose, "Amount verified")
+	}
+
+	if len(validatorPubKeys) != 0 {
+		var key [48]byte
+		copy(key[:], deposit.PublicKey)
+		if _, exists := validatorPubKeys[key]; !exists {
+			return false, errors.New("validator public key incorrect")
+		}
+		outputIf(verbose, "Validator public key verified")
+	}
+
+	depositData := &ethpb.Deposit_Data{
+		PublicKey:             deposit.PublicKey,
+		WithdrawalCredentials: deposit.WithdrawalCredentials,
+		Amount:                deposit.Amount,
+		Signature:             deposit.Signature,
+	}
+	depositDataRoot, err := depositData.HashTreeRoot()
 	if err != nil {
-		return nil, errors.Wrap(err, "data is not valid JSON")
+		return false, errors.Wrap(err, "failed to generate deposit data root")
 	}
-	if len(depositData) == 0 {
-		return nil, errors.New("no deposits supplied")
+	if !bytes.Equal(deposit.DepositDataRoot, depositDataRoot[:]) {
+		return false, errors.New("deposit data root incorrect")
 	}
-	minVersion := depositData[0].Version
-	maxVersion := depositData[0].Version
-	for i := range depositData {
-		if depositData[i].PublicKey == "" {
-			return nil, fmt.Errorf("no public key for deposit %d", i)
-		}
-		if depositData[i].DepositDataRoot == "" {
-			return nil, fmt.Errorf("no data root for deposit %d", i)
-		}
-		if depositData[i].Signature == "" {
-			return nil, fmt.Errorf("no signature for deposit %d", i)
-		}
-		if depositData[i].WithdrawalCredentials == "" {
-			return nil, fmt.Errorf("no withdrawal credentials for deposit %d", i)
-		}
-		if depositData[i].Value < 1000000000 {
-			return nil, fmt.Errorf("Deposit amount too small for deposit %d", i)
-		}
-		if depositData[i].Version > maxVersion {
-			maxVersion = depositData[i].Version
-		}
-		if depositData[i].Version < minVersion {
-			minVersion = depositData[i].Version
-		}
-	}
-	return depositData, nil
+	outputIf(debug, "Deposit data root verified")
+
+	outputIf(verbose, "Deposit verified")
+
+	return true, nil
 }
 
 func init() {
@@ -239,6 +222,6 @@ func init() {
 	depositFlags(depositVerifyCmd)
 	depositVerifyCmd.Flags().StringVar(&depositVerifyData, "data", "", "JSON data, or path to JSON data")
 	depositVerifyCmd.Flags().StringVar(&depositVerifyWithdrawalPubKey, "withdrawalpubkey", "", "Public key of the account to which the validator funds will be withdrawn")
-	depositVerifyCmd.Flags().StringVar(&depositVerifyDepositValue, "depositvalue", "", "Value of the amount to be deposited")
+	depositVerifyCmd.Flags().StringVar(&depositVerifyDepositAmount, "depositvalue", "", "Value of the amount to be deposited")
 	depositVerifyCmd.Flags().StringVar(&depositVerifyValidatorPubKey, "validatorpubkey", "", "Public key(s) of the account(s) that will be carrying out validation")
 }

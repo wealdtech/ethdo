@@ -78,8 +78,8 @@ ethdo wallet create --wallet="Launchpad" --type=hd --walletpassphrase=walletsecr
 
 Launchpad accounts are identified by their path.  The path can be seen in the filename of the keystore, for example the filename `keystore-m_12381_3600_1_0_0-1596891358.json` relates to a path of `m/12381/3600/1/0/0`.  It is also present directly in the keystore under the `path` key.
 
-To create an account corresponding to this key you would use the command:
+To create an account corresponding to this key with the account name "Account 1" you would use the command:
 
 ```sh
-ethdo account create --wallet="Launchpad" --walletpassphrase=walletsecret --passphrase=secret --path=m/12381/3600/1/0/0
+ethdo account create --account="Launchpad/Account 1" --walletpassphrase=walletsecret --passphrase=secret --path=m/12381/3600/1/0/0
 ```

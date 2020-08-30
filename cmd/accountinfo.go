@@ -58,6 +58,13 @@ In quiet mode this will return 0 if the account exists, otherwise 1.`,
 		if distributedAccount, ok := account.(e2wtypes.DistributedAccount); ok {
 			fmt.Printf("Composite public key: %#x\n", distributedAccount.CompositePublicKey().Marshal())
 			fmt.Printf("Signing threshold: %d/%d\n", distributedAccount.SigningThreshold(), len(distributedAccount.Participants()))
+			if verbose {
+				fmt.Printf("Participants:\n")
+				for k, v := range distributedAccount.Participants() {
+					fmt.Printf(" %d: %s\n", k, v)
+				}
+			}
+
 			withdrawalPubKey = distributedAccount.CompositePublicKey()
 		}
 		if verbose {

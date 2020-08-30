@@ -61,7 +61,7 @@ In quiet mode this will return 0 if the account is created successfully, otherwi
 			outputIf(debug, fmt.Sprintf("Distributed account has %d/%d threshold", viper.GetUint32("signing-threshold"), viper.GetUint32("participants")))
 			ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("timeout"))
 			defer cancel()
-			account, err = distributedCreator.CreateDistributedAccount(ctx, accountName, viper.GetUint32("participants"), viper.GetUint32("signing-threshold"), []byte(getPassphrase()))
+			account, err = distributedCreator.CreateDistributedAccount(ctx, accountName, viper.GetUint32("participants"), viper.GetUint32("signing-threshold"), []byte(getOptionalPassphrase()))
 		} else {
 			if viper.GetString("path") != "" {
 				// Want a pathed account

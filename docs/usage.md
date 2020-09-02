@@ -366,6 +366,7 @@ Current slot: 178
 Current epoch: 5
 Genesis timestamp: 1587020563
 ```
+
 ### `validator` commands
 
 Validator commands focus on interaction with Ethereum 2 validators.
@@ -429,6 +430,22 @@ $ ethdo validator info --pubkey=0x842dd66cfeaeff4397fc7c94f7350d2131ca0c4ad14ff7
 Status:            Active
 Balance:           3.201850307 Ether
 Effective balance: 3.1 Ether
+```
+
+### `attester` commands
+
+Attester commands focus on Ethereum 2 validators' actions as attesters.
+
+#### `inclusion`
+
+`ethdo attester inclusion` finds the block with wihch an attestation is included on the chain.  Options include:
+  - `epoch` the epoch in which to obtain the inclusion information (defaults to current epoch)
+  - `account` the account for which to fetch the inclusion information
+  - `pubkey` the public key for which to fetch the inclusion information
+
+```sh
+$ ethdo attester inclusion --account=Validators/1 --epoch=6484
+Attestation included in block 207492 (inclusion delay 1)
 ```
 
 ## Maintainers

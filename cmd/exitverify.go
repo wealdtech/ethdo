@@ -129,7 +129,10 @@ func init() {
 	exitFlags(exitVerifyCmd)
 	exitVerifyCmd.Flags().String("data", "", "JSON data, or path to JSON data")
 	exitVerifyCmd.Flags().StringVar(&exitVerifyPubKey, "pubkey", "", "Public key for which to verify exit")
-	if err := viper.BindPFlag("exit.data", exitVerifyCmd.Flags().Lookup("data")); err != nil {
+}
+
+func exitVerifyBindings() {
+	if err := viper.BindPFlag("data", exitVerifyCmd.Flags().Lookup("data")); err != nil {
 		panic(err)
 	}
 }

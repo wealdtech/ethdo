@@ -72,11 +72,22 @@ func persistentPreRun(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	// We bind viper here so that we bind to the correct command
+	// We bind viper here so that we bind to the correct command.
 	quiet = viper.GetBool("quiet")
 	verbose = viper.GetBool("verbose")
 	debug = viper.GetBool("debug")
 	rootStore = viper.GetString("store")
+	// Command-specific bindings.
+	switch fmt.Sprintf("%s/%s", cmd.Parent().Name(), cmd.Name()) {
+	case "account/create":
+		accountCreateBindings()
+	case "attester/inclusion":
+		attesterInclusionBindings()
+	case "exit/verify":
+		exitVerifyBindings()
+	case "wallet/create":
+		walletCreateBindings()
+	}
 
 	if quiet && verbose {
 		fmt.Println("Cannot supply both quiet and verbose flags")

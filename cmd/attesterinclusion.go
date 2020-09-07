@@ -73,7 +73,7 @@ In quiet mode this will return 0 if an attestation from the attester is found on
 			for searchCommitteeIndex, committeeValidatorIndices := range committee {
 				for position, committeeValidatorIndex := range committeeValidatorIndices {
 					if validatorIndex == committeeValidatorIndex {
-						outputIf(debug, fmt.Sprintf("Validator %d attesting at slot %d for epoch %d: entry %d in committee %d", validatorIndex, searchSlot, epoch, position, searchCommitteeIndex))
+						outputIf(verbose, fmt.Sprintf("Validator %d scheduled to attest at slot %d for epoch %d: entry %d in committee %d", validatorIndex, searchSlot, epoch, position, searchCommitteeIndex))
 						slot = searchSlot
 						committeeIndex = uint64(searchCommitteeIndex)
 						validatorPositionInCommittee = uint64(position)
@@ -109,6 +109,7 @@ In quiet mode this will return 0 if an attestation from the attester is found on
 				}
 			}
 		}
+		outputIf(verbose, "Attestation not included on the chain")
 		os.Exit(_exitFailure)
 	},
 }

@@ -287,8 +287,11 @@ func FetchBlock(conn *grpc.ClientConn, slot uint64) (*ethpb.SignedBeaconBlock, e
 	ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("timeout"))
 	defer cancel()
 
-	req := &ethpb.ListBlocksRequest{
-		QueryFilter: &ethpb.ListBlocksRequest_Slot{Slot: slot},
+	req := &ethpb.ListBlocksRequest{}
+	if slot == 0 {
+		req.QueryFilter = &ethpb.ListBlocksRequest_Genesis{Genesis: true}
+	} else {
+		req.QueryFilter = &ethpb.ListBlocksRequest_Slot{Slot: slot}
 	}
 	resp, err := beaconClient.ListBlocks(ctx, req)
 	if err != nil {

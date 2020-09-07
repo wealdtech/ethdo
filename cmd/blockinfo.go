@@ -54,7 +54,6 @@ In quiet mode this will return 0 if the block information is present and not ski
 		genesisTime, err := grpc.FetchGenesisTime(eth2GRPCConn)
 		errCheck(err, "Failed to obtain beacon chain genesis")
 
-		assert(blockInfoStream || blockInfoSlot != 0, "--slot or --stream is required")
 		assert(!blockInfoStream || blockInfoSlot == -1, "--slot and --stream are not supported together")
 
 		var slot uint64
@@ -64,8 +63,6 @@ In quiet mode this will return 0 if the block information is present and not ski
 		} else {
 			slot = uint64(blockInfoSlot)
 		}
-		assert(slot > 0, "slot must be greater than 0")
-
 		signedBlock, err := grpc.FetchBlock(eth2GRPCConn, slot)
 		errCheck(err, "Failed to obtain block")
 		if signedBlock == nil {

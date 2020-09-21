@@ -28,6 +28,7 @@ import (
 	keystorev4 "github.com/wealdtech/go-eth2-wallet-encryptor-keystorev4"
 	hd "github.com/wealdtech/go-eth2-wallet-hd/v2"
 	nd "github.com/wealdtech/go-eth2-wallet-nd/v2"
+	"golang.org/x/text/unicode/norm"
 )
 
 var walletCreateCmd = &cobra.Command{
@@ -106,6 +107,9 @@ func walletCreateHD(ctx context.Context, name string, passphrase string, mnemoni
 			mnemonicPassphrase = strings.Join(mnemonicParts[24:], " ")
 		}
 	}
+	// Normalise the input.
+	mnemonic = string(norm.NFKD.Bytes([]byte(mnemonic)))
+	mnemonicPassphrase = string(norm.NFKD.Bytes([]byte(mnemonicPassphrase)))
 
 	// Ensure the mnemonic is valid
 	if !bip39.IsMnemonicValid(mnemonic) {

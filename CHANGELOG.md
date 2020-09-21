@@ -1,4 +1,5 @@
 Development:
+  - fix issue where wallet mnemonics were not normalised to NFKD
   - "block info" supports fetching the gensis block (--slot=0)
   - "attester inclusion" command finds the inclusion slot for a validator's attestation
   - "account info" with verbose option now displays participants for distributed accounts

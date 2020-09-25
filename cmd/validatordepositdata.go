@@ -192,7 +192,7 @@ In quiet mode this will return 0 if the the data can be generated correctly, oth
 				}
 				depositMessageRoot, err := ssz.HashTreeRoot(depositMessage)
 				errCheck(err, "Failed to generate deposit message root")
-				outputs = append(outputs, fmt.Sprintf(`{"pubkey":"%x","withdrawal_credentials":"%x","amount":%d,"signature":"%x","deposit_message_root":"%x","deposit_data_root":"%x","fork_version":"%x"}`, signedDepositData.PubKey, signedDepositData.WithdrawalCredentials, val, signedDepositData.Signature, depositMessageRoot, depositDataRoot, forkVersion))
+				outputs = append(outputs, fmt.Sprintf(`[{"pubkey":"%x","withdrawal_credentials":"%x","amount":%d,"signature":"%x","deposit_message_root":"%x","deposit_data_root":"%x","fork_version":"%x"}]`, signedDepositData.PubKey, signedDepositData.WithdrawalCredentials, val, signedDepositData.Signature, depositMessageRoot, depositDataRoot, forkVersion))
 			default:
 				outputs = append(outputs, fmt.Sprintf(`{"name":"Deposit for %s","account":"%s","pubkey":"%#x","withdrawal_credentials":"%#x","signature":"%#x","value":%d,"deposit_data_root":"%#x","version":2}`, fmt.Sprintf("%s/%s", validatorWallet.Name(), validatorAccount.Name()), fmt.Sprintf("%s/%s", validatorWallet.Name(), validatorAccount.Name()), signedDepositData.PubKey, signedDepositData.WithdrawalCredentials, signedDepositData.Signature, val, depositDataRoot))
 			}

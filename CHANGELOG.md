@@ -1,3 +1,6 @@
+1.6.0:
+  - update BLS HKDF function to match spec 04
+  - add --launchpad option to "validator depositdata" to output data in launchpad format
 1.5.9:
   - fix issue where wallet mnemonics were not normalised to NFKD
   - "block info" supports fetching the gensis block (--slot=0)

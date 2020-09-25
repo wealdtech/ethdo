@@ -35,6 +35,7 @@ var validatorDepositDataWithdrawalPubKey string
 var validatorDepositDataDepositValue string
 var validatorDepositDataRaw bool
 var validatorDepositDataForkVersion string
+var validatorDepositDataLaunchpad bool
 
 var validatorDepositDataCmd = &cobra.Command{
 	Use:   "depositdata",
@@ -156,7 +157,8 @@ In quiet mode this will return 0 if the the data can be generated correctly, oth
 			errCheck(err, "Failed to generate deposit data root")
 			outputIf(debug, fmt.Sprintf("Deposit data root is %x", depositDataRoot))
 
-			if validatorDepositDataRaw {
+			switch {
+			case validatorDepositDataRaw:
 				// Build a raw transaction by hand
 				txData := []byte{0x22, 0x89, 0x51, 0x18}
 				// Pointer to validator public key
@@ -178,7 +180,20 @@ In quiet mode this will return 0 if the the data can be generated correctly, oth
 				txData = append(txData, []byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x60}...)
 				txData = append(txData, signedDepositData.Signature...)
 				outputs = append(outputs, fmt.Sprintf("%#x", txData))
-			} else {
+			case validatorDepositDataLaunchpad:
+				depositMessage := struct {
+					PubKey                []byte `ssz-size:"48"`
+					WithdrawalCredentials []byte `ssz-size:"32"`
+					Value                 uint64
+				}{
+					PubKey:                validatorPubKey.Marshal(),
+					WithdrawalCredentials: withdrawalCredentials,
+					Value:                 val,
+				}
+				depositMessageRoot, err := ssz.HashTreeRoot(depositMessage)
+				errCheck(err, "Failed to generate deposit message root")
+				outputs = append(outputs, fmt.Sprintf(`{"pubkey":"%x","withdrawal_credentials":"%x","amount":%d,"signature":"%x","deposit_message_root":"%x","deposit_data_root":"%x","fork_version":"%x"}`, signedDepositData.PubKey, signedDepositData.WithdrawalCredentials, val, signedDepositData.Signature, depositMessageRoot, depositDataRoot, forkVersion))
+			default:
 				outputs = append(outputs, fmt.Sprintf(`{"name":"Deposit for %s","account":"%s","pubkey":"%#x","withdrawal_credentials":"%#x","signature":"%#x","value":%d,"deposit_data_root":"%#x","version":2}`, fmt.Sprintf("%s/%s", validatorWallet.Name(), validatorAccount.Name()), fmt.Sprintf("%s/%s", validatorWallet.Name(), validatorAccount.Name()), signedDepositData.PubKey, signedDepositData.WithdrawalCredentials, signedDepositData.Signature, val, depositDataRoot))
 			}
 		}
@@ -206,4 +221,5 @@ func init() {
 	validatorDepositDataCmd.Flags().StringVar(&validatorDepositDataDepositValue, "depositvalue", "", "Value of the amount to be deposited")
 	validatorDepositDataCmd.Flags().BoolVar(&validatorDepositDataRaw, "raw", false, "Print raw deposit data transaction data")
 	validatorDepositDataCmd.Flags().StringVar(&validatorDepositDataForkVersion, "forkversion", "", "Use a hard-coded fork version (default is to fetch it from the node)")
+	validatorDepositDataCmd.Flags().BoolVar(&validatorDepositDataLaunchpad, "launchpad", false, "Print launchpad-compatible JSON")
 }

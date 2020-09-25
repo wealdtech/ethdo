@@ -30,15 +30,15 @@ require (
 	github.com/wealdtech/go-bytesutil v1.1.1
 	github.com/wealdtech/go-ecodec v1.1.0
 	github.com/wealdtech/go-eth2-types/v2 v2.5.0
-	github.com/wealdtech/go-eth2-util v1.5.0
-	github.com/wealdtech/go-eth2-wallet v1.13.0
-	github.com/wealdtech/go-eth2-wallet-dirk v1.0.2
+	github.com/wealdtech/go-eth2-util v1.6.0
+	github.com/wealdtech/go-eth2-wallet v1.14.0
+	github.com/wealdtech/go-eth2-wallet-dirk v1.0.3
 	github.com/wealdtech/go-eth2-wallet-distributed v1.1.0
 	github.com/wealdtech/go-eth2-wallet-encryptor-keystorev4 v1.1.0
-	github.com/wealdtech/go-eth2-wallet-hd/v2 v2.4.0
+	github.com/wealdtech/go-eth2-wallet-hd/v2 v2.5.0
 	github.com/wealdtech/go-eth2-wallet-nd/v2 v2.3.0
 	github.com/wealdtech/go-eth2-wallet-store-filesystem v1.16.1
-	github.com/wealdtech/go-eth2-wallet-store-s3 v1.8.0
+	github.com/wealdtech/go-eth2-wallet-store-s3 v1.9.0
 	github.com/wealdtech/go-eth2-wallet-types/v2 v2.7.0
 	github.com/wealdtech/go-string2eth v1.1.0
 	golang.org/x/crypto v0.0.0-20200820211705-5c72a883971a // indirect

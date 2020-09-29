@@ -1,3 +1,5 @@
+1.6.1:
+  - output array for launchpad deposit data JSON in all situations
 1.6.0:
   - update BLS HKDF function to match spec 04
   - add --launchpad option to "validator depositdata" to output data in launchpad format

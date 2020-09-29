@@ -203,7 +203,12 @@ In quiet mode this will return 0 if the the data can be generated correctly, oth
 		}
 
 		if len(outputs) == 1 {
-			fmt.Printf("%s\n", outputs[0])
+			if validatorDepositDataLaunchpad {
+				// Launchpad requires an array even if there is only a single element.
+				fmt.Printf("[%s]\n", outputs[0])
+			} else {
+				fmt.Printf("%s\n", outputs[0])
+			}
 		} else {
 			fmt.Printf("[")
 			fmt.Print(strings.Join(outputs, ","))

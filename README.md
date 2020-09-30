@@ -143,7 +143,7 @@ Command information, along with sample outputs and optional arguments, is availa
 
 # HOWTO
 
-There is a [HOWTO](https://github.com/wealdtech/ethdo/blob/master/docs/howto.md) that covers details about how to carry out various common tasks.
+There is a [HOWTO](https://github.com/wealdtech/ethdo/blob/master/docs/howto.md) that covers details about how to carry out various common tasks.  There is also a specific document that provides details of how to carry out [common conversions](docs/conversions.md) from mnemonic, to account, to deposit data, for launchpad-related configurations.
 
 ## Maintainers
 

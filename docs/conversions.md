@@ -53,7 +53,7 @@ $ ethdo account key --account=Wallet/Account --passphrase=secret2
 
 ### I want the _i_th withdrawal and validator keys
 
-[EIP-2334](https://eips.ethereum.org/EIPS/eip-2334){target="_blank"} defines derivation path indices for withdrawal and validator keys.  For a given index _i_ the keys will be at the following paths:
+[EIP-2334](https://eips.ethereum.org/EIPS/eip-2334) defines derivation path indices for withdrawal and validator keys.  For a given index _i_ the keys will be at the following paths:
 
   - withdrawal key: m/12381/3600/_i_/0
   - validator key: m/12381/3600/_i_/0/0

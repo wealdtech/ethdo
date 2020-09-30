@@ -80,3 +80,4 @@ $ ethdo validator depositdata --withdrawalaccount=Wallet/Withdrawal_i_ --validat
 
 If you wish to be able to provide this information to the launchpad you can add `--launchpad` to the end of the command.
 
+If you wish to have this data for a particular test network you will need to supply the fork version with `--forkversion`.  Details on the fork versions of various testnets can be found in the subdirectories of the [testnet site](https://github.com/goerli/medalla).

@@ -24,15 +24,13 @@ ethdo wallet create --wallet="My wallet"
 
 Additional options are available to decide the type of wallet and encryption.
 
-## Create an HD wallet from an existing seed
+## Create an HD wallet from an existing mnemonic
 
-HD wallets can be created from an existing seed by adding the `--seed` parameter to `ethdo wallet create`, for example:
+HD wallets can be created from an existing mnemonic by adding the `--mnemonic` parameter to `ethdo wallet create`, for example:
 
 ```sh
-ethdo wallet create --wallet="Recreated wallet" --type=hd --seed="tooth moon mad fun romance athlete envelope next mix divert tip top symbol resemble stock family melody desk sheriff drift bargain need jaguar method"
+ethdo wallet create --wallet="Recreated wallet" --type=hd --mnemonic="tooth moon mad fun romance athlete envelope next mix divert tip top symbol resemble stock family melody desk sheriff drift bargain need jaguar method"
 ```
-
-The seed for an existing HD wallet can be obtained with `ethdo wallet seed`.
 
 ## Back up a wallet
 

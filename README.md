@@ -90,7 +90,7 @@ All ethdo comands take the following parameters:
   - `store`: the name of the storage system for wallets.  This can be one of "filesystem" (for local storage of the wallet) or "s3" (for remote storage of the wallet on [Amazon's S3](https://aws.amazon.com/s3/) storage system), and defaults to "filesystem"
   - `storepassphrase`: the passphrase for the store.  If this is empty the store is unencrypted
   - `walletpassphrase`: the passphrase for the wallet.  This is required for some wallet-centric operations such as creating new accounts
-  - `accountpassphrase`: the passphrase for the account.  This is required for some account-centric operations such as signing data
+  - `passphrase`: the passphrase for the account.  This is required for some account-centric operations such as signing data
 
 Accounts are specified in the standard "<wallet>/<account>" format, for example the account "savings" in the wallet "primary" would be referenced as "primary/savings".
 

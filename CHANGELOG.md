@@ -1,4 +1,5 @@
 1.6.1:
+  - "attester inclusion" defaults to previous epoch
   - output array for launchpad deposit data JSON in all situations
 1.6.0:
   - update BLS HKDF function to match spec 04

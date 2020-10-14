@@ -36,7 +36,7 @@ var attesterInclusionCmd = &cobra.Command{
 
     ethdo attester inclusion --account=Validators/00001 --epoch=12345
 
-In quiet mode this will return 0 if an attestation from the attester is found on the block fo the given epoch, otherwise 1.`,
+In quiet mode this will return 0 if an attestation from the attester is found on the block of the given epoch, otherwise 1.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		err := connect()
 		errCheck(err, "Failed to obtain connection to Ethereum 2 beacon chain block")
@@ -52,6 +52,9 @@ In quiet mode this will return 0 if an attestation from the attester is found on
 			genesisTime, err := grpc.FetchGenesisTime(eth2GRPCConn)
 			errCheck(err, "Failed to obtain beacon chain genesis")
 			epoch = int64(time.Since(genesisTime).Seconds()) / int64(secondsPerSlot*slotsPerEpoch)
+			if epoch > 0 {
+				epoch--
+			}
 		}
 		outputIf(debug, fmt.Sprintf("Epoch is %d", epoch))
 
@@ -83,7 +86,7 @@ In quiet mode this will return 0 if an attestation from the attester is found on
 				}
 			}
 		}
-		assert(found, "Failed to find attester duty for validator in the given epoch")
+		assert(found, fmt.Sprintf("Failed to find attester duty for validator in epoch %d", epoch))
 
 		startSlot := slot + 1
 		endSlot := startSlot + 32
@@ -101,15 +104,15 @@ In quiet mode this will return 0 if an attestation from the attester is found on
 					attestation.Data.CommitteeIndex == committeeIndex &&
 					attestation.AggregationBits.BitAt(validatorPositionInCommittee) {
 					if verbose {
-						fmt.Printf("Attestation included in block %d, attestation %d (inclusion delay %d)\n", curSlot, i, curSlot-slot)
+						fmt.Printf("Attestation for epoch %d included in block %d, attestation %d (inclusion delay %d)\n", epoch, curSlot, i, curSlot-slot)
 					} else if !quiet {
-						fmt.Printf("Attestation included in block %d (inclusion delay %d)\n", curSlot, curSlot-slot)
+						fmt.Printf("Attestation for epoch %d included in block %d (inclusion delay %d)\n", epoch, curSlot, curSlot-slot)
 					}
 					os.Exit(_exitSuccess)
 				}
 			}
 		}
-		outputIf(verbose, "Attestation not included on the chain")
+		outputIf(verbose, fmt.Sprintf("Attestation for epoch %d not included on the chain", epoch))
 		os.Exit(_exitFailure)
 	},
 }
@@ -142,7 +145,7 @@ func attesterInclusionAccount() (e2wtypes.Account, error) {
 func init() {
 	attesterCmd.AddCommand(attesterInclusionCmd)
 	attesterFlags(attesterInclusionCmd)
-	attesterInclusionCmd.Flags().Int64("epoch", -1, "the current epoch")
+	attesterInclusionCmd.Flags().Int64("epoch", -1, "the last complete epoch")
 	attesterInclusionCmd.Flags().String("pubkey", "", "the public key of the attester")
 }
 

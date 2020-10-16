@@ -29,7 +29,7 @@ Additional options are available to decide the type of wallet and encryption.
 HD wallets can be created from an existing mnemonic by adding the `--mnemonic` parameter to `ethdo wallet create`, for example:
 
 ```sh
-ethdo wallet create --wallet="Recreated wallet" --type=hd --mnemonic="tooth moon mad fun romance athlete envelope next mix divert tip top symbol resemble stock family melody desk sheriff drift bargain need jaguar method"
+ethdo wallet create --wallet="Recreated wallet" --type=hd --walletpassphrase="secret" --mnemonic="tooth moon mad fun romance athlete envelope next mix divert tip top symbol resemble stock family melody desk sheriff drift bargain need jaguar method"
 ```
 
 ## Back up a wallet

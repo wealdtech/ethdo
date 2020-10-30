@@ -206,6 +206,10 @@ func init() {
 	if err := viper.BindPFlag("server-ca-cert", RootCmd.PersistentFlags().Lookup("server-ca-cert")); err != nil {
 		panic(err)
 	}
+	RootCmd.PersistentFlags().Bool("allow-weak-passphrases", false, "allow passphrases that use common words, are short, or generally considered weak")
+	if err := viper.BindPFlag("allow-weak-passphrases", RootCmd.PersistentFlags().Lookup("allow-weak-passphrases")); err != nil {
+		panic(err)
+	}
 }
 
 // initConfig reads in config file and ENV variables if set.

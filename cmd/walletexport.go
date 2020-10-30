@@ -20,6 +20,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"github.com/wealdtech/ethdo/util"
 	types "github.com/wealdtech/go-eth2-wallet-types/v2"
 )
 
@@ -40,6 +41,7 @@ In quiet mode this will return 0 if the wallet is able to be exported, otherwise
 		assert(viper.GetString("remote") == "", "wallet export not available with remote wallets")
 		assert(viper.GetString("wallet") != "", "--wallet is required")
 		assert(walletExportPassphrase != "", "--exportpassphrase is required")
+		assert(util.AcceptablePassphrase(walletExportPassphrase), "supplied passphrase is weak; use a stronger one or run with the --allow-weak-passphrases flag")
 
 		wallet, err := walletFromPath(ctx, viper.GetString("wallet"))
 		errCheck(err, "Failed to access wallet")

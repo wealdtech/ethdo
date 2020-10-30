@@ -20,6 +20,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"github.com/wealdtech/ethdo/util"
 	"github.com/wealdtech/go-bytesutil"
 	e2wallet "github.com/wealdtech/go-eth2-wallet"
 	e2wtypes "github.com/wealdtech/go-eth2-wallet-types/v2"
@@ -38,8 +39,8 @@ In quiet mode this will return 0 if the account is imported successfully, otherw
 	Run: func(cmd *cobra.Command, args []string) {
 		assert(!remote, "account import not available with remote wallets")
 		assert(viper.GetString("account") != "", "--account is required")
-		passphrase := getPassphrase()
 		assert(accountImportKey != "", "--key is required")
+		assert(util.AcceptablePassphrase(getPassphrase()), "supplied passphrase is weak; use a stronger one or run with the --allow-weak-passphrases flag")
 
 		ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("timeout"))
 		defer cancel()
@@ -64,7 +65,7 @@ In quiet mode this will return 0 if the account is imported successfully, otherw
 		_, accountName, err := e2wallet.WalletAndAccountNames(viper.GetString("account"))
 		errCheck(err, "Failed to obtain account name")
 
-		account, err := w.(e2wtypes.WalletAccountImporter).ImportAccount(ctx, accountName, key, []byte(passphrase))
+		account, err := w.(e2wtypes.WalletAccountImporter).ImportAccount(ctx, accountName, key, []byte(getPassphrase()))
 		errCheck(err, "Failed to create account")
 
 		pubKey, err := bestPublicKey(account)

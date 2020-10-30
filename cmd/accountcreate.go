@@ -21,6 +21,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"github.com/wealdtech/ethdo/util"
 	e2wallet "github.com/wealdtech/go-eth2-wallet"
 	e2wtypes "github.com/wealdtech/go-eth2-wallet-types/v2"
 )
@@ -61,8 +62,12 @@ In quiet mode this will return 0 if the account is created successfully, otherwi
 			outputIf(debug, fmt.Sprintf("Distributed account has %d/%d threshold", viper.GetUint32("signing-threshold"), viper.GetUint32("participants")))
 			ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("timeout"))
 			defer cancel()
+			if getOptionalPassphrase() != "" {
+				assert(util.AcceptablePassphrase(getPassphrase()), "supplied passphrase is weak; use a stronger one or run with the --allow-weak-passphrases flag")
+			}
 			account, err = distributedCreator.CreateDistributedAccount(ctx, accountName, viper.GetUint32("participants"), viper.GetUint32("signing-threshold"), []byte(getOptionalPassphrase()))
 		} else {
+			assert(util.AcceptablePassphrase(getPassphrase()), "supplied passphrase is weak; use a stronger one or run with the --allow-weak-passphrases flag")
 			if viper.GetString("path") != "" {
 				// Want a pathed account
 				creator, isCreator := wallet.(e2wtypes.WalletPathedAccountCreator)

@@ -125,6 +125,12 @@ If set, the `--debug` argument will output additional information about the oper
 
 Commands will have an exit status of 0 on success and 1 on failure.  The specific definition of success is specified in the help for each command.
 
+## Passphrase strength
+
+`ethdo` will by default not allow creation or export of accounts or wallets with weak passphrases.  If a weak pasphrase is used then `ethdo` will refuse to continue.
+
+If a weak passphrase is required, `ethdo` can be supplied with the `--allow-weak-passphrases` option which will force it to accept any passphrase, even if it is considered weak.
+
 ## Rules for account passphrases
 
 Account passphrases are used in various places in `ethdo`.  Where they are used, the following rules apply:

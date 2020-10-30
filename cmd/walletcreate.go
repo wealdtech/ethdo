@@ -24,6 +24,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	bip39 "github.com/tyler-smith/go-bip39"
+	"github.com/wealdtech/ethdo/util"
 	distributed "github.com/wealdtech/go-eth2-wallet-distributed"
 	keystorev4 "github.com/wealdtech/go-eth2-wallet-encryptor-keystorev4"
 	hd "github.com/wealdtech/go-eth2-wallet-hd/v2"
@@ -58,6 +59,7 @@ In quiet mode this will return 0 if the wallet is created successfully, otherwis
 				os.Exit(_exitFailure)
 			}
 			assert(getWalletPassphrase() != "", "--walletpassphrase is required for hierarchical deterministic wallets")
+			assert(util.AcceptablePassphrase(getWalletPassphrase()), "supplied passphrase is weak; use a stronger one or run with the --allow-weak-passphrases flag")
 			err = walletCreateHD(ctx, viper.GetString("wallet"), getWalletPassphrase(), viper.GetString("mnemonic"))
 		case "distributed":
 			assert(viper.GetString("mnemonic") == "", "--mnemonic is not allowed with distributed wallets")

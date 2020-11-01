@@ -4,6 +4,7 @@ go 1.13
 
 require (
 	github.com/OneOfOne/xxhash v1.2.5 // indirect
+	github.com/ferranbt/fastssz v0.0.0-20200826142241-3a913c5a1313
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
 	github.com/gogo/protobuf v1.3.1
 	github.com/google/uuid v1.1.2
@@ -18,6 +19,7 @@ require (
 	github.com/prysmaticlabs/ethereumapis v0.0.0-20201003171600-a72e5f77d233
 	github.com/prysmaticlabs/go-bitfield v0.0.0-20200618145306-2ae0807bef65
 	github.com/prysmaticlabs/go-ssz v0.0.0-20200612203617-6d5c9aa213ae
+	github.com/rs/zerolog v1.20.0
 	github.com/spaolacci/murmur3 v1.1.0 // indirect
 	github.com/spf13/afero v1.4.1 // indirect
 	github.com/spf13/cast v1.3.1 // indirect
@@ -40,6 +42,7 @@ require (
 	github.com/wealdtech/go-eth2-wallet-nd/v2 v2.3.1
 	github.com/wealdtech/go-eth2-wallet-store-filesystem v1.16.1
 	github.com/wealdtech/go-eth2-wallet-store-s3 v1.9.0
+	github.com/wealdtech/go-eth2-wallet-store-scratch v1.6.0
 	github.com/wealdtech/go-eth2-wallet-types/v2 v2.8.0
 	github.com/wealdtech/go-string2eth v1.1.0
 	golang.org/x/text v0.3.3

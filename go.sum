@@ -291,6 +291,9 @@ github.com/prysmaticlabs/go-ssz v0.0.0-20200612203617-6d5c9aa213ae/go.mod h1:Vec
 github.com/rogpeppe/fastuuid v0.0.0-20150106093220-6724a57986af/go.mod h1:XWv6SoW27p1b0cqNHllgS5HIMJraePCO15w5zCzIWYg=
 github.com/rogpeppe/fastuuid v1.2.0/go.mod h1:jVj6XXZzXRy/MSR5jhDC/2q6DgLz+nrA6LYCDYWNEvQ=
 github.com/rogpeppe/go-internal v1.3.0/go.mod h1:M8bDsm7K2OlrFYOpmOWEs/qY81heoFRclV5y23lUDJ4=
+github.com/rs/xid v1.2.1/go.mod h1:+uKXf+4Djp6Md1KODXJxgGQPKngRmWyn10oCKFzNHOQ=
+github.com/rs/zerolog v1.20.0 h1:38k9hgtUBdxFwE34yS8rTHmHBa4eN16E4DJlv177LNs=
+github.com/rs/zerolog v1.20.0/go.mod h1:IzD0RJ65iWH0w97OQQebJEvTZYvsCUm9WVLWBQrJRjo=
 github.com/russross/blackfriday/v2 v2.0.1/go.mod h1:+Rmxgy9KzJVeS9/2gXHxylqXiyQDYRxCVz55jmeOWTM=
 github.com/ryanuber/columnize v0.0.0-20160712163229-9b3edd62028f/go.mod h1:sm1tb6uqfes/u+d4ooFouqFdy9/2g9QGwK3SQygK0Ts=
 github.com/sasha-s/go-deadlock v0.2.0 h1:lMqc+fUb7RrFS3gQLtoQsJ7/6TV/pAIFvBsqX73DK8Y=
@@ -443,6 +446,7 @@ github.com/wealdtech/go-eth2-wallet-store-s3 v1.9.0/go.mod h1:dcQPLsRRYDiMV0DFYz
 github.com/wealdtech/go-eth2-wallet-store-scratch v1.4.2 h1:GvG3ZuzxbqFjGUaGoa8Tz7XbPlDA33G6nHQbSZInC3g=
 github.com/wealdtech/go-eth2-wallet-store-scratch v1.4.2/go.mod h1:+TbqLmJuT98PWi/xW1bp5nwZbKz+SIJYVh/+NUkmnb4=
 github.com/wealdtech/go-eth2-wallet-store-scratch v1.5.0/go.mod h1:RMIIV5/N8TgukTVzyumQd7AplpC440ZXDSk8VffeEwQ=
+github.com/wealdtech/go-eth2-wallet-store-scratch v1.6.0 h1:41H6hnVsI/csBx20UHpI2pY922N7Vhcro35DFS+slj0=
 github.com/wealdtech/go-eth2-wallet-store-scratch v1.6.0/go.mod h1:XtXHbl4OV/XenQsvGmXbh+bVXaGS788oa30DB7kDInA=
 github.com/wealdtech/go-eth2-wallet-types/v2 v2.2.0 h1:SfoBlW2LYjW05uHhnTZaezX37gbRsp+VYtxWT6SeAME=
 github.com/wealdtech/go-eth2-wallet-types/v2 v2.2.0/go.mod h1:XEvrlKFnHLbg1tj4Dep76XKASeS13TBpvdeXmvLiH+k=
@@ -598,6 +602,7 @@ golang.org/x/tools v0.0.0-20190606124116-d0a3d012864b/go.mod h1:/rFqwRUd4F7ZHNgw
 golang.org/x/tools v0.0.0-20190621195816-6e04913cbbac/go.mod h1:/rFqwRUd4F7ZHNgwSSTFct+R/Kf4OFW1sUzUTQQTgfc=
 golang.org/x/tools v0.0.0-20190628153133-6cdbf07be9d0/go.mod h1:/rFqwRUd4F7ZHNgwSSTFct+R/Kf4OFW1sUzUTQQTgfc=
 golang.org/x/tools v0.0.0-20190816200558-6889da9d5479/go.mod h1:b+2E5dAYhXwXZwtnZ6UAqBI28+e2cm9otk0dWdXHAEo=
+golang.org/x/tools v0.0.0-20190828213141-aed303cbaa74/go.mod h1:b+2E5dAYhXwXZwtnZ6UAqBI28+e2cm9otk0dWdXHAEo=
 golang.org/x/tools v0.0.0-20190911174233-4f2ddba30aff/go.mod h1:b+2E5dAYhXwXZwtnZ6UAqBI28+e2cm9otk0dWdXHAEo=
 golang.org/x/tools v0.0.0-20191012152004-8de300cfc20a/go.mod h1:b+2E5dAYhXwXZwtnZ6UAqBI28+e2cm9otk0dWdXHAEo=
 golang.org/x/tools v0.0.0-20191112195655-aa38f8e97acc/go.mod h1:b+2E5dAYhXwXZwtnZ6UAqBI28+e2cm9otk0dWdXHAEo=

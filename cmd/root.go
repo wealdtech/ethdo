@@ -85,6 +85,8 @@ func persistentPreRun(cmd *cobra.Command, args []string) {
 		attesterInclusionBindings()
 	case "exit/verify":
 		exitVerifyBindings()
+	case "validator/depositdata":
+		validatorDepositdataBindings()
 	case "wallet/create":
 		walletCreateBindings()
 	}

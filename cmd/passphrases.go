@@ -13,7 +13,9 @@
 
 package cmd
 
-import "github.com/spf13/viper"
+import (
+	"github.com/spf13/viper"
+)
 
 // getStorePassphrases() fetches the store passphrase supplied by the user.
 func getStorePassphrase() string {

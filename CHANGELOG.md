@@ -1,3 +1,5 @@
+Development:
+  - reject weak passphrases by default
 1.6.1:
   - "attester inclusion" defaults to previous epoch
   - output array for launchpad deposit data JSON in all situations

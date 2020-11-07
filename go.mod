@@ -4,7 +4,8 @@ go 1.13
 
 require (
 	github.com/OneOfOne/xxhash v1.2.5 // indirect
-	github.com/ferranbt/fastssz v0.0.0-20200826142241-3a913c5a1313
+	github.com/attestantio/go-eth2-client v0.6.8
+	github.com/ferranbt/fastssz v0.0.0-20201030134205-9b9624098321
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
 	github.com/gogo/protobuf v1.3.1
 	github.com/google/uuid v1.1.2
@@ -49,3 +50,5 @@ require (
 	google.golang.org/grpc v1.33.0
 	gopkg.in/ini.v1 v1.62.0 // indirect
 )
+
+replace github.com/attestantio/go-eth2-client => ../../attestantio/go-eth2-client

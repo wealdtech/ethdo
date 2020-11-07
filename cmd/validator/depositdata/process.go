@@ -16,6 +16,7 @@ package depositdata
 import (
 	"fmt"
 
+	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 	"github.com/wealdtech/ethdo/core"
 	"github.com/wealdtech/ethdo/signing"
@@ -35,25 +36,29 @@ func process(data *dataIn) ([]*dataOut, error) {
 			return nil, errors.Wrap(err, "validator account does not provide a public key")
 		}
 
-		depositMessage := &DepositMessage{
-			PubKey:                validatorPubKey.Marshal(),
+		var pubKey spec.BLSPubKey
+		copy(pubKey[:], validatorPubKey.Marshal())
+		depositMessage := &spec.DepositMessage{
+			PublicKey:             pubKey,
 			WithdrawalCredentials: data.withdrawalCredentials,
-			Amount:                data.amount,
+			Amount:                spec.Gwei(data.amount),
 		}
 		depositMessageRoot, err := depositMessage.HashTreeRoot()
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to generate deposit message root")
 		}
 
-		signature, err := signing.SignRoot(validatorAccount, depositMessageRoot[:], data.domain)
+		sig, err := signing.SignRoot(validatorAccount, depositMessageRoot[:], data.domain)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to sign deposit message")
 		}
 
-		depositData := &DepositData{
-			PubKey:                validatorPubKey.Marshal(),
+		var signature spec.BLSSignature
+		copy(signature[:], sig)
+		depositData := &spec.DepositData{
+			PublicKey:             pubKey,
 			WithdrawalCredentials: data.withdrawalCredentials,
-			Value:                 data.amount,
+			Amount:                spec.Gwei(data.amount),
 			Signature:             signature,
 		}
 
@@ -69,7 +74,7 @@ func process(data *dataIn) ([]*dataOut, error) {
 			validatorPubKey:       validatorPubKey.Marshal(),
 			withdrawalCredentials: data.withdrawalCredentials,
 			amount:                data.amount,
-			signature:             depositData.Signature,
+			signature:             sig,
 			forkVersion:           data.forkVersion,
 			depositMessageRoot:    depositMessageRoot[:],
 			depositDataRoot:       depositDataRoot[:],

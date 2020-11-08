@@ -78,9 +78,6 @@ func input(ctx context.Context) (*dataIn, error) {
 
 	// Passphrase.
 	data.passphrase = util.GetWalletPassphrase()
-	if data.passphrase == "" {
-		return nil, errors.New("wallet passphrase is required")
-	}
 
 	// Mnemonic.
 	data.mnemonic = viper.GetString("mnemonic")

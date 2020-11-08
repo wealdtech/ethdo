@@ -72,13 +72,13 @@ $ ethdo wallet export --wallet="Personal wallet" --exportpassphrase="my export s
   - `verify`: confirm information about the wallet import without importing it
 
 ```sh
-$ ethdo wallet import --importdata="0x01c7a27ad40d45b4ae5be5f..." --importpassphrase="my export secret"
+$ ethdo wallet import --importdata="0x01c7a27ad40d45b4ae5be5f..." --passphrase="my export secret"
 ```
 
 The encrypted wallet export can be read from a file.  For example with Unix systems:
 
 ```sh
-$ ethdo wallet import --importdata=`cat export.dat` --importpassphrase="my export secret"
+$ ethdo wallet import --importdata=`cat export.dat` --passphrase="my export secret"
 ```
 
 #### `info`

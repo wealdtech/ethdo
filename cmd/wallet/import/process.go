@@ -44,6 +44,7 @@ func process(ctx context.Context, data *dataIn) (*dataOut, error) {
 	}
 
 	results := &dataOut{
+		verify: data.verify,
 		export: ext,
 	}
 

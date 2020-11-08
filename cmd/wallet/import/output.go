@@ -49,7 +49,7 @@ func output(ctx context.Context, data *dataOut) (string, error) {
 	res := ""
 	if data.verify {
 		res = fmt.Sprintf("Wallet name: %s\nWallet type: %s\nWallet UUID: %s\nWallet accounts: %d", data.export.Wallet.Name, data.export.Wallet.Type, data.export.Wallet.ID, len(data.export.Accounts))
-		if data.verbose && len(data.export.Accounts) > 0 {
+		if data.verbose {
 			for _, account := range data.export.Accounts {
 				res = fmt.Sprintf("%s\n  %s", res, account.Name)
 			}

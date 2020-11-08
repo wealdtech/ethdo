@@ -87,8 +87,7 @@ func processPathed(ctx context.Context, data *dataIn) (*dataOut, error) {
 		return nil, errors.Wrap(err, "unable to match path to regular expression")
 	}
 	if !match {
-		// nolint
-		return nil, errors.New("path does not match expected format m/...")
+		return nil, errors.New("path does not match expected format m/…")
 	}
 
 	results := &dataOut{}

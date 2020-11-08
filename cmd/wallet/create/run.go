@@ -37,7 +37,7 @@ func Run(cmd *cobra.Command) (string, error) {
 		return "", errors.Wrap(err, "failed to process")
 	}
 
-	if !viper.GetBool("verbose") {
+	if viper.GetBool("quiet") {
 		return "", nil
 	}
 

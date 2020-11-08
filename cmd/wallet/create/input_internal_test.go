@@ -88,16 +88,6 @@ func TestInput(t *testing.T) {
 			err: "wallet type is required",
 		},
 		{
-			name: "WalletPassphraseMissing",
-			vars: map[string]interface{}{
-				"timeout": "5s",
-				"store":   store,
-				"wallet":  "Test wallet",
-				"type":    "nd",
-			},
-			err: "wallet passphrase is required",
-		},
-		{
 			name: "Good",
 			vars: map[string]interface{}{
 				"timeout":           "5s",

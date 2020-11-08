@@ -1,4 +1,6 @@
 Development:
+  - renamed "--exportpassphrase" and "--importpassphrase" flags to "--passphrase"
+  - reworked internal structure of account-related commands
   - reject weak passphrases by default
 1.6.1:
   - "attester inclusion" defaults to previous epoch

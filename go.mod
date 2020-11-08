@@ -4,8 +4,8 @@ go 1.13
 
 require (
 	github.com/OneOfOne/xxhash v1.2.5 // indirect
-	github.com/attestantio/dirk v0.9.1
-	github.com/attestantio/go-eth2-client v0.6.8
+	github.com/attestantio/dirk v0.9.2
+	github.com/attestantio/go-eth2-client v0.6.9
 	github.com/ferranbt/fastssz v0.0.0-20201030134205-9b9624098321
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
 	github.com/gofrs/uuid v3.3.0+incompatible
@@ -52,7 +52,3 @@ require (
 	google.golang.org/grpc v1.33.1
 	gopkg.in/ini.v1 v1.62.0 // indirect
 )
-
-replace github.com/attestantio/go-eth2-client => ../../attestantio/go-eth2-client
-
-replace github.com/attestantio/dirk => ../../attestantio/dirk

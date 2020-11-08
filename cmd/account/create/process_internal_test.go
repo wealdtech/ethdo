@@ -161,7 +161,7 @@ func TestProcess(t *testing.T) {
 				signingThreshold: 1,
 				path:             "n/12381/3600/1/2/3",
 			},
-			err: "path does not match expected format m/...",
+			err: "path does not match expected format m/…",
 		},
 		{
 			name: "PathPassphraseMissing",

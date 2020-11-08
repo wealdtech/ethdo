@@ -146,7 +146,7 @@ func validatorPubKeysFromInput(input string) (map[[48]byte]bool, error) {
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to find public key file")
 		}
-		lines := bytes.Split(bytes.Replace(data, []byte("\r\n"), []byte("\n"), -1), []byte("\n"))
+		lines := bytes.Split(bytes.ReplaceAll(data, []byte("\r\n"), []byte("\n")), []byte("\n"))
 		if len(lines) == 0 {
 			return nil, errors.New("file has no public keys")
 		}

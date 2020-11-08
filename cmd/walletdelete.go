@@ -14,13 +14,10 @@
 package cmd
 
 import (
-	"context"
-	"os"
-	"path/filepath"
+	"fmt"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
-	wtypes "github.com/wealdtech/go-eth2-wallet-types/v2"
+	walletdelete "github.com/wealdtech/ethdo/cmd/wallet/delete"
 )
 
 var walletDeleteCmd = &cobra.Command{
@@ -31,26 +28,15 @@ var walletDeleteCmd = &cobra.Command{
     ethdo wallet delete --wallet=primary
 
 In quiet mode this will return 0 if the wallet has been deleted, otherwise 1.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		assert(viper.GetString("remote") == "", "wallet delete not available with remote wallets")
-		assert(viper.GetString("wallet") != "", "--wallet is required")
-
-		ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("timeout"))
-		defer cancel()
-
-		wallet, err := walletFromPath(ctx, viper.GetString("wallet"))
-		errCheck(err, "Failed to access wallet")
-
-		storeProvider, ok := wallet.(wtypes.StoreProvider)
-		assert(ok, "Cannot obtain store for the wallet")
-		store := storeProvider.Store()
-		storeLocationProvider, ok := store.(wtypes.StoreLocationProvider)
-		assert(ok, "Cannot obtain store location for the wallet")
-		walletLocation := filepath.Join(storeLocationProvider.Location(), wallet.ID().String())
-		err = os.RemoveAll(walletLocation)
-		errCheck(err, "Failed to delete wallet")
-
-		os.Exit(_exitSuccess)
+	RunE: func(cmd *cobra.Command, args []string) error {
+		res, err := walletdelete.Run(cmd)
+		if err != nil {
+			return err
+		}
+		if res != "" {
+			fmt.Println(res)
+		}
+		return nil
 	},
 }
 

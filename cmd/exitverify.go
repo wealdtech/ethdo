@@ -94,7 +94,7 @@ func obtainExitData(input string) (*validatorExitData, error) {
 		}
 	}
 	exitData := &validatorExitData{}
-	err = json.Unmarshal([]byte(data), exitData)
+	err = json.Unmarshal(data, exitData)
 	if err != nil {
 		return nil, errors.Wrap(err, "data is not valid JSON")
 	}

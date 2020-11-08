@@ -22,11 +22,10 @@ import (
 	"github.com/spf13/viper"
 	e2types "github.com/wealdtech/go-eth2-types/v2"
 	e2wtypes "github.com/wealdtech/go-eth2-wallet-types/v2"
-	wtypes "github.com/wealdtech/go-eth2-wallet-types/v2"
 )
 
 // signStruct signs an arbitrary structure.
-func signStruct(account wtypes.Account, data interface{}, domain []byte) (e2types.Signature, error) {
+func signStruct(account e2wtypes.Account, data interface{}, domain []byte) (e2types.Signature, error) {
 	objRoot, err := ssz.HashTreeRoot(data)
 	outputIf(debug, fmt.Sprintf("Object root is %#x", objRoot))
 	if err != nil {
@@ -37,7 +36,7 @@ func signStruct(account wtypes.Account, data interface{}, domain []byte) (e2type
 }
 
 // verifyStruct verifies the signature of an arbitrary structure.
-func verifyStruct(account wtypes.Account, data interface{}, domain []byte, signature e2types.Signature) (bool, error) {
+func verifyStruct(account e2wtypes.Account, data interface{}, domain []byte, signature e2types.Signature) (bool, error) {
 	objRoot, err := ssz.HashTreeRoot(data)
 	outputIf(debug, fmt.Sprintf("Object root is %#x", objRoot))
 	if err != nil {
@@ -55,7 +54,7 @@ type signingContainer struct {
 }
 
 // signRoot signs a root.
-func signRoot(account wtypes.Account, root [32]byte, domain []byte) (e2types.Signature, error) {
+func signRoot(account e2wtypes.Account, root [32]byte, domain []byte) (e2types.Signature, error) {
 	if _, isProtectingSigner := account.(e2wtypes.AccountProtectingSigner); isProtectingSigner {
 		// Signer signs the data to sign itself.
 		return signGeneric(account, root[:], domain)
@@ -75,7 +74,7 @@ func signRoot(account wtypes.Account, root [32]byte, domain []byte) (e2types.Sig
 	return sign(account, signingRoot[:])
 }
 
-func verifyRoot(account wtypes.Account, root [32]byte, domain []byte, signature e2types.Signature) (bool, error) {
+func verifyRoot(account e2wtypes.Account, root [32]byte, domain []byte, signature e2types.Signature) (bool, error) {
 	// Build the signing data manually.
 	container := &signingContainer{
 		Root:   root[:],
@@ -90,7 +89,7 @@ func verifyRoot(account wtypes.Account, root [32]byte, domain []byte, signature 
 	return verify(account, signingRoot[:], signature)
 }
 
-func signGeneric(account wtypes.Account, data []byte, domain []byte) (e2types.Signature, error) {
+func signGeneric(account e2wtypes.Account, data []byte, domain []byte) (e2types.Signature, error) {
 	alreadyUnlocked, err := unlock(account)
 	if err != nil {
 		return nil, err
@@ -115,7 +114,7 @@ func signGeneric(account wtypes.Account, data []byte, domain []byte) (e2types.Si
 }
 
 // sign signs arbitrary data, handling unlocking and locking as required.
-func sign(account wtypes.Account, data []byte) (e2types.Signature, error) {
+func sign(account e2wtypes.Account, data []byte) (e2types.Signature, error) {
 	alreadyUnlocked, err := unlock(account)
 	if err != nil {
 		return nil, err
@@ -140,7 +139,7 @@ func sign(account wtypes.Account, data []byte) (e2types.Signature, error) {
 }
 
 // verify the signature of arbitrary data.
-func verify(account wtypes.Account, data []byte, signature e2types.Signature) (bool, error) {
+func verify(account e2wtypes.Account, data []byte, signature e2types.Signature) (bool, error) {
 	pubKey, err := bestPublicKey(account)
 	if err != nil {
 		return false, errors.Wrap(err, "failed to obtain account public key")

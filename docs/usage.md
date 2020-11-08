@@ -51,7 +51,7 @@ $ ethdo wallet delete --wallet="Old wallet"
 
 `ethdo wallet export` exports the wallet and all of its accounts.  Options for exporting a wallet include:
   - `wallet`: the name of the wallet to export (defaults to "primary")
-  - `exportpassphrase`: the passphrase with which to encrypt the wallet backup
+  - `passphrase`: the passphrase with which to encrypt the wallet backup
 
 ```sh
 $ ethdo wallet export --wallet="Personal wallet" --exportpassphrase="my export secret"
@@ -67,8 +67,8 @@ $ ethdo wallet export --wallet="Personal wallet" --exportpassphrase="my export s
 #### `import`
 
 `ethdo wallet import` imports a wallet and all of its accounts exported by `ethdo wallet export`.  Options for importing a wallet include:
-  - `importdata`: the data exported by `ethdo wallet export`
-  - `importpassphrase`: the passphrase that was provided to `ethdo wallet export` to encrypt the data
+  - `data`: the data exported by `ethdo wallet export`
+  - `passphrase`: the passphrase that was provided to `ethdo wallet export` to encrypt the data
   - `verify`: confirm information about the wallet import without importing it
 
 ```sh

@@ -14,19 +14,12 @@
 package cmd
 
 import (
-	"context"
 	"fmt"
-	"os"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"github.com/wealdtech/ethdo/util"
-	"github.com/wealdtech/go-bytesutil"
-	e2wallet "github.com/wealdtech/go-eth2-wallet"
-	e2wtypes "github.com/wealdtech/go-eth2-wallet-types/v2"
+	accountimport "github.com/wealdtech/ethdo/cmd/account/import"
 )
-
-var accountImportKey string
 
 var accountImportCmd = &cobra.Command{
 	Use:   "import",
@@ -36,49 +29,29 @@ var accountImportCmd = &cobra.Command{
     ethdo account import --account="primary/testing" --key="0x..." --passphrase="my secret"
 
 In quiet mode this will return 0 if the account is imported successfully, otherwise 1.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		assert(!remote, "account import not available with remote wallets")
-		assert(viper.GetString("account") != "", "--account is required")
-		assert(accountImportKey != "", "--key is required")
-		assert(util.AcceptablePassphrase(getPassphrase()), "supplied passphrase is weak; use a stronger one or run with the --allow-weak-passphrases flag")
-
-		ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("timeout"))
-		defer cancel()
-
-		key, err := bytesutil.FromHexString(accountImportKey)
-		errCheck(err, "Invalid key")
-
-		w, err := walletFromPath(ctx, viper.GetString("account"))
-		errCheck(err, "Failed to access wallet")
-
-		_, ok := w.(e2wtypes.WalletAccountImporter)
-		assert(ok, fmt.Sprintf("wallets of type %q do not allow importing accounts", w.Type()))
-
-		_, _, err = walletAndAccountFromPath(ctx, viper.GetString("account"))
-		assert(err != nil, "Account already exists")
-
-		locker, isLocker := w.(e2wtypes.WalletLocker)
-		if isLocker {
-			errCheck(locker.Unlock(ctx, []byte(getWalletPassphrase())), "Failed to unlock wallet")
+	RunE: func(cmd *cobra.Command, args []string) error {
+		res, err := accountimport.Run(cmd)
+		if err != nil {
+			return err
 		}
-
-		_, accountName, err := e2wallet.WalletAndAccountNames(viper.GetString("account"))
-		errCheck(err, "Failed to obtain account name")
-
-		account, err := w.(e2wtypes.WalletAccountImporter).ImportAccount(ctx, accountName, key, []byte(getPassphrase()))
-		errCheck(err, "Failed to create account")
-
-		pubKey, err := bestPublicKey(account)
-		if err == nil {
-			outputIf(verbose, fmt.Sprintf("%#x", pubKey.Marshal()))
+		if viper.GetBool("quiet") {
+			return nil
 		}
-
-		os.Exit(_exitSuccess)
+		if res != "" {
+			fmt.Println(res)
+		}
+		return nil
 	},
 }
 
 func init() {
 	accountCmd.AddCommand(accountImportCmd)
 	accountFlags(accountImportCmd)
-	accountImportCmd.Flags().StringVar(&accountImportKey, "key", "", "Private key of the account to import (0x...)")
+	accountImportCmd.Flags().String("key", "", "Private key of the account to import (0x...)")
+}
+
+func accountImportBindings() {
+	if err := viper.BindPFlag("key", accountImportCmd.Flags().Lookup("key")); err != nil {
+		panic(err)
+	}
 }

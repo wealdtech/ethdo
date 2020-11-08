@@ -71,10 +71,14 @@ func setup() error {
 // WalletFromInput obtains a wallet given the information in the viper variable
 // "account", or if not present the viper variable "wallet".
 func WalletFromInput(ctx context.Context) (e2wtypes.Wallet, error) {
-	if viper.GetString("account") != "" {
+	switch {
+	case viper.GetString("account") != "":
 		return WalletFromPath(ctx, viper.GetString("account"))
+	case viper.GetString("wallet") != "":
+		return WalletFromPath(ctx, viper.GetString("wallet"))
+	default:
+		return nil, errors.New("cannot determine wallet")
 	}
-	return WalletFromPath(ctx, viper.GetString("wallet"))
 }
 
 // WalletFromPath obtains a wallet given a path specification.

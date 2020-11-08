@@ -75,9 +75,16 @@ type depositInfoCLI struct {
 }
 
 func DepositInfoFromJSON(input []byte) ([]*DepositInfo, error) {
+	if len(input) == 0 {
+		return nil, errors.New("no data supplied")
+	}
 	// Work out the type of data that we're dealing with, and decode it appropriately.
 	depositInfo, err := tryRawTxData(input)
 	if err != nil {
+		// At this point, ensure we have brackets around the deposit info.
+		if input[0] != '[' {
+			input = []byte(fmt.Sprintf("[%s]", string(input)))
+		}
 		depositInfo, err = tryV3DepositInfoFromJSON(input)
 		if err != nil {
 			depositInfo, err = tryV1DepositInfoFromJSON(input)

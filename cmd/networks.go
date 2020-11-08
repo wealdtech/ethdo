@@ -41,7 +41,6 @@ func network() string {
 	depositContract := fmt.Sprintf("%x", depositContractAddress)
 	if network, exists := networks[depositContract]; exists {
 		return network
-	} else {
-		return "Unknown"
 	}
+	return "Unknown"
 }

@@ -14,13 +14,11 @@
 package cmd
 
 import (
-	"context"
 	"fmt"
-	"os"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	e2wtypes "github.com/wealdtech/go-eth2-wallet-types/v2"
+	accountkey "github.com/wealdtech/ethdo/cmd/account/key"
 )
 
 // accountKeyCmd represents the account key command
@@ -32,39 +30,18 @@ var accountKeyCmd = &cobra.Command{
     ethdo account key --account="Personal wallet/Operations" --passphrase="my account passphrase"
 
 In quiet mode this will return 0 if the key can be obtained, otherwise 1.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("timeout"))
-		defer cancel()
-
-		assert(!remote, "account keys not available with remote wallets")
-		assert(viper.GetString("account") != "", "--account is required")
-
-		_, account, err := walletAndAccountFromInput(ctx)
-		errCheck(err, "Failed to obtain account")
-
-		privateKeyProvider, isPrivateKeyProvider := account.(e2wtypes.AccountPrivateKeyProvider)
-		assert(isPrivateKeyProvider, fmt.Sprintf("account %q does not provide its private key", viper.GetString("account")))
-
-		if locker, isLocker := account.(e2wtypes.AccountLocker); isLocker {
-			unlocked, err := locker.IsUnlocked(ctx)
-			errCheck(err, "Failed to find out if account is locked")
-			if !unlocked {
-				for _, passphrase := range getPassphrases() {
-					err = locker.Unlock(ctx, []byte(passphrase))
-					if err == nil {
-						unlocked = true
-						break
-					}
-				}
-			}
-			assert(unlocked, "Failed to unlock account to obtain private key")
-			defer relockAccount(locker)
+	RunE: func(cmd *cobra.Command, args []string) error {
+		res, err := accountkey.Run(cmd)
+		if err != nil {
+			return err
 		}
-		privateKey, err := privateKeyProvider.PrivateKey(ctx)
-		errCheck(err, "Failed to obtain private key")
-
-		outputIf(!quiet, fmt.Sprintf("%#x", privateKey.Marshal()))
-		os.Exit(_exitSuccess)
+		if viper.GetBool("quiet") {
+			return nil
+		}
+		if res != "" {
+			fmt.Println(res)
+		}
+		return nil
 	},
 }
 

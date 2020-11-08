@@ -17,8 +17,6 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"regexp"
-	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -46,9 +44,6 @@ var rootStore string
 
 // Store for wallet actions.
 var store e2wtypes.Store
-
-// Remote connection.
-var remote bool
 
 // Prysm connection.
 var eth2GRPCConn *grpc.ClientConn
@@ -81,6 +76,8 @@ func persistentPreRun(cmd *cobra.Command, args []string) {
 	switch fmt.Sprintf("%s/%s", cmd.Parent().Name(), cmd.Name()) {
 	case "account/create":
 		accountCreateBindings()
+	case "account/import":
+		accountImportBindings()
 	case "attester/inclusion":
 		attesterInclusionBindings()
 	case "exit/verify":
@@ -89,6 +86,8 @@ func persistentPreRun(cmd *cobra.Command, args []string) {
 		validatorDepositdataBindings()
 	case "wallet/create":
 		walletCreateBindings()
+	case "wallet/import":
+		walletImportBindings()
 	}
 
 	if quiet && verbose {
@@ -119,9 +118,8 @@ func persistentPreRun(cmd *cobra.Command, args []string) {
 			die(fmt.Sprintf("Unsupported wallet store %s", rootStore))
 		}
 		err := e2wallet.UseStore(store)
+		viper.Set("store", store)
 		errCheck(err, "Failed to use defined wallet store")
-	} else {
-		remote = true
 	}
 }
 
@@ -331,39 +329,6 @@ func walletAndAccountFromPath(ctx context.Context, path string) (e2wtypes.Wallet
 		return nil, nil, errors.Wrap(err, "failed to obtain account")
 	}
 	return wallet, account, nil
-}
-
-// walletAndAccountsFromPath obtains the wallet and matching accounts given a path specification.
-func walletAndAccountsFromPath(ctx context.Context, path string) (e2wtypes.Wallet, []e2wtypes.Account, error) {
-	wallet, err := walletFromPath(ctx, path)
-	if err != nil {
-		return nil, nil, errors.Wrap(err, "faild to open wallet for account")
-	}
-
-	_, accountSpec, err := e2wallet.WalletAndAccountNames(path)
-	if err != nil {
-		return nil, nil, errors.Wrap(err, "failed to obtain account specification")
-	}
-	if accountSpec == "" {
-		accountSpec = "^.*$"
-	} else {
-		accountSpec = fmt.Sprintf("^%s$", accountSpec)
-	}
-	re := regexp.MustCompile(accountSpec)
-
-	accounts := make([]e2wtypes.Account, 0)
-	for account := range wallet.Accounts(ctx) {
-		if re.Match([]byte(account.Name())) {
-			accounts = append(accounts, account)
-		}
-	}
-
-	// Tidy up accounts by name.
-	sort.Slice(accounts, func(i, j int) bool {
-		return accounts[i].Name() < accounts[j].Name()
-	})
-
-	return wallet, accounts, nil
 }
 
 // connect connects to an Ethereum 2 endpoint.

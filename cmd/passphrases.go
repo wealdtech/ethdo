@@ -31,21 +31,3 @@ func getWalletPassphrase() string {
 func getPassphrases() []string {
 	return viper.GetStringSlice("passphrase")
 }
-
-// getPassphrase fetches the passphrase supplied by the user.
-func getPassphrase() string {
-	passphrases := getPassphrases()
-	assert(len(passphrases) != 0, "passphrase is required")
-	assert(len(passphrases) == 1, "multiple passphrases supplied; cannot continue")
-	return passphrases[0]
-}
-
-// getOptionalPassphrase fetches the passphrase if supplied by the user.
-func getOptionalPassphrase() string {
-	passphrases := getPassphrases()
-	if len(passphrases) == 0 {
-		return ""
-	}
-	assert(len(passphrases) == 1, "multiple passphrases supplied; cannot continue")
-	return passphrases[0]
-}

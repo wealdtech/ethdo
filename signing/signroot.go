@@ -44,9 +44,9 @@ func SignRoot(account e2wtypes.Account, root []byte, domain []byte) ([]byte, err
 	// outputIf(debug, fmt.Sprintf("Signing %x (%d)", data, len(data)))
 	if protectingSigner, isProtectingSigner := account.(e2wtypes.AccountProtectingSigner); isProtectingSigner {
 		// Signer takes root and domain.
-		signature, err = signProtected(protectingSigner, root[:], domain)
+		signature, err = signProtected(protectingSigner, root, domain)
 	} else if signer, isSigner := account.(e2wtypes.AccountSigner); isSigner {
-		signature, err = sign(signer, root[:], domain)
+		signature, err = sign(signer, root, domain)
 	} else {
 		return nil, errors.New("account does not provide signing facility")
 	}

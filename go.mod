@@ -4,13 +4,15 @@ go 1.13
 
 require (
 	github.com/OneOfOne/xxhash v1.2.5 // indirect
+	github.com/attestantio/dirk v0.9.1
 	github.com/attestantio/go-eth2-client v0.6.8
 	github.com/ferranbt/fastssz v0.0.0-20201030134205-9b9624098321
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
+	github.com/gofrs/uuid v3.3.0+incompatible
 	github.com/gogo/protobuf v1.3.1
 	github.com/google/uuid v1.1.2
 	github.com/grpc-ecosystem/grpc-gateway v1.15.2 // indirect
-	github.com/herumi/bls-eth-go-binary v0.0.0-20201008062400-71567a52ad65
+	github.com/herumi/bls-eth-go-binary v0.0.0-20201019012252-4b463a10c225
 	github.com/magiconair/properties v1.8.4 // indirect
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mitchellh/mapstructure v1.3.3 // indirect
@@ -32,23 +34,25 @@ require (
 	github.com/tyler-smith/go-bip39 v1.0.2
 	github.com/wealdtech/eth2-signer-api v1.6.0
 	github.com/wealdtech/go-bytesutil v1.1.1
-	github.com/wealdtech/go-ecodec v1.1.0
-	github.com/wealdtech/go-eth2-types/v2 v2.5.0
-	github.com/wealdtech/go-eth2-util v1.6.0
-	github.com/wealdtech/go-eth2-wallet v1.14.1
+	github.com/wealdtech/go-ecodec v1.1.1
+	github.com/wealdtech/go-eth2-types/v2 v2.5.1
+	github.com/wealdtech/go-eth2-util v1.6.1
+	github.com/wealdtech/go-eth2-wallet v1.14.2
 	github.com/wealdtech/go-eth2-wallet-dirk v1.0.4
-	github.com/wealdtech/go-eth2-wallet-distributed v1.1.1
-	github.com/wealdtech/go-eth2-wallet-encryptor-keystorev4 v1.1.1
-	github.com/wealdtech/go-eth2-wallet-hd/v2 v2.5.1
-	github.com/wealdtech/go-eth2-wallet-nd/v2 v2.3.1
-	github.com/wealdtech/go-eth2-wallet-store-filesystem v1.16.1
-	github.com/wealdtech/go-eth2-wallet-store-s3 v1.9.0
-	github.com/wealdtech/go-eth2-wallet-store-scratch v1.6.0
-	github.com/wealdtech/go-eth2-wallet-types/v2 v2.8.0
+	github.com/wealdtech/go-eth2-wallet-distributed v1.1.2
+	github.com/wealdtech/go-eth2-wallet-encryptor-keystorev4 v1.1.2
+	github.com/wealdtech/go-eth2-wallet-hd/v2 v2.5.2
+	github.com/wealdtech/go-eth2-wallet-nd/v2 v2.3.2
+	github.com/wealdtech/go-eth2-wallet-store-filesystem v1.16.13
+	github.com/wealdtech/go-eth2-wallet-store-s3 v1.9.1
+	github.com/wealdtech/go-eth2-wallet-store-scratch v1.6.1
+	github.com/wealdtech/go-eth2-wallet-types/v2 v2.8.1
 	github.com/wealdtech/go-string2eth v1.1.0
 	golang.org/x/text v0.3.3
-	google.golang.org/grpc v1.33.0
+	google.golang.org/grpc v1.33.1
 	gopkg.in/ini.v1 v1.62.0 // indirect
 )
 
 replace github.com/attestantio/go-eth2-client => ../../attestantio/go-eth2-client
+
+replace github.com/attestantio/dirk => ../../attestantio/dirk

@@ -17,19 +17,20 @@ import (
 	"fmt"
 	"strings"
 
+	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 )
 
 type dataOut struct {
 	format                string
 	account               string
-	validatorPubKey       []byte
+	validatorPubKey       *spec.BLSPubKey
 	withdrawalCredentials []byte
-	amount                uint64
-	signature             []byte
-	forkVersion           []byte
-	depositDataRoot       []byte
-	depositMessageRoot    []byte
+	amount                spec.Gwei
+	signature             *spec.BLSSignature
+	forkVersion           *spec.Version
+	depositDataRoot       *spec.Root
+	depositMessageRoot    *spec.Root
 }
 
 func output(data []*dataOut) (string, error) {
@@ -57,8 +58,8 @@ func output(data []*dataOut) (string, error) {
 }
 
 func validatorDepositDataOutputRaw(datum *dataOut) (string, error) {
-	if len(datum.validatorPubKey) != 48 {
-		return "", errors.New("validator public key must be 48 bytes")
+	if datum.validatorPubKey == nil {
+		return "", errors.New("validator public key required")
 	}
 	if len(datum.withdrawalCredentials) != 32 {
 		return "", errors.New("withdrawal credentials must be 32 bytes")
@@ -66,14 +67,11 @@ func validatorDepositDataOutputRaw(datum *dataOut) (string, error) {
 	if datum.amount == 0 {
 		return "", errors.New("missing amount")
 	}
-	if len(datum.signature) != 96 {
-		return "", errors.New("signature must be 96 bytes")
+	if datum.signature == nil {
+		return "", errors.New("signature required")
 	}
-	if len(datum.depositMessageRoot) != 32 {
-		return "", errors.New("deposit message root must be 32 bytes")
-	}
-	if len(datum.depositDataRoot) != 32 {
-		return "", errors.New("deposit data root must be 32 bytes")
+	if datum.depositDataRoot == nil {
+		return "", errors.New("deposit data root required")
 	}
 
 	output := fmt.Sprintf(
@@ -98,17 +96,17 @@ func validatorDepositDataOutputRaw(datum *dataOut) (string, error) {
 			"0000000000000000000000000000000000000000000000000000000000000060"+
 			"%x"+
 			`"`,
-		datum.depositDataRoot,
-		datum.validatorPubKey,
+		*datum.depositDataRoot,
+		*datum.validatorPubKey,
 		datum.withdrawalCredentials,
-		datum.signature,
+		*datum.signature,
 	)
 	return output, nil
 }
 
 func validatorDepositDataOutputLaunchpad(datum *dataOut) (string, error) {
-	if len(datum.validatorPubKey) != 48 {
-		return "", errors.New("validator public key must be 48 bytes")
+	if datum.validatorPubKey == nil {
+		return "", errors.New("validator public key required")
 	}
 	if len(datum.withdrawalCredentials) != 32 {
 		return "", errors.New("withdrawal credentials must be 32 bytes")
@@ -116,24 +114,24 @@ func validatorDepositDataOutputLaunchpad(datum *dataOut) (string, error) {
 	if datum.amount == 0 {
 		return "", errors.New("missing amount")
 	}
-	if len(datum.signature) != 96 {
-		return "", errors.New("signature must be 96 bytes")
+	if datum.signature == nil {
+		return "", errors.New("signature required")
 	}
-	if len(datum.depositMessageRoot) != 32 {
-		return "", errors.New("deposit message root must be 32 bytes")
+	if datum.depositMessageRoot == nil {
+		return "", errors.New("deposit message root required")
 	}
-	if len(datum.depositDataRoot) != 32 {
-		return "", errors.New("deposit data root must be 32 bytes")
+	if datum.depositDataRoot == nil {
+		return "", errors.New("deposit data root required")
 	}
 
 	output := fmt.Sprintf(`{"pubkey":"%x","withdrawal_credentials":"%x","amount":%d,"signature":"%x","deposit_message_root":"%x","deposit_data_root":"%x","fork_version":"%x"}`,
-		datum.validatorPubKey,
+		*datum.validatorPubKey,
 		datum.withdrawalCredentials,
 		datum.amount,
-		datum.signature,
-		datum.depositMessageRoot,
-		datum.depositDataRoot,
-		datum.forkVersion,
+		*datum.signature,
+		*datum.depositMessageRoot,
+		*datum.depositDataRoot,
+		*datum.forkVersion,
 	)
 	return output, nil
 }
@@ -142,30 +140,30 @@ func validatorDepositDataOutputJSON(datum *dataOut) (string, error) {
 	if datum.account == "" {
 		return "", errors.New("missing account")
 	}
-	if len(datum.validatorPubKey) != 48 {
-		return "", errors.New("validator public key must be 48 bytes")
+	if datum.validatorPubKey == nil {
+		return "", errors.New("validator public key required")
 	}
 	if len(datum.withdrawalCredentials) != 32 {
 		return "", errors.New("withdrawal credentials must be 32 bytes")
 	}
-	if len(datum.signature) != 96 {
-		return "", errors.New("signature must be 96 bytes")
+	if datum.signature == nil {
+		return "", errors.New("signature required")
 	}
 	if datum.amount == 0 {
 		return "", errors.New("missing amount")
 	}
-	if len(datum.depositDataRoot) != 32 {
-		return "", errors.New("deposit data root must be 32 bytes")
+	if datum.depositDataRoot == nil {
+		return "", errors.New("deposit data root required")
 	}
 
 	output := fmt.Sprintf(`{"name":"Deposit for %s","account":"%s","pubkey":"%#x","withdrawal_credentials":"%#x","signature":"%#x","value":%d,"deposit_data_root":"%#x","version":2}`,
 		datum.account,
 		datum.account,
-		datum.validatorPubKey,
+		*datum.validatorPubKey,
 		datum.withdrawalCredentials,
-		datum.signature,
+		*datum.signature,
 		datum.amount,
-		datum.depositDataRoot,
+		*datum.depositDataRoot,
 	)
 	return output, nil
 }

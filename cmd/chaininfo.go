@@ -14,12 +14,16 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"time"
 
+	eth2client "github.com/attestantio/go-eth2-client"
+	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/spf13/cobra"
-	"github.com/wealdtech/ethdo/grpc"
+	"github.com/spf13/viper"
+	"github.com/wealdtech/ethdo/util"
 )
 
 var chainInfoCmd = &cobra.Command{
@@ -31,31 +35,31 @@ var chainInfoCmd = &cobra.Command{
 
 In quiet mode this will return 0 if the chain information can be obtained, otherwise 1.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		err := connect()
-		errCheck(err, "Failed to obtain connection to Ethereum 2 beacon chain node")
-		config, err := grpc.FetchChainConfig(eth2GRPCConn)
-		errCheck(err, "Failed to obtain beacon chain configuration")
+		ctx := context.Background()
 
-		genesisTime, err := grpc.FetchGenesisTime(eth2GRPCConn)
-		errCheck(err, "Failed to obtain genesis time")
+		eth2Client, err := util.ConnectToBeaconNode(ctx, viper.GetString("connection"), viper.GetDuration("timeout"), viper.GetBool("allow-insecure-connections"))
+		errCheck(err, "Failed to connect to Ethereum 2 beacon node")
 
-		genesisValidatorsRoot, err := grpc.FetchGenesisValidatorsRoot(eth2GRPCConn)
-		errCheck(err, "Failed to obtain genesis validators root")
+		config, err := eth2Client.(eth2client.SpecProvider).Spec(ctx)
+		errCheck(err, "Failed to obtain beacon chain specification")
+
+		genesis, err := eth2Client.(eth2client.GenesisProvider).Genesis(ctx)
+		errCheck(err, "Failed to obtain beacon chain genesis")
 
 		if quiet {
 			os.Exit(_exitSuccess)
 		}
 
-		if genesisTime.Unix() == 0 {
+		if genesis.GenesisTime.Unix() == 0 {
 			fmt.Println("Genesis time: undefined")
 		} else {
-			fmt.Printf("Genesis time: %s\n", genesisTime.Format(time.UnixDate))
-			outputIf(verbose, fmt.Sprintf("Genesis timestamp: %v", genesisTime.Unix()))
+			fmt.Printf("Genesis time: %s\n", genesis.GenesisTime.Format(time.UnixDate))
+			outputIf(verbose, fmt.Sprintf("Genesis timestamp: %v", genesis.GenesisTime.Unix()))
 		}
-		fmt.Printf("Genesis validators root: %#x\n", genesisValidatorsRoot)
-		fmt.Printf("Genesis fork version: %#x\n", config["GenesisForkVersion"].([]byte))
-		fmt.Printf("Seconds per slot: %d\n", config["SecondsPerSlot"].(uint64))
-		fmt.Printf("Slots per epoch: %d\n", config["SlotsPerEpoch"].(uint64))
+		fmt.Printf("Genesis validators root: %#x\n", genesis.GenesisValidatorsRoot)
+		fmt.Printf("Genesis fork version: %#x\n", config["GENESIS_FORK_VERSION"].([]byte))
+		fmt.Printf("Seconds per slot: %d\n", int(config["SECONDS_PER_SLOT"].(time.Duration).Seconds()))
+		fmt.Printf("Slots per epoch: %d\n", config["SLOTS_PER_EPOCH"].(uint64))
 
 		os.Exit(_exitSuccess)
 	},
@@ -66,17 +70,17 @@ func init() {
 	chainFlags(chainInfoCmd)
 }
 
-func timestampToSlot(genesis int64, timestamp int64, secondsPerSlot uint64) uint64 {
-	if timestamp < genesis {
+func timestampToSlot(genesis time.Time, timestamp time.Time, secondsPerSlot time.Duration) spec.Slot {
+	if timestamp.Unix() < genesis.Unix() {
 		return 0
 	}
-	return uint64(timestamp-genesis) / secondsPerSlot
+	return spec.Slot(uint64(timestamp.Unix()-genesis.Unix()) / uint64(secondsPerSlot.Seconds()))
 }
 
-func slotToTimestamp(genesis int64, slot uint64, secondsPerSlot uint64) int64 {
-	return genesis + int64(slot*secondsPerSlot)
+func slotToTimestamp(genesis time.Time, slot spec.Slot, slotDuration time.Duration) int64 {
+	return genesis.Unix() + int64(slot)*int64(slotDuration.Seconds())
 }
 
-func epochToTimestamp(genesis int64, slot uint64, secondsPerSlot uint64, slotsPerEpoch uint64) int64 {
-	return genesis + int64(slot*secondsPerSlot*slotsPerEpoch)
+func epochToTimestamp(genesis time.Time, slot spec.Slot, slotDuration time.Duration, slotsPerEpoch uint64) int64 {
+	return genesis.Unix() + int64(slot)*int64(slotDuration.Seconds())*int64(slotsPerEpoch)
 }

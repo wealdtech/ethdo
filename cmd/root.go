@@ -31,7 +31,6 @@ import (
 	filesystem "github.com/wealdtech/go-eth2-wallet-store-filesystem"
 	s3 "github.com/wealdtech/go-eth2-wallet-store-s3"
 	e2wtypes "github.com/wealdtech/go-eth2-wallet-types/v2"
-	"google.golang.org/grpc"
 )
 
 var cfgFile string
@@ -44,9 +43,6 @@ var rootStore string
 
 // Store for wallet actions.
 var store e2wtypes.Store
-
-// Prysm connection.
-var eth2GRPCConn *grpc.ClientConn
 
 // RootCmd represents the base command when called without any subcommands
 var RootCmd = &cobra.Command{
@@ -80,10 +76,16 @@ func persistentPreRun(cmd *cobra.Command, args []string) {
 		accountImportBindings()
 	case "attester/inclusion":
 		attesterInclusionBindings()
+	case "block/info":
+		blockInfoBindings()
 	case "exit/verify":
 		exitVerifyBindings()
 	case "validator/depositdata":
 		validatorDepositdataBindings()
+	case "validator/exit":
+		validatorExitBindings()
+	case "validator/info":
+		validatorInfoBindings()
 	case "wallet/create":
 		walletCreateBindings()
 	case "wallet/import":
@@ -182,7 +184,7 @@ func init() {
 	if err := viper.BindPFlag("debug", RootCmd.PersistentFlags().Lookup("debug")); err != nil {
 		panic(err)
 	}
-	RootCmd.PersistentFlags().String("connection", "localhost:4000", "connection to Ethereum 2 node via GRPC")
+	RootCmd.PersistentFlags().String("connection", "localhost:4000", "connection to an Ethereum 2 node")
 	if err := viper.BindPFlag("connection", RootCmd.PersistentFlags().Lookup("connection")); err != nil {
 		panic(err)
 	}
@@ -208,6 +210,10 @@ func init() {
 	}
 	RootCmd.PersistentFlags().Bool("allow-weak-passphrases", false, "allow passphrases that use common words, are short, or generally considered weak")
 	if err := viper.BindPFlag("allow-weak-passphrases", RootCmd.PersistentFlags().Lookup("allow-weak-passphrases")); err != nil {
+		panic(err)
+	}
+	RootCmd.PersistentFlags().Bool("allow-insecure-connections", false, "allow insecure connections to remote beacon nodes")
+	if err := viper.BindPFlag("allow-insecure-connections", RootCmd.PersistentFlags().Lookup("allow-insecure-connections")); err != nil {
 		panic(err)
 	}
 }
@@ -329,32 +335,6 @@ func walletAndAccountFromPath(ctx context.Context, path string) (e2wtypes.Wallet
 		return nil, nil, errors.Wrap(err, "failed to obtain account")
 	}
 	return wallet, account, nil
-}
-
-// connect connects to an Ethereum 2 endpoint.
-func connect() error {
-	if eth2GRPCConn != nil {
-		// Already connected.
-		return nil
-	}
-
-	connection := ""
-	if viper.GetString("connection") != "" {
-		connection = viper.GetString("connection")
-	}
-
-	if connection == "" {
-		return errors.New("no connection")
-	}
-	outputIf(debug, fmt.Sprintf("Connecting to %s", connection))
-
-	opts := []grpc.DialOption{grpc.WithInsecure()}
-
-	ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("timeout"))
-	defer cancel()
-	var err error
-	eth2GRPCConn, err = grpc.DialContext(ctx, connection, opts...)
-	return err
 }
 
 // bestPublicKey returns the best public key for operations.

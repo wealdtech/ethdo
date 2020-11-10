@@ -14,19 +14,11 @@
 package cmd
 
 import (
-	"context"
-	"encoding/hex"
 	"fmt"
-	"os"
-	"strings"
-	"time"
 
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"github.com/wealdtech/ethdo/grpc"
-	"github.com/wealdtech/ethdo/util"
-	e2wtypes "github.com/wealdtech/go-eth2-wallet-types/v2"
+	attesterinclusion "github.com/wealdtech/ethdo/cmd/attester/inclusion"
 )
 
 var attesterInclusionCmd = &cobra.Command{
@@ -37,109 +29,19 @@ var attesterInclusionCmd = &cobra.Command{
     ethdo attester inclusion --account=Validators/00001 --epoch=12345
 
 In quiet mode this will return 0 if an attestation from the attester is found on the block of the given epoch, otherwise 1.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		err := connect()
-		errCheck(err, "Failed to obtain connection to Ethereum 2 beacon chain block")
-
-		// Obtain the epoch.
-		epoch := viper.GetInt64("epoch")
-		if epoch == -1 {
-			outputIf(debug, "No epoch supplied; fetching current epoch")
-			config, err := grpc.FetchChainConfig(eth2GRPCConn)
-			errCheck(err, "Failed to obtain beacon chain configuration")
-			slotsPerEpoch := config["SlotsPerEpoch"].(uint64)
-			secondsPerSlot := config["SecondsPerSlot"].(uint64)
-			genesisTime, err := grpc.FetchGenesisTime(eth2GRPCConn)
-			errCheck(err, "Failed to obtain beacon chain genesis")
-			epoch = int64(time.Since(genesisTime).Seconds()) / int64(secondsPerSlot*slotsPerEpoch)
-			if epoch > 0 {
-				epoch--
-			}
+	RunE: func(cmd *cobra.Command, args []string) error {
+		res, err := attesterinclusion.Run(cmd)
+		if err != nil {
+			return err
 		}
-		outputIf(debug, fmt.Sprintf("Epoch is %d", epoch))
-
-		// Obtain the validator.
-		account, err := attesterInclusionAccount()
-		errCheck(err, "Failed to obtain account")
-		validatorIndex, err := grpc.FetchValidatorIndex(eth2GRPCConn, account)
-		errCheck(err, "Failed to obtain validator")
-
-		// Find the attesting slot for the given epoch.
-		committees, err := grpc.FetchValidatorCommittees(eth2GRPCConn, uint64(epoch))
-		errCheck(err, "Failed to obtain validator committees")
-
-		slot := uint64(0)
-		committeeIndex := uint64(0)
-		validatorPositionInCommittee := uint64(0)
-		found := false
-		for searchSlot, committee := range committees {
-			for searchCommitteeIndex, committeeValidatorIndices := range committee {
-				for position, committeeValidatorIndex := range committeeValidatorIndices {
-					if validatorIndex == committeeValidatorIndex {
-						outputIf(verbose, fmt.Sprintf("Validator %d scheduled to attest at slot %d for epoch %d: entry %d in committee %d", validatorIndex, searchSlot, epoch, position, searchCommitteeIndex))
-						slot = searchSlot
-						committeeIndex = uint64(searchCommitteeIndex)
-						validatorPositionInCommittee = uint64(position)
-						found = true
-						break
-					}
-				}
-			}
+		if viper.GetBool("quiet") {
+			return nil
 		}
-		assert(found, fmt.Sprintf("Failed to find attester duty for validator in epoch %d", epoch))
-
-		startSlot := slot + 1
-		endSlot := startSlot + 32
-		for curSlot := startSlot; curSlot < endSlot; curSlot++ {
-			signedBlock, err := grpc.FetchBlock(eth2GRPCConn, curSlot)
-			errCheck(err, "Failed to obtain block")
-			if signedBlock == nil {
-				outputIf(debug, fmt.Sprintf("No block at slot %d", curSlot))
-				continue
-			}
-			outputIf(debug, fmt.Sprintf("Fetched block %d", curSlot))
-			for i, attestation := range signedBlock.Block.Body.Attestations {
-				outputIf(debug, fmt.Sprintf("Attestation %d is for slot %d and committee %d", i, attestation.Data.Slot, attestation.Data.CommitteeIndex))
-				if attestation.Data.Slot == slot &&
-					attestation.Data.CommitteeIndex == committeeIndex &&
-					attestation.AggregationBits.BitAt(validatorPositionInCommittee) {
-					if verbose {
-						fmt.Printf("Attestation for epoch %d included in block %d, attestation %d (inclusion delay %d)\n", epoch, curSlot, i, curSlot-slot)
-					} else if !quiet {
-						fmt.Printf("Attestation for epoch %d included in block %d (inclusion delay %d)\n", epoch, curSlot, curSlot-slot)
-					}
-					os.Exit(_exitSuccess)
-				}
-			}
+		if res != "" {
+			fmt.Println(res)
 		}
-		outputIf(verbose, fmt.Sprintf("Attestation for epoch %d not included on the chain", epoch))
-		os.Exit(_exitFailure)
+		return nil
 	},
-}
-
-// attesterInclusionAccount obtains the account for the attester inclusion command.
-func attesterInclusionAccount() (e2wtypes.Account, error) {
-	var account e2wtypes.Account
-	var err error
-	if viper.GetString("account") != "" {
-		ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("timeout"))
-		defer cancel()
-		_, account, err = walletAndAccountFromPath(ctx, viper.GetString("account"))
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to obtain account")
-		}
-	} else {
-		pubKey := viper.GetString("pubkey")
-		pubKeyBytes, err := hex.DecodeString(strings.TrimPrefix(pubKey, "0x"))
-		if err != nil {
-			return nil, errors.Wrap(err, fmt.Sprintf("failed to decode public key %s", pubKey))
-		}
-		account, err = util.NewScratchAccount(nil, pubKeyBytes)
-		if err != nil {
-			return nil, errors.Wrap(err, fmt.Sprintf("invalid public key %s", pubKey))
-		}
-	}
-	return account, nil
 }
 
 func init() {

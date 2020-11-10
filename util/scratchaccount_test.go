@@ -14,6 +14,7 @@
 package util_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -62,20 +63,27 @@ func TestScratchAccountFromPrivKey(t *testing.T) {
 				require.Equal(t, "scratch", account.Name())
 				require.Equal(t, "", account.Path())
 				require.NotNil(t, account.PublicKey())
-				require.False(t, account.IsUnlocked())
-				_, err := account.Sign(testutil.HexToBytes("0x000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"))
+				unlocked, err := account.IsUnlocked(context.Background())
+				require.NoError(t, err)
+				require.False(t, unlocked)
+				_, err = account.Sign(context.Background(), testutil.HexToBytes("0x000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"))
 				require.EqualError(t, err, "locked")
-				require.NoError(t, account.Unlock(nil))
-				require.True(t, account.IsUnlocked())
-				signature, err := account.Sign(testutil.HexToBytes("0x000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"))
+				err = account.Unlock(context.Background(), nil)
+				require.NoError(t, err)
+				unlocked, err = account.IsUnlocked(context.Background())
+				require.NoError(t, err)
+				require.True(t, unlocked)
+				signature, err := account.Sign(context.Background(), testutil.HexToBytes("0x000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"))
 				if test.sigErr == "" {
 					require.NoError(t, err)
 					require.Equal(t, test.signature, signature.Marshal())
 				} else {
 					require.EqualError(t, err, test.sigErr)
 				}
-				account.Lock()
-				require.False(t, account.IsUnlocked())
+				require.NoError(t, account.Lock(context.Background()))
+				unlocked, err = account.IsUnlocked(context.Background())
+				require.NoError(t, err)
+				require.False(t, unlocked)
 			} else {
 				require.EqualError(t, err, test.err)
 			}
@@ -119,15 +127,21 @@ func TestScratchAccountFromPublicKey(t *testing.T) {
 				require.NotNil(t, account.ID())
 				require.Equal(t, "scratch", account.Name())
 				require.Equal(t, "", account.Path())
-				require.False(t, account.IsUnlocked())
-				_, err := account.Sign(testutil.HexToBytes("0x000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"))
+				unlocked, err := account.IsUnlocked(context.Background())
+				require.NoError(t, err)
+				require.False(t, unlocked)
+				_, err = account.Sign(context.Background(), testutil.HexToBytes("0x000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"))
 				require.EqualError(t, err, "locked")
-				require.NoError(t, account.Unlock(nil))
-				require.True(t, account.IsUnlocked())
-				_, err = account.Sign(testutil.HexToBytes("0x000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"))
+				require.NoError(t, account.Unlock(context.Background(), nil))
+				unlocked, err = account.IsUnlocked(context.Background())
+				require.NoError(t, err)
+				require.True(t, unlocked)
+				_, err = account.Sign(context.Background(), testutil.HexToBytes("0x000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"))
 				require.EqualError(t, err, "no private key")
-				account.Lock()
-				require.False(t, account.IsUnlocked())
+				account.Lock(context.Background())
+				unlocked, err = account.IsUnlocked(context.Background())
+				require.NoError(t, err)
+				require.False(t, unlocked)
 			} else {
 				require.EqualError(t, err, test.err)
 			}

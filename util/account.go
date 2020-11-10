@@ -11,7 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package signing
+package util
 
 import (
 	"context"
@@ -20,11 +20,10 @@ import (
 	e2wtypes "github.com/wealdtech/go-eth2-wallet-types/v2"
 )
 
-// Unlock attempts to unlock an account.  It returns true if the account was already unlocked.
-func Unlock(ctx context.Context, account e2wtypes.Account, passphrases []string) (bool, error) {
+// UnlockAccount attempts to unlock an account.  It returns true if the account was already unlocked.
+func UnlockAccount(ctx context.Context, account e2wtypes.Account, passphrases []string) (bool, error) {
 	locker, isAccountLocker := account.(e2wtypes.AccountLocker)
 	if !isAccountLocker {
-		// outputIf(debug, "Account does not support unlocking")
 		// This account doesn't support unlocking; return okay.
 		return true, nil
 	}
@@ -51,11 +50,13 @@ func Unlock(ctx context.Context, account e2wtypes.Account, passphrases []string)
 	return false, errors.New("failed to unlock account")
 }
 
-// Lock attempts to lock an account.
-func Lock(ctx context.Context, account e2wtypes.Account) error {
+// LockAccount attempts to lock an account.
+func LockAccount(ctx context.Context, account e2wtypes.Account) error {
 	locker, isAccountLocker := account.(e2wtypes.AccountLocker)
 	if !isAccountLocker {
+		// This account doesn't support locking; return okay.
 		return nil
 	}
+
 	return locker.Lock(ctx)
 }

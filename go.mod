@@ -5,7 +5,7 @@ go 1.13
 require (
 	github.com/OneOfOne/xxhash v1.2.5 // indirect
 	github.com/attestantio/dirk v0.9.2
-	github.com/attestantio/go-eth2-client v0.6.9
+	github.com/attestantio/go-eth2-client v0.6.10
 	github.com/ferranbt/fastssz v0.0.0-20201030134205-9b9624098321
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
 	github.com/gofrs/uuid v3.3.0+incompatible

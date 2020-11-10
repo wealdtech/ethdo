@@ -14,6 +14,7 @@
 package depositdata
 
 import (
+	"context"
 	"fmt"
 
 	spec "github.com/attestantio/go-eth2-client/spec/phase0"
@@ -41,43 +42,45 @@ func process(data *dataIn) ([]*dataOut, error) {
 		depositMessage := &spec.DepositMessage{
 			PublicKey:             pubKey,
 			WithdrawalCredentials: data.withdrawalCredentials,
-			Amount:                spec.Gwei(data.amount),
+			Amount:                data.amount,
 		}
-		depositMessageRoot, err := depositMessage.HashTreeRoot()
+		root, err := depositMessage.HashTreeRoot()
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to generate deposit message root")
 		}
+		var depositMessageRoot spec.Root
+		copy(depositMessageRoot[:], root[:])
 
-		sig, err := signing.SignRoot(validatorAccount, depositMessageRoot[:], data.domain)
+		sig, err := signing.SignRoot(context.Background(), validatorAccount, data.passphrases, depositMessageRoot, *data.domain)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to sign deposit message")
 		}
 
-		var signature spec.BLSSignature
-		copy(signature[:], sig)
 		depositData := &spec.DepositData{
 			PublicKey:             pubKey,
 			WithdrawalCredentials: data.withdrawalCredentials,
-			Amount:                spec.Gwei(data.amount),
-			Signature:             signature,
+			Amount:                data.amount,
+			Signature:             sig,
 		}
 
-		depositDataRoot, err := depositData.HashTreeRoot()
+		root, err = depositData.HashTreeRoot()
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to generate deposit data root")
 		}
+		var depositDataRoot spec.Root
+		copy(depositDataRoot[:], root[:])
 
 		validatorWallet := validatorAccount.(e2wtypes.AccountWalletProvider).Wallet()
 		results = append(results, &dataOut{
 			format:                data.format,
 			account:               fmt.Sprintf("%s/%s", validatorWallet.Name(), validatorAccount.Name()),
-			validatorPubKey:       validatorPubKey.Marshal(),
+			validatorPubKey:       &pubKey,
 			withdrawalCredentials: data.withdrawalCredentials,
 			amount:                data.amount,
-			signature:             sig,
+			signature:             &sig,
 			forkVersion:           data.forkVersion,
-			depositMessageRoot:    depositMessageRoot[:],
-			depositDataRoot:       depositDataRoot[:],
+			depositMessageRoot:    &depositMessageRoot,
+			depositDataRoot:       &depositDataRoot,
 		})
 	}
 	return results, nil

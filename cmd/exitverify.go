@@ -14,6 +14,7 @@
 package cmd
 
 import (
+	"bytes"
 	"context"
 	"encoding/hex"
 	"encoding/json"
@@ -22,11 +23,11 @@ import (
 	"os"
 	"strings"
 
+	eth2client "github.com/attestantio/go-eth2-client"
+	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
-	ethpb "github.com/prysmaticlabs/ethereumapis/eth/v1alpha1"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"github.com/wealdtech/ethdo/grpc"
 	"github.com/wealdtech/ethdo/util"
 	e2types "github.com/wealdtech/go-eth2-types/v2"
 	e2wtypes "github.com/wealdtech/go-eth2-wallet-types/v2"
@@ -43,8 +44,7 @@ var exitVerifyCmd = &cobra.Command{
 
 In quiet mode this will return 0 if the the exit is verified correctly, otherwise 1.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("timeout"))
-		defer cancel()
+		ctx := context.Background()
 
 		assert(viper.GetString("account") != "" || exitVerifyPubKey != "", "account or public key is required")
 		account, err := exitVerifyAccount(ctx)
@@ -55,23 +55,26 @@ In quiet mode this will return 0 if the the exit is verified correctly, otherwis
 		errCheck(err, "Failed to obtain exit data")
 
 		// Confirm signature is good.
-		err = connect()
-		errCheck(err, "Failed to obtain connection to Ethereum 2 beacon chain node")
-		genesisValidatorsRoot, err := grpc.FetchGenesisValidatorsRoot(eth2GRPCConn)
-		outputIf(debug, fmt.Sprintf("Genesis validators root is %#x", genesisValidatorsRoot))
-		errCheck(err, "Failed to obtain genesis validators root")
-		domain := e2types.Domain(e2types.DomainVoluntaryExit, data.ForkVersion, genesisValidatorsRoot)
-		exit := &ethpb.VoluntaryExit{
-			Epoch:          data.Epoch,
-			ValidatorIndex: data.ValidatorIndex,
+		eth2Client, err := util.ConnectToBeaconNode(ctx, viper.GetString("connection"), viper.GetDuration("timeout"), viper.GetBool("allow-insecure-connections"))
+		errCheck(err, "Failed to connect to Ethereum 2 beacon node")
+
+		genesis, err := eth2Client.(eth2client.GenesisProvider).Genesis(ctx)
+		errCheck(err, "Failed to obtain beacon chain genesis")
+
+		domain := e2types.Domain(e2types.DomainVoluntaryExit, data.ForkVersion[:], genesis.GenesisValidatorsRoot[:])
+		exit := &spec.VoluntaryExit{
+			Epoch:          data.Data.Message.Epoch,
+			ValidatorIndex: data.Data.Message.ValidatorIndex,
 		}
-		sig, err := e2types.BLSSignatureFromBytes(data.Signature)
+		sig, err := e2types.BLSSignatureFromBytes(data.Data.Signature[:])
 		errCheck(err, "Invalid signature")
 		verified, err := verifyStruct(account, exit, domain, sig)
 		errCheck(err, "Failed to verify voluntary exit")
 		assert(verified, "Voluntary exit failed to verify")
 
-		// TODO confirm fork version is valid (once we have a way of obtaining the current fork version).
+		fork, err := eth2Client.(eth2client.ForkProvider).Fork(ctx, "head")
+		errCheck(err, "Failed to obtain current fork")
+		assert(bytes.Equal(data.ForkVersion[:], fork.CurrentVersion[:]) || bytes.Equal(data.ForkVersion[:], fork.PreviousVersion[:]), "Exit is for an old fork version and is no longer valid")
 
 		outputIf(verbose, "Verified")
 		os.Exit(_exitSuccess)
@@ -79,7 +82,7 @@ In quiet mode this will return 0 if the the exit is verified correctly, otherwis
 }
 
 // obtainExitData obtains exit data from an input, could be JSON itself or a path to JSON.
-func obtainExitData(input string) (*validatorExitData, error) {
+func obtainExitData(input string) (*util.ValidatorExitData, error) {
 	var err error
 	var data []byte
 	// Input could be JSON or a path to JSON
@@ -93,7 +96,7 @@ func obtainExitData(input string) (*validatorExitData, error) {
 			return nil, errors.Wrap(err, "failed to find deposit data file")
 		}
 	}
-	exitData := &validatorExitData{}
+	exitData := &util.ValidatorExitData{}
 	err = json.Unmarshal(data, exitData)
 	if err != nil {
 		return nil, errors.Wrap(err, "data is not valid JSON")

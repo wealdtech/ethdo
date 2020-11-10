@@ -24,17 +24,6 @@ import (
 	e2wtypes "github.com/wealdtech/go-eth2-wallet-types/v2"
 )
 
-// signStruct signs an arbitrary structure.
-func signStruct(account e2wtypes.Account, data interface{}, domain []byte) (e2types.Signature, error) {
-	objRoot, err := ssz.HashTreeRoot(data)
-	outputIf(debug, fmt.Sprintf("Object root is %#x", objRoot))
-	if err != nil {
-		return nil, err
-	}
-
-	return signRoot(account, objRoot, domain)
-}
-
 // verifyStruct verifies the signature of an arbitrary structure.
 func verifyStruct(account e2wtypes.Account, data interface{}, domain []byte, signature e2types.Signature) (bool, error) {
 	objRoot, err := ssz.HashTreeRoot(data)

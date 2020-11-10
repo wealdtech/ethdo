@@ -14,22 +14,61 @@
 package depositdata
 
 import (
-	"encoding/hex"
-	"strings"
 	"testing"
 
+	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/stretchr/testify/require"
+	"github.com/wealdtech/ethdo/testutil"
 )
 
-func hexToBytes(input string) []byte {
-	res, err := hex.DecodeString(strings.TrimPrefix(input, "0x"))
-	if err != nil {
-		panic(err)
-	}
-	return res
-}
-
 func TestOutputJSON(t *testing.T) {
+	var validatorPubKey *spec.BLSPubKey
+	{
+		tmp := testutil.HexToPubKey("0xa99a76ed7796f7be22d5b7e85deeb7c5677e88e511e0b337618f8c4eb61349b4bf2d153f649f7b53359fe8b94a38e44c")
+		validatorPubKey = &tmp
+	}
+	var signature *spec.BLSSignature
+	{
+		tmp := testutil.HexToSignature("0xb7a757a4c506ac6ac5f2d23e065de7d00dc9f5a6a3f9610a8b60b65f166379139ae382c91ecbbf5c9fabc34b1cd2cf8f0211488d50d8754716d8e72e17c1a00b5d9b37cc73767946790ebe66cf9669abfc5c25c67e1e2d1c2e11429d149c25a2")
+		signature = &tmp
+	}
+	var forkVersion *spec.Version
+	{
+		tmp := testutil.HexToVersion("0x01020304")
+		forkVersion = &tmp
+	}
+	var depositDataRoot *spec.Root
+	{
+		tmp := testutil.HexToRoot("0x9e51b386f4271c18149dd0f73297a26a4a8c15c3622c44af79c92446f44a3554")
+		depositDataRoot = &tmp
+	}
+	var depositMessageRoot *spec.Root
+	{
+		tmp := testutil.HexToRoot("0x139b510ea7f2788ab82da1f427d6cbe1db147c15a053db738ad5500cd83754a6")
+		depositMessageRoot = &tmp
+	}
+
+	var validatorPubKey2 *spec.BLSPubKey
+	{
+		tmp := testutil.HexToPubKey("0xb89bebc699769726a318c8e9971bd3171297c61aea4a6578a7a4f94b547dcba5bac16a89108b6b6a1fe3695d1a874a0b")
+		validatorPubKey2 = &tmp
+	}
+	var signature2 *spec.BLSSignature
+	{
+		tmp := testutil.HexToSignature("0x911fe0766e8b79d711dde46bc2142eb51e35be99e5f7da505af9eaad85707bbb8013f0dea35e30403b3e57bb13054c1d0d389aceeba1d4160a148026212c7e017044e3ea69cd96fbd23b6aa9fd1e6f7e82494fbd5f8fc75856711a6b8998926e")
+		signature2 = &tmp
+	}
+	var depositDataRoot2 *spec.Root
+	{
+		tmp := testutil.HexToRoot("0x3b51670e9f266d44c879682a230d60f0d534c64ab25ee68700fe3adb17ddfcab")
+		depositDataRoot2 = &tmp
+	}
+	var depositMessageRoot2 *spec.Root
+	{
+		tmp := testutil.HexToRoot("0xbb4b6184b25873cdf430df3838c8d3e3d16cf3dc3b214e2f3ab7df9e6d5a9b52")
+		depositMessageRoot2 = &tmp
+	}
+
 	tests := []struct {
 		name    string
 		dataOut []*dataOut
@@ -52,13 +91,13 @@ func TestOutputJSON(t *testing.T) {
 			dataOut: []*dataOut{
 				{
 					format:                "json",
-					validatorPubKey:       hexToBytes("0xa99a76ed7796f7be22d5b7e85deeb7c5677e88e511e0b337618f8c4eb61349b4bf2d153f649f7b53359fe8b94a38e44c"),
-					withdrawalCredentials: hexToBytes("0x00fad2a6bfb0e7f1f0f45460944fbd8dfa7f37da06a4d13b3983cc90bb46963b"),
+					validatorPubKey:       validatorPubKey,
+					withdrawalCredentials: testutil.HexToBytes("0x00fad2a6bfb0e7f1f0f45460944fbd8dfa7f37da06a4d13b3983cc90bb46963b"),
 					amount:                32000000000,
-					signature:             hexToBytes("0xb7a757a4c506ac6ac5f2d23e065de7d00dc9f5a6a3f9610a8b60b65f166379139ae382c91ecbbf5c9fabc34b1cd2cf8f0211488d50d8754716d8e72e17c1a00b5d9b37cc73767946790ebe66cf9669abfc5c25c67e1e2d1c2e11429d149c25a2"),
-					forkVersion:           hexToBytes("0x01020304"),
-					depositDataRoot:       hexToBytes("0x9e51b386f4271c18149dd0f73297a26a4a8c15c3622c44af79c92446f44a3554"),
-					depositMessageRoot:    hexToBytes("0x139b510ea7f2788ab82da1f427d6cbe1db147c15a053db738ad5500cd83754a6"),
+					signature:             signature,
+					forkVersion:           forkVersion,
+					depositDataRoot:       depositDataRoot,
+					depositMessageRoot:    depositMessageRoot,
 				},
 			},
 			err: "missing account",
@@ -69,15 +108,15 @@ func TestOutputJSON(t *testing.T) {
 				{
 					format:                "json",
 					account:               "interop/00000",
-					withdrawalCredentials: hexToBytes("0x00fad2a6bfb0e7f1f0f45460944fbd8dfa7f37da06a4d13b3983cc90bb46963b"),
+					withdrawalCredentials: testutil.HexToBytes("0x00fad2a6bfb0e7f1f0f45460944fbd8dfa7f37da06a4d13b3983cc90bb46963b"),
 					amount:                32000000000,
-					signature:             hexToBytes("0xb7a757a4c506ac6ac5f2d23e065de7d00dc9f5a6a3f9610a8b60b65f166379139ae382c91ecbbf5c9fabc34b1cd2cf8f0211488d50d8754716d8e72e17c1a00b5d9b37cc73767946790ebe66cf9669abfc5c25c67e1e2d1c2e11429d149c25a2"),
-					forkVersion:           hexToBytes("0x01020304"),
-					depositDataRoot:       hexToBytes("0x9e51b386f4271c18149dd0f73297a26a4a8c15c3622c44af79c92446f44a3554"),
-					depositMessageRoot:    hexToBytes("0x139b510ea7f2788ab82da1f427d6cbe1db147c15a053db738ad5500cd83754a6"),
+					signature:             signature,
+					forkVersion:           forkVersion,
+					depositDataRoot:       depositDataRoot,
+					depositMessageRoot:    depositMessageRoot,
 				},
 			},
-			err: "validator public key must be 48 bytes",
+			err: "validator public key required",
 		},
 		{
 			name: "MissingWithdrawalCredentials",
@@ -85,12 +124,12 @@ func TestOutputJSON(t *testing.T) {
 				{
 					format:             "json",
 					account:            "interop/00000",
-					validatorPubKey:    hexToBytes("0xa99a76ed7796f7be22d5b7e85deeb7c5677e88e511e0b337618f8c4eb61349b4bf2d153f649f7b53359fe8b94a38e44c"),
+					validatorPubKey:    validatorPubKey,
 					amount:             32000000000,
-					signature:          hexToBytes("0xb7a757a4c506ac6ac5f2d23e065de7d00dc9f5a6a3f9610a8b60b65f166379139ae382c91ecbbf5c9fabc34b1cd2cf8f0211488d50d8754716d8e72e17c1a00b5d9b37cc73767946790ebe66cf9669abfc5c25c67e1e2d1c2e11429d149c25a2"),
-					forkVersion:        hexToBytes("0x01020304"),
-					depositDataRoot:    hexToBytes("0x9e51b386f4271c18149dd0f73297a26a4a8c15c3622c44af79c92446f44a3554"),
-					depositMessageRoot: hexToBytes("0x139b510ea7f2788ab82da1f427d6cbe1db147c15a053db738ad5500cd83754a6"),
+					signature:          signature,
+					forkVersion:        forkVersion,
+					depositDataRoot:    depositDataRoot,
+					depositMessageRoot: depositMessageRoot,
 				},
 			},
 			err: "withdrawal credentials must be 32 bytes",
@@ -101,15 +140,15 @@ func TestOutputJSON(t *testing.T) {
 				{
 					format:                "json",
 					account:               "interop/00000",
-					validatorPubKey:       hexToBytes("0xa99a76ed7796f7be22d5b7e85deeb7c5677e88e511e0b337618f8c4eb61349b4bf2d153f649f7b53359fe8b94a38e44c"),
-					withdrawalCredentials: hexToBytes("0x00fad2a6bfb0e7f1f0f45460944fbd8dfa7f37da06a4d13b3983cc90bb46963b"),
+					validatorPubKey:       validatorPubKey,
+					withdrawalCredentials: testutil.HexToBytes("0x00fad2a6bfb0e7f1f0f45460944fbd8dfa7f37da06a4d13b3983cc90bb46963b"),
 					amount:                32000000000,
-					forkVersion:           hexToBytes("0x01020304"),
-					depositDataRoot:       hexToBytes("0x9e51b386f4271c18149dd0f73297a26a4a8c15c3622c44af79c92446f44a3554"),
-					depositMessageRoot:    hexToBytes("0x139b510ea7f2788ab82da1f427d6cbe1db147c15a053db738ad5500cd83754a6"),
+					forkVersion:           forkVersion,
+					depositDataRoot:       depositDataRoot,
+					depositMessageRoot:    depositMessageRoot,
 				},
 			},
-			err: "signature must be 96 bytes",
+			err: "signature required",
 		},
 		{
 			name: "AmountMissing",
@@ -117,12 +156,12 @@ func TestOutputJSON(t *testing.T) {
 				{
 					format:                "json",
 					account:               "interop/00000",
-					validatorPubKey:       hexToBytes("0xa99a76ed7796f7be22d5b7e85deeb7c5677e88e511e0b337618f8c4eb61349b4bf2d153f649f7b53359fe8b94a38e44c"),
-					withdrawalCredentials: hexToBytes("0x00fad2a6bfb0e7f1f0f45460944fbd8dfa7f37da06a4d13b3983cc90bb46963b"),
-					signature:             hexToBytes("0xb7a757a4c506ac6ac5f2d23e065de7d00dc9f5a6a3f9610a8b60b65f166379139ae382c91ecbbf5c9fabc34b1cd2cf8f0211488d50d8754716d8e72e17c1a00b5d9b37cc73767946790ebe66cf9669abfc5c25c67e1e2d1c2e11429d149c25a2"),
-					forkVersion:           hexToBytes("0x01020304"),
-					depositDataRoot:       hexToBytes("0x9e51b386f4271c18149dd0f73297a26a4a8c15c3622c44af79c92446f44a3554"),
-					depositMessageRoot:    hexToBytes("0x139b510ea7f2788ab82da1f427d6cbe1db147c15a053db738ad5500cd83754a6"),
+					validatorPubKey:       validatorPubKey,
+					withdrawalCredentials: testutil.HexToBytes("0x00fad2a6bfb0e7f1f0f45460944fbd8dfa7f37da06a4d13b3983cc90bb46963b"),
+					signature:             signature,
+					forkVersion:           forkVersion,
+					depositDataRoot:       depositDataRoot,
+					depositMessageRoot:    depositMessageRoot,
 				},
 			},
 			err: "missing amount",
@@ -133,15 +172,15 @@ func TestOutputJSON(t *testing.T) {
 				{
 					format:                "json",
 					account:               "interop/00000",
-					validatorPubKey:       hexToBytes("0xa99a76ed7796f7be22d5b7e85deeb7c5677e88e511e0b337618f8c4eb61349b4bf2d153f649f7b53359fe8b94a38e44c"),
-					withdrawalCredentials: hexToBytes("0x00fad2a6bfb0e7f1f0f45460944fbd8dfa7f37da06a4d13b3983cc90bb46963b"),
+					validatorPubKey:       validatorPubKey,
+					withdrawalCredentials: testutil.HexToBytes("0x00fad2a6bfb0e7f1f0f45460944fbd8dfa7f37da06a4d13b3983cc90bb46963b"),
 					amount:                32000000000,
-					signature:             hexToBytes("0xb7a757a4c506ac6ac5f2d23e065de7d00dc9f5a6a3f9610a8b60b65f166379139ae382c91ecbbf5c9fabc34b1cd2cf8f0211488d50d8754716d8e72e17c1a00b5d9b37cc73767946790ebe66cf9669abfc5c25c67e1e2d1c2e11429d149c25a2"),
-					forkVersion:           hexToBytes("0x01020304"),
-					depositMessageRoot:    hexToBytes("0x139b510ea7f2788ab82da1f427d6cbe1db147c15a053db738ad5500cd83754a6"),
+					signature:             signature,
+					forkVersion:           forkVersion,
+					depositMessageRoot:    depositMessageRoot,
 				},
 			},
-			err: "deposit data root must be 32 bytes",
+			err: "deposit data root required",
 		},
 		{
 			name: "Single",
@@ -149,13 +188,13 @@ func TestOutputJSON(t *testing.T) {
 				{
 					format:                "json",
 					account:               "interop/00000",
-					validatorPubKey:       hexToBytes("0xa99a76ed7796f7be22d5b7e85deeb7c5677e88e511e0b337618f8c4eb61349b4bf2d153f649f7b53359fe8b94a38e44c"),
-					withdrawalCredentials: hexToBytes("0x00fad2a6bfb0e7f1f0f45460944fbd8dfa7f37da06a4d13b3983cc90bb46963b"),
+					validatorPubKey:       validatorPubKey,
+					withdrawalCredentials: testutil.HexToBytes("0x00fad2a6bfb0e7f1f0f45460944fbd8dfa7f37da06a4d13b3983cc90bb46963b"),
 					amount:                32000000000,
-					signature:             hexToBytes("0xb7a757a4c506ac6ac5f2d23e065de7d00dc9f5a6a3f9610a8b60b65f166379139ae382c91ecbbf5c9fabc34b1cd2cf8f0211488d50d8754716d8e72e17c1a00b5d9b37cc73767946790ebe66cf9669abfc5c25c67e1e2d1c2e11429d149c25a2"),
-					forkVersion:           hexToBytes("0x01020304"),
-					depositDataRoot:       hexToBytes("0x9e51b386f4271c18149dd0f73297a26a4a8c15c3622c44af79c92446f44a3554"),
-					depositMessageRoot:    hexToBytes("0x139b510ea7f2788ab82da1f427d6cbe1db147c15a053db738ad5500cd83754a6"),
+					signature:             signature,
+					forkVersion:           forkVersion,
+					depositDataRoot:       depositDataRoot,
+					depositMessageRoot:    depositMessageRoot,
 				},
 			},
 			res: `[{"name":"Deposit for interop/00000","account":"interop/00000","pubkey":"0xa99a76ed7796f7be22d5b7e85deeb7c5677e88e511e0b337618f8c4eb61349b4bf2d153f649f7b53359fe8b94a38e44c","withdrawal_credentials":"0x00fad2a6bfb0e7f1f0f45460944fbd8dfa7f37da06a4d13b3983cc90bb46963b","signature":"0xb7a757a4c506ac6ac5f2d23e065de7d00dc9f5a6a3f9610a8b60b65f166379139ae382c91ecbbf5c9fabc34b1cd2cf8f0211488d50d8754716d8e72e17c1a00b5d9b37cc73767946790ebe66cf9669abfc5c25c67e1e2d1c2e11429d149c25a2","value":32000000000,"deposit_data_root":"0x9e51b386f4271c18149dd0f73297a26a4a8c15c3622c44af79c92446f44a3554","version":2}]`,
@@ -166,24 +205,24 @@ func TestOutputJSON(t *testing.T) {
 				{
 					format:                "json",
 					account:               "interop/00000",
-					validatorPubKey:       hexToBytes("0xa99a76ed7796f7be22d5b7e85deeb7c5677e88e511e0b337618f8c4eb61349b4bf2d153f649f7b53359fe8b94a38e44c"),
-					withdrawalCredentials: hexToBytes("0x00fad2a6bfb0e7f1f0f45460944fbd8dfa7f37da06a4d13b3983cc90bb46963b"),
+					validatorPubKey:       validatorPubKey,
+					withdrawalCredentials: testutil.HexToBytes("0x00fad2a6bfb0e7f1f0f45460944fbd8dfa7f37da06a4d13b3983cc90bb46963b"),
 					amount:                32000000000,
-					signature:             hexToBytes("0xb7a757a4c506ac6ac5f2d23e065de7d00dc9f5a6a3f9610a8b60b65f166379139ae382c91ecbbf5c9fabc34b1cd2cf8f0211488d50d8754716d8e72e17c1a00b5d9b37cc73767946790ebe66cf9669abfc5c25c67e1e2d1c2e11429d149c25a2"),
-					forkVersion:           hexToBytes("0x01020304"),
-					depositDataRoot:       hexToBytes("0x9e51b386f4271c18149dd0f73297a26a4a8c15c3622c44af79c92446f44a3554"),
-					depositMessageRoot:    hexToBytes("0x139b510ea7f2788ab82da1f427d6cbe1db147c15a053db738ad5500cd83754a6"),
+					signature:             signature,
+					forkVersion:           forkVersion,
+					depositDataRoot:       depositDataRoot,
+					depositMessageRoot:    depositMessageRoot,
 				},
 				{
 					format:                "json",
 					account:               "interop/00001",
-					validatorPubKey:       hexToBytes("0xb89bebc699769726a318c8e9971bd3171297c61aea4a6578a7a4f94b547dcba5bac16a89108b6b6a1fe3695d1a874a0b"),
-					withdrawalCredentials: hexToBytes("0x00ec7ef7780c9d151597924036262dd28dc60e1228f4da6fecf9d402cb3f3594"),
+					validatorPubKey:       validatorPubKey2,
+					withdrawalCredentials: testutil.HexToBytes("0x00ec7ef7780c9d151597924036262dd28dc60e1228f4da6fecf9d402cb3f3594"),
 					amount:                32000000000,
-					signature:             hexToBytes("0x911fe0766e8b79d711dde46bc2142eb51e35be99e5f7da505af9eaad85707bbb8013f0dea35e30403b3e57bb13054c1d0d389aceeba1d4160a148026212c7e017044e3ea69cd96fbd23b6aa9fd1e6f7e82494fbd5f8fc75856711a6b8998926e"),
-					forkVersion:           hexToBytes("0x01020304"),
-					depositDataRoot:       hexToBytes("0x3b51670e9f266d44c879682a230d60f0d534c64ab25ee68700fe3adb17ddfcab"),
-					depositMessageRoot:    hexToBytes("0xbb4b6184b25873cdf430df3838c8d3e3d16cf3dc3b214e2f3ab7df9e6d5a9b52"),
+					signature:             signature2,
+					forkVersion:           forkVersion,
+					depositDataRoot:       depositDataRoot2,
+					depositMessageRoot:    depositMessageRoot2,
 				},
 			},
 			res: `[{"name":"Deposit for interop/00000","account":"interop/00000","pubkey":"0xa99a76ed7796f7be22d5b7e85deeb7c5677e88e511e0b337618f8c4eb61349b4bf2d153f649f7b53359fe8b94a38e44c","withdrawal_credentials":"0x00fad2a6bfb0e7f1f0f45460944fbd8dfa7f37da06a4d13b3983cc90bb46963b","signature":"0xb7a757a4c506ac6ac5f2d23e065de7d00dc9f5a6a3f9610a8b60b65f166379139ae382c91ecbbf5c9fabc34b1cd2cf8f0211488d50d8754716d8e72e17c1a00b5d9b37cc73767946790ebe66cf9669abfc5c25c67e1e2d1c2e11429d149c25a2","value":32000000000,"deposit_data_root":"0x9e51b386f4271c18149dd0f73297a26a4a8c15c3622c44af79c92446f44a3554","version":2},{"name":"Deposit for interop/00001","account":"interop/00001","pubkey":"0xb89bebc699769726a318c8e9971bd3171297c61aea4a6578a7a4f94b547dcba5bac16a89108b6b6a1fe3695d1a874a0b","withdrawal_credentials":"0x00ec7ef7780c9d151597924036262dd28dc60e1228f4da6fecf9d402cb3f3594","signature":"0x911fe0766e8b79d711dde46bc2142eb51e35be99e5f7da505af9eaad85707bbb8013f0dea35e30403b3e57bb13054c1d0d389aceeba1d4160a148026212c7e017044e3ea69cd96fbd23b6aa9fd1e6f7e82494fbd5f8fc75856711a6b8998926e","value":32000000000,"deposit_data_root":"0x3b51670e9f266d44c879682a230d60f0d534c64ab25ee68700fe3adb17ddfcab","version":2}]`,
@@ -204,6 +243,53 @@ func TestOutputJSON(t *testing.T) {
 }
 
 func TestOutputLaunchpad(t *testing.T) {
+	var validatorPubKey *spec.BLSPubKey
+	{
+		tmp := testutil.HexToPubKey("0xa99a76ed7796f7be22d5b7e85deeb7c5677e88e511e0b337618f8c4eb61349b4bf2d153f649f7b53359fe8b94a38e44c")
+		validatorPubKey = &tmp
+	}
+	var signature *spec.BLSSignature
+	{
+		tmp := testutil.HexToSignature("0xb7a757a4c506ac6ac5f2d23e065de7d00dc9f5a6a3f9610a8b60b65f166379139ae382c91ecbbf5c9fabc34b1cd2cf8f0211488d50d8754716d8e72e17c1a00b5d9b37cc73767946790ebe66cf9669abfc5c25c67e1e2d1c2e11429d149c25a2")
+		signature = &tmp
+	}
+	var forkVersion *spec.Version
+	{
+		tmp := testutil.HexToVersion("0x01020304")
+		forkVersion = &tmp
+	}
+	var depositDataRoot *spec.Root
+	{
+		tmp := testutil.HexToRoot("0x9e51b386f4271c18149dd0f73297a26a4a8c15c3622c44af79c92446f44a3554")
+		depositDataRoot = &tmp
+	}
+	var depositMessageRoot *spec.Root
+	{
+		tmp := testutil.HexToRoot("0x139b510ea7f2788ab82da1f427d6cbe1db147c15a053db738ad5500cd83754a6")
+		depositMessageRoot = &tmp
+	}
+
+	var validatorPubKey2 *spec.BLSPubKey
+	{
+		tmp := testutil.HexToPubKey("0xb89bebc699769726a318c8e9971bd3171297c61aea4a6578a7a4f94b547dcba5bac16a89108b6b6a1fe3695d1a874a0b")
+		validatorPubKey2 = &tmp
+	}
+	var signature2 *spec.BLSSignature
+	{
+		tmp := testutil.HexToSignature("0x911fe0766e8b79d711dde46bc2142eb51e35be99e5f7da505af9eaad85707bbb8013f0dea35e30403b3e57bb13054c1d0d389aceeba1d4160a148026212c7e017044e3ea69cd96fbd23b6aa9fd1e6f7e82494fbd5f8fc75856711a6b8998926e")
+		signature2 = &tmp
+	}
+	var depositDataRoot2 *spec.Root
+	{
+		tmp := testutil.HexToRoot("0x3b51670e9f266d44c879682a230d60f0d534c64ab25ee68700fe3adb17ddfcab")
+		depositDataRoot2 = &tmp
+	}
+	var depositMessageRoot2 *spec.Root
+	{
+		tmp := testutil.HexToRoot("0xbb4b6184b25873cdf430df3838c8d3e3d16cf3dc3b214e2f3ab7df9e6d5a9b52")
+		depositMessageRoot2 = &tmp
+	}
+
 	tests := []struct {
 		name    string
 		dataOut []*dataOut
@@ -227,15 +313,15 @@ func TestOutputLaunchpad(t *testing.T) {
 				{
 					format:                "launchpad",
 					account:               "interop/00000",
-					withdrawalCredentials: hexToBytes("0x00fad2a6bfb0e7f1f0f45460944fbd8dfa7f37da06a4d13b3983cc90bb46963b"),
+					withdrawalCredentials: testutil.HexToBytes("0x00fad2a6bfb0e7f1f0f45460944fbd8dfa7f37da06a4d13b3983cc90bb46963b"),
 					amount:                32000000000,
-					signature:             hexToBytes("0xb7a757a4c506ac6ac5f2d23e065de7d00dc9f5a6a3f9610a8b60b65f166379139ae382c91ecbbf5c9fabc34b1cd2cf8f0211488d50d8754716d8e72e17c1a00b5d9b37cc73767946790ebe66cf9669abfc5c25c67e1e2d1c2e11429d149c25a2"),
-					forkVersion:           hexToBytes("0x01020304"),
-					depositDataRoot:       hexToBytes("0x9e51b386f4271c18149dd0f73297a26a4a8c15c3622c44af79c92446f44a3554"),
-					depositMessageRoot:    hexToBytes("0x139b510ea7f2788ab82da1f427d6cbe1db147c15a053db738ad5500cd83754a6"),
+					signature:             signature,
+					forkVersion:           forkVersion,
+					depositDataRoot:       depositDataRoot,
+					depositMessageRoot:    depositMessageRoot,
 				},
 			},
-			err: "validator public key must be 48 bytes",
+			err: "validator public key required",
 		},
 		{
 			name: "MissingWithdrawalCredentials",
@@ -243,12 +329,12 @@ func TestOutputLaunchpad(t *testing.T) {
 				{
 					format:             "launchpad",
 					account:            "interop/00000",
-					validatorPubKey:    hexToBytes("0xa99a76ed7796f7be22d5b7e85deeb7c5677e88e511e0b337618f8c4eb61349b4bf2d153f649f7b53359fe8b94a38e44c"),
+					validatorPubKey:    validatorPubKey,
 					amount:             32000000000,
-					signature:          hexToBytes("0xb7a757a4c506ac6ac5f2d23e065de7d00dc9f5a6a3f9610a8b60b65f166379139ae382c91ecbbf5c9fabc34b1cd2cf8f0211488d50d8754716d8e72e17c1a00b5d9b37cc73767946790ebe66cf9669abfc5c25c67e1e2d1c2e11429d149c25a2"),
-					forkVersion:        hexToBytes("0x01020304"),
-					depositDataRoot:    hexToBytes("0x9e51b386f4271c18149dd0f73297a26a4a8c15c3622c44af79c92446f44a3554"),
-					depositMessageRoot: hexToBytes("0x139b510ea7f2788ab82da1f427d6cbe1db147c15a053db738ad5500cd83754a6"),
+					signature:          signature,
+					forkVersion:        forkVersion,
+					depositDataRoot:    depositDataRoot,
+					depositMessageRoot: depositMessageRoot,
 				},
 			},
 			err: "withdrawal credentials must be 32 bytes",
@@ -259,15 +345,15 @@ func TestOutputLaunchpad(t *testing.T) {
 				{
 					format:                "launchpad",
 					account:               "interop/00000",
-					validatorPubKey:       hexToBytes("0xa99a76ed7796f7be22d5b7e85deeb7c5677e88e511e0b337618f8c4eb61349b4bf2d153f649f7b53359fe8b94a38e44c"),
-					withdrawalCredentials: hexToBytes("0x00fad2a6bfb0e7f1f0f45460944fbd8dfa7f37da06a4d13b3983cc90bb46963b"),
+					validatorPubKey:       validatorPubKey,
+					withdrawalCredentials: testutil.HexToBytes("0x00fad2a6bfb0e7f1f0f45460944fbd8dfa7f37da06a4d13b3983cc90bb46963b"),
 					amount:                32000000000,
-					forkVersion:           hexToBytes("0x01020304"),
-					depositDataRoot:       hexToBytes("0x9e51b386f4271c18149dd0f73297a26a4a8c15c3622c44af79c92446f44a3554"),
-					depositMessageRoot:    hexToBytes("0x139b510ea7f2788ab82da1f427d6cbe1db147c15a053db738ad5500cd83754a6"),
+					forkVersion:           forkVersion,
+					depositDataRoot:       depositDataRoot,
+					depositMessageRoot:    depositMessageRoot,
 				},
 			},
-			err: "signature must be 96 bytes",
+			err: "signature required",
 		},
 		{
 			name: "AmountMissing",
@@ -275,12 +361,12 @@ func TestOutputLaunchpad(t *testing.T) {
 				{
 					format:                "launchpad",
 					account:               "interop/00000",
-					validatorPubKey:       hexToBytes("0xa99a76ed7796f7be22d5b7e85deeb7c5677e88e511e0b337618f8c4eb61349b4bf2d153f649f7b53359fe8b94a38e44c"),
-					withdrawalCredentials: hexToBytes("0x00fad2a6bfb0e7f1f0f45460944fbd8dfa7f37da06a4d13b3983cc90bb46963b"),
-					signature:             hexToBytes("0xb7a757a4c506ac6ac5f2d23e065de7d00dc9f5a6a3f9610a8b60b65f166379139ae382c91ecbbf5c9fabc34b1cd2cf8f0211488d50d8754716d8e72e17c1a00b5d9b37cc73767946790ebe66cf9669abfc5c25c67e1e2d1c2e11429d149c25a2"),
-					forkVersion:           hexToBytes("0x01020304"),
-					depositDataRoot:       hexToBytes("0x9e51b386f4271c18149dd0f73297a26a4a8c15c3622c44af79c92446f44a3554"),
-					depositMessageRoot:    hexToBytes("0x139b510ea7f2788ab82da1f427d6cbe1db147c15a053db738ad5500cd83754a6"),
+					validatorPubKey:       validatorPubKey,
+					withdrawalCredentials: testutil.HexToBytes("0x00fad2a6bfb0e7f1f0f45460944fbd8dfa7f37da06a4d13b3983cc90bb46963b"),
+					signature:             signature,
+					forkVersion:           forkVersion,
+					depositDataRoot:       depositDataRoot,
+					depositMessageRoot:    depositMessageRoot,
 				},
 			},
 			err: "missing amount",
@@ -291,15 +377,15 @@ func TestOutputLaunchpad(t *testing.T) {
 				{
 					format:                "launchpad",
 					account:               "interop/00000",
-					validatorPubKey:       hexToBytes("0xa99a76ed7796f7be22d5b7e85deeb7c5677e88e511e0b337618f8c4eb61349b4bf2d153f649f7b53359fe8b94a38e44c"),
-					withdrawalCredentials: hexToBytes("0x00fad2a6bfb0e7f1f0f45460944fbd8dfa7f37da06a4d13b3983cc90bb46963b"),
+					validatorPubKey:       validatorPubKey,
+					withdrawalCredentials: testutil.HexToBytes("0x00fad2a6bfb0e7f1f0f45460944fbd8dfa7f37da06a4d13b3983cc90bb46963b"),
 					amount:                32000000000,
-					signature:             hexToBytes("0xb7a757a4c506ac6ac5f2d23e065de7d00dc9f5a6a3f9610a8b60b65f166379139ae382c91ecbbf5c9fabc34b1cd2cf8f0211488d50d8754716d8e72e17c1a00b5d9b37cc73767946790ebe66cf9669abfc5c25c67e1e2d1c2e11429d149c25a2"),
-					forkVersion:           hexToBytes("0x01020304"),
-					depositMessageRoot:    hexToBytes("0x139b510ea7f2788ab82da1f427d6cbe1db147c15a053db738ad5500cd83754a6"),
+					signature:             signature,
+					forkVersion:           forkVersion,
+					depositMessageRoot:    depositMessageRoot,
 				},
 			},
-			err: "deposit data root must be 32 bytes",
+			err: "deposit data root required",
 		},
 		{
 			name: "DepositMessageRootMissing",
@@ -307,15 +393,15 @@ func TestOutputLaunchpad(t *testing.T) {
 				{
 					format:                "launchpad",
 					account:               "interop/00000",
-					validatorPubKey:       hexToBytes("0xa99a76ed7796f7be22d5b7e85deeb7c5677e88e511e0b337618f8c4eb61349b4bf2d153f649f7b53359fe8b94a38e44c"),
-					withdrawalCredentials: hexToBytes("0x00fad2a6bfb0e7f1f0f45460944fbd8dfa7f37da06a4d13b3983cc90bb46963b"),
+					validatorPubKey:       validatorPubKey,
+					withdrawalCredentials: testutil.HexToBytes("0x00fad2a6bfb0e7f1f0f45460944fbd8dfa7f37da06a4d13b3983cc90bb46963b"),
 					amount:                32000000000,
-					signature:             hexToBytes("0xb7a757a4c506ac6ac5f2d23e065de7d00dc9f5a6a3f9610a8b60b65f166379139ae382c91ecbbf5c9fabc34b1cd2cf8f0211488d50d8754716d8e72e17c1a00b5d9b37cc73767946790ebe66cf9669abfc5c25c67e1e2d1c2e11429d149c25a2"),
-					forkVersion:           hexToBytes("0x01020304"),
-					depositDataRoot:       hexToBytes("0x9e51b386f4271c18149dd0f73297a26a4a8c15c3622c44af79c92446f44a3554"),
+					signature:             signature,
+					forkVersion:           forkVersion,
+					depositDataRoot:       depositDataRoot,
 				},
 			},
-			err: "deposit message root must be 32 bytes",
+			err: "deposit message root required",
 		},
 		{
 			name: "Single",
@@ -323,13 +409,13 @@ func TestOutputLaunchpad(t *testing.T) {
 				{
 					format:                "launchpad",
 					account:               "interop/00000",
-					validatorPubKey:       hexToBytes("0xa99a76ed7796f7be22d5b7e85deeb7c5677e88e511e0b337618f8c4eb61349b4bf2d153f649f7b53359fe8b94a38e44c"),
-					withdrawalCredentials: hexToBytes("0x00fad2a6bfb0e7f1f0f45460944fbd8dfa7f37da06a4d13b3983cc90bb46963b"),
+					validatorPubKey:       validatorPubKey,
+					withdrawalCredentials: testutil.HexToBytes("0x00fad2a6bfb0e7f1f0f45460944fbd8dfa7f37da06a4d13b3983cc90bb46963b"),
 					amount:                32000000000,
-					signature:             hexToBytes("0xb7a757a4c506ac6ac5f2d23e065de7d00dc9f5a6a3f9610a8b60b65f166379139ae382c91ecbbf5c9fabc34b1cd2cf8f0211488d50d8754716d8e72e17c1a00b5d9b37cc73767946790ebe66cf9669abfc5c25c67e1e2d1c2e11429d149c25a2"),
-					forkVersion:           hexToBytes("0x01020304"),
-					depositDataRoot:       hexToBytes("0x9e51b386f4271c18149dd0f73297a26a4a8c15c3622c44af79c92446f44a3554"),
-					depositMessageRoot:    hexToBytes("0x139b510ea7f2788ab82da1f427d6cbe1db147c15a053db738ad5500cd83754a6"),
+					signature:             signature,
+					forkVersion:           forkVersion,
+					depositDataRoot:       depositDataRoot,
+					depositMessageRoot:    depositMessageRoot,
 				},
 			},
 			res: `[{"pubkey":"a99a76ed7796f7be22d5b7e85deeb7c5677e88e511e0b337618f8c4eb61349b4bf2d153f649f7b53359fe8b94a38e44c","withdrawal_credentials":"00fad2a6bfb0e7f1f0f45460944fbd8dfa7f37da06a4d13b3983cc90bb46963b","amount":32000000000,"signature":"b7a757a4c506ac6ac5f2d23e065de7d00dc9f5a6a3f9610a8b60b65f166379139ae382c91ecbbf5c9fabc34b1cd2cf8f0211488d50d8754716d8e72e17c1a00b5d9b37cc73767946790ebe66cf9669abfc5c25c67e1e2d1c2e11429d149c25a2","deposit_message_root":"139b510ea7f2788ab82da1f427d6cbe1db147c15a053db738ad5500cd83754a6","deposit_data_root":"9e51b386f4271c18149dd0f73297a26a4a8c15c3622c44af79c92446f44a3554","fork_version":"01020304"}]`,
@@ -340,24 +426,24 @@ func TestOutputLaunchpad(t *testing.T) {
 				{
 					format:                "launchpad",
 					account:               "interop/00000",
-					validatorPubKey:       hexToBytes("0xa99a76ed7796f7be22d5b7e85deeb7c5677e88e511e0b337618f8c4eb61349b4bf2d153f649f7b53359fe8b94a38e44c"),
-					withdrawalCredentials: hexToBytes("0x00fad2a6bfb0e7f1f0f45460944fbd8dfa7f37da06a4d13b3983cc90bb46963b"),
+					validatorPubKey:       validatorPubKey,
+					withdrawalCredentials: testutil.HexToBytes("0x00fad2a6bfb0e7f1f0f45460944fbd8dfa7f37da06a4d13b3983cc90bb46963b"),
 					amount:                32000000000,
-					signature:             hexToBytes("0xb7a757a4c506ac6ac5f2d23e065de7d00dc9f5a6a3f9610a8b60b65f166379139ae382c91ecbbf5c9fabc34b1cd2cf8f0211488d50d8754716d8e72e17c1a00b5d9b37cc73767946790ebe66cf9669abfc5c25c67e1e2d1c2e11429d149c25a2"),
-					forkVersion:           hexToBytes("0x01020304"),
-					depositDataRoot:       hexToBytes("0x9e51b386f4271c18149dd0f73297a26a4a8c15c3622c44af79c92446f44a3554"),
-					depositMessageRoot:    hexToBytes("0x139b510ea7f2788ab82da1f427d6cbe1db147c15a053db738ad5500cd83754a6"),
+					signature:             signature,
+					forkVersion:           forkVersion,
+					depositDataRoot:       depositDataRoot,
+					depositMessageRoot:    depositMessageRoot,
 				},
 				{
 					format:                "launchpad",
 					account:               "interop/00001",
-					validatorPubKey:       hexToBytes("0xb89bebc699769726a318c8e9971bd3171297c61aea4a6578a7a4f94b547dcba5bac16a89108b6b6a1fe3695d1a874a0b"),
-					withdrawalCredentials: hexToBytes("0x00ec7ef7780c9d151597924036262dd28dc60e1228f4da6fecf9d402cb3f3594"),
+					validatorPubKey:       validatorPubKey2,
+					withdrawalCredentials: testutil.HexToBytes("0x00ec7ef7780c9d151597924036262dd28dc60e1228f4da6fecf9d402cb3f3594"),
 					amount:                32000000000,
-					signature:             hexToBytes("0x911fe0766e8b79d711dde46bc2142eb51e35be99e5f7da505af9eaad85707bbb8013f0dea35e30403b3e57bb13054c1d0d389aceeba1d4160a148026212c7e017044e3ea69cd96fbd23b6aa9fd1e6f7e82494fbd5f8fc75856711a6b8998926e"),
-					forkVersion:           hexToBytes("0x01020304"),
-					depositDataRoot:       hexToBytes("0x3b51670e9f266d44c879682a230d60f0d534c64ab25ee68700fe3adb17ddfcab"),
-					depositMessageRoot:    hexToBytes("0xbb4b6184b25873cdf430df3838c8d3e3d16cf3dc3b214e2f3ab7df9e6d5a9b52"),
+					signature:             signature2,
+					forkVersion:           forkVersion,
+					depositDataRoot:       depositDataRoot2,
+					depositMessageRoot:    depositMessageRoot2,
 				},
 			},
 			res: `[{"pubkey":"a99a76ed7796f7be22d5b7e85deeb7c5677e88e511e0b337618f8c4eb61349b4bf2d153f649f7b53359fe8b94a38e44c","withdrawal_credentials":"00fad2a6bfb0e7f1f0f45460944fbd8dfa7f37da06a4d13b3983cc90bb46963b","amount":32000000000,"signature":"b7a757a4c506ac6ac5f2d23e065de7d00dc9f5a6a3f9610a8b60b65f166379139ae382c91ecbbf5c9fabc34b1cd2cf8f0211488d50d8754716d8e72e17c1a00b5d9b37cc73767946790ebe66cf9669abfc5c25c67e1e2d1c2e11429d149c25a2","deposit_message_root":"139b510ea7f2788ab82da1f427d6cbe1db147c15a053db738ad5500cd83754a6","deposit_data_root":"9e51b386f4271c18149dd0f73297a26a4a8c15c3622c44af79c92446f44a3554","fork_version":"01020304"},{"pubkey":"b89bebc699769726a318c8e9971bd3171297c61aea4a6578a7a4f94b547dcba5bac16a89108b6b6a1fe3695d1a874a0b","withdrawal_credentials":"00ec7ef7780c9d151597924036262dd28dc60e1228f4da6fecf9d402cb3f3594","amount":32000000000,"signature":"911fe0766e8b79d711dde46bc2142eb51e35be99e5f7da505af9eaad85707bbb8013f0dea35e30403b3e57bb13054c1d0d389aceeba1d4160a148026212c7e017044e3ea69cd96fbd23b6aa9fd1e6f7e82494fbd5f8fc75856711a6b8998926e","deposit_message_root":"bb4b6184b25873cdf430df3838c8d3e3d16cf3dc3b214e2f3ab7df9e6d5a9b52","deposit_data_root":"3b51670e9f266d44c879682a230d60f0d534c64ab25ee68700fe3adb17ddfcab","fork_version":"01020304"}]`,
@@ -378,6 +464,53 @@ func TestOutputLaunchpad(t *testing.T) {
 }
 
 func TestOutputRaw(t *testing.T) {
+	var validatorPubKey *spec.BLSPubKey
+	{
+		tmp := testutil.HexToPubKey("0xa99a76ed7796f7be22d5b7e85deeb7c5677e88e511e0b337618f8c4eb61349b4bf2d153f649f7b53359fe8b94a38e44c")
+		validatorPubKey = &tmp
+	}
+	var signature *spec.BLSSignature
+	{
+		tmp := testutil.HexToSignature("0xb7a757a4c506ac6ac5f2d23e065de7d00dc9f5a6a3f9610a8b60b65f166379139ae382c91ecbbf5c9fabc34b1cd2cf8f0211488d50d8754716d8e72e17c1a00b5d9b37cc73767946790ebe66cf9669abfc5c25c67e1e2d1c2e11429d149c25a2")
+		signature = &tmp
+	}
+	var forkVersion *spec.Version
+	{
+		tmp := testutil.HexToVersion("0x01020304")
+		forkVersion = &tmp
+	}
+	var depositDataRoot *spec.Root
+	{
+		tmp := testutil.HexToRoot("0x9e51b386f4271c18149dd0f73297a26a4a8c15c3622c44af79c92446f44a3554")
+		depositDataRoot = &tmp
+	}
+	var depositMessageRoot *spec.Root
+	{
+		tmp := testutil.HexToRoot("0x139b510ea7f2788ab82da1f427d6cbe1db147c15a053db738ad5500cd83754a6")
+		depositMessageRoot = &tmp
+	}
+
+	var validatorPubKey2 *spec.BLSPubKey
+	{
+		tmp := testutil.HexToPubKey("0xb89bebc699769726a318c8e9971bd3171297c61aea4a6578a7a4f94b547dcba5bac16a89108b6b6a1fe3695d1a874a0b")
+		validatorPubKey2 = &tmp
+	}
+	var signature2 *spec.BLSSignature
+	{
+		tmp := testutil.HexToSignature("0x911fe0766e8b79d711dde46bc2142eb51e35be99e5f7da505af9eaad85707bbb8013f0dea35e30403b3e57bb13054c1d0d389aceeba1d4160a148026212c7e017044e3ea69cd96fbd23b6aa9fd1e6f7e82494fbd5f8fc75856711a6b8998926e")
+		signature2 = &tmp
+	}
+	var depositDataRoot2 *spec.Root
+	{
+		tmp := testutil.HexToRoot("0x3b51670e9f266d44c879682a230d60f0d534c64ab25ee68700fe3adb17ddfcab")
+		depositDataRoot2 = &tmp
+	}
+	var depositMessageRoot2 *spec.Root
+	{
+		tmp := testutil.HexToRoot("0xbb4b6184b25873cdf430df3838c8d3e3d16cf3dc3b214e2f3ab7df9e6d5a9b52")
+		depositMessageRoot2 = &tmp
+	}
+
 	tests := []struct {
 		name    string
 		dataOut []*dataOut
@@ -401,15 +534,15 @@ func TestOutputRaw(t *testing.T) {
 				{
 					format:                "raw",
 					account:               "interop/00000",
-					withdrawalCredentials: hexToBytes("0x00fad2a6bfb0e7f1f0f45460944fbd8dfa7f37da06a4d13b3983cc90bb46963b"),
+					withdrawalCredentials: testutil.HexToBytes("0x00fad2a6bfb0e7f1f0f45460944fbd8dfa7f37da06a4d13b3983cc90bb46963b"),
 					amount:                32000000000,
-					signature:             hexToBytes("0xb7a757a4c506ac6ac5f2d23e065de7d00dc9f5a6a3f9610a8b60b65f166379139ae382c91ecbbf5c9fabc34b1cd2cf8f0211488d50d8754716d8e72e17c1a00b5d9b37cc73767946790ebe66cf9669abfc5c25c67e1e2d1c2e11429d149c25a2"),
-					forkVersion:           hexToBytes("0x01020304"),
-					depositDataRoot:       hexToBytes("0x9e51b386f4271c18149dd0f73297a26a4a8c15c3622c44af79c92446f44a3554"),
-					depositMessageRoot:    hexToBytes("0x139b510ea7f2788ab82da1f427d6cbe1db147c15a053db738ad5500cd83754a6"),
+					signature:             signature,
+					forkVersion:           forkVersion,
+					depositDataRoot:       depositDataRoot,
+					depositMessageRoot:    depositMessageRoot,
 				},
 			},
-			err: "validator public key must be 48 bytes",
+			err: "validator public key required",
 		},
 		{
 			name: "MissingWithdrawalCredentials",
@@ -417,12 +550,12 @@ func TestOutputRaw(t *testing.T) {
 				{
 					format:             "raw",
 					account:            "interop/00000",
-					validatorPubKey:    hexToBytes("0xa99a76ed7796f7be22d5b7e85deeb7c5677e88e511e0b337618f8c4eb61349b4bf2d153f649f7b53359fe8b94a38e44c"),
+					validatorPubKey:    validatorPubKey,
 					amount:             32000000000,
-					signature:          hexToBytes("0xb7a757a4c506ac6ac5f2d23e065de7d00dc9f5a6a3f9610a8b60b65f166379139ae382c91ecbbf5c9fabc34b1cd2cf8f0211488d50d8754716d8e72e17c1a00b5d9b37cc73767946790ebe66cf9669abfc5c25c67e1e2d1c2e11429d149c25a2"),
-					forkVersion:        hexToBytes("0x01020304"),
-					depositDataRoot:    hexToBytes("0x9e51b386f4271c18149dd0f73297a26a4a8c15c3622c44af79c92446f44a3554"),
-					depositMessageRoot: hexToBytes("0x139b510ea7f2788ab82da1f427d6cbe1db147c15a053db738ad5500cd83754a6"),
+					signature:          signature,
+					forkVersion:        forkVersion,
+					depositDataRoot:    depositDataRoot,
+					depositMessageRoot: depositMessageRoot,
 				},
 			},
 			err: "withdrawal credentials must be 32 bytes",
@@ -433,15 +566,15 @@ func TestOutputRaw(t *testing.T) {
 				{
 					format:                "raw",
 					account:               "interop/00000",
-					validatorPubKey:       hexToBytes("0xa99a76ed7796f7be22d5b7e85deeb7c5677e88e511e0b337618f8c4eb61349b4bf2d153f649f7b53359fe8b94a38e44c"),
-					withdrawalCredentials: hexToBytes("0x00fad2a6bfb0e7f1f0f45460944fbd8dfa7f37da06a4d13b3983cc90bb46963b"),
+					validatorPubKey:       validatorPubKey,
+					withdrawalCredentials: testutil.HexToBytes("0x00fad2a6bfb0e7f1f0f45460944fbd8dfa7f37da06a4d13b3983cc90bb46963b"),
 					amount:                32000000000,
-					forkVersion:           hexToBytes("0x01020304"),
-					depositDataRoot:       hexToBytes("0x9e51b386f4271c18149dd0f73297a26a4a8c15c3622c44af79c92446f44a3554"),
-					depositMessageRoot:    hexToBytes("0x139b510ea7f2788ab82da1f427d6cbe1db147c15a053db738ad5500cd83754a6"),
+					forkVersion:           forkVersion,
+					depositDataRoot:       depositDataRoot,
+					depositMessageRoot:    depositMessageRoot,
 				},
 			},
-			err: "signature must be 96 bytes",
+			err: "signature required",
 		},
 		{
 			name: "AmountMissing",
@@ -449,12 +582,12 @@ func TestOutputRaw(t *testing.T) {
 				{
 					format:                "raw",
 					account:               "interop/00000",
-					validatorPubKey:       hexToBytes("0xa99a76ed7796f7be22d5b7e85deeb7c5677e88e511e0b337618f8c4eb61349b4bf2d153f649f7b53359fe8b94a38e44c"),
-					withdrawalCredentials: hexToBytes("0x00fad2a6bfb0e7f1f0f45460944fbd8dfa7f37da06a4d13b3983cc90bb46963b"),
-					signature:             hexToBytes("0xb7a757a4c506ac6ac5f2d23e065de7d00dc9f5a6a3f9610a8b60b65f166379139ae382c91ecbbf5c9fabc34b1cd2cf8f0211488d50d8754716d8e72e17c1a00b5d9b37cc73767946790ebe66cf9669abfc5c25c67e1e2d1c2e11429d149c25a2"),
-					forkVersion:           hexToBytes("0x01020304"),
-					depositDataRoot:       hexToBytes("0x9e51b386f4271c18149dd0f73297a26a4a8c15c3622c44af79c92446f44a3554"),
-					depositMessageRoot:    hexToBytes("0x139b510ea7f2788ab82da1f427d6cbe1db147c15a053db738ad5500cd83754a6"),
+					validatorPubKey:       validatorPubKey,
+					withdrawalCredentials: testutil.HexToBytes("0x00fad2a6bfb0e7f1f0f45460944fbd8dfa7f37da06a4d13b3983cc90bb46963b"),
+					signature:             signature,
+					forkVersion:           forkVersion,
+					depositDataRoot:       depositDataRoot,
+					depositMessageRoot:    depositMessageRoot,
 				},
 			},
 			err: "missing amount",
@@ -465,31 +598,15 @@ func TestOutputRaw(t *testing.T) {
 				{
 					format:                "raw",
 					account:               "interop/00000",
-					validatorPubKey:       hexToBytes("0xa99a76ed7796f7be22d5b7e85deeb7c5677e88e511e0b337618f8c4eb61349b4bf2d153f649f7b53359fe8b94a38e44c"),
-					withdrawalCredentials: hexToBytes("0x00fad2a6bfb0e7f1f0f45460944fbd8dfa7f37da06a4d13b3983cc90bb46963b"),
+					validatorPubKey:       validatorPubKey,
+					withdrawalCredentials: testutil.HexToBytes("0x00fad2a6bfb0e7f1f0f45460944fbd8dfa7f37da06a4d13b3983cc90bb46963b"),
 					amount:                32000000000,
-					signature:             hexToBytes("0xb7a757a4c506ac6ac5f2d23e065de7d00dc9f5a6a3f9610a8b60b65f166379139ae382c91ecbbf5c9fabc34b1cd2cf8f0211488d50d8754716d8e72e17c1a00b5d9b37cc73767946790ebe66cf9669abfc5c25c67e1e2d1c2e11429d149c25a2"),
-					forkVersion:           hexToBytes("0x01020304"),
-					depositMessageRoot:    hexToBytes("0x139b510ea7f2788ab82da1f427d6cbe1db147c15a053db738ad5500cd83754a6"),
+					signature:             signature,
+					forkVersion:           forkVersion,
+					depositMessageRoot:    depositMessageRoot,
 				},
 			},
-			err: "deposit data root must be 32 bytes",
-		},
-		{
-			name: "DepositMessageRootMissing",
-			dataOut: []*dataOut{
-				{
-					format:                "raw",
-					account:               "interop/00000",
-					validatorPubKey:       hexToBytes("0xa99a76ed7796f7be22d5b7e85deeb7c5677e88e511e0b337618f8c4eb61349b4bf2d153f649f7b53359fe8b94a38e44c"),
-					withdrawalCredentials: hexToBytes("0x00fad2a6bfb0e7f1f0f45460944fbd8dfa7f37da06a4d13b3983cc90bb46963b"),
-					amount:                32000000000,
-					signature:             hexToBytes("0xb7a757a4c506ac6ac5f2d23e065de7d00dc9f5a6a3f9610a8b60b65f166379139ae382c91ecbbf5c9fabc34b1cd2cf8f0211488d50d8754716d8e72e17c1a00b5d9b37cc73767946790ebe66cf9669abfc5c25c67e1e2d1c2e11429d149c25a2"),
-					forkVersion:           hexToBytes("0x01020304"),
-					depositDataRoot:       hexToBytes("0x9e51b386f4271c18149dd0f73297a26a4a8c15c3622c44af79c92446f44a3554"),
-				},
-			},
-			err: "deposit message root must be 32 bytes",
+			err: "deposit data root required",
 		},
 		{
 			name: "Single",
@@ -497,13 +614,13 @@ func TestOutputRaw(t *testing.T) {
 				{
 					format:                "raw",
 					account:               "interop/00000",
-					validatorPubKey:       hexToBytes("0xa99a76ed7796f7be22d5b7e85deeb7c5677e88e511e0b337618f8c4eb61349b4bf2d153f649f7b53359fe8b94a38e44c"),
-					withdrawalCredentials: hexToBytes("0x00fad2a6bfb0e7f1f0f45460944fbd8dfa7f37da06a4d13b3983cc90bb46963b"),
+					validatorPubKey:       validatorPubKey,
+					withdrawalCredentials: testutil.HexToBytes("0x00fad2a6bfb0e7f1f0f45460944fbd8dfa7f37da06a4d13b3983cc90bb46963b"),
 					amount:                32000000000,
-					signature:             hexToBytes("0xb7a757a4c506ac6ac5f2d23e065de7d00dc9f5a6a3f9610a8b60b65f166379139ae382c91ecbbf5c9fabc34b1cd2cf8f0211488d50d8754716d8e72e17c1a00b5d9b37cc73767946790ebe66cf9669abfc5c25c67e1e2d1c2e11429d149c25a2"),
-					forkVersion:           hexToBytes("0x01020304"),
-					depositDataRoot:       hexToBytes("0x9e51b386f4271c18149dd0f73297a26a4a8c15c3622c44af79c92446f44a3554"),
-					depositMessageRoot:    hexToBytes("0x139b510ea7f2788ab82da1f427d6cbe1db147c15a053db738ad5500cd83754a6"),
+					signature:             signature,
+					forkVersion:           forkVersion,
+					depositDataRoot:       depositDataRoot,
+					depositMessageRoot:    depositMessageRoot,
 				},
 			},
 			res: `["0x22895118000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000e000000000000000000000000000000000000000000000000000000000000001209e51b386f4271c18149dd0f73297a26a4a8c15c3622c44af79c92446f44a35540000000000000000000000000000000000000000000000000000000000000030a99a76ed7796f7be22d5b7e85deeb7c5677e88e511e0b337618f8c4eb61349b4bf2d153f649f7b53359fe8b94a38e44c00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002000fad2a6bfb0e7f1f0f45460944fbd8dfa7f37da06a4d13b3983cc90bb46963b0000000000000000000000000000000000000000000000000000000000000060b7a757a4c506ac6ac5f2d23e065de7d00dc9f5a6a3f9610a8b60b65f166379139ae382c91ecbbf5c9fabc34b1cd2cf8f0211488d50d8754716d8e72e17c1a00b5d9b37cc73767946790ebe66cf9669abfc5c25c67e1e2d1c2e11429d149c25a2"]`,
@@ -514,24 +631,24 @@ func TestOutputRaw(t *testing.T) {
 				{
 					format:                "raw",
 					account:               "interop/00000",
-					validatorPubKey:       hexToBytes("0xa99a76ed7796f7be22d5b7e85deeb7c5677e88e511e0b337618f8c4eb61349b4bf2d153f649f7b53359fe8b94a38e44c"),
-					withdrawalCredentials: hexToBytes("0x00fad2a6bfb0e7f1f0f45460944fbd8dfa7f37da06a4d13b3983cc90bb46963b"),
+					validatorPubKey:       validatorPubKey,
+					withdrawalCredentials: testutil.HexToBytes("0x00fad2a6bfb0e7f1f0f45460944fbd8dfa7f37da06a4d13b3983cc90bb46963b"),
 					amount:                32000000000,
-					signature:             hexToBytes("0xb7a757a4c506ac6ac5f2d23e065de7d00dc9f5a6a3f9610a8b60b65f166379139ae382c91ecbbf5c9fabc34b1cd2cf8f0211488d50d8754716d8e72e17c1a00b5d9b37cc73767946790ebe66cf9669abfc5c25c67e1e2d1c2e11429d149c25a2"),
-					forkVersion:           hexToBytes("0x01020304"),
-					depositDataRoot:       hexToBytes("0x9e51b386f4271c18149dd0f73297a26a4a8c15c3622c44af79c92446f44a3554"),
-					depositMessageRoot:    hexToBytes("0x139b510ea7f2788ab82da1f427d6cbe1db147c15a053db738ad5500cd83754a6"),
+					signature:             signature,
+					forkVersion:           forkVersion,
+					depositDataRoot:       depositDataRoot,
+					depositMessageRoot:    depositMessageRoot,
 				},
 				{
 					format:                "raw",
 					account:               "interop/00001",
-					validatorPubKey:       hexToBytes("0xb89bebc699769726a318c8e9971bd3171297c61aea4a6578a7a4f94b547dcba5bac16a89108b6b6a1fe3695d1a874a0b"),
-					withdrawalCredentials: hexToBytes("0x00ec7ef7780c9d151597924036262dd28dc60e1228f4da6fecf9d402cb3f3594"),
+					validatorPubKey:       validatorPubKey2,
+					withdrawalCredentials: testutil.HexToBytes("0x00ec7ef7780c9d151597924036262dd28dc60e1228f4da6fecf9d402cb3f3594"),
 					amount:                32000000000,
-					signature:             hexToBytes("0x911fe0766e8b79d711dde46bc2142eb51e35be99e5f7da505af9eaad85707bbb8013f0dea35e30403b3e57bb13054c1d0d389aceeba1d4160a148026212c7e017044e3ea69cd96fbd23b6aa9fd1e6f7e82494fbd5f8fc75856711a6b8998926e"),
-					forkVersion:           hexToBytes("0x01020304"),
-					depositDataRoot:       hexToBytes("0x3b51670e9f266d44c879682a230d60f0d534c64ab25ee68700fe3adb17ddfcab"),
-					depositMessageRoot:    hexToBytes("0xbb4b6184b25873cdf430df3838c8d3e3d16cf3dc3b214e2f3ab7df9e6d5a9b52"),
+					signature:             signature2,
+					forkVersion:           forkVersion,
+					depositDataRoot:       depositDataRoot2,
+					depositMessageRoot:    depositMessageRoot2,
 				},
 			},
 			res: `["0x22895118000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000e000000000000000000000000000000000000000000000000000000000000001209e51b386f4271c18149dd0f73297a26a4a8c15c3622c44af79c92446f44a35540000000000000000000000000000000000000000000000000000000000000030a99a76ed7796f7be22d5b7e85deeb7c5677e88e511e0b337618f8c4eb61349b4bf2d153f649f7b53359fe8b94a38e44c00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002000fad2a6bfb0e7f1f0f45460944fbd8dfa7f37da06a4d13b3983cc90bb46963b0000000000000000000000000000000000000000000000000000000000000060b7a757a4c506ac6ac5f2d23e065de7d00dc9f5a6a3f9610a8b60b65f166379139ae382c91ecbbf5c9fabc34b1cd2cf8f0211488d50d8754716d8e72e17c1a00b5d9b37cc73767946790ebe66cf9669abfc5c25c67e1e2d1c2e11429d149c25a2","0x22895118000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000e000000000000000000000000000000000000000000000000000000000000001203b51670e9f266d44c879682a230d60f0d534c64ab25ee68700fe3adb17ddfcab0000000000000000000000000000000000000000000000000000000000000030b89bebc699769726a318c8e9971bd3171297c61aea4a6578a7a4f94b547dcba5bac16a89108b6b6a1fe3695d1a874a0b00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002000ec7ef7780c9d151597924036262dd28dc60e1228f4da6fecf9d402cb3f35940000000000000000000000000000000000000000000000000000000000000060911fe0766e8b79d711dde46bc2142eb51e35be99e5f7da505af9eaad85707bbb8013f0dea35e30403b3e57bb13054c1d0d389aceeba1d4160a148026212c7e017044e3ea69cd96fbd23b6aa9fd1e6f7e82494fbd5f8fc75856711a6b8998926e"]`,

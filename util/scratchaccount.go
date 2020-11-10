@@ -14,17 +14,18 @@
 package util
 
 import (
+	"context"
 	"errors"
 
 	"github.com/google/uuid"
-	types "github.com/wealdtech/go-eth2-types/v2"
+	e2types "github.com/wealdtech/go-eth2-types/v2"
 )
 
 // ScratchAccount is an account that exists temporarily.
 type ScratchAccount struct {
 	id       uuid.UUID
-	privKey  types.PrivateKey
-	pubKey   types.PublicKey
+	privKey  e2types.PrivateKey
+	pubKey   e2types.PublicKey
 	unlocked bool
 }
 
@@ -37,7 +38,7 @@ func NewScratchAccount(privKey []byte, pubKey []byte) (*ScratchAccount, error) {
 }
 
 func newScratchAccountFromPrivKey(privKey []byte) (*ScratchAccount, error) {
-	key, err := types.BLSPrivateKeyFromBytes(privKey)
+	key, err := e2types.BLSPrivateKeyFromBytes(privKey)
 	if err != nil {
 		return nil, err
 	}
@@ -49,7 +50,7 @@ func newScratchAccountFromPrivKey(privKey []byte) (*ScratchAccount, error) {
 }
 
 func newScratchAccountFromPubKey(pubKey []byte) (*ScratchAccount, error) {
-	key, err := types.BLSPublicKeyFromBytes(pubKey)
+	key, err := e2types.BLSPublicKeyFromBytes(pubKey)
 	if err != nil {
 		return nil, err
 	}
@@ -67,7 +68,7 @@ func (a *ScratchAccount) Name() string {
 	return "scratch"
 }
 
-func (a *ScratchAccount) PublicKey() types.PublicKey {
+func (a *ScratchAccount) PublicKey() e2types.PublicKey {
 	return a.pubKey
 }
 
@@ -75,21 +76,22 @@ func (a *ScratchAccount) Path() string {
 	return ""
 }
 
-func (a *ScratchAccount) Lock() {
+func (a *ScratchAccount) Lock(ctx context.Context) error {
 	a.unlocked = false
+	return nil
 }
 
-func (a *ScratchAccount) Unlock([]byte) error {
+func (a *ScratchAccount) Unlock(ctx context.Context, passphrase []byte) error {
 	a.unlocked = true
 	return nil
 }
 
-func (a *ScratchAccount) IsUnlocked() bool {
-	return a.unlocked
+func (a *ScratchAccount) IsUnlocked(ctx context.Context) (bool, error) {
+	return a.unlocked, nil
 }
 
-func (a *ScratchAccount) Sign(data []byte) (types.Signature, error) {
-	if !a.IsUnlocked() {
+func (a *ScratchAccount) Sign(ctx context.Context, data []byte) (e2types.Signature, error) {
+	if !a.unlocked {
 		return nil, errors.New("locked")
 	}
 	if a.privKey == nil {

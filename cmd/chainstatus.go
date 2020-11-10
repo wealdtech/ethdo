@@ -14,15 +14,17 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"time"
 
+	eth2client "github.com/attestantio/go-eth2-client"
+	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/spf13/cobra"
-	"github.com/wealdtech/ethdo/grpc"
+	"github.com/spf13/viper"
+	"github.com/wealdtech/ethdo/util"
 )
-
-var chainStatusSlot bool
 
 var chainStatusCmd = &cobra.Command{
 	Use:   "status",
@@ -33,70 +35,48 @@ var chainStatusCmd = &cobra.Command{
 
 In quiet mode this will return 0 if the chain status can be obtained, otherwise 1.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		err := connect()
-		errCheck(err, "Failed to obtain connection to Ethereum 2 beacon chain node")
-		config, err := grpc.FetchChainConfig(eth2GRPCConn)
-		errCheck(err, "Failed to obtain beacon chain configuration")
+		ctx := context.Background()
 
-		genesisTime, err := grpc.FetchGenesisTime(eth2GRPCConn)
-		errCheck(err, "Failed to obtain genesis time")
+		eth2Client, err := util.ConnectToBeaconNode(ctx, viper.GetString("connection"), viper.GetDuration("timeout"), viper.GetBool("allow-insecure-connections"))
+		errCheck(err, "Failed to connect to Ethereum 2 beacon node")
 
-		info, err := grpc.FetchChainInfo(eth2GRPCConn)
-		errCheck(err, "Failed to obtain chain info")
+		config, err := eth2Client.(eth2client.SpecProvider).Spec(ctx)
+		errCheck(err, "Failed to obtain beacon chain specification")
 
-		if quiet {
-			os.Exit(_exitSuccess)
+		finality, err := eth2Client.(eth2client.FinalityProvider).Finality(ctx, "head")
+		errCheck(err, "Failed to obtain finality information")
+
+		genesis, err := eth2Client.(eth2client.GenesisProvider).Genesis(ctx)
+		errCheck(err, "Failed to obtain genesis information")
+
+		slotDuration := config["SECONDS_PER_SLOT"].(time.Duration)
+		curSlot := timestampToSlot(genesis.GenesisTime, time.Now(), slotDuration)
+		slotsPerEpoch := config["SLOTS_PER_EPOCH"].(uint64)
+		curEpoch := spec.Epoch(uint64(curSlot) / slotsPerEpoch)
+		fmt.Printf("Current epoch: %d\n", curEpoch)
+		fmt.Printf("Justified epoch: %d\n", finality.Justified.Epoch)
+		if verbose {
+			distance := curEpoch - finality.Justified.Epoch
+			fmt.Printf("Justified epoch distance: %d\n", distance)
 		}
-
-		now := time.Now()
-		slot := timestampToSlot(genesisTime.Unix(), now.Unix(), config["SecondsPerSlot"].(uint64))
-		if chainStatusSlot {
-			fmt.Printf("Current slot: %d\n", slot)
-			fmt.Printf("Justified slot: %d\n", info.GetJustifiedSlot())
-			if verbose {
-				distance := slot - info.GetJustifiedSlot()
-				fmt.Printf("Justified slot distance: %d\n", distance)
-			}
-			fmt.Printf("Finalized slot: %d\n", info.GetFinalizedSlot())
-			if verbose {
-				distance := slot - info.GetFinalizedSlot()
-				fmt.Printf("Finalized slot distance: %d\n", distance)
-			}
-			if verbose {
-				fmt.Printf("Prior justified slot: %d\n", info.GetFinalizedSlot())
-				distance := slot - info.GetPreviousJustifiedSlot()
-				fmt.Printf("Prior justified slot distance: %d\n", distance)
-			}
-		} else {
-			slotsPerEpoch := config["SlotsPerEpoch"].(uint64)
-			epoch := slot / slotsPerEpoch
-			fmt.Printf("Current epoch: %d\n", epoch)
-			fmt.Printf("Justified epoch: %d\n", info.GetJustifiedEpoch())
-			if verbose {
-				distance := (slot - info.GetJustifiedSlot()) / slotsPerEpoch
-				fmt.Printf("Justified epoch distance: %d\n", distance)
-			}
-			fmt.Printf("Finalized epoch: %d\n", info.GetFinalizedEpoch())
-			if verbose {
-				distance := (slot - info.GetFinalizedSlot()) / slotsPerEpoch
-				fmt.Printf("Finalized epoch distance: %d\n", distance)
-			}
-			if verbose {
-				fmt.Printf("Prior justified epoch: %d\n", info.GetPreviousJustifiedEpoch())
-				distance := (slot - info.GetPreviousJustifiedSlot()) / slotsPerEpoch
-				fmt.Printf("Prior justified epoch distance: %d\n", distance)
-			}
+		fmt.Printf("Finalized epoch: %d\n", finality.Finalized.Epoch)
+		if verbose {
+			distance := curEpoch - finality.Finalized.Epoch
+			fmt.Printf("Finalized epoch distance: %d\n", distance)
+		}
+		if verbose {
+			fmt.Printf("Prior justified epoch: %d\n", finality.PreviousJustified.Epoch)
+			distance := curEpoch - finality.PreviousJustified.Epoch
+			fmt.Printf("Prior justified epoch distance: %d\n", distance)
 		}
 
 		if verbose {
-			slotsPerEpoch := config["SlotsPerEpoch"].(uint64)
-			secondsPerSlot := config["SecondsPerSlot"].(uint64)
-			epochStartSlot := (slot / slotsPerEpoch) * slotsPerEpoch
+			epochStartSlot := (uint64(curSlot) / slotsPerEpoch) * slotsPerEpoch
 			fmt.Printf("Epoch slots: %d-%d\n", epochStartSlot, epochStartSlot+slotsPerEpoch-1)
-			nextSlot := slotToTimestamp(genesisTime.Unix(), slot+1, secondsPerSlot)
-			fmt.Printf("Time until next slot: %2.1fs\n", float64(time.Until(time.Unix(nextSlot, 0)).Milliseconds())/1000)
-			nextEpoch := epochToTimestamp(genesisTime.Unix(), slot/slotsPerEpoch+1, secondsPerSlot, slotsPerEpoch)
-			fmt.Printf("Slots until next epoch: %d\n", (slot/slotsPerEpoch+1)*slotsPerEpoch-slot)
+			nextSlotTimestamp := slotToTimestamp(genesis.GenesisTime, curSlot+1, slotDuration)
+			fmt.Printf("Time until next slot: %2.1fs\n", float64(time.Until(time.Unix(nextSlotTimestamp, 0)).Milliseconds())/1000)
+			nextEpoch := epochToTimestamp(genesis.GenesisTime, spec.Slot(uint64(curSlot)/slotsPerEpoch+1), slotDuration, slotsPerEpoch)
+			fmt.Printf("Slots until next epoch: %d\n", (uint64(curSlot)/slotsPerEpoch+1)*slotsPerEpoch-uint64(curSlot))
 			fmt.Printf("Time until next epoch: %2.1fs\n", float64(time.Until(time.Unix(nextEpoch, 0)).Milliseconds())/1000)
 		}
 
@@ -107,6 +87,4 @@ In quiet mode this will return 0 if the chain status can be obtained, otherwise 
 func init() {
 	chainCmd.AddCommand(chainStatusCmd)
 	chainFlags(chainStatusCmd)
-	chainStatusCmd.Flags().BoolVar(&chainStatusSlot, "slot", false, "Print slot-based values")
-
 }

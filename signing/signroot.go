@@ -16,65 +16,59 @@ package signing
 import (
 	"context"
 
+	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
-	"github.com/spf13/viper"
 	e2types "github.com/wealdtech/go-eth2-types/v2"
 	e2wtypes "github.com/wealdtech/go-eth2-wallet-types/v2"
 )
 
 // SignRoot signs a root with a domain.
-func SignRoot(account e2wtypes.Account, root []byte, domain []byte) ([]byte, error) {
+func SignRoot(ctx context.Context, account e2wtypes.Account, passphrases []string, root spec.Root, domain spec.Domain) (spec.BLSSignature, error) {
 	// Ensure input is as expected.
 	if account == nil {
-		return nil, errors.New("account not specified")
-	}
-	if len(root) != 32 {
-		return nil, errors.New("root must be 32 bytes in length")
-	}
-	if len(domain) != 32 {
-		return nil, errors.New("domain must be 32 bytes in length")
+		return spec.BLSSignature{}, errors.New("account not specified")
 	}
 
-	alreadyUnlocked, err := unlock(account)
+	alreadyUnlocked, err := Unlock(ctx, account, passphrases)
 	if err != nil {
-		return nil, err
+		return spec.BLSSignature{}, err
 	}
 
 	var signature e2types.Signature
 	// outputIf(debug, fmt.Sprintf("Signing %x (%d)", data, len(data)))
 	if protectingSigner, isProtectingSigner := account.(e2wtypes.AccountProtectingSigner); isProtectingSigner {
 		// Signer takes root and domain.
-		signature, err = signProtected(protectingSigner, root, domain)
+		signature, err = signProtected(ctx, protectingSigner, root, domain)
 	} else if signer, isSigner := account.(e2wtypes.AccountSigner); isSigner {
-		signature, err = sign(signer, root, domain)
+		signature, err = sign(ctx, signer, root, domain)
 	} else {
-		return nil, errors.New("account does not provide signing facility")
+		return spec.BLSSignature{}, errors.New("account does not provide signing facility")
 	}
 	if err != nil {
-		return nil, err
+		return spec.BLSSignature{}, err
 	}
 
 	if !alreadyUnlocked {
-		if err := lock(account); err != nil {
-			return nil, errors.Wrap(err, "failed to lock account")
+		if err := Lock(ctx, account); err != nil {
+			return spec.BLSSignature{}, errors.Wrap(err, "failed to lock account")
 		}
 	}
 
-	return signature.Marshal(), nil
+	var sig spec.BLSSignature
+	copy(sig[:], signature.Marshal())
+	return sig, nil
 }
 
-func sign(account e2wtypes.AccountSigner, root []byte, domain []byte) (e2types.Signature, error) {
+func sign(ctx context.Context, account e2wtypes.AccountSigner, root spec.Root, domain spec.Domain) (e2types.Signature, error) {
 	container := &Container{
-		Root:   root,
-		Domain: domain,
+		Root:   root[:],
+		Domain: domain[:],
 	}
 	signingRoot, err := container.HashTreeRoot()
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to generate hash tree root")
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("timeout"))
-	defer cancel()
 	signature, err := account.Sign(ctx, signingRoot[:])
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to sign")
@@ -83,10 +77,8 @@ func sign(account e2wtypes.AccountSigner, root []byte, domain []byte) (e2types.S
 	return signature, err
 }
 
-func signProtected(account e2wtypes.AccountProtectingSigner, data []byte, domain []byte) (e2types.Signature, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("timeout"))
-	defer cancel()
-	signature, err := account.SignGeneric(ctx, data, domain)
+func signProtected(ctx context.Context, account e2wtypes.AccountProtectingSigner, root spec.Root, domain spec.Domain) (e2types.Signature, error) {
+	signature, err := account.SignGeneric(ctx, root[:], domain[:])
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to sign")
 	}

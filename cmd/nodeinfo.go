@@ -14,12 +14,14 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"os"
-	"time"
 
+	eth2client "github.com/attestantio/go-eth2-client"
 	"github.com/spf13/cobra"
-	"github.com/wealdtech/ethdo/grpc"
+	"github.com/spf13/viper"
+	"github.com/wealdtech/ethdo/util"
 )
 
 var nodeInfoCmd = &cobra.Command{
@@ -31,38 +33,24 @@ var nodeInfoCmd = &cobra.Command{
 
 In quiet mode this will return 0 if the node information can be obtained, otherwise 1.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		err := connect()
-		errCheck(err, "Failed to obtain connection to Ethereum 2 beacon chain node")
-		config, err := grpc.FetchChainConfig(eth2GRPCConn)
-		errCheck(err, "Failed to obtain beacon chain configuration")
+		ctx := context.Background()
 
-		genesisTime, err := grpc.FetchGenesisTime(eth2GRPCConn)
-		errCheck(err, "Failed to obtain genesis time")
+		eth2Client, err := util.ConnectToBeaconNode(ctx, viper.GetString("connection"), viper.GetDuration("timeout"), viper.GetBool("allow-insecure-connections"))
+		errCheck(err, "Failed to connect to Ethereum 2 beacon node")
 
 		if quiet {
 			os.Exit(_exitSuccess)
 		}
 
 		if verbose {
-			version, metadata, err := grpc.FetchVersion(eth2GRPCConn)
-			errCheck(err, "Failed to obtain version")
+			version, err := eth2Client.(eth2client.NodeVersionProvider).NodeVersion(ctx)
+			errCheck(err, "Failed to obtain node version")
 			fmt.Printf("Version: %s\n", version)
-			if metadata != "" {
-				fmt.Printf("Metadata: %s\n", metadata)
-			}
 		}
-		syncing, err := grpc.FetchSyncing(eth2GRPCConn)
-		errCheck(err, "Failed to obtain syncing state")
-		fmt.Printf("Syncing: %v\n", syncing)
 
-		if genesisTime.Unix() == 0 {
-			fmt.Println("Not reached genesis")
-		} else {
-			slot := timestampToSlot(genesisTime.Unix(), time.Now().Unix(), config["SecondsPerSlot"].(uint64))
-			fmt.Printf("Current slot: %d\n", slot)
-			fmt.Printf("Current epoch: %d\n", slot/config["SlotsPerEpoch"].(uint64))
-			outputIf(verbose, fmt.Sprintf("Genesis timestamp: %v", genesisTime.Unix()))
-		}
+		syncState, err := eth2Client.(eth2client.NodeSyncingProvider).NodeSyncing(ctx)
+		errCheck(err, "failed to obtain node sync state")
+		fmt.Printf("Syncing: %t\n", syncState.SyncDistance != 0)
 
 		os.Exit(_exitSuccess)
 	},

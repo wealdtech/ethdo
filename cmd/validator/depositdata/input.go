@@ -18,10 +18,12 @@ import (
 	"encoding/hex"
 	"strings"
 
+	eth2client "github.com/attestantio/go-eth2-client"
+	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
 	"github.com/wealdtech/ethdo/core"
-	"github.com/wealdtech/ethdo/grpc"
+	ethdoutil "github.com/wealdtech/ethdo/util"
 	e2types "github.com/wealdtech/go-eth2-types/v2"
 	util "github.com/wealdtech/go-eth2-util"
 	e2wtypes "github.com/wealdtech/go-eth2-wallet-types/v2"
@@ -31,15 +33,19 @@ import (
 type dataIn struct {
 	format                string
 	withdrawalCredentials []byte
-	amount                uint64
+	amount                spec.Gwei
 	validatorAccounts     []e2wtypes.Account
-	forkVersion           []byte
-	domain                []byte
+	forkVersion           *spec.Version
+	domain                *spec.Domain
+	passphrases           []string
 }
 
 func input() (*dataIn, error) {
 	var err error
-	data := &dataIn{}
+	data := &dataIn{
+		forkVersion: &spec.Version{},
+		domain:      &spec.Domain{},
+	}
 
 	if viper.GetString("validatoraccount") == "" {
 		return nil, errors.New("validator account is required")
@@ -63,6 +69,8 @@ func input() (*dataIn, error) {
 	default:
 		data.format = "json"
 	}
+
+	data.passphrases = ethdoutil.GetPassphrases()
 
 	switch {
 	case viper.GetString("withdrawalaccount") != "":
@@ -99,39 +107,49 @@ func input() (*dataIn, error) {
 	if viper.GetString("depositvalue") == "" {
 		return nil, errors.New("deposit value is required")
 	}
-	data.amount, err = string2eth.StringToGWei(viper.GetString("depositvalue"))
+	amount, err := string2eth.StringToGWei(viper.GetString("depositvalue"))
 	if err != nil {
 		return nil, errors.Wrap(err, "deposit value is invalid")
 	}
+	data.amount = spec.Gwei(amount)
 	// This is hard-coded, to allow deposit data to be generated without a connection to the beacon node.
 	if data.amount < 1000000000 { // MIN_DEPOSIT_AMOUNT
 		return nil, errors.New("deposit value must be at least 1 Ether")
 	}
 
+	data.forkVersion, err = inputForkVersion(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to obtain fork version")
+	}
+
+	copy(data.domain[:], e2types.Domain(e2types.DomainDeposit, data.forkVersion[:], e2types.ZeroGenesisValidatorsRoot))
+
+	return data, nil
+}
+
+func inputForkVersion(ctx context.Context) (*spec.Version, error) {
 	if viper.GetString("forkversion") != "" {
-		data.forkVersion, err = hex.DecodeString(strings.TrimPrefix(viper.GetString("forkversion"), "0x"))
+		forkVersion, err := hex.DecodeString(strings.TrimPrefix(viper.GetString("forkversion"), "0x"))
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to decode fork version")
 		}
-		if len(data.forkVersion) != 4 {
+		if len(forkVersion) != 4 {
 			return nil, errors.New("fork version must be exactly 4 bytes in length")
 		}
-	} else {
-		conn, err := grpc.Connect()
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to connect to beacon node")
-		}
-		config, err := grpc.FetchChainConfig(conn)
-		if err != nil {
-			return nil, errors.Wrap(err, "could not connect to beacon node; supply a connection with --connection or provide a fork version with --forkversion to generate deposit data")
-		}
-		genesisForkVersion, exists := config["GenesisForkVersion"]
-		if !exists {
-			return nil, errors.New("failed to obtain genesis fork version")
-		}
-		data.forkVersion = genesisForkVersion.([]byte)
-	}
-	data.domain = e2types.Domain(e2types.DomainDeposit, data.forkVersion, e2types.ZeroGenesisValidatorsRoot)
 
-	return data, nil
+		res := &spec.Version{}
+		copy(res[:], forkVersion)
+		return res, nil
+	}
+
+	eth2Client, err := ethdoutil.ConnectToBeaconNode(ctx, viper.GetString("connection"), viper.GetDuration("timeout"), viper.GetBool("allow-insecure-connections"))
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to connect to Ethereum 2 beacon node")
+	}
+
+	genesis, err := eth2Client.(eth2client.GenesisProvider).Genesis(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to obtain genesis")
+	}
+	return &genesis.GenesisForkVersion, nil
 }

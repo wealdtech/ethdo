@@ -17,8 +17,10 @@ import (
 	"context"
 	"testing"
 
+	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
+	"github.com/wealdtech/ethdo/testutil"
 	e2types "github.com/wealdtech/go-eth2-types/v2"
 	e2wallet "github.com/wealdtech/go-eth2-wallet"
 	keystorev4 "github.com/wealdtech/go-eth2-wallet-encryptor-keystorev4"
@@ -39,16 +41,27 @@ func TestInput(t *testing.T) {
 	viper.Set("passphrase", "pass")
 	interop0, err := testWallet.(e2wtypes.WalletAccountImporter).ImportAccount(context.Background(),
 		"Interop 0",
-		hexToBytes("0x25295f0d1d592a90b333e26e85149708208e9f8e8bc18f6c77bd62f8ad7a6866"),
+		testutil.HexToBytes("0x25295f0d1d592a90b333e26e85149708208e9f8e8bc18f6c77bd62f8ad7a6866"),
 		[]byte("pass"),
 	)
 	require.NoError(t, err)
 	_, err = testWallet.(e2wtypes.WalletAccountImporter).ImportAccount(context.Background(),
 		"Interop 1",
-		hexToBytes("0x51d0b65185db6989ab0b560d6deed19c7ead0e24b9b6372cbecb1f26bdfad000"),
+		testutil.HexToBytes("0x51d0b65185db6989ab0b560d6deed19c7ead0e24b9b6372cbecb1f26bdfad000"),
 		[]byte("pass"),
 	)
 	require.NoError(t, err)
+
+	var forkVersion *spec.Version
+	{
+		tmp := testutil.HexToVersion("0x01020304")
+		forkVersion = &tmp
+	}
+	var domain *spec.Domain
+	{
+		tmp := testutil.HexToDomain("0x03000000ffd2fc34e5796a643f749b0b2b908c4ca3ce58ce24a00c49329a2dc0")
+		domain = &tmp
+	}
 
 	tests := []struct {
 		name string
@@ -167,17 +180,7 @@ func TestInput(t *testing.T) {
 				"depositvalue":      "32 Ether",
 				"forkversion":       "invalid",
 			},
-			err: "failed to decode fork version: encoding/hex: invalid byte: U+0069 'i'",
-		},
-		{
-			name: "ForkVersionWrongLength",
-			vars: map[string]interface{}{
-				"validatoraccount":  "Test/Interop 0",
-				"withdrawalaccount": "Test/Interop 0",
-				"depositvalue":      "32 Ether",
-				"forkversion":       "0x0102030405",
-			},
-			err: "fork version must be exactly 4 bytes in length",
+			err: "failed to obtain fork version: failed to decode fork version: encoding/hex: invalid byte: U+0069 'i'",
 		},
 		{
 			name: "Good",
@@ -189,11 +192,11 @@ func TestInput(t *testing.T) {
 			},
 			res: &dataIn{
 				format:                "json",
-				withdrawalCredentials: hexToBytes("0x00fad2a6bfb0e7f1f0f45460944fbd8dfa7f37da06a4d13b3983cc90bb46963b"),
+				withdrawalCredentials: testutil.HexToBytes("0x00fad2a6bfb0e7f1f0f45460944fbd8dfa7f37da06a4d13b3983cc90bb46963b"),
 				amount:                32000000000,
 				validatorAccounts:     []e2wtypes.Account{interop0},
-				forkVersion:           hexToBytes("0x01020304"),
-				domain:                hexToBytes("0x03000000ffd2fc34e5796a643f749b0b2b908c4ca3ce58ce24a00c49329a2dc0"),
+				forkVersion:           forkVersion,
+				domain:                domain,
 			},
 		},
 		{
@@ -206,11 +209,11 @@ func TestInput(t *testing.T) {
 			},
 			res: &dataIn{
 				format:                "json",
-				withdrawalCredentials: hexToBytes("0x00fad2a6bfb0e7f1f0f45460944fbd8dfa7f37da06a4d13b3983cc90bb46963b"),
+				withdrawalCredentials: testutil.HexToBytes("0x00fad2a6bfb0e7f1f0f45460944fbd8dfa7f37da06a4d13b3983cc90bb46963b"),
 				amount:                32000000000,
 				validatorAccounts:     []e2wtypes.Account{interop0},
-				forkVersion:           hexToBytes("0x01020304"),
-				domain:                hexToBytes("0x03000000ffd2fc34e5796a643f749b0b2b908c4ca3ce58ce24a00c49329a2dc0"),
+				forkVersion:           forkVersion,
+				domain:                domain,
 			},
 		},
 	}

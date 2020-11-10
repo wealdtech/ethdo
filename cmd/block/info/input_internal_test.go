@@ -11,15 +11,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package accountkey
+package blockinfo
 
 import (
 	"context"
+	"os"
 	"testing"
 	"time"
 
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
+	"github.com/wealdtech/ethdo/testutil"
 	e2types "github.com/wealdtech/go-eth2-types/v2"
 	e2wallet "github.com/wealdtech/go-eth2-wallet"
 	keystorev4 "github.com/wealdtech/go-eth2-wallet-encryptor-keystorev4"
@@ -29,6 +31,10 @@ import (
 )
 
 func TestInput(t *testing.T) {
+	if os.Getenv("ETHDO_TEST_CONNECTION") == "" {
+		t.Skip("ETHDO_TEST_CONNECTION not configured; cannot run tests")
+	}
+
 	require.NoError(t, e2types.InitBLS())
 
 	store := scratch.New()
@@ -39,7 +45,7 @@ func TestInput(t *testing.T) {
 	viper.Set("passphrase", "pass")
 	_, err = testWallet.(e2wtypes.WalletAccountImporter).ImportAccount(context.Background(),
 		"Interop 0",
-		hexToBytes("0x25295f0d1d592a90b333e26e85149708208e9f8e8bc18f6c77bd62f8ad7a6866"),
+		testutil.HexToBytes("0x25295f0d1d592a90b333e26e85149708208e9f8e8bc18f6c77bd62f8ad7a6866"),
 		[]byte("pass"),
 	)
 	require.NoError(t, err)
@@ -52,58 +58,50 @@ func TestInput(t *testing.T) {
 	}{
 		{
 			name: "TimeoutMissing",
-			vars: map[string]interface{}{
-				"account":    "Test wallet/Interop 0",
-				"passphrase": "ce%NohGhah4ye5ra",
-			},
-			err: "timeout is required",
+			vars: map[string]interface{}{},
+			err:  "timeout is required",
 		},
 		{
-			name: "WalletUnknown",
+			name: "ConnectionMissing",
 			vars: map[string]interface{}{
-				"timeout":    "5s",
-				"account":    "Unknown/Interop 0",
-				"passphrase": "ce%NohGhah4ye5ra",
+				"timeout": "5s",
 			},
-			err: "failed to obtain acount: faild to open wallet for account: wallet not found",
+			err: "failed to connect to Ethereum 2 beacon node: failed to connect to beacon node: problem with parameters: no address specified",
 		},
 		{
-			name: "AccountMissing",
+			name: "ConnectionBad",
 			vars: map[string]interface{}{
 				"timeout":    "5s",
-				"passphrase": "ce%NohGhah4ye5ra",
-			},
-			err: "failed to obtain acount: faild to open wallet for account: invalid account format",
-		},
-		{
-			name: "AccountWalletOnly",
-			vars: map[string]interface{}{
-				"timeout":    "5s",
-				"passphrase": "ce%NohGhah4ye5ra",
-				"account":    "Test wallet/",
-			},
-			err: "failed to obtain acount: no account name",
-		},
-		{
-			name: "AccountMalformed",
-			vars: map[string]interface{}{
-				"timeout":    "5s",
-				"account":    "//",
-				"passphrase": "ce%NohGhah4ye5ra",
-			},
-			err: "failed to obtain acount: faild to open wallet for account: invalid account format",
-		},
-		{
-			name: "Good",
-			vars: map[string]interface{}{
-				"timeout":    "5s",
-				"account":    "Test wallet/Interop 0",
-				"passphrase": []string{"ce%NohGhah4ye5ra", "pass"},
-				"key":        "0x25295f0d1d592a90b333e26e85149708208e9f8e8bc18f6c77bd62f8ad7a6866",
+				"connection": "localhost:1",
+				"blockid":    "justified",
 			},
 			res: &dataIn{
-				timeout:     5 * time.Second,
-				passphrases: []string{"ce%NohGhah4ye5ra", "pass"},
+				timeout: 5 * time.Second,
+				blockID: "justified",
+			},
+			err: "failed to connect to Ethereum 2 beacon node: failed to connect to beacon node: failed to connect to Ethereum 2 client with any known method",
+		},
+		{
+			name: "BlockIDNil",
+			vars: map[string]interface{}{
+				"timeout":    "5s",
+				"connection": os.Getenv("ETHDO_TEST_CONNECTION"),
+			},
+			res: &dataIn{
+				timeout: 5 * time.Second,
+				blockID: "head",
+			},
+		},
+		{
+			name: "BlockIDSpecific",
+			vars: map[string]interface{}{
+				"timeout":    "5s",
+				"connection": os.Getenv("ETHDO_TEST_CONNECTION"),
+				"blockid":    "justified",
+			},
+			res: &dataIn{
+				timeout: 5 * time.Second,
+				blockID: "justified",
 			},
 		},
 	}
@@ -111,6 +109,7 @@ func TestInput(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			viper.Reset()
+
 			for k, v := range test.vars {
 				viper.Set(k, v)
 			}
@@ -119,9 +118,8 @@ func TestInput(t *testing.T) {
 				require.EqualError(t, err, test.err)
 			} else {
 				require.NoError(t, err)
-				// Cannot compare accounts directly, so need to check each element individually.
 				require.Equal(t, test.res.timeout, res.timeout)
-				require.Equal(t, test.res.passphrases, res.passphrases)
+				require.Equal(t, test.res.blockID, res.blockID)
 			}
 		})
 	}

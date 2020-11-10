@@ -24,19 +24,18 @@ import (
 	"os"
 	"strconv"
 	"strings"
-	"time"
 
+	eth2client "github.com/attestantio/go-eth2-client"
+	api "github.com/attestantio/go-eth2-client/api/v1"
+	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
-	ethpb "github.com/prysmaticlabs/ethereumapis/eth/v1alpha1"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"github.com/wealdtech/ethdo/grpc"
+	"github.com/wealdtech/ethdo/core"
 	"github.com/wealdtech/ethdo/util"
 	e2wtypes "github.com/wealdtech/go-eth2-wallet-types/v2"
 	string2eth "github.com/wealdtech/go-string2eth"
 )
-
-var validatorInfoPubKey string
 
 var validatorInfoCmd = &cobra.Command{
 	Use:   "info",
@@ -47,78 +46,81 @@ var validatorInfoCmd = &cobra.Command{
 
 In quiet mode this will return 0 if the validator information can be obtained, otherwise 1.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		assert(viper.GetString("account") != "" || validatorInfoPubKey != "", "--account or --pubkey is required")
+		ctx := context.Background()
 
-		err := connect()
-		errCheck(err, "Failed to obtain connection to Ethereum 2 beacon chain node")
+		eth2Client, err := util.ConnectToBeaconNode(ctx, viper.GetString("connection"), viper.GetDuration("timeout"), viper.GetBool("allow-insecure-connections"))
+		errCheck(err, "Failed to connect to Ethereum 2 beacon node")
 
 		account, err := validatorInfoAccount()
 		errCheck(err, "Failed to obtain validator account")
 
+		pubKeys := make([]spec.BLSPubKey, 1)
+		pubKey, err := core.BestPublicKey(account)
+		errCheck(err, "Failed to obtain validator public key")
+		copy(pubKeys[0][:], pubKey.Marshal())
+		validators, err := eth2Client.(eth2client.ValidatorsProvider).ValidatorsByPubKey(ctx, "head", pubKeys)
+		errCheck(err, "Failed to obtain validator information")
+		if len(validators) == 0 {
+			fmt.Println("Validator not known by beacon node")
+			os.Exit(_exitSuccess)
+		}
+
+		var validator *api.Validator
+		for _, v := range validators {
+			validator = v
+		}
+
 		if verbose {
-			network := network()
+			network, err := util.Network(ctx, eth2Client)
+			errCheck(err, "Failed to obtain network")
 			outputIf(debug, fmt.Sprintf("Network is %s", network))
 			pubKey, err := bestPublicKey(account)
 			if err == nil {
 				deposits, totalDeposited, err := graphData(network, pubKey.Marshal())
 				if err == nil {
 					fmt.Printf("Number of deposits: %d\n", deposits)
-					fmt.Printf("Total deposited: %s\n", string2eth.GWeiToString(totalDeposited, true))
+					fmt.Printf("Total deposited: %s\n", string2eth.GWeiToString(uint64(totalDeposited), true))
 				}
 			}
 		}
-
-		validatorInfo, err := grpc.FetchValidatorInfo(eth2GRPCConn, account)
-		errCheck(err, "Failed to obtain validator information")
-		validator, err := grpc.FetchValidator(eth2GRPCConn, account)
-		if err != nil {
-			// We can live with this.
-			validator = nil
-		}
-		if validatorInfo.Status != ethpb.ValidatorStatus_DEPOSITED &&
-			validatorInfo.Status != ethpb.ValidatorStatus_UNKNOWN_STATUS {
-			errCheck(err, "Failed to obtain validator definition")
-		}
-		assert(validatorInfo.Status != ethpb.ValidatorStatus_UNKNOWN_STATUS, "Not known as a validator")
 
 		if quiet {
 			os.Exit(_exitSuccess)
 		}
 
-		outputIf(verbose, fmt.Sprintf("Epoch of data: %v", validatorInfo.Epoch))
-		outputIf(verbose && validatorInfo.Status != ethpb.ValidatorStatus_DEPOSITED, fmt.Sprintf("Index: %v", validatorInfo.Index))
-		outputIf(verbose, fmt.Sprintf("Public key: %#x", validatorInfo.PublicKey))
-		fmt.Printf("Status: %s\n", strings.Title(strings.ToLower(validatorInfo.Status.String())))
-		fmt.Printf("Balance: %s\n", string2eth.GWeiToString(validatorInfo.Balance, true))
-
-		if validatorInfo.Status == ethpb.ValidatorStatus_ACTIVE ||
-			validatorInfo.Status == ethpb.ValidatorStatus_EXITING ||
-			validatorInfo.Status == ethpb.ValidatorStatus_SLASHING {
-			fmt.Printf("Effective balance: %s\n", string2eth.GWeiToString(validatorInfo.EffectiveBalance, true))
-		}
-
-		if validator != nil {
-			outputIf(verbose, fmt.Sprintf("Withdrawal credentials: %#x", validator.WithdrawalCredentials))
-		}
-
-		transition := time.Unix(int64(validatorInfo.TransitionTimestamp), 0)
-		transitionPassed := int64(validatorInfo.TransitionTimestamp) <= time.Now().Unix()
-		switch validatorInfo.Status {
-		case ethpb.ValidatorStatus_DEPOSITED:
-			if validatorInfo.TransitionTimestamp != 0 {
-				fmt.Printf("Inclusion in chain: %s\n", transition)
+		if verbose {
+			if validator.Status.HasActivated() {
+				fmt.Printf("Index: %d\n", validator.Index)
 			}
-		case ethpb.ValidatorStatus_PENDING:
-			fmt.Printf("Activation: %s\n", transition)
-		case ethpb.ValidatorStatus_EXITING, ethpb.ValidatorStatus_SLASHING:
-			fmt.Printf("Attesting finishes: %s\n", transition)
-		case ethpb.ValidatorStatus_EXITED:
-			if transitionPassed {
-				fmt.Printf("Funds withdrawable: Now\n")
-			} else {
-				fmt.Printf("Funds withdrawable: %s\n", transition)
-			}
+			fmt.Printf("Public key: %#x\n", validator.Validator.PublicKey)
 		}
+		fmt.Printf("Status: %v\n", validator.Status)
+		fmt.Printf("Balance: %s\n", string2eth.GWeiToString(uint64(validator.Balance), true))
+		if validator.Status.IsActive() {
+			fmt.Printf("Effective balance: %s\n", string2eth.GWeiToString(uint64(validator.Validator.EffectiveBalance), true))
+		}
+		if verbose {
+			fmt.Printf("Withdrawal credentials: %#x\n", validator.Validator.WithdrawalCredentials)
+		}
+
+		//		transition := time.Unix(int64(validatorInfo.TransitionTimestamp), 0)
+		//		transitionPassed := int64(validatorInfo.TransitionTimestamp) <= time.Now().Unix()
+		//		switch validatorInfo.Status {
+		//		case ethpb.ValidatorStatus_DEPOSITED:
+		//			if validatorInfo.TransitionTimestamp != 0 {
+		//				fmt.Printf("Inclusion in chain: %s\n", transition)
+		//			}
+		//		case ethpb.ValidatorStatus_PENDING:
+		//			fmt.Printf("Activation: %s\n", transition)
+		//		case ethpb.ValidatorStatus_EXITING, ethpb.ValidatorStatus_SLASHING:
+		//			fmt.Printf("Attesting finishes: %s\n", transition)
+		//		case ethpb.ValidatorStatus_EXITED:
+		//			if transitionPassed {
+		//				fmt.Printf("Funds withdrawable: Now\n")
+		//			} else {
+		//				fmt.Printf("Funds withdrawable: %s\n", transition)
+		//			}
+		//		}
 
 		os.Exit(_exitSuccess)
 	},
@@ -128,29 +130,37 @@ In quiet mode this will return 0 if the validator information can be obtained, o
 func validatorInfoAccount() (e2wtypes.Account, error) {
 	var account e2wtypes.Account
 	var err error
-	if viper.GetString("account") != "" {
+	switch {
+	case viper.GetString("account") != "":
 		ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("timeout"))
 		defer cancel()
 		_, account, err = walletAndAccountFromPath(ctx, viper.GetString("account"))
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to obtain account")
 		}
-	} else {
-		pubKeyBytes, err := hex.DecodeString(strings.TrimPrefix(validatorInfoPubKey, "0x"))
+	case viper.GetString("pubkey") != "":
+		pubKeyBytes, err := hex.DecodeString(strings.TrimPrefix(viper.GetString("pubkey"), "0x"))
 		if err != nil {
-			return nil, errors.Wrap(err, fmt.Sprintf("failed to decode public key %s", validatorInfoPubKey))
+			return nil, errors.Wrap(err, fmt.Sprintf("failed to decode public key %s", viper.GetString("pubkey")))
 		}
 		account, err = util.NewScratchAccount(nil, pubKeyBytes)
 		if err != nil {
-			return nil, errors.Wrap(err, fmt.Sprintf("invalid public key %s", validatorInfoPubKey))
+			return nil, errors.Wrap(err, fmt.Sprintf("invalid public key %s", viper.GetString("pubkey")))
 		}
+	default:
+		return nil, errors.New("neither account nor public key supplied")
 	}
 	return account, nil
 }
 
 // graphData returns data from the graph about number and amount of deposits
-func graphData(network string, validatorPubKey []byte) (uint64, uint64, error) {
-	subgraph := fmt.Sprintf("attestantio/eth2deposits-%s", strings.ToLower(network))
+func graphData(network string, validatorPubKey []byte) (uint64, spec.Gwei, error) {
+	subgraph := ""
+	if network == "Mainnet" {
+		subgraph = "attestantio/eth2deposits"
+	} else {
+		subgraph = fmt.Sprintf("attestantio/eth2deposits-%s", strings.ToLower(network))
+	}
 	query := fmt.Sprintf(`{"query": "{deposits(where: {validatorPubKey:\"%#x\"}) { id amount withdrawalCredentials }}"}`, validatorPubKey)
 	url := fmt.Sprintf("https://api.thegraph.com/subgraphs/name/%s", subgraph)
 	graphResp, err := http.Post(url, "application/json", bytes.NewBufferString(query))
@@ -180,7 +190,7 @@ func graphData(network string, validatorPubKey []byte) (uint64, uint64, error) {
 		return 0, 0, errors.Wrap(err, "invalid data returned from existing deposit check")
 	}
 	deposits := uint64(0)
-	totalDeposited := uint64(0)
+	totalDeposited := spec.Gwei(0)
 	if response.Data != nil && len(response.Data.Deposits) > 0 {
 		for _, deposit := range response.Data.Deposits {
 			deposits++
@@ -188,7 +198,7 @@ func graphData(network string, validatorPubKey []byte) (uint64, uint64, error) {
 			if err != nil {
 				return 0, 0, errors.Wrap(err, fmt.Sprintf("invalid deposit amount from pre-existing deposit %s", deposit.Amount))
 			}
-			totalDeposited += depositAmount
+			totalDeposited += spec.Gwei(depositAmount)
 		}
 	}
 	return deposits, totalDeposited, nil
@@ -196,6 +206,12 @@ func graphData(network string, validatorPubKey []byte) (uint64, uint64, error) {
 
 func init() {
 	validatorCmd.AddCommand(validatorInfoCmd)
-	validatorInfoCmd.Flags().StringVar(&validatorInfoPubKey, "pubkey", "", "Public key for which to obtain status")
+	validatorInfoCmd.Flags().String("pubkey", "", "Public key for which to obtain status")
 	validatorFlags(validatorInfoCmd)
+}
+
+func validatorInfoBindings() {
+	if err := viper.BindPFlag("pubkey", validatorInfoCmd.Flags().Lookup("pubkey")); err != nil {
+		panic(err)
+	}
 }

@@ -47,6 +47,7 @@ func TestProcess(t *testing.T) {
 			dataIn: &dataIn{
 				eth2Client: eth2Client,
 			},
+			err: "no block supplied",
 		},
 	}
 

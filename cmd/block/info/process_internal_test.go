@@ -47,7 +47,7 @@ func TestProcess(t *testing.T) {
 			dataIn: &dataIn{
 				eth2Client: eth2Client,
 			},
-			err: "no block supplied",
+			err: "failed to output block: failed to generate text: no block supplied",
 		},
 	}
 

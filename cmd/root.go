@@ -25,6 +25,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"github.com/wealdtech/ethdo/util"
 	e2types "github.com/wealdtech/go-eth2-types/v2"
 	e2wallet "github.com/wealdtech/go-eth2-wallet"
 	dirk "github.com/wealdtech/go-eth2-wallet-dirk"
@@ -103,7 +104,7 @@ func persistentPreRun(cmd *cobra.Command, args []string) {
 		// Set up our wallet store
 		switch rootStore {
 		case "s3":
-			assert(viper.GetString("base-dir") == "", "--basedir does not apply for the s3 store")
+			assert(util.GetBaseDir() == "", "--base-dir does not apply for the s3 store")
 			var err error
 			store, err = s3.New(s3.WithPassphrase([]byte(getStorePassphrase())))
 			errCheck(err, "Failed to access Amazon S3 wallet store")
@@ -112,8 +113,8 @@ func persistentPreRun(cmd *cobra.Command, args []string) {
 			if getStorePassphrase() != "" {
 				opts = append(opts, filesystem.WithPassphrase([]byte(getStorePassphrase())))
 			}
-			if viper.GetString("base-dir") != "" {
-				opts = append(opts, filesystem.WithLocation(viper.GetString("base-dir")))
+			if util.GetBaseDir() != "" {
+				opts = append(opts, filesystem.WithLocation(util.GetBaseDir()))
 			}
 			store = filesystem.New(opts...)
 		default:
@@ -157,15 +158,30 @@ func init() {
 		panic(err)
 	}
 	RootCmd.PersistentFlags().String("basedir", "", "Base directory for filesystem wallets")
-	if err := viper.BindPFlag("base-dir", RootCmd.PersistentFlags().Lookup("basedir")); err != nil {
+	if err := viper.BindPFlag("basedir", RootCmd.PersistentFlags().Lookup("basedir")); err != nil {
+		panic(err)
+	}
+	RootCmd.PersistentFlags().MarkDeprecated("basedir", "use --base-dir")
+	RootCmd.PersistentFlags().String("base-dir", "", "Base directory for filesystem wallets")
+	if err := viper.BindPFlag("base-dir", RootCmd.PersistentFlags().Lookup("base-dir")); err != nil {
 		panic(err)
 	}
 	RootCmd.PersistentFlags().String("storepassphrase", "", "Passphrase for store (if applicable)")
-	if err := viper.BindPFlag("store-passphrase", RootCmd.PersistentFlags().Lookup("storepassphrase")); err != nil {
+	if err := viper.BindPFlag("storepassphrase", RootCmd.PersistentFlags().Lookup("storepassphrase")); err != nil {
+		panic(err)
+	}
+	RootCmd.PersistentFlags().MarkDeprecated("storepassphrase", "use --store-passphrase")
+	RootCmd.PersistentFlags().String("store-passphrase", "", "Passphrase for store (if applicable)")
+	if err := viper.BindPFlag("store-passphrase", RootCmd.PersistentFlags().Lookup("store-passphrase")); err != nil {
 		panic(err)
 	}
 	RootCmd.PersistentFlags().String("walletpassphrase", "", "Passphrase for wallet (if applicable)")
-	if err := viper.BindPFlag("wallet-passphrase", RootCmd.PersistentFlags().Lookup("walletpassphrase")); err != nil {
+	if err := viper.BindPFlag("walletpassphrase", RootCmd.PersistentFlags().Lookup("walletpassphrase")); err != nil {
+		panic(err)
+	}
+	RootCmd.PersistentFlags().MarkDeprecated("walletpassphrase", "use --wallet-passphrase")
+	RootCmd.PersistentFlags().String("wallet-passphrase", "", "Passphrase for wallet (if applicable)")
+	if err := viper.BindPFlag("wallet-passphrase", RootCmd.PersistentFlags().Lookup("wallet-passphrase")); err != nil {
 		panic(err)
 	}
 	RootCmd.PersistentFlags().StringSlice("passphrase", nil, "Passphrase for account (if applicable)")
@@ -318,7 +334,7 @@ func walletAndAccountFromPath(ctx context.Context, path string) (e2wtypes.Wallet
 
 		locker, isLocker := wallet.(e2wtypes.WalletLocker)
 		if isLocker {
-			err = locker.Unlock(ctx, []byte(viper.GetString("wallet-passphrase")))
+			err = locker.Unlock(ctx, []byte(util.GetWalletPassphrase()))
 			if err != nil {
 				return nil, nil, errors.New("failed to unlock wallet")
 			}

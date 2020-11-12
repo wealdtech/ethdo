@@ -1,4 +1,8 @@
 Development:
+  - use go-eth2-client for beacon node communications
+  - deprecated "--basedir" in favor of "--base-dir"
+  - deprecated "--storepassphrase" in favor of "--store-passphrase"
+  - deprecated "--walletpassphrsae" in favor of "--wallet-passphrsae"
   - renamed "--exportpassphrase" and "--importpassphrase" flags to "--passphrase"
   - reworked internal structure of account-related commands
   - reject weak passphrases by default

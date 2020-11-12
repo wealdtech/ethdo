@@ -160,3 +160,93 @@ func TestGetOptionalPassphrase(t *testing.T) {
 		})
 	}
 }
+
+func TestStorePassphrase(t *testing.T) {
+	tests := []struct {
+		name     string
+		inputs   map[string]interface{}
+		expected string
+	}{
+		{
+			name: "Nil",
+		},
+		{
+			name: "Current",
+			inputs: map[string]interface{}{
+				"store-passphrase": "secret",
+			},
+			expected: "secret",
+		},
+		{
+			name: "Deprecated",
+			inputs: map[string]interface{}{
+				"storepassphrase": "secret",
+			},
+			expected: "secret",
+		},
+		{
+			name: "Override",
+			inputs: map[string]interface{}{
+				"storepassphrase":  "secret",
+				"store-passphrase": "secret2",
+			},
+			expected: "secret2",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			viper.Reset()
+			for k, v := range test.inputs {
+				viper.Set(k, v)
+			}
+			res := util.GetStorePassphrase()
+			require.Equal(t, test.expected, res)
+		})
+	}
+}
+
+func TestWalletPassphrase(t *testing.T) {
+	tests := []struct {
+		name     string
+		inputs   map[string]interface{}
+		expected string
+	}{
+		{
+			name: "Nil",
+		},
+		{
+			name: "Current",
+			inputs: map[string]interface{}{
+				"wallet-passphrase": "secret",
+			},
+			expected: "secret",
+		},
+		{
+			name: "Deprecated",
+			inputs: map[string]interface{}{
+				"walletpassphrase": "secret",
+			},
+			expected: "secret",
+		},
+		{
+			name: "Override",
+			inputs: map[string]interface{}{
+				"walletpassphrase":  "secret",
+				"wallet-passphrase": "secret2",
+			},
+			expected: "secret2",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			viper.Reset()
+			for k, v := range test.inputs {
+				viper.Set(k, v)
+			}
+			res := util.GetWalletPassphrase()
+			require.Equal(t, test.expected, res)
+		})
+	}
+}

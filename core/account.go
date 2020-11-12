@@ -43,7 +43,7 @@ func setup() error {
 	// Set up our wallet store.
 	switch viper.GetString("store") {
 	case "s3":
-		if viper.GetString("base-dir") != "" {
+		if util.GetBaseDir() != "" {
 			return errors.New("basedir does not apply to the s3 store")
 		}
 		store, err = s3.New(s3.WithPassphrase([]byte(util.GetStorePassphrase())))
@@ -55,7 +55,7 @@ func setup() error {
 		if util.GetStorePassphrase() != "" {
 			opts = append(opts, filesystem.WithPassphrase([]byte(util.GetStorePassphrase())))
 		}
-		if viper.GetString("base-dir") != "" {
+		if util.GetBaseDir() != "" {
 			opts = append(opts, filesystem.WithLocation(viper.GetString("base-dir")))
 		}
 		store = filesystem.New(opts...)
@@ -142,7 +142,7 @@ func WalletAndAccountFromPath(ctx context.Context, path string) (e2wtypes.Wallet
 
 		locker, isLocker := wallet.(e2wtypes.WalletLocker)
 		if isLocker {
-			err = locker.Unlock(ctx, []byte(viper.GetString("wallet-passphrase")))
+			err = locker.Unlock(ctx, []byte(util.GetWalletPassphrase()))
 			if err != nil {
 				return nil, nil, errors.New("failed to unlock wallet")
 			}

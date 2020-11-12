@@ -15,7 +15,7 @@ The first thing you need to do is to create a wallet.  To do this run the comman
   - rename the wallet to something other than `Wallet` if you so desire.  If so, you will need to change it in all subsequent commands
 
 ```
-$ ethdo wallet create --type=hd --mnemonic='abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon art' --wallet=Wallet --walletpassphrase=secret
+$ ethdo wallet create --type=hd --mnemonic='abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon art' --wallet=Wallet --wallet-passphrase=secret
 ```
 
 ### I want a specific public key.
@@ -29,7 +29,7 @@ You should first create a wallet as per the previous step.  To then create an ac
   - pick a suitable passphrase for your account in place of `secret2`.  you will need to use this in all subsequent commands
 
 ```
-$ ethdo account create --account=Wallet/Account --path=m/12381/3600/0/0 --walletpassphrase=secret --passphrase=secret2
+$ ethdo account create --account=Wallet/Account --path=m/12381/3600/0/0 --wallet-passphrase=secret --passphrase=secret2
 ```
 
 At this point you should be able to view your account info with:
@@ -66,8 +66,8 @@ To recreate these as `ethdo` accounts run these commands with the following chan
   - pick suitable passphrases for your account in place of `secret2`
 
 ```
-$ ethdo account create --account=Wallet/Withdrawal_i_ --path=m/12381/3600/_i_/0 --walletpassphrase=secret --passphrase=secret2
-$ ethdo account create --account=Wallet/Validator_i_ --path=m/12381/3600/_i_/0/0 --walletpassphrase=secret --passphrase=secret2
+$ ethdo account create --account=Wallet/Withdrawal_i_ --path=m/12381/3600/_i_/0 --wallet-passphrase=secret --passphrase=secret2
+$ ethdo account create --account=Wallet/Validator_i_ --path=m/12381/3600/_i_/0/0 --wallet-passphrase=secret --passphrase=secret2
 ```
 
 ### I want to recreate the deposit data for my _i_th validator

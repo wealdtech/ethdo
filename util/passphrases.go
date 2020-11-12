@@ -20,12 +20,22 @@ import (
 
 // GetStorePassphrases() fetches the store passphrase supplied by the user.
 func GetStorePassphrase() string {
-	return viper.GetString("store-passphrase")
+	storePassphrase := viper.GetString("store-passphrase")
+	if storePassphrase == "" {
+		// Try deprecated name.
+		storePassphrase = viper.GetString("storepassphrase")
+	}
+	return storePassphrase
 }
 
 // GetWalletPassphrases() fetches the wallet passphrase supplied by the user.
 func GetWalletPassphrase() string {
-	return viper.GetString("wallet-passphrase")
+	walletPassphrase := viper.GetString("wallet-passphrase")
+	if walletPassphrase == "" {
+		// Try deprecated name.
+		walletPassphrase = viper.GetString("walletpassphrase")
+	}
+	return walletPassphrase
 }
 
 // GetPassphrases() fetches the passphrases supplied by the user.

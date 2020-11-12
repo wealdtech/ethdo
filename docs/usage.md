@@ -30,11 +30,11 @@ Spending: 0x85dfc6dcee4c9da36f6473ec02fda283d6c920c641fc8e3a76113c5c227d4aeeb100
 `ethdo wallet create` creates a new wallet with the given parameters.  Options for creating a wallet include:
   - `wallet`: the name of the wallet to create
   - `type`: the type of wallet to create.  This can be either "nd" for a non-deterministic wallet, where private keys are generated randomly, or "hd" for a hierarchical deterministic wallet, where private keys are generated from a seed and path as per [ERC-2333](https://github.com/CarlBeek/EIPs/blob/bls_path/EIPS/eip-2334.md) (defaults to "nd")
-  - `walletpassphrase`: the passphrase for of the wallet.  This is required for hierarchical deterministic wallets, to protect the seed
+  - `wallet-passphrase`: the passphrase for of the wallet.  This is required for hierarchical deterministic wallets, to protect the seed
   - `mnemonic`: for hierarchical deterministic wallets only, use a pre-defined 24-word [BIP-39 seed phrase](https://en.bitcoin.it/wiki/Seed_phrase) to create the wallet, along with an additional "seed extension" phrase if required.  **Warning** The same mnemonic can be used to create multiple wallets, in which case they will generate the same keys.
 
 ```sh
-$ ethdo wallet create --wallet="Personal wallet" --type="hd" --walletpassphrase="my wallet secret"
+$ ethdo wallet create --wallet="Personal wallet" --type="hd" --wallet-passphrase="my wallet secret"
 ```
 
 #### `delete`
@@ -114,12 +114,12 @@ Account commands focus on information about local accounts, generally those used
   - `passphrase`: the passphrase for the account
   - `path`: the HD path for the account (only for hierarchical deterministic accounts)
 
-Note that for hierarchical deterministic wallets you will also need to supply `--walletpassphrase` to unlock the wallet seed.
+Note that for hierarchical deterministic wallets you will also need to supply `--wallet-passphrase` to unlock the wallet seed.
 
 For distributed accounts you will also need to supply `--participants` and `--signing-threshold`.
 
 ```sh
-$ ethdo account create --account="Personal wallet/Operations" --walletpassphrase="my wallet secret" --passphrase="my account secret"
+$ ethdo account create --account="Personal wallet/Operations" --wallet-passphrase="my wallet secret" --passphrase="my account secret"
 ```
 #### `import`
 

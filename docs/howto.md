@@ -29,7 +29,7 @@ Additional options are available to decide the type of wallet and encryption.
 HD wallets can be created from an existing mnemonic by adding the `--mnemonic` parameter to `ethdo wallet create`, for example:
 
 ```sh
-ethdo wallet create --wallet="Recreated wallet" --type=hd --walletpassphrase="secret" --mnemonic="tooth moon mad fun romance athlete envelope next mix divert tip top symbol resemble stock family melody desk sheriff drift bargain need jaguar method"
+ethdo wallet create --wallet="Recreated wallet" --type=hd --wallet-passphrase="secret" --mnemonic="tooth moon mad fun romance athlete envelope next mix divert tip top symbol resemble stock family melody desk sheriff drift bargain need jaguar method"
 ```
 
 ## Back up a wallet
@@ -71,7 +71,7 @@ Recreating launchpad accounts requires two steps: recreating the wallet, and rec
 To recreate the wallet with the given mnemonic run the following command (changing the wallet name, passphrase and mnemonic as required):
 
 ```sh
-ethdo wallet create --wallet="Launchpad" --type=hd --walletpassphrase=walletsecret --mnemonic="faculty key lamp panel appear choose express off absent dance strike twenty elephant expect swift that resist bicycle kind sun favorite evoke engage thumb"
+ethdo wallet create --wallet="Launchpad" --type=hd --wallet-passphrase=walletsecret --mnemonic="faculty key lamp panel appear choose express off absent dance strike twenty elephant expect swift that resist bicycle kind sun favorite evoke engage thumb"
 ```
 
 Launchpad accounts are identified by their path.  The path can be seen in the filename of the keystore, for example the filename `keystore-m_12381_3600_1_0_0-1596891358.json` relates to a path of `m/12381/3600/1/0/0`.  It is also present directly in the keystore under the `path` key.
@@ -79,5 +79,5 @@ Launchpad accounts are identified by their path.  The path can be seen in the fi
 To create an account corresponding to this key with the account name "Account 1" you would use the command:
 
 ```sh
-ethdo account create --account="Launchpad/Account 1" --walletpassphrase=walletsecret --passphrase=secret --path=m/12381/3600/1/0/0
+ethdo account create --account="Launchpad/Account 1" --wallet-passphrase=walletsecret --passphrase=secret --path=m/12381/3600/1/0/0
 ```

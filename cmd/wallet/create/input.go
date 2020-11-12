@@ -44,6 +44,10 @@ func input(ctx context.Context) (*dataIn, error) {
 	var err error
 	data := &dataIn{}
 
+	if viper.Get("remote") != "" {
+		return nil, errors.New("cannot create remote wallets")
+	}
+
 	if viper.GetDuration("timeout") == 0 {
 		return nil, errors.New("timeout is required")
 	}

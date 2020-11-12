@@ -14,11 +14,13 @@ require (
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0 // indirect
 	github.com/herumi/bls-eth-go-binary v0.0.0-20201104034342-d782bdf735de
 	github.com/magiconair/properties v1.8.4 // indirect
+	github.com/minio/highwayhash v1.0.1 // indirect
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mitchellh/mapstructure v1.3.3 // indirect
 	github.com/nbutton23/zxcvbn-go v0.0.0-20180912185939-ae427f1e4c1d
 	github.com/pelletier/go-toml v1.8.1 // indirect
 	github.com/pkg/errors v0.9.1
+	github.com/protolambda/zssz v0.1.5 // indirect
 	github.com/prysmaticlabs/ethereumapis v0.0.0-20201020182719-7f66dae2bbba
 	github.com/prysmaticlabs/go-bitfield v0.0.0-20200618145306-2ae0807bef65
 	github.com/prysmaticlabs/go-ssz v0.0.0-20200612203617-6d5c9aa213ae

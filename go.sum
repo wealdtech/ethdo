@@ -67,6 +67,7 @@ github.com/attestantio/dirk v0.9.1 h1:oof1Xm0uI4a2T9vhQB+f3Wjlngd2rnfsKi8aj1wqNh
 github.com/attestantio/dirk v0.9.1/go.mod h1:oWsyIb/OXdx9pvDQqS3hdFBB1eFaYnrNjuvLtVwo69w=
 github.com/attestantio/dirk v0.9.2 h1:yv/Tp/Y/1wATdASROOoY2ZxP1NFjZZCD0b5TasnvYSg=
 github.com/attestantio/dirk v0.9.2/go.mod h1:yIpIiADNeBmhsCxhZ0o3gFVmUnpl9sPqRhVtwNApJoc=
+github.com/attestantio/dirk v0.9.3 h1:hJj/X63n7UV+DseKlR8Kjs+zLYtf+2Alqk9A6nI8mUg=
 github.com/attestantio/dirk v0.9.3/go.mod h1:EfppeT+VjQXnE9Ti5/vxa6ptZJAN2vMXO6KZojvSOXA=
 github.com/attestantio/go-eth2-client v0.6.8 h1:Lsjx5P0pB8ruZBfJUbqy5hpevD4Zt8Z0Lg4V5m2s53E=
 github.com/attestantio/go-eth2-client v0.6.8/go.mod h1:lYEayGHzZma9HMUJgyxFIzDWRck8n2IedP7KTkIwe0g=
@@ -675,6 +676,7 @@ github.com/wealdtech/go-eth2-wallet-dirk v1.0.4 h1:BOESKDQ2n8EsaeyD+wsTk71zx6VY1
 github.com/wealdtech/go-eth2-wallet-dirk v1.0.4/go.mod h1:ezepVp6m3sNGsZwFzcA6kjgljGek9ZGYh5AdC5PndPo=
 github.com/wealdtech/go-eth2-wallet-dirk v1.1.2 h1:HSF3j/RY5bl46cPgskNNz9k7NEeVRrZq+qKWDKRWqP8=
 github.com/wealdtech/go-eth2-wallet-dirk v1.1.2/go.mod h1:WQ0YW8E+A8r+SjMYX8ZwouZNAHEQPvoxy4Q3OtC0KqU=
+github.com/wealdtech/go-eth2-wallet-dirk v1.1.4 h1:huJwlmQDNGjjBi6B/yEDLYFUcx+xbldhoJfkVGLBJYY=
 github.com/wealdtech/go-eth2-wallet-dirk v1.1.4/go.mod h1:CEQyNdk+egD2UbvnVn4qGeSBkvR09dmknCA293WiCVk=
 github.com/wealdtech/go-eth2-wallet-distributed v1.0.1 h1:3BxMII8T6t16g6lWcYWXjfdvaw8rXuwMQx9h0TG5wRg=
 github.com/wealdtech/go-eth2-wallet-distributed v1.0.1/go.mod h1:Ha/8S+SCLEuSfXHdvhTLwnKaEF47o6gzQ+FURKwftvU=

@@ -52,6 +52,17 @@ func TestInput(t *testing.T) {
 	)
 	require.NoError(t, err)
 
+	var mainnetForkVersion *spec.Version
+	{
+		tmp := testutil.HexToVersion("0x00000000")
+		mainnetForkVersion = &tmp
+	}
+	var mainnetDomain *spec.Domain
+	{
+		tmp := testutil.HexToDomain("0x03000000f5a5fd42d16a20302798ef6ed309979b43003d2320d9f0e8ea9831a9")
+		mainnetDomain = &tmp
+	}
+
 	var forkVersion *spec.Version
 	{
 		tmp := testutil.HexToVersion("0x01020304")
@@ -184,6 +195,22 @@ func TestInput(t *testing.T) {
 		},
 		{
 			name: "Good",
+			vars: map[string]interface{}{
+				"validatoraccount":  "Test/Interop 0",
+				"withdrawalaccount": "Test/Interop 0",
+				"depositvalue":      "32 Ether",
+			},
+			res: &dataIn{
+				format:                "json",
+				withdrawalCredentials: testutil.HexToBytes("0x00fad2a6bfb0e7f1f0f45460944fbd8dfa7f37da06a4d13b3983cc90bb46963b"),
+				amount:                32000000000,
+				validatorAccounts:     []e2wtypes.Account{interop0},
+				forkVersion:           mainnetForkVersion,
+				domain:                mainnetDomain,
+			},
+		},
+		{
+			name: "GoodForkVersionOverride",
 			vars: map[string]interface{}{
 				"validatoraccount":  "Test/Interop 0",
 				"withdrawalaccount": "Test/Interop 0",

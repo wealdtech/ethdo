@@ -155,8 +155,14 @@ func validatorDepositDataOutputJSON(datum *dataOut) (string, error) {
 	if datum.depositDataRoot == nil {
 		return "", errors.New("deposit data root required")
 	}
+	if datum.depositDataRoot == nil {
+		return "", errors.New("deposit message root required")
+	}
+	if datum.forkVersion == nil {
+		return "", errors.New("fork version required")
+	}
 
-	output := fmt.Sprintf(`{"name":"Deposit for %s","account":"%s","pubkey":"%#x","withdrawal_credentials":"%#x","signature":"%#x","value":%d,"deposit_data_root":"%#x","version":2}`,
+	output := fmt.Sprintf(`{"name":"Deposit for %s","account":"%s","pubkey":"%#x","withdrawal_credentials":"%#x","signature":"%#x","amount":%d,"deposit_data_root":"%#x","deposit_message_root":"%#x","fork_version":"%#x","version":3}`,
 		datum.account,
 		datum.account,
 		*datum.validatorPubKey,
@@ -164,6 +170,8 @@ func validatorDepositDataOutputJSON(datum *dataOut) (string, error) {
 		*datum.signature,
 		datum.amount,
 		*datum.depositDataRoot,
+		*datum.depositMessageRoot,
+		*datum.forkVersion,
 	)
 	return output, nil
 }

@@ -18,7 +18,6 @@ import (
 	"encoding/hex"
 	"strings"
 
-	eth2client "github.com/attestantio/go-eth2-client"
 	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
@@ -128,8 +127,12 @@ func input() (*dataIn, error) {
 }
 
 func inputForkVersion(ctx context.Context) (*spec.Version, error) {
+	// Default to mainnet.
+	forkVersion := &spec.Version{0x00, 0x00, 0x00, 0x00}
+
+	// Override if supplied.
 	if viper.GetString("forkversion") != "" {
-		forkVersion, err := hex.DecodeString(strings.TrimPrefix(viper.GetString("forkversion"), "0x"))
+		data, err := hex.DecodeString(strings.TrimPrefix(viper.GetString("forkversion"), "0x"))
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to decode fork version")
 		}
@@ -137,19 +140,7 @@ func inputForkVersion(ctx context.Context) (*spec.Version, error) {
 			return nil, errors.New("fork version must be exactly 4 bytes in length")
 		}
 
-		res := &spec.Version{}
-		copy(res[:], forkVersion)
-		return res, nil
+		copy(forkVersion[:], data)
 	}
-
-	eth2Client, err := ethdoutil.ConnectToBeaconNode(ctx, viper.GetString("connection"), viper.GetDuration("timeout"), viper.GetBool("allow-insecure-connections"))
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to connect to Ethereum 2 beacon node")
-	}
-
-	genesis, err := eth2Client.(eth2client.GenesisProvider).Genesis(ctx)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to obtain genesis")
-	}
-	return &genesis.GenesisForkVersion, nil
+	return forkVersion, nil
 }

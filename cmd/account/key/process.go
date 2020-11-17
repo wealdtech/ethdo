@@ -17,6 +17,7 @@ import (
 	"context"
 
 	"github.com/pkg/errors"
+	"github.com/wealdtech/ethdo/util"
 	e2wtypes "github.com/wealdtech/go-eth2-wallet-types/v2"
 )
 
@@ -52,7 +53,11 @@ func process(ctx context.Context, data *dataIn) (*dataOut, error) {
 				return nil, errors.New("failed to unlock account")
 			}
 			// Because we unlocked the accout we should re-lock it when we're done.
-			defer locker.Lock(ctx)
+			defer func() {
+				if err := locker.Lock(ctx); err != nil {
+					util.Log.Trace().Err(err).Msg("Failed to lock account")
+				}
+			}()
 		}
 	}
 	key, err := privateKeyProvider.PrivateKey(ctx)

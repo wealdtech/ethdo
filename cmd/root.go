@@ -25,12 +25,11 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"github.com/wealdtech/ethdo/core"
 	"github.com/wealdtech/ethdo/util"
 	e2types "github.com/wealdtech/go-eth2-types/v2"
 	e2wallet "github.com/wealdtech/go-eth2-wallet"
 	dirk "github.com/wealdtech/go-eth2-wallet-dirk"
-	filesystem "github.com/wealdtech/go-eth2-wallet-store-filesystem"
-	s3 "github.com/wealdtech/go-eth2-wallet-store-s3"
 	e2wtypes "github.com/wealdtech/go-eth2-wallet-types/v2"
 )
 
@@ -39,36 +38,29 @@ var quiet bool
 var verbose bool
 var debug bool
 
-// Root variables, present for all commands.
-var rootStore string
-
-// Store for wallet actions.
-var store e2wtypes.Store
-
 // RootCmd represents the base command when called without any subcommands
 var RootCmd = &cobra.Command{
-	Use:              "ethdo",
-	Short:            "Ethereum 2 CLI",
-	Long:             `Manage common Ethereum 2 tasks from the command line.`,
-	PersistentPreRun: persistentPreRun,
+	Use:               "ethdo",
+	Short:             "Ethereum 2 CLI",
+	Long:              `Manage common Ethereum 2 tasks from the command line.`,
+	PersistentPreRunE: persistentPreRunE,
 }
 
-func persistentPreRun(cmd *cobra.Command, args []string) {
+func persistentPreRunE(cmd *cobra.Command, args []string) error {
 	if cmd.Name() == "help" {
 		// User just wants help
-		return
+		return nil
 	}
 
 	if cmd.Name() == "version" {
 		// User just wants the version
-		return
+		return nil
 	}
 
 	// We bind viper here so that we bind to the correct command.
 	quiet = viper.GetBool("quiet")
 	verbose = viper.GetBool("verbose")
 	debug = viper.GetBool("debug")
-	rootStore = viper.GetString("store")
 	// Command-specific bindings.
 	switch fmt.Sprintf("%s/%s", cmd.Parent().Name(), cmd.Name()) {
 	case "account/create":
@@ -100,30 +92,11 @@ func persistentPreRun(cmd *cobra.Command, args []string) {
 		fmt.Println("Cannot supply both quiet and debug flags")
 	}
 
-	if viper.GetString("remote") == "" {
-		// Set up our wallet store
-		switch rootStore {
-		case "s3":
-			assert(util.GetBaseDir() == "", "--base-dir does not apply for the s3 store")
-			var err error
-			store, err = s3.New(s3.WithPassphrase([]byte(getStorePassphrase())))
-			errCheck(err, "Failed to access Amazon S3 wallet store")
-		case "filesystem":
-			opts := make([]filesystem.Option, 0)
-			if getStorePassphrase() != "" {
-				opts = append(opts, filesystem.WithPassphrase([]byte(getStorePassphrase())))
-			}
-			if util.GetBaseDir() != "" {
-				opts = append(opts, filesystem.WithLocation(util.GetBaseDir()))
-			}
-			store = filesystem.New(opts...)
-		default:
-			die(fmt.Sprintf("Unsupported wallet store %s", rootStore))
-		}
-		err := e2wallet.UseStore(store)
-		viper.Set("store", store)
-		errCheck(err, "Failed to use defined wallet store")
+	if err := core.SetupStore(); err != nil {
+		return err
 	}
+
+	return nil
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.

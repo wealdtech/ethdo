@@ -138,7 +138,7 @@ func TestScratchAccountFromPublicKey(t *testing.T) {
 				require.True(t, unlocked)
 				_, err = account.Sign(context.Background(), testutil.HexToBytes("0x000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"))
 				require.EqualError(t, err, "no private key")
-				account.Lock(context.Background())
+				require.NoError(t, account.Lock(context.Background()))
 				unlocked, err = account.IsUnlocked(context.Background())
 				require.NoError(t, err)
 				require.False(t, unlocked)

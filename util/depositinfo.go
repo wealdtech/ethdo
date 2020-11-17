@@ -74,6 +74,7 @@ type depositInfoCLI struct {
 	Amount                uint64 `json:"amount"`
 }
 
+// DepositInfoFromJSON obtains deposit info from various possibly formx of JSON.
 func DepositInfoFromJSON(input []byte) ([]*DepositInfo, error) {
 	if len(input) == 0 {
 		return nil, errors.New("no data supplied")

@@ -32,7 +32,8 @@ import (
 	e2wtypes "github.com/wealdtech/go-eth2-wallet-types/v2"
 )
 
-func setup() error {
+// SetupStore sets up the account store.
+func SetupStore() error {
 	var store e2wtypes.Store
 	var err error
 	if viper.GetString("remote") != "" {

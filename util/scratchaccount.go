@@ -60,36 +60,44 @@ func newScratchAccountFromPubKey(pubKey []byte) (*ScratchAccount, error) {
 	}, nil
 }
 
+// ID returns the account ID.
 func (a *ScratchAccount) ID() uuid.UUID {
 	return a.id
 }
 
+// Name returns the account name.
 func (a *ScratchAccount) Name() string {
 	return "scratch"
 }
 
+// PublicKey returns the account public key.
 func (a *ScratchAccount) PublicKey() e2types.PublicKey {
 	return a.pubKey
 }
 
+// Path returns the account path.
 func (a *ScratchAccount) Path() string {
 	return ""
 }
 
+// Lock locks the account.
 func (a *ScratchAccount) Lock(ctx context.Context) error {
 	a.unlocked = false
 	return nil
 }
 
+// Unlock unlocks the account.
 func (a *ScratchAccount) Unlock(ctx context.Context, passphrase []byte) error {
 	a.unlocked = true
 	return nil
 }
 
+// IsUnlocked returns true if the account is unlocked.
 func (a *ScratchAccount) IsUnlocked(ctx context.Context) (bool, error) {
 	return a.unlocked, nil
 }
 
+// Sign signs data with the account's private key.
 func (a *ScratchAccount) Sign(ctx context.Context, data []byte) (e2types.Signature, error) {
 	if !a.unlocked {
 		return nil, errors.New("locked")

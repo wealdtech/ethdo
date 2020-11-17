@@ -254,7 +254,7 @@ func outputBlockText(ctx context.Context, data *dataOut, signedBlock *spec.Signe
 	res.WriteString(tmp)
 
 	res.WriteString(fmt.Sprintf("Proposer slashings: %d\n", len(body.ProposerSlashings)))
-	// TODO verbose proposer slashings.
+	// Add verbose proposer slashings.
 
 	tmp, err = outputBlockDeposits(ctx, data.verbose, signedBlock.Message.Body.Deposits)
 	if err != nil {

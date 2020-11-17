@@ -34,7 +34,11 @@ func process(ctx context.Context, data *dataIn) (*dataOut, error) {
 		if err := locker.Unlock(ctx, []byte(data.walletPassphrase)); err != nil {
 			return nil, errors.Wrap(err, "failed to unlock wallet")
 		}
-		defer locker.Lock(ctx)
+		defer func() {
+			if err := locker.Lock(ctx); err != nil {
+				util.Log.Trace().Err(err).Msg("Failed to lock wallet")
+			}
+		}()
 	}
 	if data.participants == 0 {
 		return nil, errors.New("participants is required")

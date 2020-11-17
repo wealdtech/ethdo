@@ -26,8 +26,8 @@ import (
 // Log is the ethdo global logger.
 var Log zerolog.Logger
 
-// initLogging initialises logging.
-func initLogging() error {
+// InitLogging initialises logging.
+func InitLogging() error {
 	// Change the output file.
 	if viper.GetString("log-file") != "" {
 		f, err := os.OpenFile(viper.GetString("log-file"), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600)

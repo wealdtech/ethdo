@@ -22,6 +22,8 @@ import (
 	"github.com/spf13/viper"
 )
 
+// ReleaseVersion is the release version of the codebase.
+// Usually overrideen by tag names when building binaries.
 var ReleaseVersion = "local build from v1.6.1"
 
 // versionCmd represents the version command

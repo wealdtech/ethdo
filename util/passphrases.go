@@ -18,7 +18,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-// GetStorePassphrases() fetches the store passphrase supplied by the user.
+// GetStorePassphrase fetches the store passphrase supplied by the user.
 func GetStorePassphrase() string {
 	storePassphrase := viper.GetString("store-passphrase")
 	if storePassphrase == "" {
@@ -28,7 +28,7 @@ func GetStorePassphrase() string {
 	return storePassphrase
 }
 
-// GetWalletPassphrases() fetches the wallet passphrase supplied by the user.
+// GetWalletPassphrase fetches the wallet passphrase supplied by the user.
 func GetWalletPassphrase() string {
 	walletPassphrase := viper.GetString("wallet-passphrase")
 	if walletPassphrase == "" {
@@ -38,12 +38,12 @@ func GetWalletPassphrase() string {
 	return walletPassphrase
 }
 
-// GetPassphrases() fetches the passphrases supplied by the user.
+// GetPassphrases fetches the passphrases supplied by the user.
 func GetPassphrases() []string {
 	return viper.GetStringSlice("passphrase")
 }
 
-// getPassphrase fetches the passphrase supplied by the user.
+// GetPassphrase fetches the passphrase supplied by the user.
 func GetPassphrase() (string, error) {
 	passphrases := GetPassphrases()
 	if len(passphrases) == 0 {

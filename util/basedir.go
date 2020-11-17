@@ -17,7 +17,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-// GetBaseDir() fetches the base directory for wallets.
+// GetBaseDir fetches the base directory for wallets.
 func GetBaseDir() string {
 	baseDir := viper.GetString("base-dir")
 	if baseDir == "" {

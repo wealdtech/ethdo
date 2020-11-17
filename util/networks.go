@@ -46,9 +46,15 @@ func Network(ctx context.Context, eth2Client eth2client.Service) (string, error)
 	} else if provider, isProvider := eth2Client.(eth2client.SpecProvider); isProvider {
 		config, err := provider.Spec(ctx)
 		if err != nil {
-			return "", errors.Wrap(err, "failed to obtain deposit contract address")
+			return "", errors.Wrap(err, "failed to obtain chain specification")
 		}
-		address = config["DEPOSIT_CONTRACT_ADDRESS"].([]byte)
+		if config == nil {
+			return "", errors.New("failed to return chain specification")
+		}
+		depositContractAddress, exists := config["DEPOSIT_CONTRACT_ADDRESS"]
+		if exists {
+			address = depositContractAddress.([]byte)
+		}
 	}
 
 	return network(address), nil

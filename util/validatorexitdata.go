@@ -51,11 +51,17 @@ func (d *ValidatorExitData) UnmarshalJSON(data []byte) error {
 		return errors.Wrap(err, "failed to unmarshal JSON")
 	}
 
+	if validatorExitJSON.Data == nil {
+		return errors.New("data missing")
+	}
 	d.Data = validatorExitJSON.Data
 
+	if validatorExitJSON.ForkVersion == "" {
+		return errors.New("fork version missing")
+	}
 	forkVersion, err := hex.DecodeString(strings.TrimPrefix(validatorExitJSON.ForkVersion, "0x"))
 	if err != nil {
-		return errors.Wrap(err, "failed to parse fork version")
+		return errors.Wrap(err, "fork version invalid")
 	}
 	copy(d.ForkVersion[:], forkVersion)
 

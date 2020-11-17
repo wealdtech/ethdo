@@ -102,20 +102,6 @@ func DepositInfoFromJSON(input []byte) ([]*DepositInfo, error) {
 		return nil, errors.New("no deposits supplied")
 	}
 
-	for i := range depositInfo {
-		if len(depositInfo[i].PublicKey) == 0 {
-			return nil, fmt.Errorf("no public key for deposit %d", i)
-		}
-		if len(depositInfo[i].DepositDataRoot) == 0 {
-			return nil, fmt.Errorf("no data root for deposit %d", i)
-		}
-		if len(depositInfo[i].Signature) == 0 {
-			return nil, fmt.Errorf("no signature for deposit %d", i)
-		}
-		if len(depositInfo[i].WithdrawalCredentials) == 0 {
-			return nil, fmt.Errorf("no withdrawal credentials for deposit %d", i)
-		}
-	}
 	return depositInfo, nil
 }
 
@@ -131,25 +117,43 @@ func tryV3DepositInfoFromJSON(data []byte) ([]*DepositInfo, error) {
 		if deposit.Version != 3 {
 			return nil, errors.New("incorrect V3 deposit version")
 		}
+		if deposit.PublicKey == "" {
+			return nil, errors.New("public key missing")
+		}
 		publicKey, err := hex.DecodeString(strings.TrimPrefix(deposit.PublicKey, "0x"))
 		if err != nil {
 			return nil, errors.New("public key invalid")
+		}
+		if deposit.WithdrawalCredentials == "" {
+			return nil, errors.New("withdrawal credentials missing")
 		}
 		withdrawalCredentials, err := hex.DecodeString(strings.TrimPrefix(deposit.WithdrawalCredentials, "0x"))
 		if err != nil {
 			return nil, errors.New("withdrawal credentials invalid")
 		}
+		if deposit.Signature == "" {
+			return nil, errors.New("signature missing")
+		}
 		signature, err := hex.DecodeString(strings.TrimPrefix(deposit.Signature, "0x"))
 		if err != nil {
 			return nil, errors.New("signature invalid")
+		}
+		if deposit.DepositDataRoot == "" {
+			return nil, errors.New("deposit data root missing")
 		}
 		depositDataRoot, err := hex.DecodeString(strings.TrimPrefix(deposit.DepositDataRoot, "0x"))
 		if err != nil {
 			return nil, errors.New("deposit data root invalid")
 		}
+		if deposit.DepositMessageRoot == "" {
+			return nil, errors.New("deposit message root missing")
+		}
 		depositMessageRoot, err := hex.DecodeString(strings.TrimPrefix(deposit.DepositMessageRoot, "0x"))
 		if err != nil {
 			return nil, errors.New("deposit message root invalid")
+		}
+		if deposit.ForkVersion == "" {
+			return nil, errors.New("fork version missing")
 		}
 		forkVersion, err := hex.DecodeString(strings.TrimPrefix(deposit.ForkVersion, "0x"))
 		if err != nil {
@@ -181,25 +185,43 @@ func tryCLIDepositInfoFromJSON(data []byte) ([]*DepositInfo, error) {
 
 	depositInfos := make([]*DepositInfo, len(depositData))
 	for i, deposit := range depositData {
+		if deposit.PublicKey == "" {
+			return nil, errors.New("public key missing")
+		}
 		publicKey, err := hex.DecodeString(strings.TrimPrefix(deposit.PublicKey, "0x"))
 		if err != nil {
 			return nil, errors.New("public key invalid")
+		}
+		if deposit.WithdrawalCredentials == "" {
+			return nil, errors.New("withdrawal credentials missing")
 		}
 		withdrawalCredentials, err := hex.DecodeString(strings.TrimPrefix(deposit.WithdrawalCredentials, "0x"))
 		if err != nil {
 			return nil, errors.New("withdrawal credentials invalid")
 		}
+		if deposit.Signature == "" {
+			return nil, errors.New("signature missing")
+		}
 		signature, err := hex.DecodeString(strings.TrimPrefix(deposit.Signature, "0x"))
 		if err != nil {
 			return nil, errors.New("signature invalid")
+		}
+		if deposit.DepositDataRoot == "" {
+			return nil, errors.New("deposit data root missing")
 		}
 		depositDataRoot, err := hex.DecodeString(strings.TrimPrefix(deposit.DepositDataRoot, "0x"))
 		if err != nil {
 			return nil, errors.New("deposit data root invalid")
 		}
+		if deposit.DepositMessageRoot == "" {
+			return nil, errors.New("deposit message root missing")
+		}
 		depositMessageRoot, err := hex.DecodeString(strings.TrimPrefix(deposit.DepositMessageRoot, "0x"))
 		if err != nil {
 			return nil, errors.New("deposit message root invalid")
+		}
+		if deposit.ForkVersion == "" {
+			return nil, errors.New("fork version missing")
 		}
 		forkVersion, err := hex.DecodeString(strings.TrimPrefix(deposit.ForkVersion, "0x"))
 		if err != nil {

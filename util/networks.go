@@ -25,6 +25,7 @@ import (
 var networks = map[string]string{
 	"00000000219ab540356cbb839cbe05303d7705fa": "Mainnet",
 	"07b39f4fde4a38bace212b546dac87c58dfe3fdc": "Medalla",
+	"8c5fecdc472e27bc447696f431e425d02dd46a8c": "Pyrmont",
 }
 
 // Network returns the name of the network., calculated from the deposit contract information.
@@ -32,6 +33,10 @@ var networks = map[string]string{
 func Network(ctx context.Context, eth2Client eth2client.Service) (string, error) {
 	var address []byte
 	var err error
+
+	if eth2Client == nil {
+		return "", errors.New("no Ethereum 2 client supplied")
+	}
 
 	if provider, isProvider := eth2Client.(eth2client.DepositContractProvider); isProvider {
 		address, err = provider.DepositContractAddress(ctx)
@@ -45,11 +50,14 @@ func Network(ctx context.Context, eth2Client eth2client.Service) (string, error)
 		}
 		address = config["DEPOSIT_CONTRACT_ADDRESS"].([]byte)
 	}
-	// outputIf(debug, fmt.Sprintf("Deposit contract is %#x", address))
 
-	depositContract := fmt.Sprintf("%x", address)
-	if network, exists := networks[depositContract]; exists {
-		return network, nil
+	return network(address), nil
+}
+
+// network returns a network given an Ethereum 1 contract address.
+func network(address []byte) string {
+	if network, exists := networks[fmt.Sprintf("%x", address)]; exists {
+		return network
 	}
-	return "Unknown", nil
+	return "Unknown"
 }

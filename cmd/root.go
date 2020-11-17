@@ -161,7 +161,9 @@ func init() {
 	if err := viper.BindPFlag("basedir", RootCmd.PersistentFlags().Lookup("basedir")); err != nil {
 		panic(err)
 	}
-	RootCmd.PersistentFlags().MarkDeprecated("basedir", "use --base-dir")
+	if err := RootCmd.PersistentFlags().MarkDeprecated("basedir", "use --base-dir"); err != nil {
+		panic(err)
+	}
 	RootCmd.PersistentFlags().String("base-dir", "", "Base directory for filesystem wallets")
 	if err := viper.BindPFlag("base-dir", RootCmd.PersistentFlags().Lookup("base-dir")); err != nil {
 		panic(err)
@@ -170,7 +172,9 @@ func init() {
 	if err := viper.BindPFlag("storepassphrase", RootCmd.PersistentFlags().Lookup("storepassphrase")); err != nil {
 		panic(err)
 	}
-	RootCmd.PersistentFlags().MarkDeprecated("storepassphrase", "use --store-passphrase")
+	if err := RootCmd.PersistentFlags().MarkDeprecated("storepassphrase", "use --store-passphrase"); err != nil {
+		panic(err)
+	}
 	RootCmd.PersistentFlags().String("store-passphrase", "", "Passphrase for store (if applicable)")
 	if err := viper.BindPFlag("store-passphrase", RootCmd.PersistentFlags().Lookup("store-passphrase")); err != nil {
 		panic(err)
@@ -179,7 +183,9 @@ func init() {
 	if err := viper.BindPFlag("walletpassphrase", RootCmd.PersistentFlags().Lookup("walletpassphrase")); err != nil {
 		panic(err)
 	}
-	RootCmd.PersistentFlags().MarkDeprecated("walletpassphrase", "use --wallet-passphrase")
+	if err := RootCmd.PersistentFlags().MarkDeprecated("walletpassphrase", "use --wallet-passphrase"); err != nil {
+		panic(err)
+	}
 	RootCmd.PersistentFlags().String("wallet-passphrase", "", "Passphrase for wallet (if applicable)")
 	if err := viper.BindPFlag("wallet-passphrase", RootCmd.PersistentFlags().Lookup("wallet-passphrase")); err != nil {
 		panic(err)

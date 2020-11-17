@@ -38,6 +38,26 @@ func TestUnmarshal(t *testing.T) {
 			err:  "invalid character 'i' looking for beginning of value",
 		},
 		{
+			name: "DataMissing",
+			in:   []byte(`{"fork_version":"0x00000001"}`),
+			err:  "data missing",
+		},
+		{
+			name: "DataInvalid",
+			in:   []byte(`{"data":{},"fork_version":"0x00000001"}`),
+			err:  "failed to unmarshal JSON: message missing",
+		},
+		{
+			name: "ForkVersionMissing",
+			in:   []byte(`{"data":{"message":{"epoch":"0","validator_index":"0"},"signature":"0xb74eade64ebf1e02cc57e5d29517032c6ca99132fb8e7fb7e6d58c68713e581ef0ef88e2a6c599a007d997782abdd50b0f9763500a93a971c89cb2275583fe755d7c0e64f459ff22fcef5cab3f80848f0356e67c142b9cf3ee65613f56283d6e"}}`),
+			err:  "fork version missing",
+		},
+		{
+			name: "ForkVersionInvalid",
+			in:   []byte(`{"data":{"message":{"epoch":"0","validator_index":"0"},"signature":"0xb74eade64ebf1e02cc57e5d29517032c6ca99132fb8e7fb7e6d58c68713e581ef0ef88e2a6c599a007d997782abdd50b0f9763500a93a971c89cb2275583fe755d7c0e64f459ff22fcef5cab3f80848f0356e67c142b9cf3ee65613f56283d6e"},"fork_version":"invalid"}`),
+			err:  "fork version invalid: encoding/hex: invalid byte: U+0069 'i'",
+		},
+		{
 			name: "Good",
 			in:   []byte(`{"data":{"message":{"epoch":"0","validator_index":"0"},"signature":"0xb74eade64ebf1e02cc57e5d29517032c6ca99132fb8e7fb7e6d58c68713e581ef0ef88e2a6c599a007d997782abdd50b0f9763500a93a971c89cb2275583fe755d7c0e64f459ff22fcef5cab3f80848f0356e67c142b9cf3ee65613f56283d6e"},"fork_version":"0x00000001"}`),
 		},

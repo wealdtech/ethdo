@@ -84,9 +84,19 @@ func TestCLIDepositInfo(t *testing.T) {
 			err:   "invalid character 'i' looking for beginning of value",
 		},
 		{
+			name:  "PubKeyMissing",
+			input: []byte(`[{"withdrawal_credentials":"00fad2a6bfb0e7f1f0f45460944fbd8dfa7f37da06a4d13b3983cc90bb46963b","amount":32000000000,"signature":"b7a757a4c506ac6ac5f2d23e065de7d00dc9f5a6a3f9610a8b60b65f166379139ae382c91ecbbf5c9fabc34b1cd2cf8f0211488d50d8754716d8e72e17c1a00b5d9b37cc73767946790ebe66cf9669abfc5c25c67e1e2d1c2e11429d149c25a2","deposit_message_root":"139b510ea7f2788ab82da1f427d6cbe1db147c15a053db738ad5500cd83754a6","deposit_data_root":"9e51b386f4271c18149dd0f73297a26a4a8c15c3622c44af79c92446f44a3554","fork_version":"01020304"}]`),
+			err:   "public key missing",
+		},
+		{
 			name:  "PubKeyInvalid",
 			input: []byte(`[{"pubkey":"invalid","withdrawal_credentials":"00fad2a6bfb0e7f1f0f45460944fbd8dfa7f37da06a4d13b3983cc90bb46963b","amount":32000000000,"signature":"b7a757a4c506ac6ac5f2d23e065de7d00dc9f5a6a3f9610a8b60b65f166379139ae382c91ecbbf5c9fabc34b1cd2cf8f0211488d50d8754716d8e72e17c1a00b5d9b37cc73767946790ebe66cf9669abfc5c25c67e1e2d1c2e11429d149c25a2","deposit_message_root":"139b510ea7f2788ab82da1f427d6cbe1db147c15a053db738ad5500cd83754a6","deposit_data_root":"9e51b386f4271c18149dd0f73297a26a4a8c15c3622c44af79c92446f44a3554","fork_version":"01020304"}]`),
 			err:   "public key invalid",
+		},
+		{
+			name:  "WithdrawalCredentialsMissing",
+			input: []byte(`[{"pubkey":"a99a76ed7796f7be22d5b7e85deeb7c5677e88e511e0b337618f8c4eb61349b4bf2d153f649f7b53359fe8b94a38e44c","amount":32000000000,"signature":"b7a757a4c506ac6ac5f2d23e065de7d00dc9f5a6a3f9610a8b60b65f166379139ae382c91ecbbf5c9fabc34b1cd2cf8f0211488d50d8754716d8e72e17c1a00b5d9b37cc73767946790ebe66cf9669abfc5c25c67e1e2d1c2e11429d149c25a2","deposit_message_root":"139b510ea7f2788ab82da1f427d6cbe1db147c15a053db738ad5500cd83754a6","deposit_data_root":"9e51b386f4271c18149dd0f73297a26a4a8c15c3622c44af79c92446f44a3554","fork_version":"01020304"}]`),
+			err:   "withdrawal credentials missing",
 		},
 		{
 			name:  "WithdrawalCredentialsInvalid",
@@ -94,9 +104,19 @@ func TestCLIDepositInfo(t *testing.T) {
 			err:   "withdrawal credentials invalid",
 		},
 		{
+			name:  "SignatureMissing",
+			input: []byte(`[{"pubkey":"a99a76ed7796f7be22d5b7e85deeb7c5677e88e511e0b337618f8c4eb61349b4bf2d153f649f7b53359fe8b94a38e44c","withdrawal_credentials":"00fad2a6bfb0e7f1f0f45460944fbd8dfa7f37da06a4d13b3983cc90bb46963b","amount":32000000000,"deposit_message_root":"139b510ea7f2788ab82da1f427d6cbe1db147c15a053db738ad5500cd83754a6","deposit_data_root":"9e51b386f4271c18149dd0f73297a26a4a8c15c3622c44af79c92446f44a3554","fork_version":"01020304"}]`),
+			err:   "signature missing",
+		},
+		{
 			name:  "SignatureInvalid",
 			input: []byte(`[{"pubkey":"a99a76ed7796f7be22d5b7e85deeb7c5677e88e511e0b337618f8c4eb61349b4bf2d153f649f7b53359fe8b94a38e44c","withdrawal_credentials":"00fad2a6bfb0e7f1f0f45460944fbd8dfa7f37da06a4d13b3983cc90bb46963b","amount":32000000000,"signature":"invalid","deposit_message_root":"139b510ea7f2788ab82da1f427d6cbe1db147c15a053db738ad5500cd83754a6","deposit_data_root":"9e51b386f4271c18149dd0f73297a26a4a8c15c3622c44af79c92446f44a3554","fork_version":"01020304"}]`),
 			err:   "signature invalid",
+		},
+		{
+			name:  "DepositMessageRootMissing",
+			input: []byte(`[{"pubkey":"a99a76ed7796f7be22d5b7e85deeb7c5677e88e511e0b337618f8c4eb61349b4bf2d153f649f7b53359fe8b94a38e44c","withdrawal_credentials":"00fad2a6bfb0e7f1f0f45460944fbd8dfa7f37da06a4d13b3983cc90bb46963b","amount":32000000000,"signature":"b7a757a4c506ac6ac5f2d23e065de7d00dc9f5a6a3f9610a8b60b65f166379139ae382c91ecbbf5c9fabc34b1cd2cf8f0211488d50d8754716d8e72e17c1a00b5d9b37cc73767946790ebe66cf9669abfc5c25c67e1e2d1c2e11429d149c25a2","deposit_data_root":"9e51b386f4271c18149dd0f73297a26a4a8c15c3622c44af79c92446f44a3554","fork_version":"01020304"}]`),
+			err:   "deposit message root missing",
 		},
 		{
 			name:  "DepositMessageRootInvalid",
@@ -104,9 +124,19 @@ func TestCLIDepositInfo(t *testing.T) {
 			err:   "deposit message root invalid",
 		},
 		{
+			name:  "DepositDataRootMissing",
+			input: []byte(`[{"pubkey":"a99a76ed7796f7be22d5b7e85deeb7c5677e88e511e0b337618f8c4eb61349b4bf2d153f649f7b53359fe8b94a38e44c","withdrawal_credentials":"00fad2a6bfb0e7f1f0f45460944fbd8dfa7f37da06a4d13b3983cc90bb46963b","amount":32000000000,"signature":"b7a757a4c506ac6ac5f2d23e065de7d00dc9f5a6a3f9610a8b60b65f166379139ae382c91ecbbf5c9fabc34b1cd2cf8f0211488d50d8754716d8e72e17c1a00b5d9b37cc73767946790ebe66cf9669abfc5c25c67e1e2d1c2e11429d149c25a2","deposit_message_root":"139b510ea7f2788ab82da1f427d6cbe1db147c15a053db738ad5500cd83754a6","fork_version":"01020304"}]`),
+			err:   "deposit data root missing",
+		},
+		{
 			name:  "DepositDataRootInvalid",
 			input: []byte(`[{"pubkey":"a99a76ed7796f7be22d5b7e85deeb7c5677e88e511e0b337618f8c4eb61349b4bf2d153f649f7b53359fe8b94a38e44c","withdrawal_credentials":"00fad2a6bfb0e7f1f0f45460944fbd8dfa7f37da06a4d13b3983cc90bb46963b","amount":32000000000,"signature":"b7a757a4c506ac6ac5f2d23e065de7d00dc9f5a6a3f9610a8b60b65f166379139ae382c91ecbbf5c9fabc34b1cd2cf8f0211488d50d8754716d8e72e17c1a00b5d9b37cc73767946790ebe66cf9669abfc5c25c67e1e2d1c2e11429d149c25a2","deposit_message_root":"139b510ea7f2788ab82da1f427d6cbe1db147c15a053db738ad5500cd83754a6","deposit_data_root":"invalid","fork_version":"01020304"}]`),
 			err:   "deposit data root invalid",
+		},
+		{
+			name:  "ForkVersionMissing",
+			input: []byte(`[{"pubkey":"a99a76ed7796f7be22d5b7e85deeb7c5677e88e511e0b337618f8c4eb61349b4bf2d153f649f7b53359fe8b94a38e44c","withdrawal_credentials":"00fad2a6bfb0e7f1f0f45460944fbd8dfa7f37da06a4d13b3983cc90bb46963b","amount":32000000000,"signature":"b7a757a4c506ac6ac5f2d23e065de7d00dc9f5a6a3f9610a8b60b65f166379139ae382c91ecbbf5c9fabc34b1cd2cf8f0211488d50d8754716d8e72e17c1a00b5d9b37cc73767946790ebe66cf9669abfc5c25c67e1e2d1c2e11429d149c25a2","deposit_message_root":"139b510ea7f2788ab82da1f427d6cbe1db147c15a053db738ad5500cd83754a6","deposit_data_root":"9e51b386f4271c18149dd0f73297a26a4a8c15c3622c44af79c92446f44a3554"}]`),
+			err:   "fork version missing",
 		},
 		{
 			name:  "ForkVersionInvalid",
@@ -150,9 +180,19 @@ func TestV3DepositInfo(t *testing.T) {
 			err:   "invalid character 'i' looking for beginning of value",
 		},
 		{
+			name:  "PubKeyMissing",
+			input: []byte(`[{"name":"Deposit for interop/00000","account":"interop/00000","withdrawal_credentials":"0x00fad2a6bfb0e7f1f0f45460944fbd8dfa7f37da06a4d13b3983cc90bb46963b","value":32000000000,"signature":"0xb7a757a4c506ac6ac5f2d23e065de7d00dc9f5a6a3f9610a8b60b65f166379139ae382c91ecbbf5c9fabc34b1cd2cf8f0211488d50d8754716d8e72e17c1a00b5d9b37cc73767946790ebe66cf9669abfc5c25c67e1e2d1c2e11429d149c25a2","deposit_message_root":"0x139b510ea7f2788ab82da1f427d6cbe1db147c15a053db738ad5500cd83754a6","deposit_data_root":"0x9e51b386f4271c18149dd0f73297a26a4a8c15c3622c44af79c92446f44a3554","fork_version":"0x01020304","version":3}]`),
+			err:   "public key missing",
+		},
+		{
 			name:  "PubKeyInvalid",
 			input: []byte(`[{"name":"Deposit for interop/00000","account":"interop/00000","pubkey":"invalid","withdrawal_credentials":"0x00fad2a6bfb0e7f1f0f45460944fbd8dfa7f37da06a4d13b3983cc90bb46963b","value":32000000000,"signature":"0xb7a757a4c506ac6ac5f2d23e065de7d00dc9f5a6a3f9610a8b60b65f166379139ae382c91ecbbf5c9fabc34b1cd2cf8f0211488d50d8754716d8e72e17c1a00b5d9b37cc73767946790ebe66cf9669abfc5c25c67e1e2d1c2e11429d149c25a2","deposit_message_root":"0x139b510ea7f2788ab82da1f427d6cbe1db147c15a053db738ad5500cd83754a6","deposit_data_root":"0x9e51b386f4271c18149dd0f73297a26a4a8c15c3622c44af79c92446f44a3554","fork_version":"0x01020304","version":3}]`),
 			err:   "public key invalid",
+		},
+		{
+			name:  "WithdrawalCredentialsMissing",
+			input: []byte(`[{"name":"Deposit for interop/00000","account":"interop/00000","pubkey":"0xa99a76ed7796f7be22d5b7e85deeb7c5677e88e511e0b337618f8c4eb61349b4bf2d153f649f7b53359fe8b94a38e44c","value":32000000000,"signature":"0xb7a757a4c506ac6ac5f2d23e065de7d00dc9f5a6a3f9610a8b60b65f166379139ae382c91ecbbf5c9fabc34b1cd2cf8f0211488d50d8754716d8e72e17c1a00b5d9b37cc73767946790ebe66cf9669abfc5c25c67e1e2d1c2e11429d149c25a2","deposit_message_root":"0x139b510ea7f2788ab82da1f427d6cbe1db147c15a053db738ad5500cd83754a6","deposit_data_root":"0x9e51b386f4271c18149dd0f73297a26a4a8c15c3622c44af79c92446f44a3554","fork_version":"0x01020304","version":3}]`),
+			err:   "withdrawal credentials missing",
 		},
 		{
 			name:  "WithdrawalCredentialsInvalid",
@@ -160,9 +200,19 @@ func TestV3DepositInfo(t *testing.T) {
 			err:   "withdrawal credentials invalid",
 		},
 		{
+			name:  "SignatureMissing",
+			input: []byte(`[{"name":"Deposit for interop/00000","account":"interop/00000","pubkey":"0xa99a76ed7796f7be22d5b7e85deeb7c5677e88e511e0b337618f8c4eb61349b4bf2d153f649f7b53359fe8b94a38e44c","withdrawal_credentials":"0x00fad2a6bfb0e7f1f0f45460944fbd8dfa7f37da06a4d13b3983cc90bb46963b","value":32000000000,"deposit_message_root":"0x139b510ea7f2788ab82da1f427d6cbe1db147c15a053db738ad5500cd83754a6","deposit_data_root":"0x9e51b386f4271c18149dd0f73297a26a4a8c15c3622c44af79c92446f44a3554","fork_version":"0x01020304","version":3}]`),
+			err:   "signature missing",
+		},
+		{
 			name:  "SignatureInvalid",
 			input: []byte(`[{"name":"Deposit for interop/00000","account":"interop/00000","pubkey":"0xa99a76ed7796f7be22d5b7e85deeb7c5677e88e511e0b337618f8c4eb61349b4bf2d153f649f7b53359fe8b94a38e44c","withdrawal_credentials":"0x00fad2a6bfb0e7f1f0f45460944fbd8dfa7f37da06a4d13b3983cc90bb46963b","value":32000000000,"signature":"invalid","deposit_message_root":"0x139b510ea7f2788ab82da1f427d6cbe1db147c15a053db738ad5500cd83754a6","deposit_data_root":"0x9e51b386f4271c18149dd0f73297a26a4a8c15c3622c44af79c92446f44a3554","fork_version":"0x01020304","version":3}]`),
 			err:   "signature invalid",
+		},
+		{
+			name:  "DepositMessageRootMissing",
+			input: []byte(`[{"name":"Deposit for interop/00000","account":"interop/00000","pubkey":"0xa99a76ed7796f7be22d5b7e85deeb7c5677e88e511e0b337618f8c4eb61349b4bf2d153f649f7b53359fe8b94a38e44c","withdrawal_credentials":"0x00fad2a6bfb0e7f1f0f45460944fbd8dfa7f37da06a4d13b3983cc90bb46963b","value":32000000000,"signature":"0xb7a757a4c506ac6ac5f2d23e065de7d00dc9f5a6a3f9610a8b60b65f166379139ae382c91ecbbf5c9fabc34b1cd2cf8f0211488d50d8754716d8e72e17c1a00b5d9b37cc73767946790ebe66cf9669abfc5c25c67e1e2d1c2e11429d149c25a2","deposit_data_root":"0x9e51b386f4271c18149dd0f73297a26a4a8c15c3622c44af79c92446f44a3554","fork_version":"0x01020304","version":3}]`),
+			err:   "deposit message root missing",
 		},
 		{
 			name:  "DepositMessageRootInvalid",
@@ -170,9 +220,19 @@ func TestV3DepositInfo(t *testing.T) {
 			err:   "deposit message root invalid",
 		},
 		{
+			name:  "DepositDataRootMissing",
+			input: []byte(`[{"name":"Deposit for interop/00000","account":"interop/00000","pubkey":"0xa99a76ed7796f7be22d5b7e85deeb7c5677e88e511e0b337618f8c4eb61349b4bf2d153f649f7b53359fe8b94a38e44c","withdrawal_credentials":"0x00fad2a6bfb0e7f1f0f45460944fbd8dfa7f37da06a4d13b3983cc90bb46963b","value":32000000000,"signature":"0xb7a757a4c506ac6ac5f2d23e065de7d00dc9f5a6a3f9610a8b60b65f166379139ae382c91ecbbf5c9fabc34b1cd2cf8f0211488d50d8754716d8e72e17c1a00b5d9b37cc73767946790ebe66cf9669abfc5c25c67e1e2d1c2e11429d149c25a2","deposit_message_root":"0x139b510ea7f2788ab82da1f427d6cbe1db147c15a053db738ad5500cd83754a6","fork_version":"0x01020304","version":3}]`),
+			err:   "deposit data root missing",
+		},
+		{
 			name:  "DepositDataRootInvalid",
 			input: []byte(`[{"name":"Deposit for interop/00000","account":"interop/00000","pubkey":"0xa99a76ed7796f7be22d5b7e85deeb7c5677e88e511e0b337618f8c4eb61349b4bf2d153f649f7b53359fe8b94a38e44c","withdrawal_credentials":"0x00fad2a6bfb0e7f1f0f45460944fbd8dfa7f37da06a4d13b3983cc90bb46963b","value":32000000000,"signature":"0xb7a757a4c506ac6ac5f2d23e065de7d00dc9f5a6a3f9610a8b60b65f166379139ae382c91ecbbf5c9fabc34b1cd2cf8f0211488d50d8754716d8e72e17c1a00b5d9b37cc73767946790ebe66cf9669abfc5c25c67e1e2d1c2e11429d149c25a2","deposit_message_root":"0x139b510ea7f2788ab82da1f427d6cbe1db147c15a053db738ad5500cd83754a6","deposit_data_root":"invalid","fork_version":"0x01020304","version":3}]`),
 			err:   "deposit data root invalid",
+		},
+		{
+			name:  "ForkVersionMissing",
+			input: []byte(`[{"name":"Deposit for interop/00000","account":"interop/00000","pubkey":"0xa99a76ed7796f7be22d5b7e85deeb7c5677e88e511e0b337618f8c4eb61349b4bf2d153f649f7b53359fe8b94a38e44c","withdrawal_credentials":"0x00fad2a6bfb0e7f1f0f45460944fbd8dfa7f37da06a4d13b3983cc90bb46963b","value":32000000000,"signature":"0xb7a757a4c506ac6ac5f2d23e065de7d00dc9f5a6a3f9610a8b60b65f166379139ae382c91ecbbf5c9fabc34b1cd2cf8f0211488d50d8754716d8e72e17c1a00b5d9b37cc73767946790ebe66cf9669abfc5c25c67e1e2d1c2e11429d149c25a2","deposit_message_root":"0x139b510ea7f2788ab82da1f427d6cbe1db147c15a053db738ad5500cd83754a6","deposit_data_root":"0x9e51b386f4271c18149dd0f73297a26a4a8c15c3622c44af79c92446f44a3554","version":3}]`),
+			err:   "fork version missing",
 		},
 		{
 			name:  "ForkVersionInvalid",

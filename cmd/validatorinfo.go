@@ -163,6 +163,7 @@ func graphData(network string, validatorPubKey []byte) (uint64, spec.Gwei, error
 	}
 	query := fmt.Sprintf(`{"query": "{deposits(where: {validatorPubKey:\"%#x\"}) { id amount withdrawalCredentials }}"}`, validatorPubKey)
 	url := fmt.Sprintf("https://api.thegraph.com/subgraphs/name/%s", subgraph)
+	// #nosec G107
 	graphResp, err := http.Post(url, "application/json", bytes.NewBufferString(query))
 	if err != nil {
 		return 0, 0, errors.Wrap(err, "failed to check if there is already a deposit for this validator")

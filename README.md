@@ -5,8 +5,6 @@
 
 A command-line tool for managing common tasks in Ethereum 2.
 
-**Please note that this tool and its underlying libraries have not yet undergone a security audit; use at your own risk.**
-
 ## Table of Contents
 
 - [Install](#install)

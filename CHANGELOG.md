@@ -1,4 +1,4 @@
-Development:
+1.7.0:
   - "validator depositdata" now defaults to mainnet, does not silently fetch fork version from chain
   - update deposit data output to version 3, to allow for better deposit checking
   - use go-eth2-client for beacon node communications

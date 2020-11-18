@@ -66,6 +66,8 @@ func SetupStore() error {
 	if err := e2wallet.UseStore(store); err != nil {
 		return errors.Wrap(err, "failed to use defined wallet store")
 	}
+	viper.Set("store", store)
+
 	return nil
 }
 

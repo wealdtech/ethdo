@@ -24,7 +24,7 @@ import (
 
 // ReleaseVersion is the release version of the codebase.
 // Usually overrideen by tag names when building binaries.
-var ReleaseVersion = "local build from v1.7.0"
+var ReleaseVersion = "local build from v1.7.1"
 
 // versionCmd represents the version command
 var versionCmd = &cobra.Command{

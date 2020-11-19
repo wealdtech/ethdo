@@ -21,8 +21,8 @@ import (
 	"os"
 	"strings"
 
+	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
-	ethpb "github.com/prysmaticlabs/ethereumapis/eth/v1alpha1"
 	"github.com/spf13/cobra"
 	"github.com/wealdtech/ethdo/util"
 	e2types "github.com/wealdtech/go-eth2-types/v2"
@@ -34,6 +34,7 @@ var depositVerifyData string
 var depositVerifyWithdrawalPubKey string
 var depositVerifyValidatorPubKey string
 var depositVerifyDepositAmount string
+var depositVerifyForkVersion string
 
 var depositVerifyCmd = &cobra.Command{
 	Use:   "verify",
@@ -98,17 +99,21 @@ In quiet mode this will return 0 if the the data is verified correctly, otherwis
 		}
 
 		failures := false
-		for i, deposit := range deposits {
+		for _, deposit := range deposits {
 			if deposit.Amount == 0 {
 				deposit.Amount = depositAmount
 			}
 			verified, err := verifyDeposit(deposit, withdrawalCredentials, validatorPubKeys, depositAmount)
-			errCheck(err, fmt.Sprintf("Error attempting to verify deposit %d", i))
+			errCheck(err, fmt.Sprintf("Error attempting to verify deposit %q", deposit.Name))
+			depositName := deposit.Name
+			if depositName == "" {
+				depositName = "Deposit"
+			}
 			if !verified {
 				failures = true
-				outputIf(!quiet, fmt.Sprintf("Deposit %q failed verification", deposit.Name))
+				outputIf(!quiet, fmt.Sprintf("%s failed verification", depositName))
 			} else {
-				outputIf(quiet, fmt.Sprintf("Deposit %q verified", deposit.Name))
+				outputIf(!quiet, fmt.Sprintf("%s verified", depositName))
 			}
 		}
 
@@ -175,44 +180,81 @@ func validatorPubKeysFromInput(input string) (map[[48]byte]bool, error) {
 }
 
 func verifyDeposit(deposit *util.DepositInfo, withdrawalCredentials []byte, validatorPubKeys map[[48]byte]bool, amount uint64) (bool, error) {
-	if withdrawalCredentials != nil {
+	if withdrawalCredentials == nil {
+		outputIf(!quiet, "Withdrawal public key not supplied; withdrawal credentials NOT checked")
+	} else {
 		if !bytes.Equal(deposit.WithdrawalCredentials, withdrawalCredentials) {
-			return false, errors.New("withdrawal credentials incorrect")
+			outputIf(!quiet, "Withdrawal public key incorrect")
+			return false, nil
 		}
-		outputIf(verbose, "Withdrawal credentials verified")
+		outputIf(!quiet, "Withdrawal credentials verified")
 	}
-	if amount != 0 {
+	if amount == 0 {
+		outputIf(!quiet, "Amount not supplied; NOT checked")
+	} else {
 		if deposit.Amount != amount {
-			return false, errors.New("deposit value incorrect")
+			outputIf(!quiet, "Amount incorrect")
+			return false, nil
 		}
-		outputIf(verbose, "Amount verified")
+		outputIf(!quiet, "Amount verified")
 	}
 
-	if len(validatorPubKeys) != 0 {
+	if len(validatorPubKeys) == 0 {
+		outputIf(!quiet, "Validator public key not suppled; NOT checked")
+	} else {
 		var key [48]byte
 		copy(key[:], deposit.PublicKey)
 		if _, exists := validatorPubKeys[key]; !exists {
-			return false, errors.New("validator public key incorrect")
+			outputIf(!quiet, "Validator public key incorrect")
+			return false, nil
 		}
-		outputIf(verbose, "Validator public key verified")
+		outputIf(!quiet, "Validator public key verified")
 	}
 
-	depositData := &ethpb.Deposit_Data{
-		PublicKey:             deposit.PublicKey,
+	var pubKey spec.BLSPubKey
+	copy(pubKey[:], deposit.PublicKey)
+	var signature spec.BLSSignature
+	copy(signature[:], deposit.Signature)
+
+	depositData := &spec.DepositData{
+		PublicKey:             pubKey,
 		WithdrawalCredentials: deposit.WithdrawalCredentials,
-		Amount:                deposit.Amount,
-		Signature:             deposit.Signature,
+		Amount:                spec.Gwei(deposit.Amount),
+		Signature:             signature,
 	}
 	depositDataRoot, err := depositData.HashTreeRoot()
 	if err != nil {
 		return false, errors.Wrap(err, "failed to generate deposit data root")
 	}
-	if !bytes.Equal(deposit.DepositDataRoot, depositDataRoot[:]) {
-		return false, errors.New("deposit data root incorrect")
-	}
-	outputIf(debug, "Deposit data root verified")
 
-	outputIf(verbose, "Deposit verified")
+	if bytes.Equal(deposit.DepositDataRoot, depositDataRoot[:]) {
+		outputIf(!quiet, "Deposit data root verified")
+	} else {
+		outputIf(!quiet, "Deposit data root incorrect")
+		return false, nil
+	}
+
+	if len(deposit.ForkVersion) == 0 {
+		if depositVerifyForkVersion != "" {
+			outputIf(!quiet, "Data format does not contain fork version for verification; NOT verified")
+			return false, nil
+		}
+	} else {
+		if depositVerifyForkVersion == "" {
+			outputIf(!quiet, "fork version not supplied; NOT checked")
+		} else {
+			forkVersion, err := hex.DecodeString(strings.TrimPrefix(depositVerifyForkVersion, "0x"))
+			if err != nil {
+				return false, errors.Wrap(err, "failed to decode fork version")
+			}
+			if bytes.Equal(deposit.ForkVersion, forkVersion[:]) {
+				outputIf(!quiet, "Fork version verified")
+			} else {
+				outputIf(!quiet, "Fork version incorrect")
+				return false, nil
+			}
+		}
+	}
 
 	return true, nil
 }
@@ -222,6 +264,7 @@ func init() {
 	depositFlags(depositVerifyCmd)
 	depositVerifyCmd.Flags().StringVar(&depositVerifyData, "data", "", "JSON data, or path to JSON data")
 	depositVerifyCmd.Flags().StringVar(&depositVerifyWithdrawalPubKey, "withdrawalpubkey", "", "Public key of the account to which the validator funds will be withdrawn")
-	depositVerifyCmd.Flags().StringVar(&depositVerifyDepositAmount, "depositvalue", "", "Value of the amount to be deposited")
+	depositVerifyCmd.Flags().StringVar(&depositVerifyDepositAmount, "depositvalue", "32 Ether", "Value of the amount to be deposited")
 	depositVerifyCmd.Flags().StringVar(&depositVerifyValidatorPubKey, "validatorpubkey", "", "Public key(s) of the account(s) that will be carrying out validation")
+	depositVerifyCmd.Flags().StringVar(&depositVerifyForkVersion, "forkversion", "0x00000000", "Fork version of the chain of the deposit")
 }

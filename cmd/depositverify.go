@@ -237,7 +237,6 @@ func verifyDeposit(deposit *util.DepositInfo, withdrawalCredentials []byte, vali
 	if len(deposit.ForkVersion) == 0 {
 		if depositVerifyForkVersion != "" {
 			outputIf(!quiet, "Data format does not contain fork version for verification; NOT verified")
-			return false, nil
 		}
 	} else {
 		if depositVerifyForkVersion == "" {

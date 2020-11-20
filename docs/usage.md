@@ -54,14 +54,14 @@ $ ethdo wallet delete --wallet="Old wallet"
   - `passphrase`: the passphrase with which to encrypt the wallet backup
 
 ```sh
-$ ethdo wallet export --wallet="Personal wallet" --exportpassphrase="my export secret"
+$ ethdo wallet export --wallet="Personal wallet" --passphrase="my export secret"
 0x01c7a27ad40d45b4ae5be5f...
 ```
 
 The encrypted wallet export is written to the console; it can be redirected to store it in a file.
 
 ```sh
-$ ethdo wallet export --wallet="Personal wallet" --exportpassphrase="my export secret" >export.dat
+$ ethdo wallet export --wallet="Personal wallet" --passphrase="my export secret" >export.dat
 ```
 
 #### `import`
@@ -72,13 +72,13 @@ $ ethdo wallet export --wallet="Personal wallet" --exportpassphrase="my export s
   - `verify`: confirm information about the wallet import without importing it
 
 ```sh
-$ ethdo wallet import --importdata="0x01c7a27ad40d45b4ae5be5f..." --passphrase="my export secret"
+$ ethdo wallet import --data="0x01c7a27ad40d45b4ae5be5f..." --passphrase="my export secret"
 ```
 
 The encrypted wallet export can be read from a file.  For example with Unix systems:
 
 ```sh
-$ ethdo wallet import --importdata=`cat export.dat` --passphrase="my export secret"
+$ ethdo wallet import --data=`cat export.dat` --passphrase="my export secret"
 ```
 
 #### `info`

@@ -65,6 +65,8 @@ func persistentPreRunE(cmd *cobra.Command, args []string) error {
 	switch fmt.Sprintf("%s/%s", cmd.Parent().Name(), cmd.Name()) {
 	case "account/create":
 		accountCreateBindings()
+	case "account/derive":
+		accountDeriveBindings()
 	case "account/import":
 		accountImportBindings()
 	case "attester/inclusion":

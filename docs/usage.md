@@ -121,6 +121,20 @@ For distributed accounts you will also need to supply `--participants` and `--si
 ```sh
 $ ethdo account create --account="Personal wallet/Operations" --wallet-passphrase="my wallet secret" --passphrase="my account secret"
 ```
+
+#### `derive`
+
+`ethdo account derive` provides the ability to derive an account's keys without creating either the wallet or the account.  This allows users to quickly obtain or confirm keys without going through a relatively long process, and has the added security benefit of not writing any information to disk.  Options for deriving the account include:
+
+  - `mnemonic`: a pre-defined 24-word [BIP-39 seed phrase](https://en.bitcoin.it/wiki/Seed_phrase) to derive the account, along with an additional "seed extension" phrase if required supplied as the 25th word
+  - `path`: the HD path used to derive the account
+  - `show-key`: show the private key as well as the public key.  **Warning** displaying private keys, especially those derived from seeds held on hardware wallets, can expose your Ether to risk of being stolen.  Only use this option if you are sure you understand the risks involved
+
+```sh
+$ ethdo account derive --mnemonic="abandon ... abandon art" --path="m/12381/3600/0/0"
+Public key: 0x99b1f1d84d76185466d86c34bde1101316afddae76217aa86cd066979b19858c2c9d9e56eebc1e067ac54277a61790db
+```
+
 #### `import`
 
 `ethdo account import` creates a new account by importing its private key.  Options for creating the account include:

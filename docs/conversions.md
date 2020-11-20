@@ -6,7 +6,7 @@ Converting from mnemonics to keys can be confusing.  Below are commands that all
 
 A seed is a 24-word phrase that is used as the start point of a process called hierarchical derivation.  It can be used, in combination with a path, to generate any number of keys.
 
-### I want to be able to create keys from the mnemonic
+### I want to be able to create accounts from the mnemonic
 
 The first thing you need to do is to create a wallet.  To do this run the command below with the following changes:
 
@@ -18,9 +18,9 @@ The first thing you need to do is to create a wallet.  To do this run the comman
 $ ethdo wallet create --type=hd --mnemonic='abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon art' --wallet=Wallet --wallet-passphrase=secret
 ```
 
-### I want a specific public key.
+### I want an account with a specific public key.
 
-To create a specific public key you need to have both the mnemonic and the derivation path.  A derivation path looks something like `m/12381/3600/0/0` and is used by `ethdo` to generate a specific private key (from which the public key is in turn derived).
+To create an account with a specific public key you need to have both the mnemonic and the derivation path.  A derivation path looks something like `m/12381/3600/0/0` and is used by `ethdo` to generate a specific private key (from which the public key is in turn derived).
 
 You should first create a wallet as per the previous step.  To then create an account run the command below with the following changes:
 
@@ -42,7 +42,7 @@ Path: m/12381/3600/0/0
 
 This process can be repated for any number of paths by changing the `path` and providing a different account name each time.
 
-### I want the private key.
+### I want an account's private key.
 
 To obtain the private key of an account follow the steps above, then run:
 
@@ -81,3 +81,11 @@ $ ethdo validator depositdata --withdrawalaccount=Wallet/Withdrawal_i_ --validat
 If you wish to be able to provide this information to the launchpad you can add `--launchpad` to the end of the command.
 
 If you wish to have this data for a particular test network you will need to supply the fork version with `--forkversion`.  Details on the fork versions of various testnets can be found in the subdirectories of the [testnet site](https://github.com/goerli/medalla).
+
+### I want keys without creating wallets and accounts
+
+It is possible to derive keys directly from a mnemonic and path without going through the interim steps.  Note that this will _not_ create accounts, and cannot be used to then sign data or requests.  This may or not be desirable, depending on your requirements.
+
+```
+$ ethdo account derive --mnemonic='abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon art' --path=m/12381/3600/0/0
+```

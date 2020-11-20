@@ -1,5 +1,6 @@
 Development:
-  - add more outpu to "deposit verify" to explain operation
+  - new "account derive" command to derive keys directly from a mnemonic and derivation path
+  - add more output to "deposit verify" to explain operation
 1.7.1:
   - fix "store not set" issue
 1.7.0:

@@ -1,4 +1,4 @@
-Development:
+1.7.2:
   - new "account derive" command to derive keys directly from a mnemonic and derivation path
   - add more output to "deposit verify" to explain operation
 1.7.1:

@@ -60,19 +60,22 @@ jobs:
       run: |
         xgo -v -x -ldflags="-X github.com/wealdtech/ethdo/cmd.ReleaseVersion=${RELEASE_VERSION} -s -w -extldflags -static" --targets="windows/amd64" github.com/wealdtech/ethdo
 
-    - name: Create windows zip file
+    - name: Create windows release files
       run: |
        mv ethdo-windows-4.0-amd64.exe ethdo.exe
+       sha256sum ethdo.exe >ethdo-${RELEASE_VERSION}-windows.sha256
        zip --junk-paths ethdo-${RELEASE_VERSION}-windows-exe.zip ethdo.exe
 
     - name: Create linux AMD64 tgz file
       run: |
        mv ethdo-linux-amd64 ethdo
+       sha256sum ethdo >ethdo-${RELEASE_VERSION}-linux-amd64.sha256
        tar zcf ethdo-${RELEASE_VERSION}-linux-amd64.tar.gz ethdo
 
     - name: Create linux ARM64 tgz file
       run: |
        mv ethdo-linux-arm64 ethdo
+       sha256sum ethdo >ethdo-${RELEASE_VERSION}-linux-arm64.sha256
        tar zcf ethdo-${RELEASE_VERSION}-linux-arm64.tar.gz ethdo
 
     - name: Create release
@@ -83,9 +86,20 @@ jobs:
       with:
         tag_name: ${{ github.ref }}
         release_name: Release ${{ env.RELEASE_VERSION }}
-        draft: false
+        draft: true
         prerelease: false
-       
+
+    - name: Upload windows checksum file
+      id: upload-release-asset-windows-checksum
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./ethdo-${{ env.RELEASE_VERSION }}-windows.sha256
+        asset_name: ethdo-${{ env.RELEASE_VERSION }}-windows.sha256
+        asset_content_type: text/plain
+
     - name: Upload windows zip file
       id: upload-release-asset-windows
       uses: actions/upload-release-asset@v1
@@ -96,7 +110,18 @@ jobs:
         asset_path: ./ethdo-${{ env.RELEASE_VERSION }}-windows-exe.zip
         asset_name: ethdo-${{ env.RELEASE_VERSION }}-windows-exe.zip
         asset_content_type: application/zip
-       
+
+    - name: Upload linux AMD64 checksum file
+      id: upload-release-asset-linux-amd64-checksum
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./ethdo-${{ env.RELEASE_VERSION }}-linux-amd64.sha256
+        asset_name: ethdo-${{ env.RELEASE_VERSION }}-linux-amd64.sha256
+        asset_content_type: text/plain
+
     - name: Upload linux AMD64 tgz file
       id: upload-release-asset-linux-amd64
       uses: actions/upload-release-asset@v1
@@ -107,7 +132,18 @@ jobs:
         asset_path: ./ethdo-${{ env.RELEASE_VERSION }}-linux-amd64.tar.gz
         asset_name: ethdo-${{ env.RELEASE_VERSION }}-linux-amd64.tar.gz
         asset_content_type: application/gzip
-       
+
+    - name: Upload linux ARM64 checksum file
+      id: upload-release-asset-linux-arm64-checksum
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./ethdo-${{ env.RELEASE_VERSION }}-linux-arm64.sha256
+        asset_name: ethdo-${{ env.RELEASE_VERSION }}-linux-arm64.sha256
+        asset_content_type: text/plain
+
     - name: Upload linux ARM64 tgz file
       id: upload-release-asset-linux-arm64
       uses: actions/upload-release-asset@v1

@@ -36,7 +36,7 @@ func TestOutput(t *testing.T) {
 	tests := []struct {
 		name    string
 		dataOut *dataOut
-		res     string
+		needs   []string
 		err     string
 	}{
 		{
@@ -53,15 +53,32 @@ func TestOutput(t *testing.T) {
 			dataOut: &dataOut{
 				key: blsPrivateKey("0x068dce0c90cb428ab37a74af0191eac49648035f1aaef077734b91e05985ec55"),
 			},
-			res: "Public key: 0x99b1f1d84d76185466d86c34bde1101316afddae76217aa86cd066979b19858c2c9d9e56eebc1e067ac54277a61790db",
+			needs: []string{"Public key"},
 		},
 		{
 			name: "PrivatKey",
 			dataOut: &dataOut{
 				key:     blsPrivateKey("0x068dce0c90cb428ab37a74af0191eac49648035f1aaef077734b91e05985ec55"),
-				showKey: true,
+				showPrivateKey: true,
 			},
-			res: "Private key: 0x068dce0c90cb428ab37a74af0191eac49648035f1aaef077734b91e05985ec55\nPublic key: 0x99b1f1d84d76185466d86c34bde1101316afddae76217aa86cd066979b19858c2c9d9e56eebc1e067ac54277a61790db",
+			needs: []string{"Public key", "Private key"},
+		},
+		{
+			name: "WithdrawalCredentials",
+			dataOut: &dataOut{
+				key:                       blsPrivateKey("0x068dce0c90cb428ab37a74af0191eac49648035f1aaef077734b91e05985ec55"),
+				showWithdrawalCredentials: true,
+			},
+			needs: []string{"Public key", "Withdrawal credentials"},
+		},
+		{
+			name: "All",
+			dataOut: &dataOut{
+				key:                       blsPrivateKey("0x068dce0c90cb428ab37a74af0191eac49648035f1aaef077734b91e05985ec55"),
+				showPrivateKey:                   true,
+				showWithdrawalCredentials: true,
+			},
+			needs: []string{"Public key", "Private key", "Withdrawal credentials"},
 		},
 	}
 
@@ -72,7 +89,9 @@ func TestOutput(t *testing.T) {
 				require.EqualError(t, err, test.err)
 			} else {
 				require.NoError(t, err)
-				require.Equal(t, test.res, res)
+				for _, need := range test.needs {
+					require.Contains(t, res, need)
+				}
 			}
 		})
 	}

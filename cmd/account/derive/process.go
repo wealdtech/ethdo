@@ -63,8 +63,9 @@ func process(ctx context.Context, data *dataIn) (*dataOut, error) {
 	}
 
 	results := &dataOut{
-		showKey: data.showKey,
-		key:     key,
+		showPrivateKey:                   data.showPrivateKey,
+		showWithdrawalCredentials: data.showWithdrawalCredentials,
+		key:                       key,
 	}
 
 	return results, nil

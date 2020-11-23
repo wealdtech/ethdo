@@ -26,7 +26,8 @@ type dataIn struct {
 	mnemonic string
 	path     string
 	// Output options.
-	showKey bool
+	showPrivateKey            bool
+	showWithdrawalCredentials bool
 }
 
 func input(ctx context.Context) (*dataIn, error) {
@@ -47,8 +48,11 @@ func input(ctx context.Context) (*dataIn, error) {
 	}
 	data.path = viper.GetString("path")
 
-	// Show key.
-	data.showKey = viper.GetBool("show-key")
+	// Show private key.
+	data.showPrivateKey = viper.GetBool("show-private-key")
+
+	// Show withdrawal credentials.
+	data.showWithdrawalCredentials = viper.GetBool("show-withdrawal-credentials")
 
 	return data, nil
 }

@@ -128,7 +128,8 @@ $ ethdo account create --account="Personal wallet/Operations" --wallet-passphras
 
   - `mnemonic`: a pre-defined 24-word [BIP-39 seed phrase](https://en.bitcoin.it/wiki/Seed_phrase) to derive the account, along with an additional "seed extension" phrase if required supplied as the 25th word
   - `path`: the HD path used to derive the account
-  - `show-key`: show the private key as well as the public key.  **Warning** displaying private keys, especially those derived from seeds held on hardware wallets, can expose your Ether to risk of being stolen.  Only use this option if you are sure you understand the risks involved
+  - `show-private-key`: show the private of the derived account.  **Warning** displaying private keys, especially those derived from seeds held on hardware wallets, can expose your Ether to risk of being stolen.  Only use this option if you are sure you understand the risks involved
+  - `show-withdrawal-credentials`: show the withdrawal credentials of the derived account
 
 ```sh
 $ ethdo account derive --mnemonic="abandon ... abandon art" --path="m/12381/3600/0/0"

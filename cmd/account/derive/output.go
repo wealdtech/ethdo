@@ -20,11 +20,13 @@ import (
 
 	"github.com/pkg/errors"
 	e2types "github.com/wealdtech/go-eth2-types/v2"
+	util "github.com/wealdtech/go-eth2-util"
 )
 
 type dataOut struct {
-	showKey bool
-	key     *e2types.BLSPrivateKey
+	showPrivateKey            bool
+	showWithdrawalCredentials bool
+	key                       *e2types.BLSPrivateKey
 }
 
 func output(ctx context.Context, data *dataOut) (string, error) {
@@ -37,10 +39,15 @@ func output(ctx context.Context, data *dataOut) (string, error) {
 
 	builder := strings.Builder{}
 
-	if data.showKey {
+	if data.showPrivateKey {
 		builder.WriteString(fmt.Sprintf("Private key: %#x\n", data.key.Marshal()))
 	}
 	builder.WriteString(fmt.Sprintf("Public key: %#x", data.key.PublicKey().Marshal()))
+	if data.showWithdrawalCredentials {
+		withdrawalCredentials := util.SHA256(data.key.PublicKey().Marshal())
+		withdrawalCredentials[0] = byte(0) // BLS_WITHDRAWAL_PREFIX
+		builder.WriteString(fmt.Sprintf("\nWithdrawal credentials: %#x", withdrawalCredentials))
+	}
 
 	return builder.String(), nil
 }

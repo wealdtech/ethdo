@@ -5,23 +5,25 @@ go 1.13
 require (
 	github.com/OneOfOne/xxhash v1.2.5 // indirect
 	github.com/attestantio/dirk v0.9.3
-	github.com/attestantio/go-eth2-client v0.6.10
-	github.com/ferranbt/fastssz v0.0.0-20201030134205-9b9624098321
+	github.com/attestantio/go-eth2-client v0.6.15
+	github.com/aws/aws-sdk-go v1.36.2 // indirect
+	github.com/ferranbt/fastssz v0.0.0-20201207112544-98a5de30d648
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
 	github.com/gofrs/uuid v3.3.0+incompatible
 	github.com/gogo/protobuf v1.3.1
 	github.com/google/uuid v1.1.2
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0 // indirect
 	github.com/herumi/bls-eth-go-binary v0.0.0-20201104034342-d782bdf735de
+	github.com/jackc/puddle v1.1.3 // indirect
 	github.com/magiconair/properties v1.8.4 // indirect
 	github.com/minio/highwayhash v1.0.1 // indirect
 	github.com/mitchellh/go-homedir v1.1.0
-	github.com/mitchellh/mapstructure v1.3.3 // indirect
+	github.com/mitchellh/mapstructure v1.4.0 // indirect
 	github.com/nbutton23/zxcvbn-go v0.0.0-20180912185939-ae427f1e4c1d
 	github.com/pelletier/go-toml v1.8.1 // indirect
 	github.com/pkg/errors v0.9.1
 	github.com/protolambda/zssz v0.1.5 // indirect
-	github.com/prysmaticlabs/ethereumapis v0.0.0-20201020182719-7f66dae2bbba
+	github.com/prysmaticlabs/ethereumapis v0.0.0-20201207010723-e69ac7fa952d
 	github.com/prysmaticlabs/go-bitfield v0.0.0-20200618145306-2ae0807bef65
 	github.com/prysmaticlabs/go-ssz v0.0.0-20200612203617-6d5c9aa213ae
 	github.com/rs/zerolog v1.20.0
@@ -52,10 +54,12 @@ require (
 	github.com/wealdtech/go-eth2-wallet-store-scratch v1.6.1
 	github.com/wealdtech/go-eth2-wallet-types/v2 v2.8.1
 	github.com/wealdtech/go-string2eth v1.1.0
-	golang.org/x/net v0.0.0-20201110031124-69a78807bb2b // indirect
-	golang.org/x/sys v0.0.0-20201112073958-5cba982894dd // indirect
+	golang.org/x/crypto v0.0.0-20201203163018-be400aefbc4c // indirect
+	golang.org/x/net v0.0.0-20201202161906-c7110b5ffcbb // indirect
+	golang.org/x/sys v0.0.0-20201204225414-ed752295db88 // indirect
 	golang.org/x/text v0.3.4
-	google.golang.org/genproto v0.0.0-20201111145450-ac7456db90a6 // indirect
-	google.golang.org/grpc v1.33.2
+	google.golang.org/genproto v0.0.0-20201204160425-06b3db808446 // indirect
+	google.golang.org/grpc v1.34.0
 	gopkg.in/ini.v1 v1.62.0 // indirect
+	gopkg.in/yaml.v2 v2.4.0 // indirect
 )

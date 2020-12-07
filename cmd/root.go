@@ -25,7 +25,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"github.com/wealdtech/ethdo/core"
 	"github.com/wealdtech/ethdo/util"
 	e2types "github.com/wealdtech/go-eth2-types/v2"
 	e2wallet "github.com/wealdtech/go-eth2-wallet"
@@ -94,7 +93,7 @@ func persistentPreRunE(cmd *cobra.Command, args []string) error {
 		fmt.Println("Cannot supply both quiet and debug flags")
 	}
 
-	if err := core.SetupStore(); err != nil {
+	if err := util.SetupStore(); err != nil {
 		return err
 	}
 

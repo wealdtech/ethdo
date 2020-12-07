@@ -67,7 +67,7 @@ func process(ctx context.Context, data *dataIn) (*dataOut, error) {
 			}
 		}
 	}
-	return nil, errors.New("not found")
+	return results, nil
 }
 
 func duty(ctx context.Context, eth2Client eth2client.Service, validator *api.Validator, epoch spec.Epoch, slotsPerEpoch uint64) (*api.AttesterDuty, error) {

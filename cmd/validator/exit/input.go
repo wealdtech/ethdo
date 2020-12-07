@@ -24,7 +24,6 @@ import (
 	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
-	"github.com/wealdtech/ethdo/core"
 	"github.com/wealdtech/ethdo/util"
 	e2wtypes "github.com/wealdtech/go-eth2-wallet-types/v2"
 )
@@ -86,7 +85,7 @@ func inputJSON(ctx context.Context, data *dataIn) (*dataIn, error) {
 
 func inputAccount(ctx context.Context, data *dataIn) (*dataIn, error) {
 	var err error
-	_, data.account, err = core.WalletAndAccountFromInput(ctx)
+	_, data.account, err = util.WalletAndAccountFromInput(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to obtain acount")
 	}

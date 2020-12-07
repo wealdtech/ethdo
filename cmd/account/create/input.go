@@ -19,7 +19,6 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
-	"github.com/wealdtech/ethdo/core"
 	"github.com/wealdtech/ethdo/util"
 	e2wallet "github.com/wealdtech/go-eth2-wallet"
 	e2wtypes "github.com/wealdtech/go-eth2-wallet-types/v2"
@@ -63,7 +62,7 @@ func input(ctx context.Context) (*dataIn, error) {
 	// Wallet.
 	ctx, cancel := context.WithTimeout(ctx, data.timeout)
 	defer cancel()
-	data.wallet, err = core.WalletFromInput(ctx)
+	data.wallet, err = util.WalletFromInput(ctx)
 	cancel()
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to obtain wallet")

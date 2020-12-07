@@ -25,7 +25,6 @@ import (
 	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
-	"github.com/wealdtech/ethdo/core"
 	"github.com/wealdtech/ethdo/util"
 	e2wtypes "github.com/wealdtech/go-eth2-wallet-types/v2"
 )
@@ -69,14 +68,15 @@ func input(ctx context.Context) (*dataIn, error) {
 		return nil, errors.Wrap(err, "failed to connect to Ethereum 2 beacon node")
 	}
 
-	// Epoch
+	config, err := data.eth2Client.(eth2client.SpecProvider).Spec(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to obtain beacon chain configuration")
+	}
+	data.slotsPerEpoch = config["SLOTS_PER_EPOCH"].(uint64)
+
+	// Epoch.
 	epoch := viper.GetInt64("epoch")
 	if epoch == -1 {
-		config, err := data.eth2Client.(eth2client.SpecProvider).Spec(ctx)
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to obtain beacon chain configuration")
-		}
-		data.slotsPerEpoch = config["SLOTS_PER_EPOCH"].(uint64)
 		slotDuration := config["SECONDS_PER_SLOT"].(time.Duration)
 		genesis, err := data.eth2Client.(eth2client.GenesisProvider).Genesis(ctx)
 		if err != nil {
@@ -89,17 +89,24 @@ func input(ctx context.Context) (*dataIn, error) {
 	}
 	data.epoch = spec.Epoch(epoch)
 
+	// Validator.
+	stateID := "head"
+	if viper.GetInt64("epoch") != -1 {
+		stateID = fmt.Sprintf("%d", uint64(data.epoch)*data.slotsPerEpoch)
+	}
 	pubKeys := make([]spec.BLSPubKey, 1)
-	pubKey, err := core.BestPublicKey(data.account)
+	pubKey, err := util.BestPublicKey(data.account)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to obtain public key for account")
 	}
 	copy(pubKeys[0][:], pubKey.Marshal())
-	validators, err := data.eth2Client.(eth2client.ValidatorsProvider).ValidatorsByPubKey(ctx, fmt.Sprintf("%d", uint64(data.epoch)*data.slotsPerEpoch), pubKeys)
+	validators, err := data.eth2Client.(eth2client.ValidatorsProvider).ValidatorsByPubKey(ctx, stateID, pubKeys)
 	if err != nil {
 		return nil, errors.New("failed to obtain validator information")
 	}
-	data.validator = validators[0]
+	for _, validator := range validators {
+		data.validator = validator
+	}
 
 	return data, nil
 }
@@ -111,7 +118,7 @@ func attesterInclusionAccount() (e2wtypes.Account, error) {
 	if viper.GetString("account") != "" {
 		ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("timeout"))
 		defer cancel()
-		_, account, err = core.WalletAndAccountFromPath(ctx, viper.GetString("account"))
+		_, account, err = util.WalletAndAccountFromPath(ctx, viper.GetString("account"))
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to obtain account")
 		}

@@ -11,12 +11,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package cmd
+package util
 
 import (
 	"context"
-	"fmt"
 
+	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 	"github.com/prysmaticlabs/go-ssz"
 	"github.com/spf13/viper"
@@ -24,66 +24,54 @@ import (
 	e2wtypes "github.com/wealdtech/go-eth2-wallet-types/v2"
 )
 
-// verifyStruct verifies the signature of an arbitrary structure.
-func verifyStruct(account e2wtypes.Account, data interface{}, domain []byte, signature e2types.Signature) (bool, error) {
-	objRoot, err := ssz.HashTreeRoot(data)
-	outputIf(debug, fmt.Sprintf("Object root is %#x", objRoot))
-	if err != nil {
-		return false, err
-	}
-
-	return verifyRoot(account, objRoot, domain, signature)
-}
-
-// SigningContainer is the container for signing roots with a domain.
-// Contains SSZ sizes to allow for correct calculation of root.
-type signingContainer struct {
-	Root   []byte `ssz-size:"32"`
-	Domain []byte `ssz-size:"32"`
-}
-
-// signRoot signs a root.
-func signRoot(account e2wtypes.Account, root [32]byte, domain []byte) (e2types.Signature, error) {
+// SignRoot signs the hash tree root of a data structure
+func SignRoot(account e2wtypes.Account, root spec.Root, domain spec.Domain) (e2types.Signature, error) {
 	if _, isProtectingSigner := account.(e2wtypes.AccountProtectingSigner); isProtectingSigner {
-		// Signer signs the data to sign itself.
-		return signGeneric(account, root[:], domain)
+		// Signer builds the signing data.
+		return signGeneric(account, root, domain)
 	}
 
 	// Build the signing data manually.
-	container := &signingContainer{
-		Root:   root[:],
-		Domain: domain,
+	container := &spec.SigningData{
+		ObjectRoot: root,
+		Domain:     domain,
 	}
-	outputIf(debug, fmt.Sprintf("Signing container:\n root: %#x\n domain: %#x", container.Root, container.Domain))
-	signingRoot, err := ssz.HashTreeRoot(container)
+	// outputIf(debug, fmt.Sprintf("Signing container:\n root: %#x\n domain: %#x", container.ObjectRoot, container.Domain))
+	signingRoot, err := container.HashTreeRoot()
 	if err != nil {
 		return nil, err
 	}
-	outputIf(debug, fmt.Sprintf("Signing root: %#x", signingRoot))
+	// outputIf(debug, fmt.Sprintf("Signing root: %#x", signingRoot))
 	return sign(account, signingRoot[:])
 }
 
-func verifyRoot(account e2wtypes.Account, root [32]byte, domain []byte, signature e2types.Signature) (bool, error) {
+// VerifyRoot verifies the hash tree root of a data structure.
+func VerifyRoot(account e2wtypes.Account, root spec.Root, domain spec.Domain, signature e2types.Signature) (bool, error) {
 	// Build the signing data manually.
-	container := &signingContainer{
-		Root:   root[:],
-		Domain: domain,
+	container := &spec.SigningData{
+		ObjectRoot: root,
+		Domain:     domain,
 	}
-	outputIf(debug, fmt.Sprintf("Signing container:\n root: %#x\n domain: %#x", container.Root, container.Domain))
+	// outputIf(debug, fmt.Sprintf("Signing container:\n root: %#x\n domain: %#x", container.ObjectRoot, container.Domain))
 	signingRoot, err := ssz.HashTreeRoot(container)
 	if err != nil {
 		return false, err
 	}
-	outputIf(debug, fmt.Sprintf("Signing root: %#x", signingRoot))
-	return verify(account, signingRoot[:], signature)
+	// outputIf(debug, fmt.Sprintf("Signing root: %#x", signingRoot))
+	pubKey, err := BestPublicKey(account)
+	if err != nil {
+		return false, errors.Wrap(err, "failed to obtain account public key")
+	}
+	return signature.Verify(signingRoot[:], pubKey), nil
 }
 
-func signGeneric(account e2wtypes.Account, data []byte, domain []byte) (e2types.Signature, error) {
+// signGeneric signs generic data.
+func signGeneric(account e2wtypes.Account, data spec.Root, domain spec.Domain) (e2types.Signature, error) {
 	alreadyUnlocked, err := unlock(account)
 	if err != nil {
 		return nil, err
 	}
-	outputIf(debug, fmt.Sprintf("Signing %x (%d)", data, len(data)))
+	// outputIf(debug, fmt.Sprintf("Signing %x (%d)", data, len(data)))
 	ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("timeout"))
 	defer cancel()
 
@@ -92,8 +80,8 @@ func signGeneric(account e2wtypes.Account, data []byte, domain []byte) (e2types.
 		return nil, errors.New("account does not provide generic signing")
 	}
 
-	signature, err := signer.SignGeneric(ctx, data, domain)
-	errCheck(err, "failed to sign")
+	signature, err := signer.SignGeneric(ctx, data[:], domain[:])
+	// errCheck(err, "failed to sign")
 	if !alreadyUnlocked {
 		if err := lock(account); err != nil {
 			return nil, errors.Wrap(err, "failed to lock account")
@@ -108,7 +96,7 @@ func sign(account e2wtypes.Account, data []byte) (e2types.Signature, error) {
 	if err != nil {
 		return nil, err
 	}
-	outputIf(debug, fmt.Sprintf("Signing %x (%d)", data, len(data)))
+	// outputIf(debug, fmt.Sprintf("Signing %x (%d)", data, len(data)))
 	ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("timeout"))
 	defer cancel()
 
@@ -118,7 +106,7 @@ func sign(account e2wtypes.Account, data []byte) (e2types.Signature, error) {
 	}
 
 	signature, err := signer.Sign(ctx, data)
-	errCheck(err, "failed to sign")
+	// errCheck(err, "failed to sign")
 	if !alreadyUnlocked {
 		if err := lock(account); err != nil {
 			return nil, errors.Wrap(err, "failed to lock account")
@@ -127,20 +115,11 @@ func sign(account e2wtypes.Account, data []byte) (e2types.Signature, error) {
 	return signature, err
 }
 
-// verify the signature of arbitrary data.
-func verify(account e2wtypes.Account, data []byte, signature e2types.Signature) (bool, error) {
-	pubKey, err := bestPublicKey(account)
-	if err != nil {
-		return false, errors.Wrap(err, "failed to obtain account public key")
-	}
-	return signature.Verify(data, pubKey), nil
-}
-
 // unlock attempts to unlock an account.  It returns true if the account was already unlocked.
 func unlock(account e2wtypes.Account) (bool, error) {
 	locker, isAccountLocker := account.(e2wtypes.AccountLocker)
 	if !isAccountLocker {
-		outputIf(debug, "Account does not support unlocking")
+		// outputIf(debug, "Account does not support unlocking")
 		// This account doesn't support unlocking; return okay.
 		return true, nil
 	}
@@ -157,7 +136,7 @@ func unlock(account e2wtypes.Account) (bool, error) {
 	}
 
 	// Not already unlocked; attempt to unlock it.
-	for _, passphrase := range getPassphrases() {
+	for _, passphrase := range GetPassphrases() {
 		ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("timeout"))
 		err = locker.Unlock(ctx, []byte(passphrase))
 		cancel()

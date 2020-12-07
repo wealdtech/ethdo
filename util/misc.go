@@ -11,7 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package core
+package util
 
 import (
 	"context"
@@ -23,7 +23,6 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
-	"github.com/wealdtech/ethdo/util"
 	e2types "github.com/wealdtech/go-eth2-types/v2"
 	e2wallet "github.com/wealdtech/go-eth2-wallet"
 	dirk "github.com/wealdtech/go-eth2-wallet-dirk"
@@ -44,19 +43,19 @@ func SetupStore() error {
 	// Set up our wallet store.
 	switch viper.GetString("store") {
 	case "s3":
-		if util.GetBaseDir() != "" {
+		if GetBaseDir() != "" {
 			return errors.New("basedir does not apply to the s3 store")
 		}
-		store, err = s3.New(s3.WithPassphrase([]byte(util.GetStorePassphrase())))
+		store, err = s3.New(s3.WithPassphrase([]byte(GetStorePassphrase())))
 		if err != nil {
 			return errors.Wrap(err, "failed to access Amazon S3 wallet store")
 		}
 	case "filesystem":
 		opts := make([]filesystem.Option, 0)
-		if util.GetStorePassphrase() != "" {
-			opts = append(opts, filesystem.WithPassphrase([]byte(util.GetStorePassphrase())))
+		if GetStorePassphrase() != "" {
+			opts = append(opts, filesystem.WithPassphrase([]byte(GetStorePassphrase())))
 		}
-		if util.GetBaseDir() != "" {
+		if GetBaseDir() != "" {
 			opts = append(opts, filesystem.WithLocation(viper.GetString("base-dir")))
 		}
 		store = filesystem.New(opts...)
@@ -139,13 +138,13 @@ func WalletAndAccountFromPath(ctx context.Context, path string) (e2wtypes.Wallet
 	}
 
 	if wallet.Type() == "hierarchical deterministic" && strings.HasPrefix(accountName, "m/") {
-		if util.GetWalletPassphrase() == "" {
+		if GetWalletPassphrase() == "" {
 			return nil, nil, errors.New("walletpassphrase is required for direct path derivations")
 		}
 
 		locker, isLocker := wallet.(e2wtypes.WalletLocker)
 		if isLocker {
-			err = locker.Unlock(ctx, []byte(util.GetWalletPassphrase()))
+			err = locker.Unlock(ctx, []byte(GetWalletPassphrase()))
 			if err != nil {
 				return nil, nil, errors.New("failed to unlock wallet")
 			}

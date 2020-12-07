@@ -31,7 +31,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"github.com/wealdtech/ethdo/core"
 	"github.com/wealdtech/ethdo/util"
 	e2wtypes "github.com/wealdtech/go-eth2-wallet-types/v2"
 	string2eth "github.com/wealdtech/go-string2eth"
@@ -55,7 +54,7 @@ In quiet mode this will return 0 if the validator information can be obtained, o
 		errCheck(err, "Failed to obtain validator account")
 
 		pubKeys := make([]spec.BLSPubKey, 1)
-		pubKey, err := core.BestPublicKey(account)
+		pubKey, err := util.BestPublicKey(account)
 		errCheck(err, "Failed to obtain validator public key")
 		copy(pubKeys[0][:], pubKey.Marshal())
 		validators, err := eth2Client.(eth2client.ValidatorsProvider).ValidatorsByPubKey(ctx, "head", pubKeys)

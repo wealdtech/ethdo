@@ -21,7 +21,6 @@ import (
 	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
-	"github.com/wealdtech/ethdo/core"
 	ethdoutil "github.com/wealdtech/ethdo/util"
 	e2types "github.com/wealdtech/go-eth2-types/v2"
 	util "github.com/wealdtech/go-eth2-util"
@@ -52,7 +51,7 @@ func input() (*dataIn, error) {
 
 	ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("timeout"))
 	defer cancel()
-	_, data.validatorAccounts, err = core.WalletAndAccountsFromPath(ctx, viper.GetString("validatoraccount"))
+	_, data.validatorAccounts, err = ethdoutil.WalletAndAccountsFromPath(ctx, viper.GetString("validatoraccount"))
 	if err != nil {
 		return nil, errors.New("failed to obtain validator account")
 	}
@@ -75,11 +74,11 @@ func input() (*dataIn, error) {
 	case viper.GetString("withdrawalaccount") != "":
 		ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("timeout"))
 		defer cancel()
-		_, withdrawalAccount, err := core.WalletAndAccountFromPath(ctx, viper.GetString("withdrawalaccount"))
+		_, withdrawalAccount, err := ethdoutil.WalletAndAccountFromPath(ctx, viper.GetString("withdrawalaccount"))
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to obtain withdrawal account")
 		}
-		pubKey, err := core.BestPublicKey(withdrawalAccount)
+		pubKey, err := ethdoutil.BestPublicKey(withdrawalAccount)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to obtain public key for withdrawal account")
 		}

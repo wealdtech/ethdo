@@ -20,6 +20,7 @@ import (
 	"os"
 	"strings"
 
+	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -64,9 +65,11 @@ In quiet mode this will return 0 if the data can be signed, otherwise 1.`,
 		errCheck(err, "Failed to obtain account")
 		outputIf(debug, fmt.Sprintf("Public key is %#x", account.PublicKey().Marshal()))
 
+		var specDomain spec.Domain
+		copy(specDomain[:], domain)
 		var root [32]byte
 		copy(root[:], data)
-		verified, err := verifyRoot(account, root, domain, signature)
+		verified, err := util.VerifyRoot(account, root, specDomain, signature)
 		errCheck(err, "Failed to verify data")
 		assert(verified, "Failed to verify")
 

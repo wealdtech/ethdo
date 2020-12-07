@@ -18,8 +18,10 @@ import (
 	"fmt"
 	"os"
 
+	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"github.com/wealdtech/ethdo/util"
 	"github.com/wealdtech/go-bytesutil"
 	e2types "github.com/wealdtech/go-eth2-types/v2"
 )
@@ -54,9 +56,11 @@ In quiet mode this will return 0 if the data can be signed, otherwise 1.`,
 		_, account, err := walletAndAccountFromInput(ctx)
 		errCheck(err, "Failed to obtain account")
 
+		var specDomain spec.Domain
+		copy(specDomain[:], domain)
 		var fixedSizeData [32]byte
 		copy(fixedSizeData[:], data)
-		signature, err := signRoot(account, fixedSizeData, domain)
+		signature, err := util.SignRoot(account, fixedSizeData, specDomain)
 		errCheck(err, "Failed to sign")
 
 		outputIf(!quiet, fmt.Sprintf("%#x", signature.Marshal()))

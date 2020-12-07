@@ -19,7 +19,6 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
-	"github.com/wealdtech/ethdo/core"
 	"github.com/wealdtech/ethdo/util"
 	e2wtypes "github.com/wealdtech/go-eth2-wallet-types/v2"
 )
@@ -51,7 +50,7 @@ func input(ctx context.Context) (*dataIn, error) {
 	data.debug = viper.GetBool("debug")
 
 	// Wallet.
-	wallet, err := core.WalletFromInput(ctx)
+	wallet, err := util.WalletFromInput(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to access wallet")
 	}

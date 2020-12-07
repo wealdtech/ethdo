@@ -20,8 +20,8 @@ import (
 	api "github.com/attestantio/go-eth2-client/api/v1"
 	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
-	"github.com/wealdtech/ethdo/core"
 	"github.com/wealdtech/ethdo/signing"
+	"github.com/wealdtech/ethdo/util"
 )
 
 // maxFutureEpochs is the farthest in the future for which an exit will be created.
@@ -111,7 +111,7 @@ func fetchValidator(ctx context.Context, data *dataIn) (*api.Validator, error) {
 
 	var validator *api.Validator
 	validatorPubKeys := make([]spec.BLSPubKey, 1)
-	pubKey, err := core.BestPublicKey(data.account)
+	pubKey, err := util.BestPublicKey(data.account)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to obtain public key for account")
 	}

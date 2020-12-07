@@ -19,8 +19,8 @@ import (
 
 	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
-	"github.com/wealdtech/ethdo/core"
 	"github.com/wealdtech/ethdo/signing"
+	"github.com/wealdtech/ethdo/util"
 	e2wtypes "github.com/wealdtech/go-eth2-wallet-types/v2"
 )
 
@@ -32,7 +32,7 @@ func process(data *dataIn) ([]*dataOut, error) {
 	results := make([]*dataOut, 0)
 
 	for _, validatorAccount := range data.validatorAccounts {
-		validatorPubKey, err := core.BestPublicKey(validatorAccount)
+		validatorPubKey, err := util.BestPublicKey(validatorAccount)
 		if err != nil {
 			return nil, errors.Wrap(err, "validator account does not provide a public key")
 		}

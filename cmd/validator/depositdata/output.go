@@ -105,6 +105,12 @@ func validatorDepositDataOutputRaw(datum *dataOut) (string, error) {
 }
 
 func validatorDepositDataOutputLaunchpad(datum *dataOut) (string, error) {
+	// Map of fork version to network name.
+	forkVersionMap := map[spec.Version]string{
+		[4]byte{0x00, 0x00, 0x00, 0x00}: "mainnet",
+		[4]byte{0x00, 0x00, 0x20, 0x09}: "pyrmont",
+	}
+
 	if datum.validatorPubKey == nil {
 		return "", errors.New("validator public key required")
 	}
@@ -124,7 +130,11 @@ func validatorDepositDataOutputLaunchpad(datum *dataOut) (string, error) {
 		return "", errors.New("deposit data root required")
 	}
 
-	output := fmt.Sprintf(`{"pubkey":"%x","withdrawal_credentials":"%x","amount":%d,"signature":"%x","deposit_message_root":"%x","deposit_data_root":"%x","fork_version":"%x"}`,
+	networkName := "unknown"
+	if network, exists := forkVersionMap[*datum.forkVersion]; exists {
+		networkName = network
+	}
+	output := fmt.Sprintf(`{"pubkey":"%x","withdrawal_credentials":"%x","amount":%d,"signature":"%x","deposit_message_root":"%x","deposit_data_root":"%x","fork_version":"%x","eth2_network_name":"%s","deposit_cli_version":"1.1.0"}`,
 		*datum.validatorPubKey,
 		datum.withdrawalCredentials,
 		datum.amount,
@@ -132,6 +142,7 @@ func validatorDepositDataOutputLaunchpad(datum *dataOut) (string, error) {
 		*datum.depositMessageRoot,
 		*datum.depositDataRoot,
 		*datum.forkVersion,
+		networkName,
 	)
 	return output, nil
 }

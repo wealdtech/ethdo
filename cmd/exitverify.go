@@ -62,13 +62,17 @@ In quiet mode this will return 0 if the the exit is verified correctly, otherwis
 		errCheck(err, "Failed to obtain beacon chain genesis")
 
 		domain := e2types.Domain(e2types.DomainVoluntaryExit, data.ForkVersion[:], genesis.GenesisValidatorsRoot[:])
+		var exitDomain spec.Domain
+		copy(exitDomain[:], domain)
 		exit := &spec.VoluntaryExit{
 			Epoch:          data.Data.Message.Epoch,
 			ValidatorIndex: data.Data.Message.ValidatorIndex,
 		}
+		exitRoot, err := exit.HashTreeRoot()
+		errCheck(err, "Failed to obtain exit hash tree root")
 		sig, err := e2types.BLSSignatureFromBytes(data.Data.Signature[:])
 		errCheck(err, "Invalid signature")
-		verified, err := verifyStruct(account, exit, domain, sig)
+		verified, err := util.VerifyRoot(account, exitRoot, exitDomain, sig)
 		errCheck(err, "Failed to verify voluntary exit")
 		assert(verified, "Voluntary exit failed to verify")
 

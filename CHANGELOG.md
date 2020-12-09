@@ -1,3 +1,7 @@
+Development:
+  - fix issue where base directory was ignored for wallet creation
+  - new "validator duties" command to display known duties for a given validator
+  - update go-eth2-client to display correct validator status from prysm
 1.7.2:
   - new "account derive" command to derive keys directly from a mnemonic and derivation path
   - add more output to "deposit verify" to explain operation

@@ -27,6 +27,10 @@ import (
 
 // ConnectToBeaconNode connects to a beacon node at the given address.
 func ConnectToBeaconNode(ctx context.Context, address string, timeout time.Duration, allowInsecure bool) (eth2client.Service, error) {
+	if timeout == 0 {
+		return nil, errors.New("no timeout specified")
+	}
+
 	if !allowInsecure {
 		// Ensure the connection is either secure or local.
 		connectionURL, err := url.Parse(address)

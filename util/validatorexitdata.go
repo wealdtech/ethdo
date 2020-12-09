@@ -25,19 +25,19 @@ import (
 
 // ValidatorExitData contains data for a validator exit.
 type ValidatorExitData struct {
-	Data        *spec.SignedVoluntaryExit
+	Exit        *spec.SignedVoluntaryExit
 	ForkVersion spec.Version
 }
 
 type validatorExitJSON struct {
-	Data        *spec.SignedVoluntaryExit `json:"data"`
+	Exit        *spec.SignedVoluntaryExit `json:"exit"`
 	ForkVersion string                    `json:"fork_version"`
 }
 
 // MarshalJSON implements custom JSON marshaller.
 func (d *ValidatorExitData) MarshalJSON() ([]byte, error) {
 	validatorExitJSON := &validatorExitJSON{
-		Data:        d.Data,
+		Exit:        d.Exit,
 		ForkVersion: fmt.Sprintf("%#x", d.ForkVersion),
 	}
 	return json.Marshal(validatorExitJSON)
@@ -51,10 +51,10 @@ func (d *ValidatorExitData) UnmarshalJSON(data []byte) error {
 		return errors.Wrap(err, "failed to unmarshal JSON")
 	}
 
-	if validatorExitJSON.Data == nil {
-		return errors.New("data missing")
+	if validatorExitJSON.Exit == nil {
+		return errors.New("exit missing")
 	}
-	d.Data = validatorExitJSON.Data
+	d.Exit = validatorExitJSON.Exit
 
 	if validatorExitJSON.ForkVersion == "" {
 		return errors.New("fork version missing")

@@ -91,9 +91,10 @@ func TestInput(t *testing.T) {
 		{
 			name: "KeyGood",
 			vars: map[string]interface{}{
-				"connection": os.Getenv("ETHDO_TEST_CONNECTION"),
-				"timeout":    "5s",
-				"key":        "0x25295f0d1d592a90b333e26e85149708208e9f8e8bc18f6c77bd62f8ad7a6866",
+				"connection":                 os.Getenv("ETHDO_TEST_CONNECTION"),
+				"allow-insecure-connections": true,
+				"timeout":                    "5s",
+				"key":                        "0x25295f0d1d592a90b333e26e85149708208e9f8e8bc18f6c77bd62f8ad7a6866",
 			},
 			res: &dataIn{
 				timeout: 5 * time.Second,
@@ -102,9 +103,10 @@ func TestInput(t *testing.T) {
 		{
 			name: "AccountUnknown",
 			vars: map[string]interface{}{
-				"connection": os.Getenv("ETHDO_TEST_CONNECTION"),
-				"timeout":    "5s",
-				"account":    "Test wallet/unknown",
+				"connection":                 os.Getenv("ETHDO_TEST_CONNECTION"),
+				"allow-insecure-connections": true,
+				"timeout":                    "5s",
+				"account":                    "Test wallet/unknown",
 			},
 			res: &dataIn{
 				timeout: 5 * time.Second,
@@ -114,9 +116,10 @@ func TestInput(t *testing.T) {
 		{
 			name: "AccountGood",
 			vars: map[string]interface{}{
-				"connection": os.Getenv("ETHDO_TEST_CONNECTION"),
-				"timeout":    "5s",
-				"account":    "Test wallet/Interop 0",
+				"connection":                 os.Getenv("ETHDO_TEST_CONNECTION"),
+				"allow-insecure-connections": true,
+				"timeout":                    "5s",
+				"account":                    "Test wallet/Interop 0",
 			},
 			res: &dataIn{
 				timeout: 5 * time.Second,
@@ -125,9 +128,10 @@ func TestInput(t *testing.T) {
 		{
 			name: "JSONInvalid",
 			vars: map[string]interface{}{
-				"connection": os.Getenv("ETHDO_TEST_CONNECTION"),
-				"timeout":    "5s",
-				"exit":       `invalid`,
+				"connection":                 os.Getenv("ETHDO_TEST_CONNECTION"),
+				"allow-insecure-connections": true,
+				"timeout":                    "5s",
+				"exit":                       `invalid`,
 			},
 			res: &dataIn{
 				timeout: 5 * time.Second,
@@ -137,9 +141,10 @@ func TestInput(t *testing.T) {
 		{
 			name: "JSONGood",
 			vars: map[string]interface{}{
-				"connection": os.Getenv("ETHDO_TEST_CONNECTION"),
-				"timeout":    "5s",
-				"exit":       `{"message":{"epoch":"123","validator_index":"456"},"signature":"0x000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f"}`,
+				"connection":                 os.Getenv("ETHDO_TEST_CONNECTION"),
+				"allow-insecure-connections": true,
+				"timeout":                    "5s",
+				"exit":                       `{"exit":{"message":{"epoch":"123","validator_index":"456"},"signature":"0x000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f"},"fork_version":"0x00002009"}`,
 			},
 			res: &dataIn{
 				timeout: 5 * time.Second,
@@ -148,19 +153,21 @@ func TestInput(t *testing.T) {
 		{
 			name: "ClientBad",
 			vars: map[string]interface{}{
-				"connection": "localhost:1",
-				"timeout":    "5s",
-				"key":        "0x25295f0d1d592a90b333e26e85149708208e9f8e8bc18f6c77bd62f8ad7a6866",
+				"connection":                 "localhost:1",
+				"allow-insecure-connections": true,
+				"timeout":                    "5s",
+				"key":                        "0x25295f0d1d592a90b333e26e85149708208e9f8e8bc18f6c77bd62f8ad7a6866",
 			},
 			err: "failed to connect to Ethereum 2 beacon node: failed to connect to beacon node: failed to connect to Ethereum 2 client with any known method",
 		},
 		{
 			name: "EpochProvided",
 			vars: map[string]interface{}{
-				"connection": os.Getenv("ETHDO_TEST_CONNECTION"),
-				"timeout":    "5s",
-				"key":        "0x25295f0d1d592a90b333e26e85149708208e9f8e8bc18f6c77bd62f8ad7a6866",
-				"epoch":      "123",
+				"connection":                 os.Getenv("ETHDO_TEST_CONNECTION"),
+				"allow-insecure-connections": true,
+				"timeout":                    "5s",
+				"key":                        "0x25295f0d1d592a90b333e26e85149708208e9f8e8bc18f6c77bd62f8ad7a6866",
+				"epoch":                      "123",
 			},
 			res: &dataIn{
 				timeout: 5 * time.Second,

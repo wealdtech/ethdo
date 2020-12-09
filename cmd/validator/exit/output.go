@@ -46,7 +46,7 @@ func output(ctx context.Context, data *dataOut) (string, error) {
 
 func outputJSON(ctx context.Context, data *dataOut) (string, error) {
 	validatorExitData := &util.ValidatorExitData{
-		Data:        data.signedVoluntaryExit,
+		Exit:        data.signedVoluntaryExit,
 		ForkVersion: data.forkVersion,
 	}
 	bytes, err := json.Marshal(validatorExitData)

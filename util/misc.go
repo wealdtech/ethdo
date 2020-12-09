@@ -56,7 +56,7 @@ func SetupStore() error {
 			opts = append(opts, filesystem.WithPassphrase([]byte(GetStorePassphrase())))
 		}
 		if GetBaseDir() != "" {
-			opts = append(opts, filesystem.WithLocation(viper.GetString("base-dir")))
+			opts = append(opts, filesystem.WithLocation(GetBaseDir()))
 		}
 		store = filesystem.New(opts...)
 	default:

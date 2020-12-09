@@ -79,7 +79,7 @@ func inputJSON(ctx context.Context, data *dataIn) (*dataIn, error) {
 	if err != nil {
 		return nil, err
 	}
-	data.signedVoluntaryExit = validatorData.Data
+	data.signedVoluntaryExit = validatorData.Exit
 	return inputChainData(ctx, data)
 }
 

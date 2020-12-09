@@ -50,8 +50,8 @@ In quiet mode this will return 0 if the the exit is verified correctly, otherwis
 		account, err := exitVerifyAccount(ctx)
 		errCheck(err, "Failed to obtain account")
 
-		assert(viper.GetString("exit.data") != "", "exit data is required")
-		data, err := obtainExitData(viper.GetString("exit.Data"))
+		assert(viper.GetString("exit") != "", "exit is required")
+		data, err := obtainExitData(viper.GetString("exit"))
 		errCheck(err, "Failed to obtain exit data")
 
 		// Confirm signature is good.
@@ -65,12 +65,12 @@ In quiet mode this will return 0 if the the exit is verified correctly, otherwis
 		var exitDomain spec.Domain
 		copy(exitDomain[:], domain)
 		exit := &spec.VoluntaryExit{
-			Epoch:          data.Data.Message.Epoch,
-			ValidatorIndex: data.Data.Message.ValidatorIndex,
+			Epoch:          data.Exit.Message.Epoch,
+			ValidatorIndex: data.Exit.Message.ValidatorIndex,
 		}
 		exitRoot, err := exit.HashTreeRoot()
 		errCheck(err, "Failed to obtain exit hash tree root")
-		sig, err := e2types.BLSSignatureFromBytes(data.Data.Signature[:])
+		sig, err := e2types.BLSSignatureFromBytes(data.Exit.Signature[:])
 		errCheck(err, "Invalid signature")
 		verified, err := util.VerifyRoot(account, exitRoot, exitDomain, sig)
 		errCheck(err, "Failed to verify voluntary exit")
@@ -134,12 +134,12 @@ func exitVerifyAccount(ctx context.Context) (e2wtypes.Account, error) {
 func init() {
 	exitCmd.AddCommand(exitVerifyCmd)
 	exitFlags(exitVerifyCmd)
-	exitVerifyCmd.Flags().String("data", "", "JSON data, or path to JSON data")
+	exitVerifyCmd.Flags().String("exit", "", "JSON data, or path to JSON data")
 	exitVerifyCmd.Flags().StringVar(&exitVerifyPubKey, "pubkey", "", "Public key for which to verify exit")
 }
 
 func exitVerifyBindings() {
-	if err := viper.BindPFlag("data", exitVerifyCmd.Flags().Lookup("data")); err != nil {
+	if err := viper.BindPFlag("exit", exitVerifyCmd.Flags().Lookup("exit")); err != nil {
 		panic(err)
 	}
 }

@@ -76,6 +76,8 @@ func persistentPreRunE(cmd *cobra.Command, args []string) error {
 		exitVerifyBindings()
 	case "validator/depositdata":
 		validatorDepositdataBindings()
+	case "validator/duties":
+		validatorDutiesBindings()
 	case "validator/exit":
 		validatorExitBindings()
 	case "validator/info":

@@ -2,11 +2,14 @@
   - fix issue where base directory was ignored for wallet creation
   - new "validator duties" command to display known duties for a given validator
   - update go-eth2-client to display correct validator status from prysm
+
 1.7.2:
   - new "account derive" command to derive keys directly from a mnemonic and derivation path
   - add more output to "deposit verify" to explain operation
+
 1.7.1:
   - fix "store not set" issue
+
 1.7.0:
   - "validator depositdata" now defaults to mainnet, does not silently fetch fork version from chain
   - update deposit data output to version 3, to allow for better deposit checking
@@ -17,12 +20,15 @@
   - renamed "--exportpassphrase" and "--importpassphrase" flags to "--passphrase"
   - reworked internal structure of account-related commands
   - reject weak passphrases by default
+
 1.6.1:
   - "attester inclusion" defaults to previous epoch
   - output array for launchpad deposit data JSON in all situations
+
 1.6.0:
   - update BLS HKDF function to match spec 04
   - add --launchpad option to "validator depositdata" to output data in launchpad format
+
 1.5.9:
   - fix issue where wallet mnemonics were not normalised to NFKD
   - "block info" supports fetching the gensis block (--slot=0)

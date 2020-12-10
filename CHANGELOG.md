@@ -1,4 +1,4 @@
-Development:
+1.7.3:
   - fix issue where base directory was ignored for wallet creation
   - new "validator duties" command to display known duties for a given validator
   - update go-eth2-client to display correct validator status from prysm

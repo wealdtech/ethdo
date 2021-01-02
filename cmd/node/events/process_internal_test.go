@@ -63,7 +63,7 @@ func TestProcess(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			_, err := process(context.Background(), test.dataIn)
+			err := process(context.Background(), test.dataIn)
 			if test.err != "" {
 				require.EqualError(t, err, test.err)
 			} else {

@@ -5,9 +5,9 @@ go 1.13
 require (
 	github.com/OneOfOne/xxhash v1.2.5 // indirect
 	github.com/attestantio/dirk v0.9.3
-	github.com/attestantio/go-eth2-client v0.6.16
-	github.com/aws/aws-sdk-go v1.36.2 // indirect
-	github.com/ferranbt/fastssz v0.0.0-20201207112544-98a5de30d648
+	github.com/attestantio/go-eth2-client v0.6.19
+	github.com/aws/aws-sdk-go v1.36.12 // indirect
+	github.com/ferranbt/fastssz v0.0.0-20201210095258-318e164fe1dd
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
 	github.com/gofrs/uuid v3.3.0+incompatible
 	github.com/gogo/protobuf v1.3.1
@@ -24,11 +24,11 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/protolambda/zssz v0.1.5 // indirect
 	github.com/prysmaticlabs/ethereumapis v0.0.0-20201207010723-e69ac7fa952d
-	github.com/prysmaticlabs/go-bitfield v0.0.0-20200618145306-2ae0807bef65
+	github.com/prysmaticlabs/go-bitfield v0.0.0-20201217222627-a48494c940af
 	github.com/prysmaticlabs/go-ssz v0.0.0-20200612203617-6d5c9aa213ae
 	github.com/rs/zerolog v1.20.0
 	github.com/spaolacci/murmur3 v1.1.0 // indirect
-	github.com/spf13/afero v1.4.1 // indirect
+	github.com/spf13/afero v1.5.1 // indirect
 	github.com/spf13/cast v1.3.1 // indirect
 	github.com/spf13/cobra v1.1.1
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
@@ -54,11 +54,11 @@ require (
 	github.com/wealdtech/go-eth2-wallet-store-scratch v1.6.1
 	github.com/wealdtech/go-eth2-wallet-types/v2 v2.8.1
 	github.com/wealdtech/go-string2eth v1.1.0
-	golang.org/x/crypto v0.0.0-20201203163018-be400aefbc4c // indirect
-	golang.org/x/net v0.0.0-20201202161906-c7110b5ffcbb // indirect
-	golang.org/x/sys v0.0.0-20201204225414-ed752295db88 // indirect
+	golang.org/x/crypto v0.0.0-20201217014255-9d1352758620 // indirect
+	golang.org/x/net v0.0.0-20201216054612-986b41b23924 // indirect
+	golang.org/x/sys v0.0.0-20201218084310-7d0127a74742 // indirect
 	golang.org/x/text v0.3.4
-	google.golang.org/genproto v0.0.0-20201204160425-06b3db808446 // indirect
+	google.golang.org/genproto v0.0.0-20201214200347-8c77b98c765d // indirect
 	google.golang.org/grpc v1.34.0
 	gopkg.in/ini.v1 v1.62.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect

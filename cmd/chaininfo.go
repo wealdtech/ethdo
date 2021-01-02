@@ -57,7 +57,7 @@ In quiet mode this will return 0 if the chain information can be obtained, other
 			outputIf(verbose, fmt.Sprintf("Genesis timestamp: %v", genesis.GenesisTime.Unix()))
 		}
 		fmt.Printf("Genesis validators root: %#x\n", genesis.GenesisValidatorsRoot)
-		fmt.Printf("Genesis fork version: %#x\n", config["GENESIS_FORK_VERSION"].([]byte))
+		fmt.Printf("Genesis fork version: %x\n", config["GENESIS_FORK_VERSION"].(spec.Version))
 		fmt.Printf("Seconds per slot: %d\n", int(config["SECONDS_PER_SLOT"].(time.Duration).Seconds()))
 		fmt.Printf("Slots per epoch: %d\n", config["SLOTS_PER_EPOCH"].(uint64))
 

@@ -74,6 +74,8 @@ func persistentPreRunE(cmd *cobra.Command, args []string) error {
 		blockInfoBindings()
 	case "exit/verify":
 		exitVerifyBindings()
+	case "node/events":
+		nodeEventsBindings()
 	case "validator/depositdata":
 		validatorDepositdataBindings()
 	case "validator/duties":
@@ -106,7 +108,6 @@ func persistentPreRunE(cmd *cobra.Command, args []string) error {
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
 	if err := RootCmd.Execute(); err != nil {
-		fmt.Println(err)
 		os.Exit(_exitFailure)
 	}
 }

@@ -1,3 +1,7 @@
+Development:
+  - add "node events"
+  - add activation epoch to "validator info"
+
 1.7.3:
   - fix issue where base directory was ignored for wallet creation
   - new "validator duties" command to display known duties for a given validator

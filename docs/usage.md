@@ -360,6 +360,17 @@ $ ethdo exit verify --exit=${HOME}/exit.json --pubkey=0xa951530887ae2494a8cc4f11
 
 Node commands focus on information from an Ethereum 2 node.
 
+#### `events`
+
+`ethdo node events` displays events emitted by an Ethereum 2 node.
+
+```sh
+$ ethdo node events --topics=head,chain_reorg
+{"topic":"head","data":{"block":"0x3b98ccd8dbd39e0763a5e91ef754f4559f5f9b6b8014ff45c8abf2eaf236324a","current_duty_dependent_root":"0xdedb063fcc2f404c701fe05a5bfbc95881d23292239adc1c4fc49d409beea7be","epoch_transition":false,"previous_duty_dependent_root":"0x626037a43b204b88d1911510d2717669ee2839b3227f5642832c36e5e6fc5e2f","slot":"231380","state":"0x009630f55970fa73b61cc97b0ed83b2faaf9103c8db722705e1b4376f240e415"}}
+{"topic":"head","data":{"block":"0x41e4c09da2ddbca777fbdae5b0cdd2823df630fb74e1d3f6837586046737b414","current_duty_dependent_root":"0xdedb063fcc2f404c701fe05a5bfbc95881d23292239adc1c4fc49d409beea7be","epoch_transition":false,"previous_duty_dependent_root":"0x626037a43b204b88d1911510d2717669ee2839b3227f5642832c36e5e6fc5e2f","slot":"231381","state":"0xd2ce52483df1add63df441c15d4aef291be8a41d6d1d3ce7e9d6d619f7c911de"}}
+...
+```
+
 #### `info`
 
 `ethdo node info` obtains the information about an Ethereum 2 node.

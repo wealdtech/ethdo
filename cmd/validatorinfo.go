@@ -47,7 +47,11 @@ In quiet mode this will return 0 if the validator information can be obtained, o
 	Run: func(cmd *cobra.Command, args []string) {
 		ctx := context.Background()
 
-		eth2Client, err := util.ConnectToBeaconNode(ctx, viper.GetString("connection"), viper.GetDuration("timeout"), viper.GetBool("allow-insecure-connections"))
+		eth2Client, err := util.ConnectToBeaconNode(ctx,
+			viper.GetString("connection"),
+			viper.GetDuration("timeout"),
+			viper.GetBool("allow-insecure-connections"),
+		)
 		errCheck(err, "Failed to connect to Ethereum 2 beacon node")
 
 		account, err := validatorInfoAccount()
@@ -90,6 +94,7 @@ In quiet mode this will return 0 if the validator information can be obtained, o
 		if verbose {
 			if validator.Status.HasActivated() {
 				fmt.Printf("Index: %d\n", validator.Index)
+				fmt.Printf("Activation epoch: %d\n", validator.Validator.ActivationEpoch)
 			}
 			fmt.Printf("Public key: %#x\n", validator.Validator.PublicKey)
 		}

@@ -393,6 +393,20 @@ Current epoch: 5
 Genesis timestamp: 1587020563
 ```
 
+### `slot` commands
+
+Slot commands focus on information about Ethereum 2 slots.
+
+#### `slottime`
+
+`ethdo slot time` provides information about the time of a slot.  options include:
+  - `slot` the slot for which to provide the time
+
+```sh
+$ ethdo slot time --slot=5
+2020-12-01 12:01:23 +0000 GMT
+```
+
 ### `validator` commands
 
 Validator commands focus on interaction with Ethereum 2 validators.
@@ -460,6 +474,18 @@ Effective balance: 3.1 Ether
 ### `attester` commands
 
 Attester commands focus on Ethereum 2 validators' actions as attesters.
+
+#### `duties`
+
+`ethdo attester duties` provides information on the duties that a given validator has in a given epoch.  Options include:
+  - `epoch` the epoch in which to obtain the duties (defaults to current epoch)
+  - `account` the account for which to fetch the duties (in format "wallet/account")
+  - `pubkey` the public key for which to fetch the duties
+
+```sh
+$ ethdo attester duties --account=Validators/0 --epoch=5
+Validator attesting in slot 186 committee 3
+```
 
 #### `inclusion`
 

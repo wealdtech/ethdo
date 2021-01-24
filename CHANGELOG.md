@@ -1,4 +1,6 @@
 Development:
+  - add "slot time"
+  - add "attester duties"
   - add "node events"
   - add activation epoch to "validator info"
 

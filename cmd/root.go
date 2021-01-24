@@ -68,6 +68,8 @@ func persistentPreRunE(cmd *cobra.Command, args []string) error {
 		accountDeriveBindings()
 	case "account/import":
 		accountImportBindings()
+	case "attester/duties":
+		attesterDutiesBindings()
 	case "attester/inclusion":
 		attesterInclusionBindings()
 	case "block/info":
@@ -76,6 +78,8 @@ func persistentPreRunE(cmd *cobra.Command, args []string) error {
 		exitVerifyBindings()
 	case "node/events":
 		nodeEventsBindings()
+	case "slot/time":
+		slotTimeBindings()
 	case "validator/depositdata":
 		validatorDepositdataBindings()
 	case "validator/duties":
@@ -302,7 +306,7 @@ func walletAndAccountFromInput(ctx context.Context) (e2wtypes.Wallet, e2wtypes.A
 func walletAndAccountFromPath(ctx context.Context, path string) (e2wtypes.Wallet, e2wtypes.Account, error) {
 	wallet, err := walletFromPath(ctx, path)
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "faild to open wallet for account")
+		return nil, nil, errors.Wrap(err, "failed to open wallet for account")
 	}
 	_, accountName, err := e2wallet.WalletAndAccountNames(path)
 	if err != nil {

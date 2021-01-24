@@ -127,7 +127,7 @@ func WalletAndAccountFromInput(ctx context.Context) (e2wtypes.Wallet, e2wtypes.A
 func WalletAndAccountFromPath(ctx context.Context, path string) (e2wtypes.Wallet, e2wtypes.Account, error) {
 	wallet, err := WalletFromPath(ctx, path)
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "faild to open wallet for account")
+		return nil, nil, errors.Wrap(err, "failed to open wallet for account")
 	}
 	_, accountName, err := e2wallet.WalletAndAccountNames(path)
 	if err != nil {
@@ -167,7 +167,7 @@ func WalletAndAccountFromPath(ctx context.Context, path string) (e2wtypes.Wallet
 func WalletAndAccountsFromPath(ctx context.Context, path string) (e2wtypes.Wallet, []e2wtypes.Account, error) {
 	wallet, err := WalletFromPath(ctx, path)
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "faild to open wallet for account")
+		return nil, nil, errors.Wrap(err, "failed to open wallet for account")
 	}
 
 	_, accountSpec, err := e2wallet.WalletAndAccountNames(path)

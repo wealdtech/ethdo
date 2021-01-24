@@ -65,7 +65,7 @@ func TestInput(t *testing.T) {
 				"account":    "Unknown/Interop 0",
 				"passphrase": "ce%NohGhah4ye5ra",
 			},
-			err: "failed to obtain acount: faild to open wallet for account: wallet not found",
+			err: "failed to obtain acount: failed to open wallet for account: wallet not found",
 		},
 		{
 			name: "AccountMissing",
@@ -73,7 +73,7 @@ func TestInput(t *testing.T) {
 				"timeout":    "5s",
 				"passphrase": "ce%NohGhah4ye5ra",
 			},
-			err: "failed to obtain acount: faild to open wallet for account: invalid account format",
+			err: "failed to obtain acount: failed to open wallet for account: invalid account format",
 		},
 		{
 			name: "AccountWalletOnly",
@@ -91,7 +91,7 @@ func TestInput(t *testing.T) {
 				"account":    "//",
 				"passphrase": "ce%NohGhah4ye5ra",
 			},
-			err: "failed to obtain acount: faild to open wallet for account: invalid account format",
+			err: "failed to obtain acount: failed to open wallet for account: invalid account format",
 		},
 		{
 			name: "Good",

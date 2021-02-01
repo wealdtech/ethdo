@@ -1,4 +1,4 @@
-Development:
+1.7.4:
   - add "slot time"
   - add "attester duties"
   - add "node events"

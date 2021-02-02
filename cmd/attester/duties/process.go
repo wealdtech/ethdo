@@ -15,11 +15,16 @@ package attesterduties
 
 import (
 	"context"
+	"encoding/hex"
+	"fmt"
+	"strings"
 
 	eth2client "github.com/attestantio/go-eth2-client"
 	api "github.com/attestantio/go-eth2-client/api/v1"
 	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
+	"github.com/wealdtech/ethdo/util"
+	e2wtypes "github.com/wealdtech/go-eth2-wallet-types/v2"
 )
 
 func process(ctx context.Context, data *dataIn) (*dataOut, error) {
@@ -27,13 +32,49 @@ func process(ctx context.Context, data *dataIn) (*dataOut, error) {
 		return nil, errors.New("no data")
 	}
 
+	var account e2wtypes.Account
+	var err error
+	if data.account != "" {
+		ctx, cancel := context.WithTimeout(ctx, data.timeout)
+		defer cancel()
+		_, account, err = util.WalletAndAccountFromPath(ctx, data.account)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to obtain account")
+		}
+	} else {
+		pubKeyBytes, err := hex.DecodeString(strings.TrimPrefix(data.pubKey, "0x"))
+		if err != nil {
+			return nil, errors.Wrap(err, fmt.Sprintf("failed to decode public key %s", data.pubKey))
+		}
+		account, err = util.NewScratchAccount(nil, pubKeyBytes)
+		if err != nil {
+			return nil, errors.Wrap(err, fmt.Sprintf("invalid public key %s", data.pubKey))
+		}
+	}
+
+	// Fetch validator
+	pubKeys := make([]spec.BLSPubKey, 1)
+	pubKey, err := util.BestPublicKey(account)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to obtain public key for account")
+	}
+	copy(pubKeys[0][:], pubKey.Marshal())
+	validators, err := data.eth2Client.(eth2client.ValidatorsProvider).ValidatorsByPubKey(ctx, fmt.Sprintf("%d", uint64(data.epoch)*data.slotsPerEpoch), pubKeys)
+	if err != nil {
+		return nil, errors.New("failed to obtain validator information")
+	}
+	if len(validators) == 0 {
+		return nil, errors.New("validator is not known")
+	}
+	validator := validators[0]
+
 	results := &dataOut{
 		debug:   data.debug,
 		quiet:   data.quiet,
 		verbose: data.verbose,
 	}
 
-	duty, err := duty(ctx, data.eth2Client, data.validator, data.epoch, data.slotsPerEpoch)
+	duty, err := duty(ctx, data.eth2Client, validator, data.epoch, data.slotsPerEpoch)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to obtain duty for validator")
 	}

@@ -15,18 +15,13 @@ package attesterduties
 
 import (
 	"context"
-	"encoding/hex"
-	"fmt"
-	"strings"
 	"time"
 
 	eth2client "github.com/attestantio/go-eth2-client"
-	api "github.com/attestantio/go-eth2-client/api/v1"
 	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
 	"github.com/wealdtech/ethdo/util"
-	e2wtypes "github.com/wealdtech/go-eth2-wallet-types/v2"
 )
 
 type dataIn struct {
@@ -39,10 +34,10 @@ type dataIn struct {
 	// Chain information.
 	slotsPerEpoch uint64
 	// Operation.
-	validator  *api.Validator
+	account    string
+	pubKey     string
 	eth2Client eth2client.Service
 	epoch      spec.Epoch
-	account    e2wtypes.Account
 }
 
 func input(ctx context.Context) (*dataIn, error) {
@@ -57,14 +52,15 @@ func input(ctx context.Context) (*dataIn, error) {
 	data.debug = viper.GetBool("debug")
 	data.json = viper.GetBool("json")
 
-	// Account.
-	var err error
-	data.account, err = attesterDutiesAccount()
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to obtain account")
+	// Account or pubkey.
+	if viper.GetString("account") == "" && viper.GetString("pubkey") == "" {
+		return nil, errors.New("account or pubkey is required")
 	}
+	data.account = viper.GetString("account")
+	data.pubKey = viper.GetString("pubkey")
 
 	// Ethereum 2 client.
+	var err error
 	data.eth2Client, err = util.ConnectToBeaconNode(ctx, viper.GetString("connection"), viper.GetDuration("timeout"), viper.GetBool("allow-insecure-connections"))
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to connect to Ethereum 2 beacon node")
@@ -87,45 +83,5 @@ func input(ctx context.Context) (*dataIn, error) {
 	}
 	data.epoch = spec.Epoch(epoch)
 
-	pubKeys := make([]spec.BLSPubKey, 1)
-	pubKey, err := util.BestPublicKey(data.account)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to obtain public key for account")
-	}
-	copy(pubKeys[0][:], pubKey.Marshal())
-	validators, err := data.eth2Client.(eth2client.ValidatorsProvider).ValidatorsByPubKey(ctx, fmt.Sprintf("%d", uint64(data.epoch)*data.slotsPerEpoch), pubKeys)
-	if err != nil {
-		return nil, errors.New("failed to obtain validator information")
-	}
-	if len(validators) == 0 {
-		return nil, errors.New("validator is not known")
-	}
-	data.validator = validators[0]
-
 	return data, nil
-}
-
-// attesterDutiesAccount obtains the account for the attester duties command.
-func attesterDutiesAccount() (e2wtypes.Account, error) {
-	var account e2wtypes.Account
-	var err error
-	if viper.GetString("account") != "" {
-		ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("timeout"))
-		defer cancel()
-		_, account, err = util.WalletAndAccountFromPath(ctx, viper.GetString("account"))
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to obtain account")
-		}
-	} else {
-		pubKey := viper.GetString("pubkey")
-		pubKeyBytes, err := hex.DecodeString(strings.TrimPrefix(pubKey, "0x"))
-		if err != nil {
-			return nil, errors.Wrap(err, fmt.Sprintf("failed to decode public key %s", pubKey))
-		}
-		account, err = util.NewScratchAccount(nil, pubKeyBytes)
-		if err != nil {
-			return nil, errors.Wrap(err, fmt.Sprintf("invalid public key %s", pubKey))
-		}
-	}
-	return account, nil
 }

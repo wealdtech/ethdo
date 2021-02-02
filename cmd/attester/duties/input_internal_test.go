@@ -65,7 +65,7 @@ func TestInput(t *testing.T) {
 			vars: map[string]interface{}{
 				"timeout": "5s",
 			},
-			err: "failed to obtain account: invalid public key : public key must be 48 bytes",
+			err: "account or pubkey is required",
 		},
 		{
 			name: "ConnectionMissing",

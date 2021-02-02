@@ -18,7 +18,6 @@ import (
 	"os"
 	"testing"
 
-	api "github.com/attestantio/go-eth2-client/api/v1"
 	"github.com/attestantio/go-eth2-client/auto"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
@@ -48,10 +47,8 @@ func TestProcess(t *testing.T) {
 			dataIn: &dataIn{
 				eth2Client:    eth2Client,
 				slotsPerEpoch: 32,
-				validator: &api.Validator{
-					Index: 0,
-				},
-				epoch: 100,
+				pubKey:        "0x933ad9491b62059dd065b560d256d8957a8c402cc6e8d8ee7290ae11e8f7329267a8811c397529dac52ae1342ba58c95",
+				epoch:         100,
 			},
 		},
 	}

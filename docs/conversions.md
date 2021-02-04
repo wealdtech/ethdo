@@ -15,7 +15,7 @@ The first thing you need to do is to create a wallet.  To do this run the comman
   - rename the wallet to something other than `Wallet` if you so desire.  If so, you will need to change it in all subsequent commands
 
 ```
-$ ethdo wallet create --type=hd --mnemonic='abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon art' --wallet=Wallet --wallet-passphrase=secret
+$ ethdo wallet create --type=hd --mnemonic="abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon art" --wallet=Wallet --wallet-passphrase=secret
 ```
 
 ### I want an account with a specific public key.
@@ -87,5 +87,5 @@ If you wish to have this data for a particular test network you will need to sup
 It is possible to derive keys directly from a mnemonic and path without going through the interim steps.  Note that this will _not_ create accounts, and cannot be used to then sign data or requests.  This may or not be desirable, depending on your requirements.
 
 ```
-$ ethdo account derive --mnemonic='abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon art' --path=m/12381/3600/0/0
+$ ethdo account derive --mnemonic="abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon art" --path=m/12381/3600/0/0
 ```

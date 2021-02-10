@@ -246,7 +246,7 @@ func verifyDeposit(deposit *util.DepositInfo, withdrawalCredentials []byte, vali
 			if err != nil {
 				return false, errors.Wrap(err, "failed to decode fork version")
 			}
-			if bytes.Equal(deposit.ForkVersion, forkVersion[:]) {
+			if bytes.Equal(deposit.ForkVersion, forkVersion) {
 				outputIf(!quiet, "Fork version verified")
 			} else {
 				outputIf(!quiet, "Fork version incorrect")

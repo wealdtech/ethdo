@@ -53,7 +53,7 @@ func process(ctx context.Context, data *dataIn) (*dataOut, error) {
 
 	slotDuration := config["SECONDS_PER_SLOT"].(time.Duration)
 
-	results.startTime = genesis.GenesisTime.Add(time.Duration((time.Duration(slot*int64(slotDuration.Seconds())) * time.Second)))
+	results.startTime = genesis.GenesisTime.Add((time.Duration(slot*int64(slotDuration.Seconds())) * time.Second))
 	results.endTime = results.startTime.Add(slotDuration)
 
 	return results, nil

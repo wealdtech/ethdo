@@ -27,7 +27,6 @@ type dataOut struct {
 	debug   bool
 	quiet   bool
 	verbose bool
-	json    bool
 
 	epoch      spec.Epoch
 	epochStart time.Time
@@ -51,16 +50,16 @@ func output(ctx context.Context, data *dataOut) (string, error) {
 	builder.WriteString("Epoch ")
 	builder.WriteString(fmt.Sprintf("%d", data.epoch))
 	builder.WriteString("\n  Epoch start ")
-	builder.WriteString(fmt.Sprintf("%s", data.epochStart.Format("2006-01-02 15:04:05")))
+	builder.WriteString(data.epochStart.Format("2006-01-02 15:04:05"))
 	builder.WriteString("\n  Epoch end ")
-	builder.WriteString(fmt.Sprintf("%s", data.epochEnd.Format("2006-01-02 15:04:05")))
+	builder.WriteString(data.epochEnd.Format("2006-01-02 15:04:05"))
 
 	builder.WriteString("\nSlot ")
 	builder.WriteString(fmt.Sprintf("%d", data.slot))
 	builder.WriteString("\n  Slot start ")
-	builder.WriteString(fmt.Sprintf("%s", data.slotStart.Format("2006-01-02 15:04:05")))
+	builder.WriteString(data.slotStart.Format("2006-01-02 15:04:05"))
 	builder.WriteString("\n  Slot end ")
-	builder.WriteString(fmt.Sprintf("%s", data.slotEnd.Format("2006-01-02 15:04:05")))
+	builder.WriteString(data.slotEnd.Format("2006-01-02 15:04:05"))
 	builder.WriteString("\n")
 
 	return builder.String(), nil

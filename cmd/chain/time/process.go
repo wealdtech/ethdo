@@ -45,7 +45,6 @@ func process(ctx context.Context, data *dataIn) (*dataOut, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to obtain genesis data")
 	}
-	//epoch = int64(time.Since(genesis.GenesisTime).Seconds()) / (int64(slotDuration.Seconds()) * int64(data.slotsPerEpoch))
 
 	results := &dataOut{
 		debug:   data.debug,

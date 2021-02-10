@@ -27,6 +27,3 @@ var attestationCmd = &cobra.Command{
 func init() {
 	RootCmd.AddCommand(attestationCmd)
 }
-
-func attestationFlags(cmd *cobra.Command) {
-}

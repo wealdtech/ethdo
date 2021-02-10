@@ -40,5 +40,5 @@ func output(ctx context.Context, data *dataOut) (string, error) {
 	if data.verbose {
 		return fmt.Sprintf("%s - %s", data.startTime, data.endTime), nil
 	}
-	return fmt.Sprintf("%s", data.startTime), nil
+	return data.startTime.String(), nil
 }

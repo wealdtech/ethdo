@@ -46,7 +46,7 @@ func output(ctx context.Context, data *dataOut) (string, int, error) {
 			return "Withdrawal credentials confirmed", 0, nil
 		}
 		return fmt.Sprintf("Withdrawal credentials confirmed at path %s", data.path), 0, nil
-	} else {
-		return "Could not confirm withdrawal credentials with given information", 1, nil
 	}
+
+	return "Could not confirm withdrawal credentials with given information", 1, nil
 }

@@ -23,8 +23,6 @@ import (
 	"github.com/pkg/errors"
 )
 
-var jsonOutput bool
-
 func process(ctx context.Context, data *dataIn) error {
 	if data == nil {
 		return errors.New("no data")

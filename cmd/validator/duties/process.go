@@ -58,17 +58,20 @@ func process(ctx context.Context, data *dataIn) (*dataOut, error) {
 	}
 	thisEpochAttesterDuty, err := attesterDuty(ctx, eth2Client, validatorIndex, thisEpoch)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to obtain this epoch duty for validator")
+		return nil, errors.Wrap(err, "failed to obtain this epoch attester duty for validator")
 	}
 	results.thisEpochAttesterDuty = thisEpochAttesterDuty
 
 	thisEpochProposerDuties, err := proposerDuties(ctx, eth2Client, validatorIndex, thisEpoch)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to obtain this epoch proposer duties for validator")
+	}
 	results.thisEpochProposerDuties = thisEpochProposerDuties
 
 	nextEpoch := thisEpoch + 1
 	nextEpochAttesterDuty, err := attesterDuty(ctx, eth2Client, validatorIndex, nextEpoch)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to obtain next epoch duty for validator")
+		return nil, errors.Wrap(err, "failed to obtain next epoch attester duty for validator")
 	}
 	results.nextEpochAttesterDuty = nextEpochAttesterDuty
 

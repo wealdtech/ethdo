@@ -57,6 +57,9 @@ func process(ctx context.Context, data *dataIn) (*dataOut, error) {
 	} else {
 		// Mnemonic to check.
 		match, path, err = checkMnemonic(ctx, data.debug, validatorWithdrawalCredentials, data.mnemonic)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	results := &dataOut{

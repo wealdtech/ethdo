@@ -15,7 +15,6 @@ package validatorkeycheck
 
 import (
 	"context"
-	"time"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
@@ -23,7 +22,6 @@ import (
 
 type dataIn struct {
 	// System.
-	timeout time.Duration
 	quiet   bool
 	verbose bool
 	debug   bool

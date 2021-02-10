@@ -25,6 +25,9 @@ import (
 
 func blsPrivateKey(input string) *e2types.BLSPrivateKey {
 	data, err := hex.DecodeString(strings.TrimPrefix(input, "0x"))
+	if err != nil {
+		panic(err)
+	}
 	key, err := e2types.BLSPrivateKeyFromBytes(data)
 	if err != nil {
 		panic(err)
@@ -58,7 +61,7 @@ func TestOutput(t *testing.T) {
 		{
 			name: "PrivatKey",
 			dataOut: &dataOut{
-				key:     blsPrivateKey("0x068dce0c90cb428ab37a74af0191eac49648035f1aaef077734b91e05985ec55"),
+				key:            blsPrivateKey("0x068dce0c90cb428ab37a74af0191eac49648035f1aaef077734b91e05985ec55"),
 				showPrivateKey: true,
 			},
 			needs: []string{"Public key", "Private key"},
@@ -75,7 +78,7 @@ func TestOutput(t *testing.T) {
 			name: "All",
 			dataOut: &dataOut{
 				key:                       blsPrivateKey("0x068dce0c90cb428ab37a74af0191eac49648035f1aaef077734b91e05985ec55"),
-				showPrivateKey:                   true,
+				showPrivateKey:            true,
 				showWithdrawalCredentials: true,
 			},
 			needs: []string{"Public key", "Private key", "Withdrawal credentials"},

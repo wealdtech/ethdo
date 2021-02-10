@@ -39,7 +39,7 @@ In quiet mode this will return 0 if the the duties have been obtained, otherwise
 		if viper.GetBool("quiet") {
 			return nil
 		}
-		fmt.Printf(res)
+		fmt.Print(res)
 		return nil
 	},
 }

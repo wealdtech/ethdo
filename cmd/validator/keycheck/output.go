@@ -1,0 +1,52 @@
+// Copyright © 2021 Weald Technology Trading
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package validatorkeycheck
+
+import (
+	"context"
+	"fmt"
+	"os"
+
+	"github.com/pkg/errors"
+)
+
+type dataOut struct {
+	debug   bool
+	quiet   bool
+	verbose bool
+	match   bool
+	path    string
+}
+
+func output(ctx context.Context, data *dataOut) (string, int, error) {
+	if data == nil {
+		return "", 1, errors.New("no data")
+	}
+
+	if data.quiet {
+		if !data.match {
+			os.Exit(1)
+		}
+		return "", 1, nil
+	}
+
+	if data.match {
+		if data.path == "" {
+			return "Withdrawal credentials confirmed", 0, nil
+		}
+		return fmt.Sprintf("Withdrawal credentials confirmed at path %s", data.path), 0, nil
+	} else {
+		return "Could not confirm withdrawal credentials with given information", 1, nil
+	}
+}

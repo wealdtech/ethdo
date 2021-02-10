@@ -1,0 +1,67 @@
+// Copyright © 2021 Weald Technology Trading
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package chaintime
+
+import (
+	"context"
+	"fmt"
+	"strings"
+	"time"
+
+	spec "github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/pkg/errors"
+)
+
+type dataOut struct {
+	debug   bool
+	quiet   bool
+	verbose bool
+	json    bool
+
+	epoch      spec.Epoch
+	epochStart time.Time
+	epochEnd   time.Time
+	slot       spec.Slot
+	slotStart  time.Time
+	slotEnd    time.Time
+}
+
+func output(ctx context.Context, data *dataOut) (string, error) {
+	if data == nil {
+		return "", errors.New("no data")
+	}
+
+	if data.quiet {
+		return "", nil
+	}
+
+	builder := strings.Builder{}
+
+	builder.WriteString("Epoch ")
+	builder.WriteString(fmt.Sprintf("%d", data.epoch))
+	builder.WriteString("\n  Epoch start ")
+	builder.WriteString(fmt.Sprintf("%s", data.epochStart.Format("2006-01-02 15:04:05")))
+	builder.WriteString("\n  Epoch end ")
+	builder.WriteString(fmt.Sprintf("%s", data.epochEnd.Format("2006-01-02 15:04:05")))
+
+	builder.WriteString("\nSlot ")
+	builder.WriteString(fmt.Sprintf("%d", data.slot))
+	builder.WriteString("\n  Slot start ")
+	builder.WriteString(fmt.Sprintf("%s", data.slotStart.Format("2006-01-02 15:04:05")))
+	builder.WriteString("\n  Slot end ")
+	builder.WriteString(fmt.Sprintf("%s", data.slotEnd.Format("2006-01-02 15:04:05")))
+	builder.WriteString("\n")
+
+	return builder.String(), nil
+}

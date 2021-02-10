@@ -74,6 +74,8 @@ func persistentPreRunE(cmd *cobra.Command, args []string) error {
 		attesterInclusionBindings()
 	case "block/info":
 		blockInfoBindings()
+	case "chain/time":
+		chainTimeBindings()
 	case "exit/verify":
 		exitVerifyBindings()
 	case "node/events":
@@ -88,6 +90,8 @@ func persistentPreRunE(cmd *cobra.Command, args []string) error {
 		validatorExitBindings()
 	case "validator/info":
 		validatorInfoBindings()
+	case "validator/keycheck":
+		validatorKeycheckBindings()
 	case "wallet/create":
 		walletCreateBindings()
 	case "wallet/import":

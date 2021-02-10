@@ -1,3 +1,7 @@
+1.8.0
+  - add "chain time"
+  - add "validator keycheck"
+
 1.7.5:
   - add "slot time"
   - add "attester duties"

@@ -1,3 +1,6 @@
+1.8.1
+  - fix issue where 'attester duties' and 'attester inclusion' could crash
+
 1.8.0
   - add "chain time"
   - add "validator keycheck"

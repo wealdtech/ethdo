@@ -66,7 +66,10 @@ func process(ctx context.Context, data *dataIn) (*dataOut, error) {
 	if len(validators) == 0 {
 		return nil, errors.New("validator is not known")
 	}
-	validator := validators[0]
+	var validator *api.Validator
+	for _, v := range validators {
+		validator = v
+	}
 
 	results := &dataOut{
 		debug:   data.debug,

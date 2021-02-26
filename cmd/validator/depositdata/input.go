@@ -83,6 +83,8 @@ func input() (*dataIn, error) {
 			return nil, errors.Wrap(err, "failed to obtain public key for withdrawal account")
 		}
 		data.withdrawalCredentials = util.SHA256(pubKey.Marshal())
+		// This is hard-coded, to allow deposit data to be generated without a connection to the beacon node.
+		data.withdrawalCredentials[0] = byte(0) // BLS_WITHDRAWAL_PREFIX
 	case viper.GetString("withdrawalpubkey") != "":
 		withdrawalPubKeyBytes, err := hex.DecodeString(strings.TrimPrefix(viper.GetString("withdrawalpubkey"), "0x"))
 		if err != nil {
@@ -96,11 +98,24 @@ func input() (*dataIn, error) {
 			return nil, errors.Wrap(err, "withdrawal public key is not valid")
 		}
 		data.withdrawalCredentials = util.SHA256(withdrawalPubKey.Marshal())
+		// This is hard-coded, to allow deposit data to be generated without a connection to the beacon node.
+		data.withdrawalCredentials[0] = byte(0) // BLS_WITHDRAWAL_PREFIX
+	case viper.GetString("withdrawaladdress") != "":
+		// TODO checksum.
+		withdrawalAddressBytes, err := hex.DecodeString(strings.TrimPrefix(viper.GetString("withdrawaladdress"), "0x"))
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to decode withdrawal address")
+		}
+		if len(withdrawalAddressBytes) != 20 {
+			return nil, errors.New("withdrawal address must be exactly 20 bytes in length")
+		}
+		data.withdrawalCredentials = make([]byte, 32)
+		copy(data.withdrawalCredentials[12:32], withdrawalAddressBytes[:])
+		// This is hard-coded, to allow deposit data to be generated without a connection to the beacon node.
+		data.withdrawalCredentials[0] = byte(1) // ETH1_ADDRESS_WITHDRAWAL_PREFIX
 	default:
-		return nil, errors.New("withdrawalaccount or withdrawal public key is required")
+		return nil, errors.New("withdrawal account, public key or address is required")
 	}
-	// This is hard-coded, to allow deposit data to be generated without a connection to the beacon node.
-	data.withdrawalCredentials[0] = byte(0) // BLS_WITHDRAWAL_PREFIX
 
 	if viper.GetString("depositvalue") == "" {
 		return nil, errors.New("deposit value is required")

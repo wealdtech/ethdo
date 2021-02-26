@@ -49,9 +49,10 @@ In quiet mode this will return 0 if the the data can be generated correctly, oth
 func init() {
 	validatorCmd.AddCommand(validatorDepositDataCmd)
 	validatorFlags(validatorDepositDataCmd)
-	validatorDepositDataCmd.Flags().String("validatoraccount", "", "Account of the account carrying out the validation")
-	validatorDepositDataCmd.Flags().String("withdrawalaccount", "", "Account of the account to which the validator funds will be withdrawn")
+	validatorDepositDataCmd.Flags().String("validatoraccount", "", "Account carrying out the validation")
+	validatorDepositDataCmd.Flags().String("withdrawalaccount", "", "Account to which the validator funds will be withdrawn")
 	validatorDepositDataCmd.Flags().String("withdrawalpubkey", "", "Public key of the account to which the validator funds will be withdrawn")
+	validatorDepositDataCmd.Flags().String("withdrawaladdress", "", "Ethereum 1 address of the account to which the validator funds will be withdrawn")
 	validatorDepositDataCmd.Flags().String("depositvalue", "", "Value of the amount to be deposited")
 	validatorDepositDataCmd.Flags().Bool("raw", false, "Print raw deposit data transaction data")
 	validatorDepositDataCmd.Flags().String("forkversion", "", "Use a hard-coded fork version (default is to fetch it from the node)")
@@ -66,6 +67,9 @@ func validatorDepositdataBindings() {
 		panic(err)
 	}
 	if err := viper.BindPFlag("withdrawalpubkey", validatorDepositDataCmd.Flags().Lookup("withdrawalpubkey")); err != nil {
+		panic(err)
+	}
+	if err := viper.BindPFlag("withdrawaladdress", validatorDepositDataCmd.Flags().Lookup("withdrawaladdress")); err != nil {
 		panic(err)
 	}
 	if err := viper.BindPFlag("depositvalue", validatorDepositDataCmd.Flags().Lookup("depositvalue")); err != nil {

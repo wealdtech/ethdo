@@ -1,4 +1,4 @@
-// Copyright © 2019, 2020 eald Technology Trading
+// Copyright © 2019-2021 Weald Technology Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -15,6 +15,8 @@ package depositdata
 
 import (
 	"context"
+	"encoding/hex"
+	"strings"
 	"testing"
 
 	spec "github.com/attestantio/go-eth2-client/spec/phase0"
@@ -48,6 +50,10 @@ func TestProcess(t *testing.T) {
 		[]byte("pass"),
 	)
 	require.NoError(t, err)
+
+	withdrawalAccount := "Test/Interop 0"
+	withdrawalPubKey := "0xa99a76ed7796f7be22d5b7e85deeb7c5677e88e511e0b337618f8c4eb61349b4bf2d153f649f7b53359fe8b94a38e44c"
+	withdrawalAddress := "0x30C99930617B7b793beaB603ecEB08691005f2E5"
 
 	var validatorPubKey *spec.BLSPubKey
 	{
@@ -101,6 +107,22 @@ func TestProcess(t *testing.T) {
 		depositMessageRoot2 = &tmp
 	}
 
+	var depositDataRoot3 *spec.Root
+	{
+		tmp := testutil.HexToRoot("0x489500535b03dd9deffa0f00cb38d82346111856fb58a9541fe1f01a1a97429c")
+		depositDataRoot3 = &tmp
+	}
+	var depositMessageRoot3 *spec.Root
+	{
+		tmp := testutil.HexToRoot("0x7b8ee5694e4338cf2bfe5a4d2f46540f0ade85ebd30713673cf5783c4e925681")
+		depositMessageRoot3 = &tmp
+	}
+	var signature3 *spec.BLSSignature
+	{
+		tmp := testutil.HexToSignature("0xba0019d5c421f205d845782f52a87ab95cd489fbef2911f8a1f9cf7c14b4ce59eefa82641e770a4cb405534b7776d0f801b0a8b178c1b71b718c104e89f4e633da10a398c7919a00c403d58f3f4b827af8adb263b192e7a45b0ed1926dff5f66")
+		signature3 = &tmp
+	}
+
 	tests := []struct {
 		name   string
 		dataIn *dataIn
@@ -112,15 +134,118 @@ func TestProcess(t *testing.T) {
 			err:  "no data",
 		},
 		{
+			name: "WithdrawalDetailsMissing",
+			dataIn: &dataIn{
+				format:            "raw",
+				passphrases:       []string{"pass"},
+				amount:            32000000000,
+				validatorAccounts: []e2wtypes.Account{interop0},
+				forkVersion:       forkVersion,
+				domain:            domain,
+			},
+			err: "withdrawal account, public key or address is required",
+		},
+		{
+			name: "WithdrawalAccountUnknown",
+			dataIn: &dataIn{
+				format:            "raw",
+				passphrases:       []string{"pass"},
+				withdrawalAccount: "Unknown",
+				amount:            32000000000,
+				validatorAccounts: []e2wtypes.Account{interop0},
+				forkVersion:       forkVersion,
+				domain:            domain,
+			},
+			err: "failed to obtain withdrawal account: failed to open wallet for account: wallet not found",
+		},
+		{
+			name: "WithdrawalPubKeyInvalid",
+			dataIn: &dataIn{
+				format:            "raw",
+				passphrases:       []string{"pass"},
+				withdrawalPubKey:  "invalid",
+				amount:            32000000000,
+				validatorAccounts: []e2wtypes.Account{interop0},
+				forkVersion:       forkVersion,
+				domain:            domain,
+			},
+			err: "failed to decode withdrawal public key: encoding/hex: invalid byte: U+0069 'i'",
+		},
+		{
+			name: "WithdrawalPubKeyWrongLength",
+			dataIn: &dataIn{
+				format:            "raw",
+				passphrases:       []string{"pass"},
+				withdrawalPubKey:  "0xb89bebc699769726a318c8e9971bd3171297c61aea4a6578a7a4f94b547dcba5bac16a89108b6b6a1fe3695d1a874a0bff",
+				amount:            32000000000,
+				validatorAccounts: []e2wtypes.Account{interop0},
+				forkVersion:       forkVersion,
+				domain:            domain,
+			},
+			err: "withdrawal public key must be exactly 48 bytes in length",
+		},
+		{
+			name: "WithdrawalPubKeyNotPubKey",
+			dataIn: &dataIn{
+				format:            "raw",
+				passphrases:       []string{"pass"},
+				withdrawalPubKey:  "0x089bebc699769726a318c8e9971bd3171297c61aea4a6578a7a4f94b547dcba5bac16a89108b6b6a1fe3695d1a874a0b",
+				amount:            32000000000,
+				validatorAccounts: []e2wtypes.Account{interop0},
+				forkVersion:       forkVersion,
+				domain:            domain,
+			},
+			err: "withdrawal public key is not valid: failed to deserialize public key: err blsPublicKeyDeserialize 089bebc699769726a318c8e9971bd3171297c61aea4a6578a7a4f94b547dcba5bac16a89108b6b6a1fe3695d1a874a0b",
+		},
+		{
+			name: "WithdrawalAddressInvalid",
+			dataIn: &dataIn{
+				format:            "raw",
+				passphrases:       []string{"pass"},
+				withdrawalAddress: "invalid",
+				amount:            32000000000,
+				validatorAccounts: []e2wtypes.Account{interop0},
+				forkVersion:       forkVersion,
+				domain:            domain,
+			},
+			err: "failed to decode withdrawal address: encoding/hex: invalid byte: U+0069 'i'",
+		},
+		{
+			name: "WithdrawalAddressWrongLength",
+			dataIn: &dataIn{
+				format:            "raw",
+				passphrases:       []string{"pass"},
+				withdrawalAddress: "0x30C99930617B7b793beaB603ecEB08691005f2",
+				amount:            32000000000,
+				validatorAccounts: []e2wtypes.Account{interop0},
+				forkVersion:       forkVersion,
+				domain:            domain,
+			},
+			err: "withdrawal address must be exactly 20 bytes in length",
+		},
+		{
+			name: "WithdrawalAddressIncorrectChecksum",
+			dataIn: &dataIn{
+				format:            "raw",
+				passphrases:       []string{"pass"},
+				withdrawalAddress: "0x30c99930617b7b793beab603eceb08691005f2e5",
+				amount:            32000000000,
+				validatorAccounts: []e2wtypes.Account{interop0},
+				forkVersion:       forkVersion,
+				domain:            domain,
+			},
+			err: "withdrawal address checksum does not match (expected 0x30C99930617B7b793beaB603ecEB08691005f2E5)",
+		},
+		{
 			name: "Single",
 			dataIn: &dataIn{
-				format:                "raw",
-				passphrases:           []string{"pass"},
-				withdrawalCredentials: testutil.HexToBytes("0x00fad2a6bfb0e7f1f0f45460944fbd8dfa7f37da06a4d13b3983cc90bb46963b"),
-				amount:                32000000000,
-				validatorAccounts:     []e2wtypes.Account{interop0},
-				forkVersion:           forkVersion,
-				domain:                domain,
+				format:            "raw",
+				passphrases:       []string{"pass"},
+				withdrawalAccount: withdrawalAccount,
+				amount:            32000000000,
+				validatorAccounts: []e2wtypes.Account{interop0},
+				forkVersion:       forkVersion,
+				domain:            domain,
 			},
 			res: []*dataOut{
 				{
@@ -139,13 +264,13 @@ func TestProcess(t *testing.T) {
 		{
 			name: "Double",
 			dataIn: &dataIn{
-				format:                "raw",
-				passphrases:           []string{"pass"},
-				withdrawalCredentials: testutil.HexToBytes("0x00fad2a6bfb0e7f1f0f45460944fbd8dfa7f37da06a4d13b3983cc90bb46963b"),
-				amount:                32000000000,
-				validatorAccounts:     []e2wtypes.Account{interop0, interop1},
-				forkVersion:           forkVersion,
-				domain:                domain,
+				format:            "raw",
+				passphrases:       []string{"pass"},
+				withdrawalPubKey:  withdrawalPubKey,
+				amount:            32000000000,
+				validatorAccounts: []e2wtypes.Account{interop0, interop1},
+				forkVersion:       forkVersion,
+				domain:            domain,
 			},
 			res: []*dataOut{
 				{
@@ -172,6 +297,31 @@ func TestProcess(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "WithdrawalAddress",
+			dataIn: &dataIn{
+				format:            "raw",
+				passphrases:       []string{"pass"},
+				withdrawalAddress: withdrawalAddress,
+				amount:            32000000000,
+				validatorAccounts: []e2wtypes.Account{interop0},
+				forkVersion:       forkVersion,
+				domain:            domain,
+			},
+			res: []*dataOut{
+				{
+					format:                "raw",
+					account:               "Test/Interop 0",
+					validatorPubKey:       validatorPubKey,
+					amount:                32000000000,
+					withdrawalCredentials: testutil.HexToBytes("0x01000000000000000000000030C99930617B7b793beaB603ecEB08691005f2E5"),
+					signature:             signature3,
+					forkVersion:           forkVersion,
+					depositDataRoot:       depositDataRoot3,
+					depositMessageRoot:    depositMessageRoot3,
+				},
+			},
+		},
 	}
 
 	for _, test := range tests {
@@ -184,5 +334,20 @@ func TestProcess(t *testing.T) {
 				require.Equal(t, test.res, res)
 			}
 		})
+	}
+}
+
+func TestAddressBytesToEIP55(t *testing.T) {
+	tests := []string{
+		"0x5aAeb6053F3E94C9b9A09f33669435E7Ef1BeAed",
+		"0xfB6916095ca1df60bB79Ce92cE3Ea74c37c5d359",
+		"0xdbF03B407c01E7cD3CBea99509d93f8DDDC8C6FB",
+		"0xD1220A0cf47c7B9Be7A2E6BA89F429762e7b9aDb",
+	}
+
+	for _, test := range tests {
+		bytes, err := hex.DecodeString(strings.TrimPrefix(test, "0x"))
+		require.NoError(t, err)
+		require.Equal(t, addressBytesToEIP55(bytes), test)
 	}
 }

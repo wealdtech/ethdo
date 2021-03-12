@@ -1,4 +1,4 @@
-// Copyright © 2019, 2020 Weald Technology Trading
+// Copyright © 2019-2021 Weald Technology Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -32,6 +32,7 @@ import (
 
 var depositVerifyData string
 var depositVerifyWithdrawalPubKey string
+var depositVerifyWithdrawalAddress string
 var depositVerifyValidatorPubKey string
 var depositVerifyDepositAmount string
 var depositVerifyForkVersion string
@@ -81,7 +82,14 @@ In quiet mode this will return 0 if the the data is verified correctly, otherwis
 			withdrawalPubKey, err := e2types.BLSPublicKeyFromBytes(withdrawalPubKeyBytes)
 			errCheck(err, "Value supplied with --withdrawalpubkey is not a valid public key")
 			withdrawalCredentials = eth2util.SHA256(withdrawalPubKey.Marshal())
-			withdrawalCredentials[0] = 0 // BLS_WITHDRAWAL_PREFIX
+			withdrawalCredentials[0] = 0x00 // BLS_WITHDRAWAL_PREFIX
+		} else if depositVerifyWithdrawalAddress != "" {
+			withdrawalAddressBytes, err := hex.DecodeString(strings.TrimPrefix(depositVerifyWithdrawalAddress, "0x"))
+			errCheck(err, "Invalid withdrawal address")
+			assert(len(withdrawalAddressBytes) == 20, "address should be 20 bytes")
+			withdrawalCredentials = make([]byte, 32)
+			withdrawalCredentials[0] = 0x01 // ETH1_ADDRESS_WITHDRAWAL_PREFIX
+			copy(withdrawalCredentials[12:], withdrawalAddressBytes)
 		}
 		outputIf(debug, fmt.Sprintf("Withdrawal credentials are %#x", withdrawalCredentials))
 
@@ -181,10 +189,10 @@ func validatorPubKeysFromInput(input string) (map[[48]byte]bool, error) {
 
 func verifyDeposit(deposit *util.DepositInfo, withdrawalCredentials []byte, validatorPubKeys map[[48]byte]bool, amount uint64) (bool, error) {
 	if withdrawalCredentials == nil {
-		outputIf(!quiet, "Withdrawal public key not supplied; withdrawal credentials NOT checked")
+		outputIf(!quiet, "Withdrawal public key or address not supplied; withdrawal credentials NOT checked")
 	} else {
 		if !bytes.Equal(deposit.WithdrawalCredentials, withdrawalCredentials) {
-			outputIf(!quiet, "Withdrawal public key incorrect")
+			outputIf(!quiet, "Withdrawal credentials incorrect")
 			return false, nil
 		}
 		outputIf(!quiet, "Withdrawal credentials verified")
@@ -263,6 +271,7 @@ func init() {
 	depositFlags(depositVerifyCmd)
 	depositVerifyCmd.Flags().StringVar(&depositVerifyData, "data", "", "JSON data, or path to JSON data")
 	depositVerifyCmd.Flags().StringVar(&depositVerifyWithdrawalPubKey, "withdrawalpubkey", "", "Public key of the account to which the validator funds will be withdrawn")
+	depositVerifyCmd.Flags().StringVar(&depositVerifyWithdrawalAddress, "withdrawaladdress", "", "Ethereum 1 address of the account to which the validator funds will be withdrawn")
 	depositVerifyCmd.Flags().StringVar(&depositVerifyDepositAmount, "depositvalue", "32 Ether", "Value of the amount to be deposited")
 	depositVerifyCmd.Flags().StringVar(&depositVerifyValidatorPubKey, "validatorpubkey", "", "Public key(s) of the account(s) that will be carrying out validation")
 	depositVerifyCmd.Flags().StringVar(&depositVerifyForkVersion, "forkversion", "0x00000000", "Fork version of the chain of the deposit")

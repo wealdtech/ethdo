@@ -17,25 +17,28 @@ import (
 	"context"
 	"encoding/hex"
 	"strings"
+	"time"
 
 	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
 	ethdoutil "github.com/wealdtech/ethdo/util"
 	e2types "github.com/wealdtech/go-eth2-types/v2"
-	util "github.com/wealdtech/go-eth2-util"
 	e2wtypes "github.com/wealdtech/go-eth2-wallet-types/v2"
 	string2eth "github.com/wealdtech/go-string2eth"
 )
 
 type dataIn struct {
-	format                string
-	withdrawalCredentials []byte
-	amount                spec.Gwei
-	validatorAccounts     []e2wtypes.Account
-	forkVersion           *spec.Version
-	domain                *spec.Domain
-	passphrases           []string
+	format            string
+	timeout           time.Duration
+	withdrawalAccount string
+	withdrawalPubKey  string
+	withdrawalAddress string
+	amount            spec.Gwei
+	validatorAccounts []e2wtypes.Account
+	forkVersion       *spec.Version
+	domain            *spec.Domain
+	passphrases       []string
 }
 
 func input() (*dataIn, error) {
@@ -48,6 +51,11 @@ func input() (*dataIn, error) {
 	if viper.GetString("validatoraccount") == "" {
 		return nil, errors.New("validator account is required")
 	}
+
+	if viper.GetDuration("timeout") == 0 {
+		return nil, errors.New("timeout is required")
+	}
+	data.timeout = viper.GetDuration("timeout")
 
 	ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("timeout"))
 	defer cancel()
@@ -70,51 +78,24 @@ func input() (*dataIn, error) {
 
 	data.passphrases = ethdoutil.GetPassphrases()
 
-	switch {
-	case viper.GetString("withdrawalaccount") != "":
-		ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("timeout"))
-		defer cancel()
-		_, withdrawalAccount, err := ethdoutil.WalletAndAccountFromPath(ctx, viper.GetString("withdrawalaccount"))
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to obtain withdrawal account")
-		}
-		pubKey, err := ethdoutil.BestPublicKey(withdrawalAccount)
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to obtain public key for withdrawal account")
-		}
-		data.withdrawalCredentials = util.SHA256(pubKey.Marshal())
-		// This is hard-coded, to allow deposit data to be generated without a connection to the beacon node.
-		data.withdrawalCredentials[0] = byte(0) // BLS_WITHDRAWAL_PREFIX
-	case viper.GetString("withdrawalpubkey") != "":
-		withdrawalPubKeyBytes, err := hex.DecodeString(strings.TrimPrefix(viper.GetString("withdrawalpubkey"), "0x"))
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to decode withdrawal public key")
-		}
-		if len(withdrawalPubKeyBytes) != 48 {
-			return nil, errors.New("withdrawal public key must be exactly 48 bytes in length")
-		}
-		withdrawalPubKey, err := e2types.BLSPublicKeyFromBytes(withdrawalPubKeyBytes)
-		if err != nil {
-			return nil, errors.Wrap(err, "withdrawal public key is not valid")
-		}
-		data.withdrawalCredentials = util.SHA256(withdrawalPubKey.Marshal())
-		// This is hard-coded, to allow deposit data to be generated without a connection to the beacon node.
-		data.withdrawalCredentials[0] = byte(0) // BLS_WITHDRAWAL_PREFIX
-	case viper.GetString("withdrawaladdress") != "":
-		// TODO checksum.
-		withdrawalAddressBytes, err := hex.DecodeString(strings.TrimPrefix(viper.GetString("withdrawaladdress"), "0x"))
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to decode withdrawal address")
-		}
-		if len(withdrawalAddressBytes) != 20 {
-			return nil, errors.New("withdrawal address must be exactly 20 bytes in length")
-		}
-		data.withdrawalCredentials = make([]byte, 32)
-		copy(data.withdrawalCredentials[12:32], withdrawalAddressBytes[:])
-		// This is hard-coded, to allow deposit data to be generated without a connection to the beacon node.
-		data.withdrawalCredentials[0] = byte(1) // ETH1_ADDRESS_WITHDRAWAL_PREFIX
-	default:
+	data.withdrawalAccount = viper.GetString("withdrawalaccount")
+	data.withdrawalPubKey = viper.GetString("withdrawalpubkey")
+	data.withdrawalAddress = viper.GetString("withdrawaladdress")
+	withdrawalDetailsPresent := 0
+	if data.withdrawalAccount != "" {
+		withdrawalDetailsPresent++
+	}
+	if data.withdrawalPubKey != "" {
+		withdrawalDetailsPresent++
+	}
+	if data.withdrawalAddress != "" {
+		withdrawalDetailsPresent++
+	}
+	if withdrawalDetailsPresent == 0 {
 		return nil, errors.New("withdrawal account, public key or address is required")
+	}
+	if withdrawalDetailsPresent > 1 {
+		return nil, errors.New("only one of withdrawal account, public key or address is allowed")
 	}
 
 	if viper.GetString("depositvalue") == "" {
@@ -150,7 +131,7 @@ func inputForkVersion(ctx context.Context) (*spec.Version, error) {
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to decode fork version")
 		}
-		if len(forkVersion) != 4 {
+		if len(data) != 4 {
 			return nil, errors.New("fork version must be exactly 4 bytes in length")
 		}
 

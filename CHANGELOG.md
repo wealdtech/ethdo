@@ -1,3 +1,6 @@
+1.9.0
+  - allow use of Ethereum 1 address as withdrawal credentials
+
 1.8.1
   - fix issue where 'attester duties' and 'attester inclusion' could crash
 

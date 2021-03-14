@@ -1,4 +1,4 @@
-// Copyright © 2019, 2020 Weald Technology Trading
+// Copyright © 2019-2021 Weald Technology Trading
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -85,8 +85,19 @@ func TestInput(t *testing.T) {
 			err:  "validator account is required",
 		},
 		{
+			name: "TimeoutMissing",
+			vars: map[string]interface{}{
+				"validatoraccount":  "Test/Interop 0",
+				"withdrawalaccount": "Test/Interop 0",
+				"depositvalue":      "32 Ether",
+				"forkversion":       "0x01020304",
+			},
+			err: "timeout is required",
+		},
+		{
 			name: "ValidatorAccountMissing",
 			vars: map[string]interface{}{
+				"timeout":           "10s",
 				"withdrawalaccount": "Test/Interop 0",
 				"depositvalue":      "32 Ether",
 				"forkversion":       "0x01020304",
@@ -96,6 +107,7 @@ func TestInput(t *testing.T) {
 		{
 			name: "ValidatorAccountUnknown",
 			vars: map[string]interface{}{
+				"timeout":           "10s",
 				"validatoraccount":  "Test/Unknown",
 				"withdrawalaccount": "Test/Interop 0",
 				"depositvalue":      "32 Ether",
@@ -104,59 +116,74 @@ func TestInput(t *testing.T) {
 			err: "unknown validator account",
 		},
 		{
-			name: "WithdrawalAccountMissing",
+			name: "WithdrawalDetailsMissing",
 			vars: map[string]interface{}{
+				"timeout":          "10s",
 				"launchpad":        true,
 				"validatoraccount": "Test/Interop 0",
 				"depositvalue":     "32 Ether",
 				"forkversion":      "0x01020304",
 			},
-			err: "withdrawalaccount or withdrawal public key is required",
+			err: "withdrawal account, public key or address is required",
 		},
 		{
-			name: "WithdrawalAccountUnknown",
+			name: "WithdrawalDetailsTooMany1",
 			vars: map[string]interface{}{
-				"raw":               true,
+				"timeout":           "10s",
+				"launchpad":         true,
 				"validatoraccount":  "Test/Interop 0",
-				"withdrawalaccount": "Test/Unknown",
+				"withdrawalaccount": "Test/Interop 0",
+				"withdrawalpubkey":  "0xa99a76ed7796f7be22d5b7e85deeb7c5677e88e511e0b337618f8c4eb61349b4bf2d153f649f7b53359fe8b94a38e44c",
 				"depositvalue":      "32 Ether",
 				"forkversion":       "0x01020304",
 			},
-			err: "failed to obtain withdrawal account: failed to obtain account: no account with name \"Unknown\"",
+			err: "only one of withdrawal account, public key or address is allowed",
 		},
 		{
-			name: "WithdrawalPubKeyInvalid",
+			name: "WithdrawalDetailsTooMany2",
 			vars: map[string]interface{}{
-				"validatoraccount": "Test/Interop 0",
-				"withdrawalpubkey": "invalid",
-				"depositvalue":     "32 Ether",
-				"forkversion":      "0x01020304",
+				"timeout":           "10s",
+				"launchpad":         true,
+				"validatoraccount":  "Test/Interop 0",
+				"withdrawalaccount": "Test/Interop 0",
+				"withdrawalpubkey":  "0xa99a76ed7796f7be22d5b7e85deeb7c5677e88e511e0b337618f8c4eb61349b4bf2d153f649f7b53359fe8b94a38e44c",
+				"withdrawaladdress": "0x30C99930617B7b793beaB603ecEB08691005f2E5",
+				"depositvalue":      "32 Ether",
+				"forkversion":       "0x01020304",
 			},
-			err: "failed to decode withdrawal public key: encoding/hex: invalid byte: U+0069 'i'",
+			err: "only one of withdrawal account, public key or address is allowed",
 		},
 		{
-			name: "WithdrawalPubKeyWrongLength",
+			name: "WithdrawalDetailsTooMany3",
 			vars: map[string]interface{}{
-				"validatoraccount": "Test/Interop 0",
-				"withdrawalpubkey": "0xb89bebc699769726a318c8e9971bd3171297c61aea4a6578a7a4f94b547dcba5bac16a89108b6b6a1fe3695d1a874a0bff",
-				"depositvalue":     "32 Ether",
-				"forkversion":      "0x01020304",
+				"timeout":           "10s",
+				"launchpad":         true,
+				"validatoraccount":  "Test/Interop 0",
+				"withdrawalpubkey":  "0xa99a76ed7796f7be22d5b7e85deeb7c5677e88e511e0b337618f8c4eb61349b4bf2d153f649f7b53359fe8b94a38e44c",
+				"withdrawaladdress": "0x30C99930617B7b793beaB603ecEB08691005f2E5",
+				"depositvalue":      "32 Ether",
+				"forkversion":       "0x01020304",
 			},
-			err: "withdrawal public key must be exactly 48 bytes in length",
+			err: "only one of withdrawal account, public key or address is allowed",
 		},
 		{
-			name: "WithdrawalPubKeyNotPubKey",
+			name: "WithdrawalDetailsTooMany4",
 			vars: map[string]interface{}{
-				"validatoraccount": "Test/Interop 0",
-				"withdrawalpubkey": "0x089bebc699769726a318c8e9971bd3171297c61aea4a6578a7a4f94b547dcba5bac16a89108b6b6a1fe3695d1a874a0b",
-				"depositvalue":     "32 Ether",
-				"forkversion":      "0x01020304",
+				"timeout":           "10s",
+				"launchpad":         true,
+				"validatoraccount":  "Test/Interop 0",
+				"withdrawalaccount": "Test/Interop 0",
+				"withdrawalpubkey":  "0xa99a76ed7796f7be22d5b7e85deeb7c5677e88e511e0b337618f8c4eb61349b4bf2d153f649f7b53359fe8b94a38e44c",
+				"withdrawaladdress": "0x30C99930617B7b793beaB603ecEB08691005f2E5",
+				"depositvalue":      "32 Ether",
+				"forkversion":       "0x01020304",
 			},
-			err: "withdrawal public key is not valid: failed to deserialize public key: err blsPublicKeyDeserialize 089bebc699769726a318c8e9971bd3171297c61aea4a6578a7a4f94b547dcba5bac16a89108b6b6a1fe3695d1a874a0b",
+			err: "only one of withdrawal account, public key or address is allowed",
 		},
 		{
 			name: "DepositValueMissing",
 			vars: map[string]interface{}{
+				"timeout":           "10s",
 				"validatoraccount":  "Test/Interop 0",
 				"withdrawalaccount": "Test/Interop 0",
 				"forkversion":       "0x01020304",
@@ -166,6 +193,7 @@ func TestInput(t *testing.T) {
 		{
 			name: "DepositValueTooSmall",
 			vars: map[string]interface{}{
+				"timeout":           "10s",
 				"validatoraccount":  "Test/Interop 0",
 				"withdrawalaccount": "Test/Interop 0",
 				"depositvalue":      "1000 Wei",
@@ -176,6 +204,7 @@ func TestInput(t *testing.T) {
 		{
 			name: "DepositValueInvalid",
 			vars: map[string]interface{}{
+				"timeout":           "10s",
 				"validatoraccount":  "Test/Interop 0",
 				"withdrawalaccount": "Test/Interop 0",
 				"depositvalue":      "1 groat",
@@ -186,6 +215,7 @@ func TestInput(t *testing.T) {
 		{
 			name: "ForkVersionInvalid",
 			vars: map[string]interface{}{
+				"timeout":           "10s",
 				"validatoraccount":  "Test/Interop 0",
 				"withdrawalaccount": "Test/Interop 0",
 				"depositvalue":      "32 Ether",
@@ -194,53 +224,67 @@ func TestInput(t *testing.T) {
 			err: "failed to obtain fork version: failed to decode fork version: encoding/hex: invalid byte: U+0069 'i'",
 		},
 		{
+			name: "ForkVersionShort",
+			vars: map[string]interface{}{
+				"timeout":           "10s",
+				"validatoraccount":  "Test/Interop 0",
+				"withdrawalaccount": "Test/Interop 0",
+				"depositvalue":      "32 Ether",
+				"forkversion":       "0x01",
+			},
+			err: "failed to obtain fork version: fork version must be exactly 4 bytes in length",
+		},
+		{
 			name: "Good",
 			vars: map[string]interface{}{
+				"timeout":           "10s",
 				"validatoraccount":  "Test/Interop 0",
 				"withdrawalaccount": "Test/Interop 0",
 				"depositvalue":      "32 Ether",
 			},
 			res: &dataIn{
-				format:                "json",
-				withdrawalCredentials: testutil.HexToBytes("0x00fad2a6bfb0e7f1f0f45460944fbd8dfa7f37da06a4d13b3983cc90bb46963b"),
-				amount:                32000000000,
-				validatorAccounts:     []e2wtypes.Account{interop0},
-				forkVersion:           mainnetForkVersion,
-				domain:                mainnetDomain,
+				format:            "json",
+				withdrawalAccount: "Test/Interop 0",
+				amount:            32000000000,
+				validatorAccounts: []e2wtypes.Account{interop0},
+				forkVersion:       mainnetForkVersion,
+				domain:            mainnetDomain,
 			},
 		},
 		{
 			name: "GoodForkVersionOverride",
 			vars: map[string]interface{}{
+				"timeout":           "10s",
 				"validatoraccount":  "Test/Interop 0",
 				"withdrawalaccount": "Test/Interop 0",
 				"depositvalue":      "32 Ether",
 				"forkversion":       "0x01020304",
 			},
 			res: &dataIn{
-				format:                "json",
-				withdrawalCredentials: testutil.HexToBytes("0x00fad2a6bfb0e7f1f0f45460944fbd8dfa7f37da06a4d13b3983cc90bb46963b"),
-				amount:                32000000000,
-				validatorAccounts:     []e2wtypes.Account{interop0},
-				forkVersion:           forkVersion,
-				domain:                domain,
+				format:            "json",
+				withdrawalAccount: "Test/Interop 0",
+				amount:            32000000000,
+				validatorAccounts: []e2wtypes.Account{interop0},
+				forkVersion:       forkVersion,
+				domain:            domain,
 			},
 		},
 		{
 			name: "GoodWithdrawalPubKey",
 			vars: map[string]interface{}{
+				"timeout":          "10s",
 				"validatoraccount": "Test/Interop 0",
 				"withdrawalpubkey": "0xa99a76ed7796f7be22d5b7e85deeb7c5677e88e511e0b337618f8c4eb61349b4bf2d153f649f7b53359fe8b94a38e44c",
 				"depositvalue":     "32 Ether",
 				"forkversion":      "0x01020304",
 			},
 			res: &dataIn{
-				format:                "json",
-				withdrawalCredentials: testutil.HexToBytes("0x00fad2a6bfb0e7f1f0f45460944fbd8dfa7f37da06a4d13b3983cc90bb46963b"),
-				amount:                32000000000,
-				validatorAccounts:     []e2wtypes.Account{interop0},
-				forkVersion:           forkVersion,
-				domain:                domain,
+				format:            "json",
+				withdrawalPubKey:  "0xa99a76ed7796f7be22d5b7e85deeb7c5677e88e511e0b337618f8c4eb61349b4bf2d153f649f7b53359fe8b94a38e44c",
+				amount:            32000000000,
+				validatorAccounts: []e2wtypes.Account{interop0},
+				forkVersion:       forkVersion,
+				domain:            domain,
 			},
 		},
 	}
@@ -258,7 +302,9 @@ func TestInput(t *testing.T) {
 				require.NoError(t, err)
 				// Cannot compare accounts directly, so need to check each element individually.
 				require.Equal(t, test.res.format, res.format)
-				require.Equal(t, test.res.withdrawalCredentials, res.withdrawalCredentials)
+				require.Equal(t, test.res.withdrawalAccount, res.withdrawalAccount)
+				require.Equal(t, test.res.withdrawalAddress, res.withdrawalAddress)
+				require.Equal(t, test.res.withdrawalPubKey, res.withdrawalPubKey)
 				require.Equal(t, test.res.amount, res.amount)
 				require.Equal(t, test.res.forkVersion, res.forkVersion)
 				require.Equal(t, test.res.domain, res.domain)

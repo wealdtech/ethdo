@@ -70,7 +70,9 @@ In quiet mode this will return 0 if the the exit is verified correctly, otherwis
 		}
 		exitRoot, err := exit.HashTreeRoot()
 		errCheck(err, "Failed to obtain exit hash tree root")
-		sig, err := e2types.BLSSignatureFromBytes(data.Exit.Signature[:])
+		signatureBytes := make([]byte, 96)
+		copy(signatureBytes, data.Exit.Signature[:])
+		sig, err := e2types.BLSSignatureFromBytes(signatureBytes)
 		errCheck(err, "Invalid signature")
 		verified, err := util.VerifyRoot(account, exitRoot, exitDomain, sig)
 		errCheck(err, "Failed to verify voluntary exit")

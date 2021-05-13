@@ -40,13 +40,19 @@ In quiet mode this will return 0 if the chain status can be obtained, otherwise 
 		eth2Client, err := util.ConnectToBeaconNode(ctx, viper.GetString("connection"), viper.GetDuration("timeout"), viper.GetBool("allow-insecure-connections"))
 		errCheck(err, "Failed to connect to Ethereum 2 beacon node")
 
-		config, err := eth2Client.(eth2client.SpecProvider).Spec(ctx)
+		specProvider, isProvider := eth2Client.(eth2client.SpecProvider)
+		assert(isProvider, "beacon node does not provide spec; cannot report on chain status")
+		config, err := specProvider.Spec(ctx)
 		errCheck(err, "Failed to obtain beacon chain specification")
 
-		finality, err := eth2Client.(eth2client.FinalityProvider).Finality(ctx, "head")
+		finalityProvider, isProvider := eth2Client.(eth2client.FinalityProvider)
+		assert(isProvider, "beacon node does not provide finality; cannot report on chain status")
+		finality, err := finalityProvider.Finality(ctx, "head")
 		errCheck(err, "Failed to obtain finality information")
 
-		genesis, err := eth2Client.(eth2client.GenesisProvider).Genesis(ctx)
+		genesisProvider, isProvider := eth2Client.(eth2client.GenesisProvider)
+		assert(isProvider, "beacon node does not provide genesis; cannot report on chain status")
+		genesis, err := genesisProvider.Genesis(ctx)
 		errCheck(err, "Failed to obtain genesis information")
 
 		slotDuration := config["SECONDS_PER_SLOT"].(time.Duration)

@@ -65,3 +65,5 @@ require (
 	google.golang.org/grpc v1.39.0
 	gopkg.in/check.v1 v1.0.0-20200227125254-8fa46927fb4f // indirect
 )
+
+replace github.com/attestantio/go-eth2-client => ../../attestantio/go-eth2-client

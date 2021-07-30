@@ -67,7 +67,7 @@ func process(ctx context.Context, data *dataIn) (*dataOut, error) {
 		}
 		results.slot = spec.Slot(epoch * slotsPerEpoch)
 	case data.timestamp != "":
-		timestamp, err := time.Parse("2006-01-02T15:04:05", data.timestamp)
+		timestamp, err := time.Parse("2006-01-02T15:04:05-0700", data.timestamp)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to parse timestamp")
 		}

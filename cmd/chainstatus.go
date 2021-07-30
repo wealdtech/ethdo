@@ -60,6 +60,7 @@ In quiet mode this will return 0 if the chain status can be obtained, otherwise 
 		slotsPerEpoch := config["SLOTS_PER_EPOCH"].(uint64)
 		curEpoch := spec.Epoch(uint64(curSlot) / slotsPerEpoch)
 		fmt.Printf("Current epoch: %d\n", curEpoch)
+		outputIf(verbose, fmt.Sprintf("Current slot: %d", curSlot))
 		fmt.Printf("Justified epoch: %d\n", finality.Justified.Epoch)
 		if verbose {
 			distance := curEpoch - finality.Justified.Epoch

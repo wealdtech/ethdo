@@ -44,7 +44,7 @@ func init() {
 	chainFlags(chainTimeCmd)
 	chainTimeCmd.Flags().String("slot", "", "The slot for which to obtain information")
 	chainTimeCmd.Flags().String("epoch", "", "The epoch for which to obtain information")
-	chainTimeCmd.Flags().String("timestamp", "", "The timestamp for which to obtain information (format YYYY-MM-DDTHH:MM:SS)")
+	chainTimeCmd.Flags().String("timestamp", "", "The timestamp for which to obtain information (format YYYY-MM-DDTHH:MM:SS+ZZZZ)")
 }
 
 func chainTimeBindings() {

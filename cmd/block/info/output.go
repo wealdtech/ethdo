@@ -229,23 +229,31 @@ func outputBlockSyncAggregate(ctx context.Context, eth2Client eth2client.Service
 	res.WriteString("Sync aggregate: ")
 	res.WriteString(fmt.Sprintf("%d/%d\n", syncAggregate.SyncCommitteeBits.Count(), syncAggregate.SyncCommitteeBits.Len()))
 	if verbose {
-		res.WriteString("  Contributions: ")
-		res.WriteString(bitvectorToString(syncAggregate.SyncCommitteeBits))
-		res.WriteString("\n")
-
-		syncCommitteesProvider, isProvider := eth2Client.(eth2client.SyncCommitteesProvider)
+		specProvider, isProvider := eth2Client.(eth2client.SpecProvider)
 		if isProvider {
-			syncCommittee, err := syncCommitteesProvider.SyncCommittee(ctx, fmt.Sprintf("%d", epoch))
-			if err != nil {
-				res.WriteString(fmt.Sprintf("  Error: failed to obtain sync committee: %v\n", err))
-			} else {
-				res.WriteString("  Contributing validators:")
-				for i := uint64(0); i < syncAggregate.SyncCommitteeBits.Len(); i++ {
-					if syncAggregate.SyncCommitteeBits.BitAt(i) {
-						res.WriteString(fmt.Sprintf(" %d", syncCommittee.Validators[i]))
+			config, err := specProvider.Spec(ctx)
+			if err == nil {
+				slotsPerEpoch := config["SLOTS_PER_EPOCH"].(uint64)
+
+				res.WriteString("  Contributions: ")
+				res.WriteString(bitvectorToString(syncAggregate.SyncCommitteeBits))
+				res.WriteString("\n")
+
+				syncCommitteesProvider, isProvider := eth2Client.(eth2client.SyncCommitteesProvider)
+				if isProvider {
+					syncCommittee, err := syncCommitteesProvider.SyncCommittee(ctx, fmt.Sprintf("%d", uint64(epoch)*slotsPerEpoch))
+					if err != nil {
+						res.WriteString(fmt.Sprintf("  Error: failed to obtain sync committee: %v\n", err))
+					} else {
+						res.WriteString("  Contributing validators:")
+						for i := uint64(0); i < syncAggregate.SyncCommitteeBits.Len(); i++ {
+							if syncAggregate.SyncCommitteeBits.BitAt(i) {
+								res.WriteString(fmt.Sprintf(" %d", syncCommittee.Validators[i]))
+							}
+						}
+						res.WriteString("\n")
 					}
 				}
-				res.WriteString("\n")
 			}
 		}
 	}

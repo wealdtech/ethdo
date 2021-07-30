@@ -6,16 +6,10 @@ require (
 	github.com/DataDog/zstd v1.4.8 // indirect
 	github.com/OneOfOne/xxhash v1.2.5 // indirect
 	github.com/attestantio/dirk v1.0.2
-	github.com/attestantio/go-eth2-client v0.6.30
-	github.com/aws/aws-sdk-go v1.40.14 // indirect
-	github.com/dgraph-io/badger/v2 v2.2007.3 // indirect
-	github.com/dgraph-io/ristretto v0.1.0 // indirect
-	github.com/fatih/color v1.12.0 // indirect
-	github.com/ferranbt/fastssz v0.0.0-20210719200358-90640294cb9c
-	github.com/goccy/go-yaml v1.9.2 // indirect
+	github.com/attestantio/go-eth2-client v0.7.0-beta.2
+	github.com/aws/aws-sdk-go v1.38.68 // indirect
+	github.com/ferranbt/fastssz v0.0.0-20210526181520-7df50c8568f8
 	github.com/gofrs/uuid v4.0.0+incompatible
-	github.com/golang/glog v0.0.0-20210429001901-424d2337a529 // indirect
-	github.com/golang/snappy v0.0.4 // indirect
 	github.com/google/go-cmp v0.5.6 // indirect
 	github.com/google/uuid v1.3.0
 	github.com/grpc-ecosystem/go-grpc-middleware v1.3.0 // indirect
@@ -65,5 +59,3 @@ require (
 	google.golang.org/grpc v1.39.0
 	gopkg.in/check.v1 v1.0.0-20200227125254-8fa46927fb4f // indirect
 )
-
-replace github.com/attestantio/go-eth2-client => ../../attestantio/go-eth2-client

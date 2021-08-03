@@ -98,7 +98,7 @@ func persistentPreRunE(cmd *cobra.Command, args []string) error {
 		walletImportBindings()
 	case "wallet/sharedexport":
 		walletSharedExportBindings()
-	case "wallet/sharedsssimport":
+	case "wallet/sharedimport":
 		walletSharedImportBindings()
 	}
 

@@ -96,10 +96,10 @@ func persistentPreRunE(cmd *cobra.Command, args []string) error {
 		walletCreateBindings()
 	case "wallet/import":
 		walletImportBindings()
-	case "wallet/sssexport":
-		walletSSSExportBindings()
-	case "wallet/sssimport":
-		walletSSSImportBindings()
+	case "wallet/sharedexport":
+		walletSharedExportBindings()
+	case "wallet/sharedsssimport":
+		walletSharedImportBindings()
 	}
 
 	if quiet && verbose {

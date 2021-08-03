@@ -11,7 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package walletsssimport
+package walletsharedimport
 
 import (
 	"context"
@@ -25,7 +25,7 @@ import (
 	e2wallet "github.com/wealdtech/go-eth2-wallet"
 )
 
-type sssExport struct {
+type sharedExport struct {
 	Version      uint32 `json:"version"`
 	Participants uint32 `json:"participants"`
 	Threshold    uint32 `json:"threshold"`
@@ -40,14 +40,14 @@ func process(ctx context.Context, data *dataIn) (*dataOut, error) {
 		return nil, errors.New("import file is required")
 	}
 
-	sssExport := &sssExport{}
-	err := json.Unmarshal(data.file, sssExport)
+	sharedExport := &sharedExport{}
+	err := json.Unmarshal(data.file, sharedExport)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to unmarshal export")
 	}
 
-	if len(data.shares) != int(sssExport.Threshold) {
-		return nil, fmt.Errorf("import requires %d shares, %d were provided", sssExport.Threshold, len(data.shares))
+	if len(data.shares) != int(sharedExport.Threshold) {
+		return nil, fmt.Errorf("import requires %d shares, %d were provided", sharedExport.Threshold, len(data.shares))
 	}
 
 	shares := make([][]byte, len(data.shares))
@@ -61,7 +61,7 @@ func process(ctx context.Context, data *dataIn) (*dataOut, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to recreate passphrase from shares")
 	}
-	wallet, err := hex.DecodeString(strings.TrimPrefix(sssExport.Data, "0x"))
+	wallet, err := hex.DecodeString(strings.TrimPrefix(sharedExport.Data, "0x"))
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to obtain data from export")
 	}

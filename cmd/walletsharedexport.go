@@ -18,17 +18,17 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	walletsssexport "github.com/wealdtech/ethdo/cmd/wallet/sssexport"
+	walletsharedexport "github.com/wealdtech/ethdo/cmd/wallet/sharedexport"
 )
 
-var walletSSSExportCmd = &cobra.Command{
-	Use:   "sssexport",
+var walletSharedExportCmd = &cobra.Command{
+	Use:   "sharedexport",
 	Short: "Export a wallet using Shamir secret sharing",
 	Long: `Export a wallet for backup of transfer using Shamir secret sharing.  For example:
 
-    ethdo wallet sssexport --wallet=primary --participants=5 --threshold=3 --file=backup.dat`,
+    ethdo wallet sharedexport --wallet=primary --participants=5 --threshold=3 --file=backup.dat`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		res, err := walletsssexport.Run(cmd)
+		res, err := walletsharedexport.Run(cmd)
 		if err != nil {
 			return err
 		}
@@ -40,21 +40,21 @@ var walletSSSExportCmd = &cobra.Command{
 }
 
 func init() {
-	walletCmd.AddCommand(walletSSSExportCmd)
-	walletFlags(walletSSSExportCmd)
-	walletSSSExportCmd.Flags().Uint32("participants", 0, "Number of participants in sharing scheme")
-	walletSSSExportCmd.Flags().Uint32("threshold", 0, "Number of participants required to recover the export")
-	walletSSSExportCmd.Flags().String("file", "", "Name of the file that stores the export")
+	walletCmd.AddCommand(walletSharedExportCmd)
+	walletFlags(walletSharedExportCmd)
+	walletSharedExportCmd.Flags().Uint32("participants", 0, "Number of participants in sharing scheme")
+	walletSharedExportCmd.Flags().Uint32("threshold", 0, "Number of participants required to recover the export")
+	walletSharedExportCmd.Flags().String("file", "", "Name of the file that stores the export")
 }
 
-func walletSSSExportBindings() {
-	if err := viper.BindPFlag("participants", walletSSSExportCmd.Flags().Lookup("participants")); err != nil {
+func walletSharedExportBindings() {
+	if err := viper.BindPFlag("participants", walletSharedExportCmd.Flags().Lookup("participants")); err != nil {
 		panic(err)
 	}
-	if err := viper.BindPFlag("threshold", walletSSSExportCmd.Flags().Lookup("threshold")); err != nil {
+	if err := viper.BindPFlag("threshold", walletSharedExportCmd.Flags().Lookup("threshold")); err != nil {
 		panic(err)
 	}
-	if err := viper.BindPFlag("file", walletSSSExportCmd.Flags().Lookup("file")); err != nil {
+	if err := viper.BindPFlag("file", walletSharedExportCmd.Flags().Lookup("file")); err != nil {
 		panic(err)
 	}
 }

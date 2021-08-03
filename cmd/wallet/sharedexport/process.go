@@ -11,7 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package walletsssexport
+package walletsharedexport
 
 import (
 	"context"
@@ -25,7 +25,7 @@ import (
 	e2wtypes "github.com/wealdtech/go-eth2-wallet-types/v2"
 )
 
-type sssExport struct {
+type sharedExport struct {
 	Version      uint32 `json:"version"`
 	Participants uint32 `json:"participants"`
 	Threshold    uint32 `json:"threshold"`
@@ -63,18 +63,18 @@ func process(ctx context.Context, data *dataIn) (*dataOut, error) {
 		return nil, errors.Wrap(err, "failed to create shamir shares")
 	}
 
-	sssExport := &sssExport{
+	sharedExport := &sharedExport{
 		Version:      1,
 		Participants: data.participants,
 		Threshold:    data.threshold,
 		Data:         fmt.Sprintf("%#x", export),
 	}
-	sssFile, err := json.Marshal(sssExport)
+	sharedFile, err := json.Marshal(sharedExport)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to marshal shamir export")
 	}
 
-	if err := os.WriteFile(data.file, sssFile, 0600); err != nil {
+	if err := os.WriteFile(data.file, sharedFile, 0600); err != nil {
 		return nil, errors.Wrap(err, "failed to write export file")
 	}
 

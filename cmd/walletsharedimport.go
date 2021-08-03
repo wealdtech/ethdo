@@ -18,19 +18,19 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	walletsssimport "github.com/wealdtech/ethdo/cmd/wallet/sssimport"
+	walletsharedimport "github.com/wealdtech/ethdo/cmd/wallet/sharedimport"
 )
 
-var walletSSSImportCmd = &cobra.Command{
-	Use:   "sssimport",
+var walletSharedImportCmd = &cobra.Command{
+	Use:   "sharedimport",
 	Short: "Import a wallet using Shamir secret sharing",
 	Long: `Import a wallet for backup of transfer using Shamir secret sharing.  For example:
 
-	ethdo wallet sssimport --file=backup.dat --shares="1234 2345 3456"
+	ethdo wallet sharedimport --file=backup.dat --shares="1234 2345 3456"
 
 In quiet mode this will return 0 if the wallet is imported successfully, otherwise 1.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		res, err := walletsssimport.Run(cmd)
+		res, err := walletsharedimport.Run(cmd)
 		if err != nil {
 			return err
 		}
@@ -42,17 +42,17 @@ In quiet mode this will return 0 if the wallet is imported successfully, otherwi
 }
 
 func init() {
-	walletCmd.AddCommand(walletSSSImportCmd)
-	walletFlags(walletSSSImportCmd)
-	walletSSSImportCmd.Flags().String("file", "", "Name of the file that stores the export")
-	walletSSSImportCmd.Flags().String("shares", "", "Shares required to decrypt the export, separated with spaces")
+	walletCmd.AddCommand(walletSharedImportCmd)
+	walletFlags(walletSharedImportCmd)
+	walletSharedImportCmd.Flags().String("file", "", "Name of the file that stores the export")
+	walletSharedImportCmd.Flags().String("shares", "", "Shares required to decrypt the export, separated with spaces")
 }
 
-func walletSSSImportBindings() {
-	if err := viper.BindPFlag("file", walletSSSImportCmd.Flags().Lookup("file")); err != nil {
+func walletSharedImportBindings() {
+	if err := viper.BindPFlag("file", walletSharedImportCmd.Flags().Lookup("file")); err != nil {
 		panic(err)
 	}
-	if err := viper.BindPFlag("shares", walletSSSImportCmd.Flags().Lookup("shares")); err != nil {
+	if err := viper.BindPFlag("shares", walletSharedImportCmd.Flags().Lookup("shares")); err != nil {
 		panic(err)
 	}
 }

@@ -11,10 +11,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package walletsssexport
+package walletsharedimport
 
 import (
 	"context"
+	"fmt"
+	"io/ioutil"
+	"os"
+	"path/filepath"
 	"testing"
 	"time"
 
@@ -25,15 +29,25 @@ import (
 	keystorev4 "github.com/wealdtech/go-eth2-wallet-encryptor-keystorev4"
 	nd "github.com/wealdtech/go-eth2-wallet-nd/v2"
 	scratch "github.com/wealdtech/go-eth2-wallet-store-scratch"
+	e2wtypes "github.com/wealdtech/go-eth2-wallet-types/v2"
 )
 
 func TestInput(t *testing.T) {
 	require.NoError(t, e2types.InitBLS())
 
+	dir := os.TempDir()
+	datFile := filepath.Join(dir, "backup.dat")
+	err := ioutil.WriteFile(datFile, []byte("dummy"), 0600)
+	require.NoError(t, err)
+	// defer os.RemoveAll(dir)
+
 	store := scratch.New()
 	require.NoError(t, e2wallet.UseStore(store))
 	wallet, err := nd.CreateWallet(context.Background(), "Test wallet", store, keystorev4.New())
 	require.NoError(t, err)
+	data, err := wallet.(e2wtypes.WalletExporter).Export(context.Background(), []byte("ce%NohGhah4ye5ra"))
+	require.NoError(t, err)
+	require.NoError(t, e2wallet.UseStore(scratch.New()))
 
 	tests := []struct {
 		name string
@@ -44,92 +58,58 @@ func TestInput(t *testing.T) {
 		{
 			name: "TimeoutMissing",
 			vars: map[string]interface{}{
-				"wallet": "Test wallet",
+				"data": fmt.Sprintf("%#x", data),
 			},
 			err: "timeout is required",
-		},
-		{
-			name: "Quiet",
-			vars: map[string]interface{}{
-				"timeout": "5s",
-				"wallet":  "Test wallet",
-				"quiet":   "true",
-			},
-			err: "quiet not allowed",
-		},
-		{
-			name: "WalletMissing",
-			vars: map[string]interface{}{
-				"timeout": "5s",
-			},
-			err: "failed to access wallet: cannot determine wallet",
-		},
-		{
-			name: "WalletUnknown",
-			vars: map[string]interface{}{
-				"timeout": "5s",
-				"wallet":  "unknown",
-			},
-			err: "failed to access wallet: wallet not found",
-		},
-		{
-			name: "Remote",
-			vars: map[string]interface{}{
-				"timeout": "5s",
-				"remote":  "remoteaddress",
-			},
-			err: "wallet export not available for remote wallets",
 		},
 		{
 			name: "FileMissing",
 			vars: map[string]interface{}{
 				"timeout": "5s",
-				"wallet":  "Test wallet",
 			},
 			err: "file is required",
 		},
 		{
-			name: "ParticipantsMissing",
+			name: "Remote",
 			vars: map[string]interface{}{
 				"timeout": "5s",
-				"wallet":  "Test wallet",
 				"file":    "test.dat",
+				"remote":  "remoteaddress",
 			},
-			err: "participants is required",
+			err: "wallet import not available for remote wallets",
 		},
 		{
-			name: "ThresholdMissing",
+			name: "FilMissing",
 			vars: map[string]interface{}{
-				"timeout":      "5s",
-				"wallet":       "Test wallet",
-				"file":         "test.dat",
-				"participants": "5",
+				"timeout": "5s",
 			},
-			err: "threshold is required",
+			err: "file is required",
 		},
 		{
-			name: "ThresholdTooHigh",
+			name: "FileBad",
 			vars: map[string]interface{}{
-				"timeout":      "5s",
-				"wallet":       "Test wallet",
-				"file":         "test.dat",
-				"participants": "5",
-				"threshold":    "6",
+				"timeout": "5s",
+				"file":    "bad.dat",
 			},
-			err: "threshold cannot be more than participants",
+			err: "failed to read wallet import file: open bad.dat: no such file or directory",
+		},
+		{
+			name: "SharesMissing",
+			vars: map[string]interface{}{
+				"timeout": "5s",
+				"file":    datFile,
+			},
+			err: "failed to obtain shares",
 		},
 		{
 			name: "Good",
 			vars: map[string]interface{}{
-				"timeout":      "5s",
-				"wallet":       "Test wallet",
-				"file":         "test.dat",
-				"participants": "5",
-				"threshold":    "3",
+				"timeout": "5s",
+				"file":    datFile,
+				"shares":  "01 02 03",
 			},
 			res: &dataIn{
 				timeout: 5 * time.Second,
-				wallet:  wallet,
 			},
 		},
 	}
@@ -145,8 +125,7 @@ func TestInput(t *testing.T) {
 				require.EqualError(t, err, test.err)
 			} else {
 				require.NoError(t, err)
-				require.Equal(t, test.res.timeout, res.timeout)
-				require.Equal(t, test.vars["wallet"], res.wallet.Name())
+				require.NotNil(t, res)
 			}
 		})
 	}

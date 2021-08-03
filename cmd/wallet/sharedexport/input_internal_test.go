@@ -11,14 +11,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package walletsssimport
+package walletsharedexport
 
 import (
 	"context"
-	"fmt"
-	"io/ioutil"
-	"os"
-	"path/filepath"
 	"testing"
 	"time"
 
@@ -29,25 +25,15 @@ import (
 	keystorev4 "github.com/wealdtech/go-eth2-wallet-encryptor-keystorev4"
 	nd "github.com/wealdtech/go-eth2-wallet-nd/v2"
 	scratch "github.com/wealdtech/go-eth2-wallet-store-scratch"
-	e2wtypes "github.com/wealdtech/go-eth2-wallet-types/v2"
 )
 
 func TestInput(t *testing.T) {
 	require.NoError(t, e2types.InitBLS())
 
-	dir := os.TempDir()
-	datFile := filepath.Join(dir, "backup.dat")
-	err := ioutil.WriteFile(datFile, []byte("dummy"), 0600)
-	require.NoError(t, err)
-	// defer os.RemoveAll(dir)
-
 	store := scratch.New()
 	require.NoError(t, e2wallet.UseStore(store))
 	wallet, err := nd.CreateWallet(context.Background(), "Test wallet", store, keystorev4.New())
 	require.NoError(t, err)
-	data, err := wallet.(e2wtypes.WalletExporter).Export(context.Background(), []byte("ce%NohGhah4ye5ra"))
-	require.NoError(t, err)
-	require.NoError(t, e2wallet.UseStore(scratch.New()))
 
 	tests := []struct {
 		name string
@@ -58,58 +44,92 @@ func TestInput(t *testing.T) {
 		{
 			name: "TimeoutMissing",
 			vars: map[string]interface{}{
-				"data": fmt.Sprintf("%#x", data),
+				"wallet": "Test wallet",
 			},
 			err: "timeout is required",
 		},
 		{
-			name: "FileMissing",
+			name: "Quiet",
+			vars: map[string]interface{}{
+				"timeout": "5s",
+				"wallet":  "Test wallet",
+				"quiet":   "true",
+			},
+			err: "quiet not allowed",
+		},
+		{
+			name: "WalletMissing",
 			vars: map[string]interface{}{
 				"timeout": "5s",
 			},
-			err: "file is required",
+			err: "failed to access wallet: cannot determine wallet",
+		},
+		{
+			name: "WalletUnknown",
+			vars: map[string]interface{}{
+				"timeout": "5s",
+				"wallet":  "unknown",
+			},
+			err: "failed to access wallet: wallet not found",
 		},
 		{
 			name: "Remote",
 			vars: map[string]interface{}{
 				"timeout": "5s",
-				"file":    "test.dat",
 				"remote":  "remoteaddress",
 			},
-			err: "wallet import not available for remote wallets",
+			err: "wallet export not available for remote wallets",
 		},
 		{
-			name: "FilMissing",
+			name: "FileMissing",
 			vars: map[string]interface{}{
 				"timeout": "5s",
+				"wallet":  "Test wallet",
 			},
 			err: "file is required",
 		},
 		{
-			name: "FileBad",
+			name: "ParticipantsMissing",
 			vars: map[string]interface{}{
 				"timeout": "5s",
-				"file":    "bad.dat",
+				"wallet":  "Test wallet",
+				"file":    "test.dat",
 			},
-			err: "failed to read wallet import file: open bad.dat: no such file or directory",
+			err: "participants is required",
 		},
 		{
-			name: "SharesMissing",
+			name: "ThresholdMissing",
 			vars: map[string]interface{}{
-				"timeout": "5s",
-				"file":    datFile,
+				"timeout":      "5s",
+				"wallet":       "Test wallet",
+				"file":         "test.dat",
+				"participants": "5",
 			},
-			err: "failed to obtain shares",
+			err: "threshold is required",
+		},
+		{
+			name: "ThresholdTooHigh",
+			vars: map[string]interface{}{
+				"timeout":      "5s",
+				"wallet":       "Test wallet",
+				"file":         "test.dat",
+				"participants": "5",
+				"threshold":    "6",
+			},
+			err: "threshold cannot be more than participants",
 		},
 		{
 			name: "Good",
 			vars: map[string]interface{}{
-				"timeout": "5s",
-				"file":    datFile,
-				"shares":  "01 02 03",
+				"timeout":      "5s",
+				"wallet":       "Test wallet",
+				"file":         "test.dat",
+				"participants": "5",
+				"threshold":    "3",
 			},
 			res: &dataIn{
 				timeout: 5 * time.Second,
+				wallet:  wallet,
 			},
 		},
 	}
@@ -125,7 +145,8 @@ func TestInput(t *testing.T) {
 				require.EqualError(t, err, test.err)
 			} else {
 				require.NoError(t, err)
-				require.NotNil(t, res)
+				require.Equal(t, test.res.timeout, res.timeout)
+				require.Equal(t, test.vars["wallet"], res.wallet.Name())
 			}
 		})
 	}

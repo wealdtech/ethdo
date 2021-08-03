@@ -11,40 +11,32 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package walletsssimport
+package walletsharedexport
 
 import (
 	"context"
+	"fmt"
+	"strings"
 
 	"github.com/pkg/errors"
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
-// Run runs the command.
-func Run(cmd *cobra.Command) (string, error) {
-	ctx := context.Background()
-	dataIn, err := input(ctx)
-	if err != nil {
-		return "", errors.Wrap(err, "failed to obtain input")
+type dataOut struct {
+	shares [][]byte
+}
+
+func output(ctx context.Context, data *dataOut) (string, error) {
+	if data == nil {
+		return "", errors.New("no data")
 	}
 
-	// Further errors do not need a usage report.
-	cmd.SilenceUsage = true
-
-	dataOut, err := process(ctx, dataIn)
-	if err != nil {
-		return "", errors.Wrap(err, "failed to process")
+	builder := strings.Builder{}
+	for i := range data.shares {
+		builder.WriteString(fmt.Sprintf("%x", data.shares[i]))
+		if i != len(data.shares)-1 {
+			builder.WriteString("\n")
+		}
 	}
 
-	if viper.GetBool("quiet") {
-		return "", nil
-	}
-
-	results, err := output(ctx, dataOut)
-	if err != nil {
-		return "", errors.Wrap(err, "failed to obtain output")
-	}
-
-	return results, nil
+	return builder.String(), nil
 }

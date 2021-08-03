@@ -1,3 +1,6 @@
+1.10.2
+  - use local shamir code (copied from github.com/hashicorp/vault)
+
 1.10.0
   - add "wallet sharedexport" and "wallet sharedimport"
 

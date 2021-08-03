@@ -20,8 +20,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/hashicorp/vault/shamir"
 	"github.com/pkg/errors"
+	"github.com/wealdtech/ethdo/shamir"
 	e2wtypes "github.com/wealdtech/go-eth2-wallet-types/v2"
 )
 

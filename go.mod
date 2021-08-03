@@ -19,13 +19,15 @@ require (
 	github.com/google/go-cmp v0.5.6 // indirect
 	github.com/google/uuid v1.3.0
 	github.com/grpc-ecosystem/go-grpc-middleware v1.3.0 // indirect
-	github.com/hashicorp/vault v1.8.0
+	github.com/hashicorp/hcl v1.0.1-vault-3 // indirect
 	github.com/herumi/bls-eth-go-binary v0.0.0-20210520070601-31246bfa8ac4
 	github.com/klauspost/cpuid/v2 v2.0.9 // indirect
+	github.com/kr/text v0.2.0 // indirect
 	github.com/mattn/go-isatty v0.0.13 // indirect
 	github.com/minio/highwayhash v1.0.2 // indirect
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/nbutton23/zxcvbn-go v0.0.0-20210217022336-fa2cb2858354
+	github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e // indirect
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/common v0.30.0 // indirect
 	github.com/prometheus/procfs v0.7.1 // indirect
@@ -61,4 +63,5 @@ require (
 	golang.org/x/text v0.3.6
 	google.golang.org/genproto v0.0.0-20210803142424-70bd63adacf2 // indirect
 	google.golang.org/grpc v1.39.0
+	gopkg.in/check.v1 v1.0.0-20200227125254-8fa46927fb4f // indirect
 )

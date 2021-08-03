@@ -1,7 +1,9 @@
+1.10.0
+  - add "wallet sharedexport" and "wallet sharedimport"
+
 1.9.1
   - Avoid crash when required interfaces for chain status command are not supported
   - Avoid crash with latest version of herumi/go-bls
-
 
 1.9.0
   - allow use of Ethereum 1 address as withdrawal credentials

@@ -103,6 +103,33 @@ Personal wallet
 
 **N.B.** encrypted wallets will not show up in this list unless the correct passphrase for the store is supplied.
 
+#### `sharedexport`
+
+`ethdo wallet sharedexport` exports the wallet and all of its accounts with shared keys.  Options for exporting a wallet include:
+  - `wallet`: the name of the wallet to export (defaults to "primary")
+  - `participants`: the total number of participants that each hold a share
+  - `threshold`: the number of participants necessary to provide their share to restore the wallet
+  - `file`: the name of the file that stores the backup
+
+```sh
+$ ethdo wallet sharedexport --wallet="Personal wallet" --participants=3 --threshold=2 --file=backup.dat
+298a4efce34c7f46114b7c4ea4be3d3bef925dccb153dd00227b53c3be7dad668b326f2659b2375e708bb824b33f0e7364e0f21dd18e5f5f2d7d04de7c122a9189
+10eabc645fd1633e2e874ffc486fcbe313b33c34fbcb30511a74517296e01f332c6e3c40757c39b4dc47f3a417d321c4c81c2115e53fca57797c975913b8bf5063
+559c77b56d36cbd84f23669a376d389f8c6644933a1a4112512e4d063d0779489c6b6312e6c46def0ee33ce5b5aca0941a833f65e64b5d270c7224323f4e28b238
+```
+
+Each line of the output is a share and should be provided to one of the participants, along with the backup file.
+
+#### `sharedimport`
+
+`ethdo wallet sharedimport` imports a wallet and all of its accounts exported by `ethdo wallet sharedexport`.  Options for importing a wallet include:
+  - `file`: the name of the file that stores the backup
+  - `shares`: a number of shares, defined by _threshold_ during the export, separated by spaces
+
+```sh
+$ ethdo wallet sharedimport --file=backup.dat --shares="298a…9189 10ea…5063"
+```
+
 ### `account` commands
 
 Account commands focus on information about local accounts, generally those used by Geth and Parity but also those from hardware devices.

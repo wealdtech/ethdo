@@ -12,8 +12,9 @@ RUN go build
 
 FROM debian:buster-slim
 
+RUN mkdir /data
 WORKDIR /app
 
 COPY --from=builder /app/ethdo /app
 
-ENTRYPOINT ["/app/ethdo"]
+ENTRYPOINT ["/app/ethdo", "--basedir=/data"]

@@ -1,3 +1,6 @@
+1.10.3
+  - add more information to "chain info"
+
 1.10.2
   - use local shamir code (copied from github.com/hashicorp/vault)
 

@@ -46,6 +46,9 @@ In quiet mode this will return 0 if the chain information can be obtained, other
 		genesis, err := eth2Client.(eth2client.GenesisProvider).Genesis(ctx)
 		errCheck(err, "Failed to obtain beacon chain genesis")
 
+		fork, err := eth2Client.(eth2client.ForkProvider).Fork(ctx, "head")
+		errCheck(err, "Failed to obtain current fork")
+
 		if quiet {
 			os.Exit(_exitSuccess)
 		}
@@ -57,7 +60,20 @@ In quiet mode this will return 0 if the chain information can be obtained, other
 			outputIf(verbose, fmt.Sprintf("Genesis timestamp: %v", genesis.GenesisTime.Unix()))
 		}
 		fmt.Printf("Genesis validators root: %#x\n", genesis.GenesisValidatorsRoot)
-		fmt.Printf("Genesis fork version: %x\n", config["GENESIS_FORK_VERSION"].(spec.Version))
+		fmt.Printf("Genesis fork version: %#x\n", config["GENESIS_FORK_VERSION"].(spec.Version))
+		fmt.Printf("Current fork version: %#x\n", fork.CurrentVersion)
+		if verbose {
+			forkData := &spec.ForkData{
+				CurrentVersion:        fork.CurrentVersion,
+				GenesisValidatorsRoot: genesis.GenesisValidatorsRoot,
+			}
+			forkDataRoot, err := forkData.HashTreeRoot()
+			if err == nil {
+				var forkDigest spec.ForkDigest
+				copy(forkDigest[:], forkDataRoot[:])
+				fmt.Printf("Fork digest: %#x\n", forkDigest)
+			}
+		}
 		fmt.Printf("Seconds per slot: %d\n", int(config["SECONDS_PER_SLOT"].(time.Duration).Seconds()))
 		fmt.Printf("Slots per epoch: %d\n", config["SLOTS_PER_EPOCH"].(uint64))
 

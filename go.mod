@@ -6,7 +6,7 @@ require (
 	github.com/DataDog/zstd v1.4.8 // indirect
 	github.com/OneOfOne/xxhash v1.2.5 // indirect
 	github.com/attestantio/dirk v1.0.2
-	github.com/attestantio/go-eth2-client v0.7.0-beta.2
+	github.com/attestantio/go-eth2-client v0.7.0
 	github.com/aws/aws-sdk-go v1.38.68 // indirect
 	github.com/ferranbt/fastssz v0.0.0-20210526181520-7df50c8568f8
 	github.com/gofrs/uuid v4.0.0+incompatible

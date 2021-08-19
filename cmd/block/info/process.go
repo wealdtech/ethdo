@@ -21,7 +21,9 @@ import (
 
 	eth2client "github.com/attestantio/go-eth2-client"
 	api "github.com/attestantio/go-eth2-client/api/v1"
-	spec "github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/attestantio/go-eth2-client/spec"
+	"github.com/attestantio/go-eth2-client/spec/altair"
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 )
 
@@ -55,9 +57,20 @@ func process(ctx context.Context, data *dataIn) (*dataOut, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to obtain beacon block")
 	}
-
-	if err := outputBlock(ctx, data.jsonOutput, signedBlock); err != nil {
-		return nil, errors.Wrap(err, "failed to output block")
+	if signedBlock == nil {
+		return nil, errors.New("empty beacon block")
+	}
+	switch signedBlock.Version {
+	case spec.DataVersionPhase0:
+		if err := outputPhase0Block(ctx, data.jsonOutput, signedBlock.Phase0); err != nil {
+			return nil, errors.Wrap(err, "failed to output block")
+		}
+	case spec.DataVersionAltair:
+		if err := outputAltairBlock(ctx, data.jsonOutput, signedBlock.Altair); err != nil {
+			return nil, errors.Wrap(err, "failed to output block")
+		}
+	default:
+		return nil, errors.New("unknown block version")
 	}
 
 	if data.stream {
@@ -82,13 +95,30 @@ func headEventHandler(event *api.Event) {
 	signedBlock, err := results.eth2Client.(eth2client.SignedBeaconBlockProvider).SignedBeaconBlock(context.Background(), blockID)
 	if err != nil {
 		fmt.Printf("Failed to obtain block: %v\n", err)
+		return
 	}
-	if err := outputBlock(context.Background(), jsonOutput, signedBlock); err != nil {
-		fmt.Printf("Failed to display block: %v\n", err)
+	if signedBlock == nil {
+		fmt.Println("Empty beacon block")
+		return
+	}
+	switch signedBlock.Version {
+	case spec.DataVersionPhase0:
+		if err := outputPhase0Block(context.Background(), jsonOutput, signedBlock.Phase0); err != nil {
+			fmt.Printf("Failed to output block: %v\n", err)
+			return
+		}
+	case spec.DataVersionAltair:
+		if err := outputAltairBlock(context.Background(), jsonOutput, signedBlock.Altair); err != nil {
+			fmt.Printf("Failed to output block: %v\n", err)
+			return
+		}
+	default:
+		fmt.Printf("Unknown block version: %v\n", signedBlock.Version)
+		return
 	}
 }
 
-func outputBlock(ctx context.Context, jsonOutput bool, signedBlock *spec.SignedBeaconBlock) error {
+func outputPhase0Block(ctx context.Context, jsonOutput bool, signedBlock *phase0.SignedBeaconBlock) error {
 	switch {
 	case jsonOutput:
 		data, err := json.Marshal(signedBlock)
@@ -97,7 +127,25 @@ func outputBlock(ctx context.Context, jsonOutput bool, signedBlock *spec.SignedB
 		}
 		fmt.Printf("%s\n", string(data))
 	default:
-		data, err := outputBlockText(ctx, results, signedBlock)
+		data, err := outputPhase0BlockText(ctx, results, signedBlock)
+		if err != nil {
+			return errors.Wrap(err, "failed to generate text")
+		}
+		fmt.Printf("%s\n", data)
+	}
+	return nil
+}
+
+func outputAltairBlock(ctx context.Context, jsonOutput bool, signedBlock *altair.SignedBeaconBlock) error {
+	switch {
+	case jsonOutput:
+		data, err := json.Marshal(signedBlock)
+		if err != nil {
+			return errors.Wrap(err, "failed to generate JSON")
+		}
+		fmt.Printf("%s\n", string(data))
+	default:
+		data, err := outputAltairBlockText(ctx, results, signedBlock)
 		if err != nil {
 			return errors.Wrap(err, "failed to generate text")
 		}

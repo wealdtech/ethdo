@@ -21,7 +21,7 @@ import (
 
 	eth2client "github.com/attestantio/go-eth2-client"
 	api "github.com/attestantio/go-eth2-client/api/v1"
-	spec "github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 	"github.com/wealdtech/ethdo/util"
 	e2wtypes "github.com/wealdtech/go-eth2-wallet-types/v2"
@@ -53,7 +53,7 @@ func process(ctx context.Context, data *dataIn) (*dataOut, error) {
 	}
 
 	// Fetch validator
-	pubKeys := make([]spec.BLSPubKey, 1)
+	pubKeys := make([]phase0.BLSPubKey, 1)
 	pubKey, err := util.BestPublicKey(account)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to obtain public key for account")
@@ -92,13 +92,21 @@ func process(ctx context.Context, data *dataIn) (*dataOut, error) {
 		if signedBlock == nil {
 			continue
 		}
-		if signedBlock.Message.Slot != slot {
+		blockSlot, err := signedBlock.Slot()
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to obtain block slot")
+		}
+		if blockSlot != slot {
 			continue
 		}
 		if data.debug {
 			fmt.Printf("Fetched block for slot %d\n", slot)
 		}
-		for i, attestation := range signedBlock.Message.Body.Attestations {
+		attestations, err := signedBlock.Attestations()
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to obtain block attestations")
+		}
+		for i, attestation := range attestations {
 			if attestation.Data.Slot == duty.Slot &&
 				attestation.Data.Index == duty.CommitteeIndex &&
 				attestation.AggregationBits.BitAt(duty.ValidatorCommitteeIndex) {
@@ -113,9 +121,9 @@ func process(ctx context.Context, data *dataIn) (*dataOut, error) {
 	return results, nil
 }
 
-func duty(ctx context.Context, eth2Client eth2client.Service, validator *api.Validator, epoch spec.Epoch, slotsPerEpoch uint64) (*api.AttesterDuty, error) {
+func duty(ctx context.Context, eth2Client eth2client.Service, validator *api.Validator, epoch phase0.Epoch, slotsPerEpoch uint64) (*api.AttesterDuty, error) {
 	// Find the attesting slot for the given epoch.
-	duties, err := eth2Client.(eth2client.AttesterDutiesProvider).AttesterDuties(ctx, epoch, []spec.ValidatorIndex{validator.Index})
+	duties, err := eth2Client.(eth2client.AttesterDutiesProvider).AttesterDuties(ctx, epoch, []phase0.ValidatorIndex{validator.Index})
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to obtain attester duties")
 	}

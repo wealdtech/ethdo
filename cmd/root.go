@@ -109,11 +109,7 @@ func persistentPreRunE(cmd *cobra.Command, args []string) error {
 		fmt.Println("Cannot supply both quiet and debug flags")
 	}
 
-	if err := util.SetupStore(); err != nil {
-		return err
-	}
-
-	return nil
+	return util.SetupStore()
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.

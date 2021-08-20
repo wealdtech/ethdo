@@ -82,6 +82,8 @@ func persistentPreRunE(cmd *cobra.Command, args []string) error {
 		nodeEventsBindings()
 	case "slot/time":
 		slotTimeBindings()
+	case "synccommittee/members":
+		synccommitteeMembersBindings()
 	case "validator/depositdata":
 		validatorDepositdataBindings()
 	case "validator/duties":

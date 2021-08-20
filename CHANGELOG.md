@@ -1,3 +1,6 @@
+Development:
+  - add "synccommittee members"
+
 1.11.0
   - add Altair information to "block info"
   - add more information to "chain info"

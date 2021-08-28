@@ -37,7 +37,7 @@ ethdo wallet create --wallet="Recreated wallet" --type=hd --wallet-passphrase="s
 A wallet can be backed up with the `ethdo wallet export` command.  This creates an encrypted backup of the wallet, for example:
 
 ```sh
-ethdo wallet export --wallet="My wallet" --exportpassphrase="export secret" >export.dat
+ethdo wallet export --wallet="My wallet" --passphrase="export secret" >export.dat
 ```
 
 Note that by default the wallet backup is printed to the console, hence the `>export.dat` to redirect it to a file.
@@ -47,7 +47,7 @@ Note that by default the wallet backup is printed to the console, hence the `>ex
 A backed up wallet can be restored with the `ethdo wallet import` command, for example:
 
 ```sh
-ethdo wallet import --importdata=export.dat --importpassphrase="export secret"
+ethdo wallet import --importdata=export.dat --passphrase="export secret"
 ```
 
 In this example the wallet to be imported is being read from the `export.dat` file.

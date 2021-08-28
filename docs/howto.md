@@ -47,7 +47,7 @@ Note that by default the wallet backup is printed to the console, hence the `>ex
 A backed up wallet can be restored with the `ethdo wallet import` command, for example:
 
 ```sh
-ethdo wallet import --importdata=export.dat --passphrase="export secret"
+ethdo wallet import --data=export.dat --passphrase="export secret"
 ```
 
 In this example the wallet to be imported is being read from the `export.dat` file.

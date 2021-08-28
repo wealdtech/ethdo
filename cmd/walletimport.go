@@ -26,7 +26,7 @@ var walletImportCmd = &cobra.Command{
 	Short: "Import a wallet",
 	Long: `Import a wallet.  For example:
 
-    ethdo wallet import --importdata=primary --passphrase="my export secret"
+    ethdo wallet import --data=primary --passphrase="my export secret"
 
 In quiet mode this will return 0 if the wallet is imported successfully, otherwise 1.`,
 	RunE: func(cmd *cobra.Command, args []string) error {

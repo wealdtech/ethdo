@@ -23,6 +23,7 @@ import (
 
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/pkg/errors"
+	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/wealdtech/ethdo/util"
@@ -55,6 +56,9 @@ func persistentPreRunE(cmd *cobra.Command, args []string) error {
 		// User just wants the version
 		return nil
 	}
+
+	// Disable service logging.
+	zerolog.SetGlobalLevel(zerolog.Disabled)
 
 	// We bind viper here so that we bind to the correct command.
 	quiet = viper.GetBool("quiet")

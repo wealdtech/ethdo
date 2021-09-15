@@ -18,9 +18,11 @@ import (
 	"os"
 	"testing"
 
+	eth2client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/auto"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
+	standardchaintime "github.com/wealdtech/ethdo/services/chaintime/standard"
 )
 
 func TestProcess(t *testing.T) {
@@ -30,6 +32,13 @@ func TestProcess(t *testing.T) {
 	eth2Client, err := auto.New(context.Background(),
 		auto.WithLogLevel(zerolog.Disabled),
 		auto.WithAddress(os.Getenv("ETHDO_TEST_CONNECTION")),
+	)
+	require.NoError(t, err)
+
+	chainTime, err := standardchaintime.New(context.Background(),
+		standardchaintime.WithGenesisTimeProvider(eth2Client.(eth2client.GenesisTimeProvider)),
+		standardchaintime.WithForkScheduleProvider(eth2Client.(eth2client.ForkScheduleProvider)),
+		standardchaintime.WithSpecProvider(eth2Client.(eth2client.SpecProvider)),
 	)
 	require.NoError(t, err)
 
@@ -45,9 +54,9 @@ func TestProcess(t *testing.T) {
 		{
 			name: "Good",
 			dataIn: &dataIn{
-				eth2Client:    eth2Client,
-				slotsPerEpoch: 32,
-				epoch:         61650,
+				eth2Client: eth2Client,
+				chainTime:  chainTime,
+				epoch:      61650,
 			},
 		},
 	}

@@ -21,6 +21,8 @@ import (
 	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
+	"github.com/wealdtech/ethdo/services/chaintime"
+	standardchaintime "github.com/wealdtech/ethdo/services/chaintime/standard"
 	"github.com/wealdtech/ethdo/util"
 )
 
@@ -30,10 +32,9 @@ type dataIn struct {
 	quiet   bool
 	verbose bool
 	debug   bool
-	// Chain information.
-	slotsPerEpoch uint64
 	// Operation.
 	eth2Client eth2client.Service
+	chainTime  chaintime.Service
 	epoch      spec.Epoch
 }
 
@@ -55,24 +56,23 @@ func input(ctx context.Context) (*dataIn, error) {
 		return nil, errors.Wrap(err, "failed to connect to Ethereum 2 beacon node")
 	}
 
-	// Chain configuration.
-	config, err := data.eth2Client.(eth2client.SpecProvider).Spec(ctx)
+	// Chain time.
+	data.chainTime, err = standardchaintime.New(ctx,
+		standardchaintime.WithGenesisTimeProvider(data.eth2Client.(eth2client.GenesisTimeProvider)),
+		standardchaintime.WithForkScheduleProvider(data.eth2Client.(eth2client.ForkScheduleProvider)),
+		standardchaintime.WithSpecProvider(data.eth2Client.(eth2client.SpecProvider)),
+	)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to obtain beacon chain configuration")
+		return nil, errors.Wrap(err, "failed to configure chaintime service")
 	}
-	data.slotsPerEpoch = config["SLOTS_PER_EPOCH"].(uint64)
 
 	// Epoch
 	epoch := viper.GetInt64("epoch")
 	if epoch == -1 {
-		slotDuration := config["SECONDS_PER_SLOT"].(time.Duration)
-		genesis, err := data.eth2Client.(eth2client.GenesisProvider).Genesis(ctx)
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to obtain genesis data")
-		}
-		epoch = int64(time.Since(genesis.GenesisTime).Seconds()) / (int64(slotDuration.Seconds()) * int64(data.slotsPerEpoch))
+		data.epoch = data.chainTime.CurrentEpoch()
+	} else {
+		data.epoch = spec.Epoch(epoch)
 	}
-	data.epoch = spec.Epoch(epoch)
 
 	return data, nil
 }

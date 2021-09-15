@@ -57,5 +57,5 @@ func output(ctx context.Context, data *dataOut) (string, error) {
 		validators[i] = fmt.Sprintf("%d", data.validators[i])
 	}
 
-	return "[" + strings.Join(validators, ",") + "]", nil
+	return strings.Join(validators, ","), nil
 }

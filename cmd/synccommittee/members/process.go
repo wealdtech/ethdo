@@ -26,7 +26,11 @@ func process(ctx context.Context, data *dataIn) (*dataOut, error) {
 		return nil, errors.New("no data")
 	}
 
-	syncCommittee, err := data.eth2Client.(eth2client.SyncCommitteesProvider).SyncCommittee(ctx, fmt.Sprintf("%d", uint64(data.epoch)*data.slotsPerEpoch))
+	if data.epoch < data.chainTime.AltairInitialEpoch() {
+		return nil, errors.New("not an Altair epoch")
+	}
+
+	syncCommittee, err := data.eth2Client.(eth2client.SyncCommitteesProvider).SyncCommittee(ctx, fmt.Sprintf("%d", data.chainTime.FirstSlotOfEpoch(data.epoch)))
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to obtain sync committee information")
 	}

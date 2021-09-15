@@ -1,4 +1,4 @@
-Development:
+1.12.0:
   - add "synccommittee members"
 
 1.11.0

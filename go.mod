@@ -44,5 +44,3 @@ require (
 	golang.org/x/text v0.3.7
 	google.golang.org/grpc v1.40.0
 )
-
-replace github.com/wealdtech/go-eth2-wallet-encryptor-keystorev4 => ../go-eth2-wallet-encryptor-keystorev4

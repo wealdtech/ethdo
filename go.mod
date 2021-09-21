@@ -4,7 +4,7 @@ go 1.16
 
 require (
 	github.com/OneOfOne/xxhash v1.2.5 // indirect
-	github.com/attestantio/dirk v1.0.3
+	github.com/attestantio/dirk v1.0.4
 	github.com/attestantio/go-eth2-client v0.7.2
 	github.com/ferranbt/fastssz v0.0.0-20210905181407-59cf6761a7d5
 	github.com/gofrs/uuid v4.0.0+incompatible
@@ -31,7 +31,7 @@ require (
 	github.com/wealdtech/go-eth2-types/v2 v2.5.6
 	github.com/wealdtech/go-eth2-util v1.6.5
 	github.com/wealdtech/go-eth2-wallet v1.14.6
-	github.com/wealdtech/go-eth2-wallet-dirk v1.1.7
+	github.com/wealdtech/go-eth2-wallet-dirk v1.1.8
 	github.com/wealdtech/go-eth2-wallet-distributed v1.1.4
 	github.com/wealdtech/go-eth2-wallet-encryptor-keystorev4 v1.1.6
 	github.com/wealdtech/go-eth2-wallet-hd/v2 v2.5.5
@@ -44,5 +44,3 @@ require (
 	golang.org/x/text v0.3.7
 	google.golang.org/grpc v1.40.0
 )
-
-replace github.com/fsnotify/fsnotify v1.5.0 => github.com/fsnotify/fsnotify v1.5.1

@@ -44,3 +44,5 @@ require (
 	golang.org/x/text v0.3.7
 	google.golang.org/grpc v1.40.0
 )
+
+replace github.com/fsnotify/fsnotify v1.5.0 => github.com/fsnotify/fsnotify v1.5.1

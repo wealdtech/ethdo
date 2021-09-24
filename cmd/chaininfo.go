@@ -85,18 +85,3 @@ func init() {
 	chainCmd.AddCommand(chainInfoCmd)
 	chainFlags(chainInfoCmd)
 }
-
-func timestampToSlot(genesis time.Time, timestamp time.Time, secondsPerSlot time.Duration) spec.Slot {
-	if timestamp.Unix() < genesis.Unix() {
-		return 0
-	}
-	return spec.Slot(uint64(timestamp.Unix()-genesis.Unix()) / uint64(secondsPerSlot.Seconds()))
-}
-
-func slotToTimestamp(genesis time.Time, slot spec.Slot, slotDuration time.Duration) int64 {
-	return genesis.Unix() + int64(slot)*int64(slotDuration.Seconds())
-}
-
-func epochToTimestamp(genesis time.Time, slot spec.Slot, slotDuration time.Duration, slotsPerEpoch uint64) int64 {
-	return genesis.Unix() + int64(slot)*int64(slotDuration.Seconds())*int64(slotsPerEpoch)
-}

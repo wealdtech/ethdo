@@ -63,20 +63,20 @@ jobs:
     - name: Create windows release files
       run: |
        mv ethdo-windows-4.0-amd64.exe ethdo.exe
-       sha256sum ethdo.exe >ethdo-${RELEASE_VERSION}-windows.sha256
        zip --junk-paths ethdo-${RELEASE_VERSION}-windows-exe.zip ethdo.exe
+       sha256sum ethdo-${RELEASE_VERSION}-windows-exe.zip >ethdo-${RELEASE_VERSION}-windows.sha256
 
     - name: Create linux AMD64 tgz file
       run: |
        mv ethdo-linux-amd64 ethdo
-       sha256sum ethdo >ethdo-${RELEASE_VERSION}-linux-amd64.sha256
        tar zcf ethdo-${RELEASE_VERSION}-linux-amd64.tar.gz ethdo
+       sha256sum ethdo-${RELEASE_VERSION}-linux-amd64.tar.gz >ethdo-${RELEASE_VERSION}-linux-amd64.sha256
 
        # - name: Create linux ARM64 tgz file
        #   run: |
        #    mv ethdo-linux-arm64 ethdo
-       #    sha256sum ethdo >ethdo-${RELEASE_VERSION}-linux-arm64.sha256
        #    tar zcf ethdo-${RELEASE_VERSION}-linux-arm64.tar.gz ethdo
+       #    sha256sum ethdo-${RELEASE_VERSION}-linux-arm64.tar.gz >ethdo-${RELEASE_VERSION}-linux-arm64.sha256
 
     - name: Create release
       id: create_release

@@ -1,4 +1,4 @@
-// Copyright © 2019 Weald Technology Trading
+// Copyright © 2019 - 2021 Weald Technology Trading.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -65,7 +65,7 @@ func persistentPreRunE(cmd *cobra.Command, args []string) error {
 	verbose = viper.GetBool("verbose")
 	debug = viper.GetBool("debug")
 	// Command-specific bindings.
-	switch fmt.Sprintf("%s/%s", cmd.Parent().Name(), cmd.Name()) {
+	switch commandPath(cmd) {
 	case "account/create":
 		accountCreateBindings()
 	case "account/derive":
@@ -80,6 +80,8 @@ func persistentPreRunE(cmd *cobra.Command, args []string) error {
 		blockInfoBindings()
 	case "chain/time":
 		chainTimeBindings()
+	case "chain/verify/signedcontributionandproof":
+		chainVerifySignedContributionAndProofBindings(cmd)
 	case "exit/verify":
 		exitVerifyBindings()
 	case "node/events":
@@ -388,4 +390,15 @@ func remotesToEndpoints(remotes []string) ([]*dirk.Endpoint, error) {
 // relockAccount locks an account; generally called as a defer after an account is unlocked.
 func relockAccount(locker e2wtypes.AccountLocker) {
 	errCheck(locker.Lock(context.Background()), "failed to re-lock account")
+}
+
+func commandPath(cmd *cobra.Command) string {
+	path := ""
+	for {
+		path = fmt.Sprintf("%s/%s", cmd.Name(), path)
+		if cmd.Parent().Name() == "ethdo" {
+			return strings.TrimRight(path, "/")
+		}
+		cmd = cmd.Parent()
+	}
 }

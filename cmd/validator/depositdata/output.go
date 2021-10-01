@@ -109,6 +109,7 @@ func validatorDepositDataOutputLaunchpad(datum *dataOut) (string, error) {
 	forkVersionMap := map[spec.Version]string{
 		[4]byte{0x00, 0x00, 0x00, 0x00}: "mainnet",
 		[4]byte{0x00, 0x00, 0x20, 0x09}: "pyrmont",
+		[4]byte{0x00, 0x00, 0x10, 0x20}: "prater",
 	}
 
 	if datum.validatorPubKey == nil {

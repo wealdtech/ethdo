@@ -253,10 +253,15 @@ func TestOutputLaunchpad(t *testing.T) {
 		tmp := testutil.HexToSignature("0xb7a757a4c506ac6ac5f2d23e065de7d00dc9f5a6a3f9610a8b60b65f166379139ae382c91ecbbf5c9fabc34b1cd2cf8f0211488d50d8754716d8e72e17c1a00b5d9b37cc73767946790ebe66cf9669abfc5c25c67e1e2d1c2e11429d149c25a2")
 		signature = &tmp
 	}
-	var forkVersion *spec.Version
+	var forkVersionPyrmont *spec.Version
 	{
 		tmp := testutil.HexToVersion("0x00002009")
-		forkVersion = &tmp
+		forkVersionPyrmont = &tmp
+	}
+	var forkVersionPrater *spec.Version
+	{
+		tmp := testutil.HexToVersion("0x00001020")
+		forkVersionPrater = &tmp
 	}
 	var depositDataRoot *spec.Root
 	{
@@ -316,7 +321,7 @@ func TestOutputLaunchpad(t *testing.T) {
 					withdrawalCredentials: testutil.HexToBytes("0x00fad2a6bfb0e7f1f0f45460944fbd8dfa7f37da06a4d13b3983cc90bb46963b"),
 					amount:                32000000000,
 					signature:             signature,
-					forkVersion:           forkVersion,
+					forkVersion:           forkVersionPyrmont,
 					depositDataRoot:       depositDataRoot,
 					depositMessageRoot:    depositMessageRoot,
 				},
@@ -332,7 +337,7 @@ func TestOutputLaunchpad(t *testing.T) {
 					validatorPubKey:    validatorPubKey,
 					amount:             32000000000,
 					signature:          signature,
-					forkVersion:        forkVersion,
+					forkVersion:        forkVersionPyrmont,
 					depositDataRoot:    depositDataRoot,
 					depositMessageRoot: depositMessageRoot,
 				},
@@ -348,7 +353,7 @@ func TestOutputLaunchpad(t *testing.T) {
 					validatorPubKey:       validatorPubKey,
 					withdrawalCredentials: testutil.HexToBytes("0x00fad2a6bfb0e7f1f0f45460944fbd8dfa7f37da06a4d13b3983cc90bb46963b"),
 					amount:                32000000000,
-					forkVersion:           forkVersion,
+					forkVersion:           forkVersionPyrmont,
 					depositDataRoot:       depositDataRoot,
 					depositMessageRoot:    depositMessageRoot,
 				},
@@ -364,7 +369,7 @@ func TestOutputLaunchpad(t *testing.T) {
 					validatorPubKey:       validatorPubKey,
 					withdrawalCredentials: testutil.HexToBytes("0x00fad2a6bfb0e7f1f0f45460944fbd8dfa7f37da06a4d13b3983cc90bb46963b"),
 					signature:             signature,
-					forkVersion:           forkVersion,
+					forkVersion:           forkVersionPyrmont,
 					depositDataRoot:       depositDataRoot,
 					depositMessageRoot:    depositMessageRoot,
 				},
@@ -381,7 +386,7 @@ func TestOutputLaunchpad(t *testing.T) {
 					withdrawalCredentials: testutil.HexToBytes("0x00fad2a6bfb0e7f1f0f45460944fbd8dfa7f37da06a4d13b3983cc90bb46963b"),
 					amount:                32000000000,
 					signature:             signature,
-					forkVersion:           forkVersion,
+					forkVersion:           forkVersionPyrmont,
 					depositMessageRoot:    depositMessageRoot,
 				},
 			},
@@ -397,14 +402,14 @@ func TestOutputLaunchpad(t *testing.T) {
 					withdrawalCredentials: testutil.HexToBytes("0x00fad2a6bfb0e7f1f0f45460944fbd8dfa7f37da06a4d13b3983cc90bb46963b"),
 					amount:                32000000000,
 					signature:             signature,
-					forkVersion:           forkVersion,
+					forkVersion:           forkVersionPyrmont,
 					depositDataRoot:       depositDataRoot,
 				},
 			},
 			err: "deposit message root required",
 		},
 		{
-			name: "Single",
+			name: "SinglePyrmont",
 			dataOut: []*dataOut{
 				{
 					format:                "launchpad",
@@ -413,12 +418,29 @@ func TestOutputLaunchpad(t *testing.T) {
 					withdrawalCredentials: testutil.HexToBytes("0x00fad2a6bfb0e7f1f0f45460944fbd8dfa7f37da06a4d13b3983cc90bb46963b"),
 					amount:                32000000000,
 					signature:             signature,
-					forkVersion:           forkVersion,
+					forkVersion:           forkVersionPyrmont,
 					depositDataRoot:       depositDataRoot,
 					depositMessageRoot:    depositMessageRoot,
 				},
 			},
 			res: `[{"pubkey":"a99a76ed7796f7be22d5b7e85deeb7c5677e88e511e0b337618f8c4eb61349b4bf2d153f649f7b53359fe8b94a38e44c","withdrawal_credentials":"00fad2a6bfb0e7f1f0f45460944fbd8dfa7f37da06a4d13b3983cc90bb46963b","amount":32000000000,"signature":"b7a757a4c506ac6ac5f2d23e065de7d00dc9f5a6a3f9610a8b60b65f166379139ae382c91ecbbf5c9fabc34b1cd2cf8f0211488d50d8754716d8e72e17c1a00b5d9b37cc73767946790ebe66cf9669abfc5c25c67e1e2d1c2e11429d149c25a2","deposit_message_root":"139b510ea7f2788ab82da1f427d6cbe1db147c15a053db738ad5500cd83754a6","deposit_data_root":"9e51b386f4271c18149dd0f73297a26a4a8c15c3622c44af79c92446f44a3554","fork_version":"00002009","eth2_network_name":"pyrmont","deposit_cli_version":"1.1.0"}]`,
+		},
+		{
+			name: "SinglePrater",
+			dataOut: []*dataOut{
+				{
+					format:                "launchpad",
+					account:               "interop/00000",
+					validatorPubKey:       validatorPubKey,
+					withdrawalCredentials: testutil.HexToBytes("0x00fad2a6bfb0e7f1f0f45460944fbd8dfa7f37da06a4d13b3983cc90bb46963b"),
+					amount:                32000000000,
+					signature:             signature,
+					forkVersion:           forkVersionPrater,
+					depositDataRoot:       depositDataRoot,
+					depositMessageRoot:    depositMessageRoot,
+				},
+			},
+			res: `[{"pubkey":"a99a76ed7796f7be22d5b7e85deeb7c5677e88e511e0b337618f8c4eb61349b4bf2d153f649f7b53359fe8b94a38e44c","withdrawal_credentials":"00fad2a6bfb0e7f1f0f45460944fbd8dfa7f37da06a4d13b3983cc90bb46963b","amount":32000000000,"signature":"b7a757a4c506ac6ac5f2d23e065de7d00dc9f5a6a3f9610a8b60b65f166379139ae382c91ecbbf5c9fabc34b1cd2cf8f0211488d50d8754716d8e72e17c1a00b5d9b37cc73767946790ebe66cf9669abfc5c25c67e1e2d1c2e11429d149c25a2","deposit_message_root":"139b510ea7f2788ab82da1f427d6cbe1db147c15a053db738ad5500cd83754a6","deposit_data_root":"9e51b386f4271c18149dd0f73297a26a4a8c15c3622c44af79c92446f44a3554","fork_version":"00001020","eth2_network_name":"prater","deposit_cli_version":"1.1.0"}]`,
 		},
 		{
 			name: "Double",
@@ -430,7 +452,7 @@ func TestOutputLaunchpad(t *testing.T) {
 					withdrawalCredentials: testutil.HexToBytes("0x00fad2a6bfb0e7f1f0f45460944fbd8dfa7f37da06a4d13b3983cc90bb46963b"),
 					amount:                32000000000,
 					signature:             signature,
-					forkVersion:           forkVersion,
+					forkVersion:           forkVersionPyrmont,
 					depositDataRoot:       depositDataRoot,
 					depositMessageRoot:    depositMessageRoot,
 				},
@@ -441,7 +463,7 @@ func TestOutputLaunchpad(t *testing.T) {
 					withdrawalCredentials: testutil.HexToBytes("0x00ec7ef7780c9d151597924036262dd28dc60e1228f4da6fecf9d402cb3f3594"),
 					amount:                32000000000,
 					signature:             signature2,
-					forkVersion:           forkVersion,
+					forkVersion:           forkVersionPyrmont,
 					depositDataRoot:       depositDataRoot2,
 					depositMessageRoot:    depositMessageRoot2,
 				},

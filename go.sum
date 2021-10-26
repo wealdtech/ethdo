@@ -64,8 +64,9 @@ github.com/armon/go-metrics v0.0.0-20180917152333-f0300d1749da/go.mod h1:Q73ZrmV
 github.com/armon/go-radix v0.0.0-20180808171621-7fddfc383310/go.mod h1:ufUuZ+zHj4x4TnLV4JWEpy2hxWSpsRywHrMgIH9cCH8=
 github.com/attestantio/dirk v1.0.4 h1:e5WFS3RxTvtk3BgLjUACItCcjwer07QiYWXP0pjnbZM=
 github.com/attestantio/dirk v1.0.4/go.mod h1:w9QSIVDKMqD7tjK4e5wrTUCyCNlXaDT8U3SfJ+JOsx4=
-github.com/attestantio/go-eth2-client v0.7.2 h1:qxqUX6y8rpyHBk1SGXRAmCLwRSgL28OumP4ic7vKjLM=
 github.com/attestantio/go-eth2-client v0.7.2/go.mod h1:kEK9iAAOBoADO5wEkd84FEOzjT1zXgVWveQsqn+uBGg=
+github.com/attestantio/go-eth2-client v0.8.0 h1:5aUmXOW5vdYxjV0nJpN2qUJlfXbf78266ga2e667Lp4=
+github.com/attestantio/go-eth2-client v0.8.0/go.mod h1:kEK9iAAOBoADO5wEkd84FEOzjT1zXgVWveQsqn+uBGg=
 github.com/aws/aws-sdk-go v1.33.17/go.mod h1:5zCpMtNQVjRREroY7sYe8lOMRSxkhG6MZveU8YkpAk0=
 github.com/aws/aws-sdk-go v1.40.41 h1:v/Y4bB8+wHCONtKV+fuHTzLiqC08lk8e9HqYhRB9PBQ=
 github.com/aws/aws-sdk-go v1.40.41/go.mod h1:585smgzpB/KqRA+K3y/NL/oYRqQvpNJYvLm+LY1U59Q=
@@ -247,7 +248,6 @@ github.com/gopherjs/gopherjs v0.0.0-20181017120253-0766667cb4d1/go.mod h1:wJfORR
 github.com/grpc-ecosystem/go-grpc-middleware v1.3.0 h1:+9834+KizmvFV7pXQGSXQTsaWhq2GjuNUt0aUU0YBYw=
 github.com/grpc-ecosystem/go-grpc-middleware v1.3.0/go.mod h1:z0ButlSOZa5vEBq9m2m2hlwIgKw+rp3sdCBRoJY+30Y=
 github.com/grpc-ecosystem/grpc-gateway v1.13.0/go.mod h1:8XEsbTttt/W+VvjtQhLACqCisSPWTxCZ7sBRjU6iH9c=
-github.com/grpc-ecosystem/grpc-gateway v1.16.0 h1:gmcG1KaJ57LophUzW0Hy8NmPhnMZb4M0+kPpLofRdBo=
 github.com/grpc-ecosystem/grpc-gateway v1.16.0/go.mod h1:BDjrQk3hbvj6Nolgz8mAMFbcEtjT1g+wF4CSlocrBnw=
 github.com/hashicorp/consul/api v1.1.0/go.mod h1:VmuI/Lkw1nC05EYQWNKwWGbkg+FbDBtguAZLlVdkD9Q=
 github.com/hashicorp/consul/sdk v0.1.1/go.mod h1:VKf9jXwCTEY1QZP2MOLRhb5i/I/ssyNV1vwHyQBF0x8=
@@ -399,8 +399,6 @@ github.com/prometheus/procfs v0.7.3/go.mod h1:cz+aTbrPOrUb4q7XlbU9ygM+/jj0fzG6c1
 github.com/protolambda/zssz v0.1.5 h1:7fjJjissZIIaa2QcvmhS/pZISMX21zVITt49sW1ouek=
 github.com/protolambda/zssz v0.1.5/go.mod h1:a4iwOX5FE7/JkKA+J/PH0Mjo9oXftN6P8NZyL28gpag=
 github.com/prysmaticlabs/ethereumapis v0.0.0-20200812153649-a842fc47c2c3/go.mod h1:k7b2dxy6RppCG6kmOJkNOXzRpEoTdsPygc2aQhsUsZk=
-github.com/prysmaticlabs/ethereumapis v0.0.0-20210201130911-92b2a467c108 h1:iiLmzQ0tSh0ShqrzdZm2T2xJdHze7wu8dAMywl/8Ynw=
-github.com/prysmaticlabs/ethereumapis v0.0.0-20210201130911-92b2a467c108/go.mod h1:k7b2dxy6RppCG6kmOJkNOXzRpEoTdsPygc2aQhsUsZk=
 github.com/prysmaticlabs/go-bitfield v0.0.0-20200322041314-62c2aee71669/go.mod h1:hCwmef+4qXWjv0jLDbQdWnL0Ol7cS7/lCSS26WR+u6s=
 github.com/prysmaticlabs/go-bitfield v0.0.0-20210607200045-4da71aaf6c2d/go.mod h1:hCwmef+4qXWjv0jLDbQdWnL0Ol7cS7/lCSS26WR+u6s=
 github.com/prysmaticlabs/go-bitfield v0.0.0-20210809151128-385d8c5e3fb7 h1:0tVE4tdWQK9ZpYygoV7+vS6QkDvQVySboMVEIxBJmXw=

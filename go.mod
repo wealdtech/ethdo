@@ -5,7 +5,7 @@ go 1.16
 require (
 	github.com/OneOfOne/xxhash v1.2.5 // indirect
 	github.com/attestantio/dirk v1.0.4
-	github.com/attestantio/go-eth2-client v0.7.2
+	github.com/attestantio/go-eth2-client v0.8.0
 	github.com/ferranbt/fastssz v0.0.0-20210905181407-59cf6761a7d5
 	github.com/gofrs/uuid v4.0.0+incompatible
 	github.com/google/uuid v1.3.0
@@ -17,7 +17,6 @@ require (
 	github.com/nbutton23/zxcvbn-go v0.0.0-20210217022336-fa2cb2858354
 	github.com/pkg/errors v0.9.1
 	github.com/protolambda/zssz v0.1.5 // indirect
-	github.com/prysmaticlabs/ethereumapis v0.0.0-20210201130911-92b2a467c108 // indirect
 	github.com/prysmaticlabs/go-bitfield v0.0.0-20210809151128-385d8c5e3fb7
 	github.com/prysmaticlabs/go-ssz v0.0.0-20210121151755-f6208871c388
 	github.com/rs/zerolog v1.23.0

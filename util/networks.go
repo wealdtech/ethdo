@@ -26,35 +26,32 @@ var networks = map[string]string{
 	"00000000219ab540356cbb839cbe05303d7705fa": "Mainnet",
 	"07b39f4fde4a38bace212b546dac87c58dfe3fdc": "Medalla",
 	"8c5fecdc472e27bc447696f431e425d02dd46a8c": "Pyrmont",
+	"ff50ed3d0ec03ac01d4c79aad74928bff48a7b2b": "Prater",
 }
 
 // Network returns the name of the network., calculated from the deposit contract information.
 // If not known, returns "Unknown".
 func Network(ctx context.Context, eth2Client eth2client.Service) (string, error) {
 	var address []byte
-	var err error
 
 	if eth2Client == nil {
 		return "", errors.New("no Ethereum 2 client supplied")
 	}
 
-	if provider, isProvider := eth2Client.(eth2client.DepositContractProvider); isProvider {
-		address, err = provider.DepositContractAddress(ctx)
-		if err != nil {
-			return "", errors.Wrap(err, "failed to obtain deposit contract address")
-		}
-	} else if provider, isProvider := eth2Client.(eth2client.SpecProvider); isProvider {
-		config, err := provider.Spec(ctx)
-		if err != nil {
-			return "", errors.Wrap(err, "failed to obtain chain specification")
-		}
-		if config == nil {
-			return "", errors.New("failed to return chain specification")
-		}
-		depositContractAddress, exists := config["DEPOSIT_CONTRACT_ADDRESS"]
-		if exists {
-			address = depositContractAddress.([]byte)
-		}
+	provider, isProvider := eth2Client.(eth2client.SpecProvider)
+	if !isProvider {
+		return "", errors.New("client does not provide deposit contract address")
+	}
+	config, err := provider.Spec(ctx)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to obtain chain specification")
+	}
+	if config == nil {
+		return "", errors.New("failed to return chain specification")
+	}
+	depositContractAddress, exists := config["DEPOSIT_CONTRACT_ADDRESS"]
+	if exists {
+		address = depositContractAddress.([]byte)
 	}
 
 	return network(address), nil

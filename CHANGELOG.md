@@ -1,6 +1,7 @@
 dev:
   - add "chain verify signedcontributionandproof"
   - show both block and body root in "block info"
+  - add exit / withdrawable epoch to "validator info"
 
 1.13.0:
   - rework and provide additional information to "chain status" output

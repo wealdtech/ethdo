@@ -1,4 +1,4 @@
-// Copyright © 2020 Weald Technology Trading
+// Copyright © 2020, 2021 Weald Technology Trading
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -22,38 +22,6 @@ import (
 	"github.com/wealdtech/ethdo/testutil"
 	"github.com/wealdtech/ethdo/util"
 )
-
-// A mock Ethereum 2 client service that returns supplied deposit information.
-type depositETH2Client struct {
-	address   []byte
-	chainID   uint64
-	networkID uint64
-}
-
-// Name returns the name of the client implementation.
-func (c *depositETH2Client) Name() string {
-	return "deposit mock"
-}
-
-// Address returns the address of the client.
-func (c *depositETH2Client) Address() string {
-	return "mock"
-}
-
-// DepositContractAddress provides the Ethereum 1 address of the deposit contract.
-func (c *depositETH2Client) DepositContractAddress(ctx context.Context) ([]byte, error) {
-	return c.address, nil
-}
-
-// DepositContractChainID provides the Ethereum 1 chain ID of the deposit contract.
-func (c *depositETH2Client) DepositContractChainID(ctx context.Context) (uint64, error) {
-	return c.chainID, nil
-}
-
-// DepositContractNetworkID provides the Ethereum 1 network ID of the deposit contract.
-func (c *depositETH2Client) DepositContractNetworkID(ctx context.Context) (uint64, error) {
-	return c.networkID, nil
-}
 
 // A mock Ethereum 2 client service that returns spec information.
 type specETH2Client struct {
@@ -89,29 +57,11 @@ func TestNetworks(t *testing.T) {
 			err:  "no Ethereum 2 client supplied",
 		},
 		{
-			name: "MainnetDeposit",
-			service: &depositETH2Client{
-				address:   testutil.HexToBytes("0x00000000219ab540356cbb839cbe05303d7705fa"),
-				chainID:   0,
-				networkID: 0,
-			},
-			network: "Mainnet",
-		},
-		{
 			name: "MainnetSpec",
 			service: &specETH2Client{
 				address: testutil.HexToBytes("0x00000000219ab540356cbb839cbe05303d7705fa"),
 			},
 			network: "Mainnet",
-		},
-		{
-			name: "UnknownDeposit",
-			service: &depositETH2Client{
-				address:   testutil.HexToBytes("0x1111111111111111111111111111111111111111"),
-				chainID:   0,
-				networkID: 0,
-			},
-			network: "Unknown",
 		},
 		{
 			name: "UnknownSpec",

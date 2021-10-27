@@ -1,4 +1,4 @@
-dev:
+1.14.0:
   - add "chain verify signedcontributionandproof"
   - show both block and body root in "block info"
   - add exit / withdrawable epoch to "validator info"

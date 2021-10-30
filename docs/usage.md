@@ -527,6 +527,16 @@ $ ethdo validator keycheck --withdrawal-credentials=0x007e28dcf9029e8d92ca4b5d01
 Withdrawal credentials confirmed at path m/12381/3600/10/0
 ```
 
+#### `expectation`
+
+`ethdo validator expectation` calculates the times between expected actions.
+
+```sh
+$ ethdo validator expectation
+Expected time between block proposals: 4 weeks 6 days
+Expected time between sync committees: 1 year 27 weeks
+```
+
 ### `attester` commands
 
 Attester commands focus on Ethereum 2 validators' actions as attesters.

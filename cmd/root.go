@@ -100,6 +100,8 @@ func persistentPreRunE(cmd *cobra.Command, args []string) error {
 		validatorInfoBindings()
 	case "validator/keycheck":
 		validatorKeycheckBindings()
+	case "validator/expectation":
+		validatorExpectationBindings()
 	case "wallet/create":
 		walletCreateBindings()
 	case "wallet/import":

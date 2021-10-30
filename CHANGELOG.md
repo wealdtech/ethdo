@@ -1,3 +1,6 @@
+development:
+  - add --period to "synccommittee members", can be "current", "next"
+
 1.14.0:
   - add "chain verify signedcontributionandproof"
   - show both block and body root in "block info"

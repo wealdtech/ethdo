@@ -16,8 +16,10 @@ package members
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	eth2client "github.com/attestantio/go-eth2-client"
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 )
 
@@ -26,11 +28,12 @@ func process(ctx context.Context, data *dataIn) (*dataOut, error) {
 		return nil, errors.New("no data")
 	}
 
-	if data.epoch < data.chainTime.AltairInitialEpoch() {
-		return nil, errors.New("not an Altair epoch")
+	epoch, err := calculateEpoch(ctx, data)
+	if err != nil {
+		return nil, err
 	}
 
-	syncCommittee, err := data.eth2Client.(eth2client.SyncCommitteesProvider).SyncCommittee(ctx, fmt.Sprintf("%d", data.chainTime.FirstSlotOfEpoch(data.epoch)))
+	syncCommittee, err := data.eth2Client.(eth2client.SyncCommitteesProvider).SyncCommittee(ctx, fmt.Sprintf("%d", data.chainTime.FirstSlotOfEpoch(epoch)))
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to obtain sync committee information")
 	}
@@ -47,4 +50,28 @@ func process(ctx context.Context, data *dataIn) (*dataOut, error) {
 	}
 
 	return results, nil
+}
+
+func calculateEpoch(ctx context.Context, data *dataIn) (phase0.Epoch, error) {
+	var epoch phase0.Epoch
+	if data.epoch != -1 {
+		epoch = phase0.Epoch(data.epoch)
+	} else {
+		switch strings.ToLower(data.period) {
+		case "", "current":
+			epoch = data.chainTime.CurrentEpoch()
+		case "next":
+			period := data.chainTime.SlotToSyncCommitteePeriod(data.chainTime.CurrentSlot())
+			nextPeriod := period + 1
+			epoch = data.chainTime.FirstEpochOfSyncPeriod(nextPeriod)
+		default:
+			return 0, fmt.Errorf("period %s not known", data.period)
+		}
+	}
+
+	if data.debug {
+		fmt.Printf("epoch is %d\n", epoch)
+	}
+
+	return epoch, nil
 }

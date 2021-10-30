@@ -28,7 +28,9 @@ var synccommitteeMembersCmd = &cobra.Command{
 
     ethdo synccommittee members --epoch=12345
 
-In quiet mode this will return 0 if the synccommittee members are found, otherwise 1.`,
+In quiet mode this will return 0 if the synccommittee members are found, otherwise 1.
+
+epoch can be a specific epoch.  period can be 'current' for the current sync period or 'next' for the next sync period`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		res, err := synccommitteemembers.Run(cmd)
 		if err != nil {
@@ -48,10 +50,14 @@ func init() {
 	synccommitteeCmd.AddCommand(synccommitteeMembersCmd)
 	synccommitteeFlags(synccommitteeMembersCmd)
 	synccommitteeMembersCmd.Flags().Int64("epoch", -1, "the epoch for which to fetch sync committees")
+	synccommitteeMembersCmd.Flags().String("period", "", "the sync committee period for which to fetch sync committees ('current', 'next')")
 }
 
 func synccommitteeMembersBindings() {
 	if err := viper.BindPFlag("epoch", synccommitteeMembersCmd.Flags().Lookup("epoch")); err != nil {
+		panic(err)
+	}
+	if err := viper.BindPFlag("period", synccommitteeMembersCmd.Flags().Lookup("period")); err != nil {
 		panic(err)
 	}
 }

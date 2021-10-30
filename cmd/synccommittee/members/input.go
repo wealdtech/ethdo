@@ -18,7 +18,6 @@ import (
 	"time"
 
 	eth2client "github.com/attestantio/go-eth2-client"
-	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
 	"github.com/wealdtech/ethdo/services/chaintime"
@@ -35,7 +34,8 @@ type dataIn struct {
 	// Operation.
 	eth2Client eth2client.Service
 	chainTime  chaintime.Service
-	epoch      spec.Epoch
+	epoch      int64
+	period     string
 }
 
 func input(ctx context.Context) (*dataIn, error) {
@@ -67,12 +67,8 @@ func input(ctx context.Context) (*dataIn, error) {
 	}
 
 	// Epoch
-	epoch := viper.GetInt64("epoch")
-	if epoch == -1 {
-		data.epoch = data.chainTime.CurrentEpoch()
-	} else {
-		data.epoch = spec.Epoch(epoch)
-	}
+	data.epoch = viper.GetInt64("epoch")
+	data.period = viper.GetString("period")
 
 	return data, nil
 }

@@ -45,7 +45,11 @@ var validatorExpectationCmd = &cobra.Command{
 func init() {
 	validatorCmd.AddCommand(validatorExpectationCmd)
 	validatorFlags(validatorExpectationCmd)
+	validatorExpectationCmd.Flags().Int64("validators", 1, "Number of validators")
 }
 
 func validatorExpectationBindings() {
+	if err := viper.BindPFlag("validators", validatorExpectationCmd.Flags().Lookup("validators")); err != nil {
+		panic(err)
+	}
 }

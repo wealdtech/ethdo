@@ -33,6 +33,7 @@ type command struct {
 	allowInsecureConnections bool
 
 	// Input.
+	validators int64
 
 	// Data access.
 	eth2Client         eth2client.Service
@@ -62,6 +63,11 @@ func newCommand(ctx context.Context) (*command, error) {
 	}
 	c.connection = viper.GetString("connection")
 	c.allowInsecureConnections = viper.GetBool("allow-insecure-connections")
+
+	c.validators = viper.GetInt64("validators")
+	if c.validators < 1 {
+		return nil, errors.New("validators must be at least 1")
+	}
 
 	return c, nil
 }

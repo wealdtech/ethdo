@@ -59,7 +59,7 @@ func (c *command) calculateProposalChance(ctx context.Context) error {
 		return errors.New("SECONDS_PER_SLOT of incorrect type")
 	}
 
-	c.timeBetweenProposals = slotDuration * time.Duration(c.activeValidators)
+	c.timeBetweenProposals = slotDuration * time.Duration(c.activeValidators) / time.Duration(c.validators)
 
 	return nil
 }
@@ -114,7 +114,7 @@ func (c *command) calculateSyncCommitteeChance(ctx context.Context) error {
 		fmt.Printf("Sync committee periods between inclusion: %d\n", periodsBetweenSyncCommittees)
 	}
 
-	c.timeBetweenSyncCommittees = slotDuration * time.Duration(slotsPerEpoch*epochsPerPeriod) * time.Duration(periodsBetweenSyncCommittees)
+	c.timeBetweenSyncCommittees = slotDuration * time.Duration(slotsPerEpoch*epochsPerPeriod) * time.Duration(periodsBetweenSyncCommittees) / time.Duration(c.validators)
 
 	return nil
 }

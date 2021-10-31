@@ -36,6 +36,7 @@ func TestProcess(t *testing.T) {
 			name: "InvalidData",
 			vars: map[string]interface{}{
 				"timeout":    "5s",
+				"validators": "1",
 				"data":       "[[",
 				"connection": os.Getenv("ETHDO_TEST_CONNECTION"),
 			},

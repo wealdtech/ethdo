@@ -1,4 +1,4 @@
-development:
+1.15.0:
   - add --period to "synccommittee members", can be "current", "next"
   - add "validator expectation"
 

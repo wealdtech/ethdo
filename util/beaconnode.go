@@ -17,6 +17,7 @@ import (
 	"context"
 	"fmt"
 	"net/url"
+	"strings"
 	"time"
 
 	eth2client "github.com/attestantio/go-eth2-client"
@@ -39,7 +40,9 @@ func ConnectToBeaconNode(ctx context.Context, address string, timeout time.Durat
 		}
 		if connectionURL.Scheme == "http" &&
 			connectionURL.Host != "localhost" &&
-			connectionURL.Host != "127.0.0.1" {
+			!strings.HasPrefix(connectionURL.Host, "localhost:") &&
+			connectionURL.Host != "127.0.0.1" &&
+			!strings.HasPrefix(connectionURL.Host, "127.0.0.1:") {
 			fmt.Println("Connections to remote beacon nodes should be secure.  This warning can be silenced with --allow-insecure-connections")
 		}
 	}

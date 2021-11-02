@@ -32,6 +32,9 @@ func ConnectToBeaconNode(ctx context.Context, address string, timeout time.Durat
 		return nil, errors.New("no timeout specified")
 	}
 
+	if !strings.HasPrefix(address, "http") {
+		address = fmt.Sprintf("http://%s", address)
+	}
 	if !allowInsecure {
 		// Ensure the connection is either secure or local.
 		connectionURL, err := url.Parse(address)

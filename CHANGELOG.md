@@ -1,4 +1,5 @@
 dev:
+  - provide sync committee slots in "chain status"
   - clarify that --connection should be a URL
 
 1.15.0:

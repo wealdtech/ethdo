@@ -119,9 +119,11 @@ In quiet mode this will return 0 if the chain status can be obtained, otherwise 
 		if epoch >= chainTime.AltairInitialEpoch() {
 			period := chainTime.SlotToSyncCommitteePeriod(slot)
 			periodStartEpoch := chainTime.FirstEpochOfSyncPeriod(period)
+			periodStartSlot := chainTime.FirstSlotOfEpoch(periodStartEpoch)
 			nextPeriod := period + 1
 			nextPeriodStartEpoch := chainTime.FirstEpochOfSyncPeriod(nextPeriod)
 			periodEndEpoch := nextPeriodStartEpoch - 1
+			periodEndSlot := chainTime.FirstSlotOfEpoch(periodEndEpoch+1) - 1
 			nextPeriodTimestamp := chainTime.StartOfEpoch(nextPeriodStartEpoch)
 
 			res.WriteString("Sync committee period: ")
@@ -133,6 +135,12 @@ In quiet mode this will return 0 if the chain status can be obtained, otherwise 
 				res.WriteString(fmt.Sprintf("%d", periodStartEpoch))
 				res.WriteString("-")
 				res.WriteString(fmt.Sprintf("%d", periodEndEpoch))
+				res.WriteString("\n")
+
+				res.WriteString("Sync committee slots: ")
+				res.WriteString(fmt.Sprintf("%d", periodStartSlot))
+				res.WriteString("-")
+				res.WriteString(fmt.Sprintf("%d", periodEndSlot))
 				res.WriteString("\n")
 
 				res.WriteString("Time until next sync committee period: ")

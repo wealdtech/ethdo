@@ -65,8 +65,8 @@ github.com/armon/go-radix v0.0.0-20180808171621-7fddfc383310/go.mod h1:ufUuZ+zHj
 github.com/attestantio/dirk v1.0.4 h1:e5WFS3RxTvtk3BgLjUACItCcjwer07QiYWXP0pjnbZM=
 github.com/attestantio/dirk v1.0.4/go.mod h1:w9QSIVDKMqD7tjK4e5wrTUCyCNlXaDT8U3SfJ+JOsx4=
 github.com/attestantio/go-eth2-client v0.7.2/go.mod h1:kEK9iAAOBoADO5wEkd84FEOzjT1zXgVWveQsqn+uBGg=
-github.com/attestantio/go-eth2-client v0.8.0 h1:5aUmXOW5vdYxjV0nJpN2qUJlfXbf78266ga2e667Lp4=
-github.com/attestantio/go-eth2-client v0.8.0/go.mod h1:kEK9iAAOBoADO5wEkd84FEOzjT1zXgVWveQsqn+uBGg=
+github.com/attestantio/go-eth2-client v0.8.1 h1:KR9FVsEr7t/Gr7bmfONI8itYGDrOgnDuyIYFsfwGGdA=
+github.com/attestantio/go-eth2-client v0.8.1/go.mod h1:kEK9iAAOBoADO5wEkd84FEOzjT1zXgVWveQsqn+uBGg=
 github.com/aws/aws-sdk-go v1.33.17/go.mod h1:5zCpMtNQVjRREroY7sYe8lOMRSxkhG6MZveU8YkpAk0=
 github.com/aws/aws-sdk-go v1.40.41 h1:v/Y4bB8+wHCONtKV+fuHTzLiqC08lk8e9HqYhRB9PBQ=
 github.com/aws/aws-sdk-go v1.40.41/go.mod h1:585smgzpB/KqRA+K3y/NL/oYRqQvpNJYvLm+LY1U59Q=

@@ -76,7 +76,7 @@ func outputBlockGeneral(ctx context.Context,
 	}
 	if len(graffiti) > 0 && hex.EncodeToString(graffiti) != "0000000000000000000000000000000000000000000000000000000000000000" {
 		if utf8.Valid(graffiti) {
-			res.WriteString(fmt.Sprintf("Graffiti: %s\n", string(graffiti)))
+			res.WriteString(fmt.Sprintf("Graffiti: %s\n", strings.TrimRight(string(graffiti), "\u0000")))
 		} else {
 			res.WriteString(fmt.Sprintf("Graffiti: %#x\n", graffiti))
 		}

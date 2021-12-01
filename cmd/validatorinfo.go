@@ -143,8 +143,9 @@ func validatorInfoAccount(ctx context.Context, eth2Client eth2client.Service) (e
 		if !isValidatorsProvider {
 			return nil, errors.New("client does not provide validator information")
 		}
+		index := spec.ValidatorIndex(viper.GetInt64("index"))
 		validators, err := validatorsProvider.Validators(ctx, "head", []spec.ValidatorIndex{
-			spec.ValidatorIndex(viper.GetInt64("index")),
+			index,
 		})
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to obtain validator information.")
@@ -153,7 +154,7 @@ func validatorInfoAccount(ctx context.Context, eth2Client eth2client.Service) (e
 			return nil, errors.New("unknown validator index")
 		}
 		pubKeyBytes := make([]byte, 48)
-		copy(pubKeyBytes, validators[0].Validator.PublicKey[:])
+		copy(pubKeyBytes, validators[index].Validator.PublicKey[:])
 		account, err = util.NewScratchAccount(nil, pubKeyBytes)
 		if err != nil {
 			return nil, errors.Wrap(err, fmt.Sprintf("invalid public key %s", viper.GetString("pubkey")))
@@ -225,6 +226,9 @@ func init() {
 
 func validatorInfoBindings() {
 	if err := viper.BindPFlag("pubkey", validatorInfoCmd.Flags().Lookup("pubkey")); err != nil {
+		panic(err)
+	}
+	if err := viper.BindPFlag("index", validatorInfoCmd.Flags().Lookup("index")); err != nil {
 		panic(err)
 	}
 }

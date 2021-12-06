@@ -1,4 +1,4 @@
-FROM golang:1.16-buster as builder
+FROM golang:1.17-bullseye as builder
 
 WORKDIR /app
 
@@ -10,7 +10,9 @@ COPY . .
 
 RUN go build
 
-FROM debian:buster-slim
+FROM debian:bullseye-slim
+
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt install -y ca-certificates && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 

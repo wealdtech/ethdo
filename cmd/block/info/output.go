@@ -111,13 +111,15 @@ func outputBlockAttestations(ctx context.Context, eth2Client eth2client.Service,
 				if !exists {
 					beaconCommittees, err := beaconCommitteesProvider.BeaconCommittees(ctx, fmt.Sprintf("%d", att.Data.Slot))
 					if err != nil {
-						return "", errors.Wrap(err, "failed to obtain beacon committees")
-					}
-					for _, beaconCommittee := range beaconCommittees {
-						if _, exists := validatorCommittees[beaconCommittee.Slot]; !exists {
-							validatorCommittees[beaconCommittee.Slot] = make(map[phase0.CommitteeIndex][]phase0.ValidatorIndex)
+						// Failed to get it; create an empty committee to stop us continually attempting to re-fetch.
+						validatorCommittees[att.Data.Slot] = make(map[phase0.CommitteeIndex][]phase0.ValidatorIndex)
+					} else {
+						for _, beaconCommittee := range beaconCommittees {
+							if _, exists := validatorCommittees[beaconCommittee.Slot]; !exists {
+								validatorCommittees[beaconCommittee.Slot] = make(map[phase0.CommitteeIndex][]phase0.ValidatorIndex)
+							}
+							validatorCommittees[beaconCommittee.Slot][beaconCommittee.Index] = beaconCommittee.Validators
 						}
-						validatorCommittees[beaconCommittee.Slot][beaconCommittee.Index] = beaconCommittee.Validators
 					}
 					committees = validatorCommittees[att.Data.Slot]
 				}
@@ -125,7 +127,9 @@ func outputBlockAttestations(ctx context.Context, eth2Client eth2client.Service,
 				res.WriteString(fmt.Sprintf("    Committee index: %d\n", att.Data.Index))
 				res.WriteString(fmt.Sprintf("    Attesters: %d/%d\n", att.AggregationBits.Count(), att.AggregationBits.Len()))
 				res.WriteString(fmt.Sprintf("    Aggregation bits: %s\n", bitlistToString(att.AggregationBits)))
-				res.WriteString(fmt.Sprintf("    Attesting indices: %s\n", attestingIndices(att.AggregationBits, committees[att.Data.Index])))
+				if _, exists := committees[att.Data.Index]; exists {
+					res.WriteString(fmt.Sprintf("    Attesting indices: %s\n", attestingIndices(att.AggregationBits, committees[att.Data.Index])))
+				}
 				res.WriteString(fmt.Sprintf("    Slot: %d\n", att.Data.Slot))
 				res.WriteString(fmt.Sprintf("    Beacon block root: %#x\n", att.Data.BeaconBlockRoot))
 				res.WriteString(fmt.Sprintf("    Source epoch: %d\n", att.Data.Source.Epoch))

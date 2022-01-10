@@ -64,7 +64,20 @@ func persistentPreRunE(cmd *cobra.Command, args []string) error {
 	quiet = viper.GetBool("quiet")
 	verbose = viper.GetBool("verbose")
 	debug = viper.GetBool("debug")
-	// Command-specific bindings.
+
+	includeCommandBindings(cmd)
+
+	if quiet && verbose {
+		fmt.Println("Cannot supply both quiet and verbose flags")
+	}
+	if quiet && debug {
+		fmt.Println("Cannot supply both quiet and debug flags")
+	}
+
+	return util.SetupStore()
+}
+
+func includeCommandBindings(cmd *cobra.Command) {
 	switch commandPath(cmd) {
 	case "account/create":
 		accountCreateBindings()
@@ -111,15 +124,6 @@ func persistentPreRunE(cmd *cobra.Command, args []string) error {
 	case "wallet/sharedimport":
 		walletSharedImportBindings()
 	}
-
-	if quiet && verbose {
-		fmt.Println("Cannot supply both quiet and verbose flags")
-	}
-	if quiet && debug {
-		fmt.Println("Cannot supply both quiet and debug flags")
-	}
-
-	return util.SetupStore()
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.

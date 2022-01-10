@@ -44,7 +44,29 @@ func TestOutput(t *testing.T) {
 				attestationIndex: 456,
 				inclusionDelay:   7,
 			},
-			res: "Attestation included in block 123, attestation 456 (inclusion delay 7)",
+			res: `Attestation included in block 123, index 456`,
+		},
+		{
+			name: "Verbose",
+			dataOut: &dataOut{
+				verbose:          true,
+				found:            true,
+				slot:             123,
+				attestationIndex: 456,
+				inclusionDelay:   7,
+				headCorrect:      true,
+				headTimely:       false,
+				sourceTimely:     false,
+				targetCorrect:    true,
+				targetTimely:     true,
+			},
+			res: `Attestation included in block 123, index 456
+Inclusion delay: 7
+Head correct: ✓
+Head timely: ✕
+Source timely: ✕
+Target correct: ✓
+Target timely: ✓`,
 		},
 	}
 

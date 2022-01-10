@@ -28,12 +28,17 @@ type dataOut struct {
 	quiet   bool
 	verbose bool
 
-	epoch      spec.Epoch
-	epochStart time.Time
-	epochEnd   time.Time
-	slot       spec.Slot
-	slotStart  time.Time
-	slotEnd    time.Time
+	epoch                         spec.Epoch
+	epochStart                    time.Time
+	epochEnd                      time.Time
+	slot                          spec.Slot
+	slotStart                     time.Time
+	slotEnd                       time.Time
+	syncCommitteePeriod           uint64
+	syncCommitteePeriodStart      time.Time
+	syncCommitteePeriodEpochStart spec.Epoch
+	syncCommitteePeriodEnd        time.Time
+	syncCommitteePeriodEpochEnd   spec.Epoch
 }
 
 func output(ctx context.Context, data *dataOut) (string, error) {
@@ -60,7 +65,18 @@ func output(ctx context.Context, data *dataOut) (string, error) {
 	builder.WriteString(data.slotStart.Format("2006-01-02 15:04:05"))
 	builder.WriteString("\n  Slot end ")
 	builder.WriteString(data.slotEnd.Format("2006-01-02 15:04:05"))
-	builder.WriteString("\n")
+
+	builder.WriteString("\nSync committee period ")
+	builder.WriteString(fmt.Sprintf("%d", data.syncCommitteePeriod))
+	builder.WriteString("\n  Sync committee period start ")
+	builder.WriteString(data.syncCommitteePeriodStart.Format("2006-01-02 15:04:05"))
+	builder.WriteString(" (epoch ")
+	builder.WriteString(fmt.Sprintf("%d", data.syncCommitteePeriodEpochStart))
+	builder.WriteString(")\n  Sync committee period end ")
+	builder.WriteString(data.syncCommitteePeriodEnd.Format("2006-01-02 15:04:05"))
+	builder.WriteString(" (epoch ")
+	builder.WriteString(fmt.Sprintf("%d", data.syncCommitteePeriodEpochEnd))
+	builder.WriteString(")\n")
 
 	return builder.String(), nil
 }

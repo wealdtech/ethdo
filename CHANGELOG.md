@@ -1,3 +1,6 @@
+dev:
+  - add sync committee information to "chain time"
+
 1.15.1:
   - provide sync committee slots in "chain status"
   - clarify that --connection should be a URL

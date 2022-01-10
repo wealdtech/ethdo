@@ -49,6 +49,7 @@ func init() {
 	attesterFlags(attesterInclusionCmd)
 	attesterInclusionCmd.Flags().Int64("epoch", -1, "the last complete epoch")
 	attesterInclusionCmd.Flags().String("pubkey", "", "the public key of the attester")
+	attesterInclusionCmd.Flags().Int64("index", -1, "the index of the attester")
 }
 
 func attesterInclusionBindings() {
@@ -56,6 +57,9 @@ func attesterInclusionBindings() {
 		panic(err)
 	}
 	if err := viper.BindPFlag("pubkey", attesterInclusionCmd.Flags().Lookup("pubkey")); err != nil {
+		panic(err)
+	}
+	if err := viper.BindPFlag("index", attesterInclusionCmd.Flags().Lookup("index")); err != nil {
 		panic(err)
 	}
 }

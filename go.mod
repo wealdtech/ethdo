@@ -5,7 +5,7 @@ go 1.16
 require (
 	github.com/OneOfOne/xxhash v1.2.5 // indirect
 	github.com/attestantio/dirk v1.0.4
-	github.com/attestantio/go-eth2-client v0.8.1
+	github.com/attestantio/go-eth2-client v0.9.2
 	github.com/ferranbt/fastssz v0.0.0-20210905181407-59cf6761a7d5
 	github.com/gofrs/uuid v4.0.0+incompatible
 	github.com/google/uuid v1.3.0

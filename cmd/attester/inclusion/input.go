@@ -15,12 +15,14 @@ package attesterinclusion
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	eth2client "github.com/attestantio/go-eth2-client"
 	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
+	"github.com/wealdtech/ethdo/services/chaintime"
 	"github.com/wealdtech/ethdo/util"
 )
 
@@ -34,9 +36,11 @@ type dataIn struct {
 	slotsPerEpoch uint64
 	// Operation.
 	eth2Client eth2client.Service
+	chainTime  chaintime.Service
 	epoch      spec.Epoch
 	account    string
 	pubKey     string
+	index      string
 }
 
 func input(ctx context.Context) (*dataIn, error) {
@@ -50,12 +54,18 @@ func input(ctx context.Context) (*dataIn, error) {
 	data.verbose = viper.GetBool("verbose")
 	data.debug = viper.GetBool("debug")
 
-	// Account or pubkey.
-	if viper.GetString("account") == "" && viper.GetString("pubkey") == "" {
-		return nil, errors.New("account or pubkey is required")
-	}
+	// Account.
 	data.account = viper.GetString("account")
+
+	// PubKey.
 	data.pubKey = viper.GetString("pubkey")
+
+	// ID.
+	data.index = viper.GetString("index")
+
+	if viper.GetString("account") == "" && viper.GetString("index") == "" && viper.GetString("pubkey") == "" {
+		return nil, errors.New("account, index or pubkey is required")
+	}
 
 	// Ethereum 2 client.
 	var err error
@@ -84,6 +94,9 @@ func input(ctx context.Context) (*dataIn, error) {
 		}
 	}
 	data.epoch = spec.Epoch(epoch)
+	if data.debug {
+		fmt.Printf("Epoch is %d\n", data.epoch)
+	}
 
 	return data, nil
 }

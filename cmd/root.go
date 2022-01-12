@@ -101,6 +101,8 @@ func includeCommandBindings(cmd *cobra.Command) {
 		nodeEventsBindings()
 	case "slot/time":
 		slotTimeBindings()
+	case "synccommittee/inclusion":
+		synccommitteeInclusionBindings()
 	case "synccommittee/members":
 		synccommitteeMembersBindings()
 	case "validator/depositdata":

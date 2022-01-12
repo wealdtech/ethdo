@@ -1,6 +1,7 @@
-dev:
+1.16.0:
   - add sync committee information to "chain time"
   - add details of vote success to "attester inclusion --verbose"
+  - add "synccommittee inclusion"
 
 1.15.1:
   - provide sync committee slots in "chain status"

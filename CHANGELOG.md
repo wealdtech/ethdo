@@ -1,4 +1,4 @@
-1.16.0:
+1.17.0:
   - add sync committee information to "chain time"
   - add details of vote success to "attester inclusion --verbose"
   - add "synccommittee inclusion"

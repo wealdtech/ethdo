@@ -73,7 +73,7 @@ func TestInput(t *testing.T) {
 				"timeout": "5s",
 				"slot":    "1",
 			},
-			err: "failed to connect to Ethereum 2 beacon node: failed to connect to beacon node: problem with parameters: no address specified",
+			err: "failed to connect to beacon node: failed to connect to Ethereum 2 client with any known method",
 		},
 	}
 

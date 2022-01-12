@@ -15,10 +15,7 @@ package inclusion
 
 import (
 	"context"
-	"encoding/hex"
 	"fmt"
-	"strconv"
-	"strings"
 
 	eth2client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/spec"
@@ -27,7 +24,6 @@ import (
 	"github.com/pkg/errors"
 	standardchaintime "github.com/wealdtech/ethdo/services/chaintime/standard"
 	"github.com/wealdtech/ethdo/util"
-	e2wtypes "github.com/wealdtech/go-eth2-wallet-types/v2"
 )
 
 func (c *command) process(ctx context.Context) error {
@@ -38,7 +34,7 @@ func (c *command) process(ctx context.Context) error {
 
 	firstSlot, lastSlot := c.calculateSlots(ctx)
 
-	validatorIndex, err := c.validatorIndex(ctx)
+	validatorIndex, err := util.ValidatorIndex(ctx, c.eth2Client, c.account, c.pubKey, c.index)
 	if err != nil {
 		return err
 	}
@@ -112,57 +108,6 @@ func (c *command) setup(ctx context.Context) error {
 	}
 
 	return nil
-}
-
-// validatorIndex obtains the index of a validator.
-func (c *command) validatorIndex(ctx context.Context) (phase0.ValidatorIndex, error) {
-	switch {
-	case c.account != "":
-		ctx, cancel := context.WithTimeout(context.Background(), c.timeout)
-		defer cancel()
-		_, account, err := util.WalletAndAccountFromPath(ctx, c.account)
-		if err != nil {
-			return 0, errors.Wrap(err, "failed to obtain account")
-		}
-		return accountToIndex(ctx, account, c.eth2Client)
-	case c.pubKey != "":
-		pubKeyBytes, err := hex.DecodeString(strings.TrimPrefix(c.pubKey, "0x"))
-		if err != nil {
-			return 0, errors.Wrap(err, fmt.Sprintf("failed to decode public key %s", c.pubKey))
-		}
-		account, err := util.NewScratchAccount(nil, pubKeyBytes)
-		if err != nil {
-			return 0, errors.Wrap(err, fmt.Sprintf("invalid public key %s", c.pubKey))
-		}
-		return accountToIndex(ctx, account, c.eth2Client)
-	case c.index != "":
-		val, err := strconv.ParseUint(c.index, 10, 64)
-		if err != nil {
-			return 0, err
-		}
-		return phase0.ValidatorIndex(val), nil
-	default:
-		return 0, errors.New("no validator")
-	}
-}
-
-func accountToIndex(ctx context.Context, account e2wtypes.Account, eth2Client eth2client.Service) (phase0.ValidatorIndex, error) {
-	pubKey, err := util.BestPublicKey(account)
-	if err != nil {
-		return 0, err
-	}
-
-	pubKeys := make([]phase0.BLSPubKey, 1)
-	copy(pubKeys[0][:], pubKey.Marshal())
-	validators, err := eth2Client.(eth2client.ValidatorsProvider).ValidatorsByPubKey(ctx, "head", pubKeys)
-	if err != nil {
-		return 0, err
-	}
-
-	for index := range validators {
-		return index, nil
-	}
-	return 0, errors.New("validator not found")
 }
 
 func (c *command) calculateSlots(ctx context.Context) (phase0.Slot, phase0.Slot) {

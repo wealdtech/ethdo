@@ -66,7 +66,7 @@ func TestInput(t *testing.T) {
 			vars: map[string]interface{}{
 				"timeout": "5s",
 			},
-			err: "failed to connect to Ethereum 2 beacon node: failed to connect to beacon node: problem with parameters: no address specified",
+			err: "failed to connect to beacon node: failed to connect to Ethereum 2 client with any known method",
 		},
 		{
 			name: "ConnectionBad",
@@ -75,7 +75,7 @@ func TestInput(t *testing.T) {
 				"connection": "localhost:1",
 				"topics":     []string{"one", "two"},
 			},
-			err: "failed to connect to Ethereum 2 beacon node: failed to connect to beacon node: failed to connect to Ethereum 2 client with any known method",
+			err: "failed to connect to beacon node: failed to connect to Ethereum 2 client with any known method",
 		},
 		{
 			name: "TopicsNil",

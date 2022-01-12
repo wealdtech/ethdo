@@ -1,4 +1,4 @@
-// Copyright © 2019, 2020 Weald Technology Trading
+// Copyright © 2019 - 2022 Weald Technology Trading
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -16,10 +16,7 @@ package attesterinclusion
 import (
 	"bytes"
 	"context"
-	"encoding/hex"
 	"fmt"
-	"strconv"
-	"strings"
 
 	eth2client "github.com/attestantio/go-eth2-client"
 	api "github.com/attestantio/go-eth2-client/api/v1"
@@ -27,7 +24,6 @@ import (
 	"github.com/pkg/errors"
 	standardchaintime "github.com/wealdtech/ethdo/services/chaintime/standard"
 	"github.com/wealdtech/ethdo/util"
-	e2wtypes "github.com/wealdtech/go-eth2-wallet-types/v2"
 )
 
 func process(ctx context.Context, data *dataIn) (*dataOut, error) {
@@ -46,7 +42,7 @@ func process(ctx context.Context, data *dataIn) (*dataOut, error) {
 		return nil, errors.Wrap(err, "failed to set up chaintime service")
 	}
 
-	validatorIndex, err := validatorIndex(ctx, data.eth2Client, data)
+	validatorIndex, err := util.ValidatorIndex(ctx, data.eth2Client, data.account, data.pubKey, data.index)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to obtain validator index")
 	}
@@ -193,55 +189,4 @@ func duty(ctx context.Context, eth2Client eth2client.Service, validator *api.Val
 	}
 
 	return duties[0], nil
-}
-
-// validatorIndex obtains the index of a validator
-func validatorIndex(ctx context.Context, eth2Client eth2client.Service, data *dataIn) (phase0.ValidatorIndex, error) {
-	switch {
-	case data.account != "":
-		ctx, cancel := context.WithTimeout(context.Background(), data.timeout)
-		defer cancel()
-		_, account, err := util.WalletAndAccountFromPath(ctx, data.account)
-		if err != nil {
-			return 0, errors.Wrap(err, "failed to obtain account")
-		}
-		return accountToIndex(ctx, account, eth2Client)
-	case data.pubKey != "":
-		pubKeyBytes, err := hex.DecodeString(strings.TrimPrefix(data.pubKey, "0x"))
-		if err != nil {
-			return 0, errors.Wrap(err, fmt.Sprintf("failed to decode public key %s", data.pubKey))
-		}
-		account, err := util.NewScratchAccount(nil, pubKeyBytes)
-		if err != nil {
-			return 0, errors.Wrap(err, fmt.Sprintf("invalid public key %s", data.pubKey))
-		}
-		return accountToIndex(ctx, account, eth2Client)
-	case data.index != "":
-		val, err := strconv.ParseUint(data.index, 10, 64)
-		if err != nil {
-			return 0, err
-		}
-		return phase0.ValidatorIndex(val), nil
-	default:
-		return 0, errors.New("no validator")
-	}
-}
-
-func accountToIndex(ctx context.Context, account e2wtypes.Account, eth2Client eth2client.Service) (phase0.ValidatorIndex, error) {
-	pubKey, err := util.BestPublicKey(account)
-	if err != nil {
-		return 0, err
-	}
-
-	pubKeys := make([]phase0.BLSPubKey, 1)
-	copy(pubKeys[0][:], pubKey.Marshal())
-	validators, err := eth2Client.(eth2client.ValidatorsProvider).ValidatorsByPubKey(ctx, "head", pubKeys)
-	if err != nil {
-		return 0, err
-	}
-
-	for index := range validators {
-		return index, nil
-	}
-	return 0, errors.New("validator not found")
 }

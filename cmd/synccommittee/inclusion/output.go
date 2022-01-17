@@ -26,17 +26,18 @@ func (c *command) output(ctx context.Context) (string, error) {
 
 	builder := strings.Builder{}
 
-	builder.WriteString("Epoch: ")
-	builder.WriteString(fmt.Sprintf("%d", c.epoch))
+	if c.verbose {
+		builder.WriteString("Epoch: ")
+		builder.WriteString(fmt.Sprintf("%d\n", c.epoch))
+	}
 
 	if !c.inCommittee {
-		builder.WriteString("\nValidator not in sync committee\n")
+		builder.WriteString("Validator not in sync committee")
 	} else {
 		if c.verbose {
 			builder.WriteString("Validator sync committee index ")
-			builder.WriteString(fmt.Sprintf("%d", c.committeeIndex))
+			builder.WriteString(fmt.Sprintf("%d\n", c.committeeIndex))
 		}
-		builder.WriteString("\n")
 
 		noBlock := 0
 		included := 0

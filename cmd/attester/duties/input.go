@@ -66,14 +66,16 @@ func input(ctx context.Context) (*dataIn, error) {
 		return nil, err
 	}
 
+	// Required data.
+	config, err := data.eth2Client.(eth2client.SpecProvider).Spec(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to obtain beacon chain configuration")
+	}
+	data.slotsPerEpoch = config["SLOTS_PER_EPOCH"].(uint64)
+
 	// Epoch
 	epoch := viper.GetInt64("epoch")
 	if epoch == -1 {
-		config, err := data.eth2Client.(eth2client.SpecProvider).Spec(ctx)
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to obtain beacon chain configuration")
-		}
-		data.slotsPerEpoch = config["SLOTS_PER_EPOCH"].(uint64)
 		slotDuration := config["SECONDS_PER_SLOT"].(time.Duration)
 		genesis, err := data.eth2Client.(eth2client.GenesisProvider).Genesis(ctx)
 		if err != nil {

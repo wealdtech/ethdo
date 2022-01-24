@@ -94,26 +94,36 @@ func headEventHandler(event *api.Event) {
 	blockID := fmt.Sprintf("%#x", event.Data.(*api.HeadEvent).Block[:])
 	signedBlock, err := results.eth2Client.(eth2client.SignedBeaconBlockProvider).SignedBeaconBlock(context.Background(), blockID)
 	if err != nil {
-		fmt.Printf("Failed to obtain block: %v\n", err)
+		if !jsonOutput {
+			fmt.Printf("Failed to obtain block: %v\n", err)
+		}
 		return
 	}
 	if signedBlock == nil {
-		fmt.Println("Empty beacon block")
+		if !jsonOutput {
+			fmt.Println("Empty beacon block")
+		}
 		return
 	}
 	switch signedBlock.Version {
 	case spec.DataVersionPhase0:
 		if err := outputPhase0Block(context.Background(), jsonOutput, signedBlock.Phase0); err != nil {
-			fmt.Printf("Failed to output block: %v\n", err)
+			if !jsonOutput {
+				fmt.Printf("Failed to output block: %v\n", err)
+			}
 			return
 		}
 	case spec.DataVersionAltair:
 		if err := outputAltairBlock(context.Background(), jsonOutput, signedBlock.Altair); err != nil {
-			fmt.Printf("Failed to output block: %v\n", err)
+			if !jsonOutput {
+				fmt.Printf("Failed to output block: %v\n", err)
+			}
 			return
 		}
 	default:
-		fmt.Printf("Unknown block version: %v\n", signedBlock.Version)
+		if !jsonOutput {
+			fmt.Printf("Unknown block version: %v\n", signedBlock.Version)
+		}
 		return
 	}
 }

@@ -1,3 +1,6 @@
+dev:
+  - add "-ssz" option to "block info"
+
 1.17.0:
   - add sync committee information to "chain time"
   - add details of vote success to "attester inclusion --verbose"

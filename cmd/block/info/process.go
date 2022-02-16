@@ -28,6 +28,7 @@ import (
 )
 
 var jsonOutput bool
+var sszOutput bool
 var results *dataOut
 
 func process(ctx context.Context, data *dataIn) (*dataOut, error) {
@@ -66,7 +67,7 @@ func process(ctx context.Context, data *dataIn) (*dataOut, error) {
 			return nil, errors.Wrap(err, "failed to output block")
 		}
 	case spec.DataVersionAltair:
-		if err := outputAltairBlock(ctx, data.jsonOutput, signedBlock.Altair); err != nil {
+		if err := outputAltairBlock(ctx, data.jsonOutput, data.sszOutput, signedBlock.Altair); err != nil {
 			return nil, errors.Wrap(err, "failed to output block")
 		}
 	default:
@@ -75,6 +76,7 @@ func process(ctx context.Context, data *dataIn) (*dataOut, error) {
 
 	if data.stream {
 		jsonOutput = data.jsonOutput
+		sszOutput = data.sszOutput
 		err := data.eth2Client.(eth2client.EventsProvider).Events(ctx, []string{"head"}, headEventHandler)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to start block stream")
@@ -114,7 +116,7 @@ func headEventHandler(event *api.Event) {
 			return
 		}
 	case spec.DataVersionAltair:
-		if err := outputAltairBlock(context.Background(), jsonOutput, signedBlock.Altair); err != nil {
+		if err := outputAltairBlock(context.Background(), jsonOutput, sszOutput, signedBlock.Altair); err != nil {
 			if !jsonOutput {
 				fmt.Printf("Failed to output block: %v\n", err)
 			}
@@ -146,7 +148,7 @@ func outputPhase0Block(ctx context.Context, jsonOutput bool, signedBlock *phase0
 	return nil
 }
 
-func outputAltairBlock(ctx context.Context, jsonOutput bool, signedBlock *altair.SignedBeaconBlock) error {
+func outputAltairBlock(ctx context.Context, jsonOutput bool, sszOutput bool, signedBlock *altair.SignedBeaconBlock) error {
 	switch {
 	case jsonOutput:
 		data, err := json.Marshal(signedBlock)
@@ -154,6 +156,12 @@ func outputAltairBlock(ctx context.Context, jsonOutput bool, signedBlock *altair
 			return errors.Wrap(err, "failed to generate JSON")
 		}
 		fmt.Printf("%s\n", string(data))
+	case sszOutput:
+		data, err := signedBlock.MarshalSSZ()
+		if err != nil {
+			return errors.Wrap(err, "failed to generate SSZ")
+		}
+		fmt.Printf("%x\n", data)
 	default:
 		data, err := outputAltairBlockText(ctx, results, signedBlock)
 		if err != nil {

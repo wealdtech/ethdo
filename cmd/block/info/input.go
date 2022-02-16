@@ -32,6 +32,7 @@ type dataIn struct {
 	// Operation.
 	eth2Client eth2client.Service
 	jsonOutput bool
+	sszOutput  bool
 	// Chain information.
 	blockID string
 	stream  bool
@@ -48,6 +49,7 @@ func input(ctx context.Context) (*dataIn, error) {
 	data.verbose = viper.GetBool("verbose")
 	data.debug = viper.GetBool("debug")
 	data.jsonOutput = viper.GetBool("json")
+	data.sszOutput = viper.GetBool("ssz")
 
 	data.stream = viper.GetBool("stream")
 

@@ -1,5 +1,6 @@
 dev:
   - add "-ssz" option to "block info"
+  - add "block analyze" command
 
 1.17.0:
   - add sync committee information to "chain time"

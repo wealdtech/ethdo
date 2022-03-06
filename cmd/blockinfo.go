@@ -26,7 +26,7 @@ var blockInfoCmd = &cobra.Command{
 	Short: "Obtain information about a block",
 	Long: `Obtain information about a block.  For example:
 
-    ethdo block info --slot=12345
+    ethdo block info --blockid=12345
 
 In quiet mode this will return 0 if the block information is present and not skipped, otherwise 1.`,
 	RunE: func(cmd *cobra.Command, args []string) error {

@@ -266,13 +266,35 @@ $ ethdo version
 ### `block` commands
 
 Block commands focus on providing information about Ethereum 2 blocks.
+#### `analyze`
+`ethdo block info` obtains information about a block in Ethereum 2.  Options include:
+  - `blockid`: the ID (slot, root, 'head') of the block to obtain
+
+```sh
+$ ethdo block analyze --blockid=80
+Value for block 80: 488.531
+```
+
+Additional information is supplied when using `--verbose`
+
+```
+$ ethdo block analyze --blockid=80 --verbose
+Attestation 0: distance 1, 119/119/132 new/total/possible votes, score 0.844, value 100.406
+Attestation 1: distance 1, 116/116/131 new/total/possible votes, score 0.844, value 97.875
+Attestation 2: distance 1, 115/115/131 new/total/possible votes, score 0.844, value 97.031
+Attestation 3: distance 1, 114/114/132 new/total/possible votes, score 0.844, value 96.188
+Attestation 4: distance 1, 113/113/132 new/total/possible votes, score 0.844, value 95.344
+Attestation 5: distance 1, 2/22/132 new/total/possible votes, score 0.844, value 1.688
+Value for block 80: 488.531
+```
+
 #### `info`
 
 `ethdo block info` obtains information about a block in Ethereum 2.  Options include:
-  - `slot`: the slot at which to attempt to fetch the block
+  - `blockid`: the ID (slot, root, 'head') of the block to obtain
 
 ```sh
-$ ethdo block info --slot=80 
+$ ethdo block info --blockid=80
 Attestations: 1
 Attester slashings: 0
 Deposits: 0

@@ -89,6 +89,8 @@ func includeCommandBindings(cmd *cobra.Command) {
 		attesterDutiesBindings()
 	case "attester/inclusion":
 		attesterInclusionBindings()
+	case "block/analyze":
+		blockAnalyzeBindings()
 	case "block/info":
 		blockInfoBindings()
 	case "chain/time":

@@ -1,3 +1,6 @@
+1.18.1:
+  - do not show execution payload if empty
+
 1.18.0:
   - add "-ssz" option to "block info"
   - add "block analyze" command

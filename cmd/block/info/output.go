@@ -530,6 +530,9 @@ func outputBlockExecutionPayload(ctx context.Context,
 		return "", nil
 	}
 
+	if payload.BlockNumber == 0 {
+		return "", nil
+	}
 	res := strings.Builder{}
 	res.WriteString("Execution payload:\n")
 	res.WriteString("  Execution block number: ")

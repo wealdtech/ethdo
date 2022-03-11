@@ -18,6 +18,7 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
+	"math/big"
 	"sort"
 	"strings"
 	"time"
@@ -25,6 +26,7 @@ import (
 
 	eth2client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/spec/altair"
+	"github.com/attestantio/go-eth2-client/spec/bellatrix"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 	"github.com/prysmaticlabs/go-bitfield"
@@ -267,6 +269,96 @@ func outputBlockSyncAggregate(ctx context.Context, eth2Client eth2client.Service
 	return res.String(), nil
 }
 
+func outputBellatrixBlockText(ctx context.Context, data *dataOut, signedBlock *bellatrix.SignedBeaconBlock) (string, error) {
+	if signedBlock == nil {
+		return "", errors.New("no block supplied")
+	}
+
+	body := signedBlock.Message.Body
+
+	res := strings.Builder{}
+
+	// General info.
+	blockRoot, err := signedBlock.Message.HashTreeRoot()
+	if err != nil {
+		return "", errors.Wrap(err, "failed to obtain block root")
+	}
+	bodyRoot, err := signedBlock.Message.Body.HashTreeRoot()
+	if err != nil {
+		return "", errors.Wrap(err, "failed to generate body root")
+	}
+
+	tmp, err := outputBlockGeneral(ctx,
+		data.verbose,
+		signedBlock.Message.Slot,
+		blockRoot,
+		bodyRoot,
+		signedBlock.Message.ParentRoot,
+		signedBlock.Message.StateRoot,
+		signedBlock.Message.Body.Graffiti,
+		data.genesisTime,
+		data.slotDuration,
+		data.slotsPerEpoch)
+	if err != nil {
+		return "", err
+	}
+	res.WriteString(tmp)
+
+	// Eth1 data.
+	if data.verbose {
+		tmp, err := outputBlockETH1Data(ctx, body.ETH1Data)
+		if err != nil {
+			return "", err
+		}
+		res.WriteString(tmp)
+	}
+
+	// Sync aggregate.
+	tmp, err = outputBlockSyncAggregate(ctx, data.eth2Client, data.verbose, signedBlock.Message.Body.SyncAggregate, phase0.Epoch(uint64(signedBlock.Message.Slot)/data.slotsPerEpoch))
+	if err != nil {
+		return "", err
+	}
+	res.WriteString(tmp)
+
+	// Attestations.
+	tmp, err = outputBlockAttestations(ctx, data.eth2Client, data.verbose, signedBlock.Message.Body.Attestations)
+	if err != nil {
+		return "", err
+	}
+	res.WriteString(tmp)
+
+	// Attester slashings.
+	tmp, err = outputBlockAttesterSlashings(ctx, data.eth2Client, data.verbose, signedBlock.Message.Body.AttesterSlashings)
+	if err != nil {
+		return "", err
+	}
+	res.WriteString(tmp)
+
+	res.WriteString(fmt.Sprintf("Proposer slashings: %d\n", len(body.ProposerSlashings)))
+	// Add verbose proposer slashings.
+
+	tmp, err = outputBlockDeposits(ctx, data.verbose, signedBlock.Message.Body.Deposits)
+	if err != nil {
+		return "", err
+	}
+	res.WriteString(tmp)
+
+	// Voluntary exits.
+	tmp, err = outputBlockVoluntaryExits(ctx, data.eth2Client, data.verbose, signedBlock.Message.Body.VoluntaryExits)
+	if err != nil {
+		return "", err
+	}
+	res.WriteString(tmp)
+
+	tmp, err = outputBlockExecutionPayload(ctx, data.verbose, signedBlock.Message.Body.ExecutionPayload)
+	if err != nil {
+		return "", err
+	}
+	res.WriteString(tmp)
+
+	return res.String(), nil
+}
+
 func outputAltairBlockText(ctx context.Context, data *dataOut, signedBlock *altair.SignedBeaconBlock) (string, error) {
 	if signedBlock == nil {
 		return "", errors.New("no block supplied")
@@ -423,6 +515,56 @@ func outputPhase0BlockText(ctx context.Context, data *dataOut, signedBlock *phas
 		return "", err
 	}
 	res.WriteString(tmp)
+
+	return res.String(), nil
+}
+
+func outputBlockExecutionPayload(ctx context.Context,
+	verbose bool,
+	payload *bellatrix.ExecutionPayload,
+) (
+	string,
+	error,
+) {
+	if payload == nil {
+		return "", nil
+	}
+
+	res := strings.Builder{}
+	res.WriteString("Execution payload:\n")
+	res.WriteString("  Execution block number: ")
+	res.WriteString(fmt.Sprintf("%d\n", payload.BlockNumber))
+	if verbose {
+		baseFeePerGasBEBytes := make([]byte, len(payload.BaseFeePerGas))
+		for i := 0; i < 32; i++ {
+			baseFeePerGasBEBytes[i] = payload.BaseFeePerGas[32-1-i]
+		}
+		baseFeePerGas := new(big.Int).SetBytes(baseFeePerGasBEBytes)
+		res.WriteString("  Base fee per gas: ")
+		res.WriteString(string2eth.WeiToString(baseFeePerGas, true))
+		res.WriteString("\n  Block hash: ")
+		res.WriteString(fmt.Sprintf("%#x\n", payload.BlockHash))
+		res.WriteString("  Parent hash: ")
+		res.WriteString(fmt.Sprintf("%#x\n", payload.ParentHash))
+		res.WriteString("  Fee recipient: ")
+		res.WriteString(fmt.Sprintf("%#x\n", payload.FeeRecipient))
+		res.WriteString("  Gas limit: ")
+		res.WriteString(fmt.Sprintf("%d\n", payload.GasLimit))
+		res.WriteString("  Gas used: ")
+		res.WriteString(fmt.Sprintf("%d\n", payload.GasUsed))
+		res.WriteString("  Timestamp: ")
+		res.WriteString(fmt.Sprintf("%s (%d)\n", time.Unix(int64(payload.Timestamp), 0).String(), payload.Timestamp))
+		res.WriteString("  Prev RANDAO: ")
+		res.WriteString(fmt.Sprintf("%#x\n", payload.PrevRandao))
+		res.WriteString("  Receipts root: ")
+		res.WriteString(fmt.Sprintf("%#x\n", payload.ReceiptsRoot))
+		res.WriteString("  State root: ")
+		res.WriteString(fmt.Sprintf("%#x\n", payload.StateRoot))
+		res.WriteString("  Extra data: ")
+		res.WriteString(fmt.Sprintf("%#x\n", payload.ExtraData))
+		res.WriteString("  Logs bloom: ")
+		res.WriteString(fmt.Sprintf("%#x\n", payload.LogsBloom))
+	}
 
 	return res.String(), nil
 }

@@ -23,6 +23,7 @@ import (
 	api "github.com/attestantio/go-eth2-client/api/v1"
 	"github.com/attestantio/go-eth2-client/spec"
 	"github.com/attestantio/go-eth2-client/spec/altair"
+	"github.com/attestantio/go-eth2-client/spec/bellatrix"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 )
@@ -68,6 +69,10 @@ func process(ctx context.Context, data *dataIn) (*dataOut, error) {
 		}
 	case spec.DataVersionAltair:
 		if err := outputAltairBlock(ctx, data.jsonOutput, data.sszOutput, signedBlock.Altair); err != nil {
+			return nil, errors.Wrap(err, "failed to output block")
+		}
+	case spec.DataVersionBellatrix:
+		if err := outputBellatrixBlock(ctx, data.jsonOutput, data.sszOutput, signedBlock.Bellatrix); err != nil {
 			return nil, errors.Wrap(err, "failed to output block")
 		}
 	default:
@@ -122,6 +127,13 @@ func headEventHandler(event *api.Event) {
 			}
 			return
 		}
+	case spec.DataVersionBellatrix:
+		if err := outputBellatrixBlock(context.Background(), jsonOutput, sszOutput, signedBlock.Bellatrix); err != nil {
+			if !jsonOutput {
+				fmt.Printf("Failed to output block: %v\n", err)
+			}
+			return
+		}
 	default:
 		if !jsonOutput {
 			fmt.Printf("Unknown block version: %v\n", signedBlock.Version)
@@ -164,6 +176,30 @@ func outputAltairBlock(ctx context.Context, jsonOutput bool, sszOutput bool, sig
 		fmt.Printf("%x\n", data)
 	default:
 		data, err := outputAltairBlockText(ctx, results, signedBlock)
+		if err != nil {
+			return errors.Wrap(err, "failed to generate text")
+		}
+		fmt.Printf("%s\n", data)
+	}
+	return nil
+}
+
+func outputBellatrixBlock(ctx context.Context, jsonOutput bool, sszOutput bool, signedBlock *bellatrix.SignedBeaconBlock) error {
+	switch {
+	case jsonOutput:
+		data, err := json.Marshal(signedBlock)
+		if err != nil {
+			return errors.Wrap(err, "failed to generate JSON")
+		}
+		fmt.Printf("%s\n", string(data))
+	case sszOutput:
+		data, err := signedBlock.MarshalSSZ()
+		if err != nil {
+			return errors.Wrap(err, "failed to generate SSZ")
+		}
+		fmt.Printf("%x\n", data)
+	default:
+		data, err := outputBellatrixBlockText(ctx, results, signedBlock)
 		if err != nil {
 			return errors.Wrap(err, "failed to generate text")
 		}

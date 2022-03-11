@@ -1,6 +1,7 @@
-dev:
+1.18.0:
   - add "-ssz" option to "block info"
   - add "block analyze" command
+  - support bellatrix
 
 1.17.0:
   - add sync committee information to "chain time"

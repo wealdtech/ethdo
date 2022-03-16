@@ -1,3 +1,6 @@
+1.18.2:
+  - tidy up output of "block info"
+
 1.18.1:
   - do not show execution payload if empty
 

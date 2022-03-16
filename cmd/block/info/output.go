@@ -77,8 +77,9 @@ func outputBlockGeneral(ctx context.Context,
 		res.WriteString(fmt.Sprintf("State root: %#x\n", stateRoot))
 	}
 	if len(graffiti) > 0 && hex.EncodeToString(graffiti) != "0000000000000000000000000000000000000000000000000000000000000000" {
+		graffiti = bytes.TrimRight(graffiti, "\u0000")
 		if utf8.Valid(graffiti) {
-			res.WriteString(fmt.Sprintf("Graffiti: %s\n", strings.TrimRight(string(graffiti), "\u0000")))
+			res.WriteString(fmt.Sprintf("Graffiti: %s\n", string(graffiti)))
 		} else {
 			res.WriteString(fmt.Sprintf("Graffiti: %#x\n", graffiti))
 		}
@@ -530,14 +531,19 @@ func outputBlockExecutionPayload(ctx context.Context,
 		return "", nil
 	}
 
+	// If the block number is 0 then we're before the merge.
 	if payload.BlockNumber == 0 {
 		return "", nil
 	}
+
 	res := strings.Builder{}
-	res.WriteString("Execution payload:\n")
-	res.WriteString("  Execution block number: ")
-	res.WriteString(fmt.Sprintf("%d\n", payload.BlockNumber))
-	if verbose {
+	if !verbose {
+		res.WriteString("Execution block number: ")
+		res.WriteString(fmt.Sprintf("%d\n", payload.BlockNumber))
+	} else {
+		res.WriteString("Execution payload:\n")
+		res.WriteString("  Execution block number: ")
+		res.WriteString(fmt.Sprintf("%d\n", payload.BlockNumber))
 		baseFeePerGasBEBytes := make([]byte, len(payload.BaseFeePerGas))
 		for i := 0; i < 32; i++ {
 			baseFeePerGasBEBytes[i] = payload.BaseFeePerGas[32-1-i]

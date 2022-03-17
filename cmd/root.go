@@ -97,6 +97,8 @@ func includeCommandBindings(cmd *cobra.Command) {
 		chainTimeBindings()
 	case "chain/verify/signedcontributionandproof":
 		chainVerifySignedContributionAndProofBindings(cmd)
+	case "epoch/summary":
+		epochSummaryBindings()
 	case "exit/verify":
 		exitVerifyBindings()
 	case "node/events":

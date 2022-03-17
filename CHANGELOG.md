@@ -1,3 +1,6 @@
+1.19.0:
+  - add "epoch summary"
+
 1.18.2:
   - tidy up output of "block info"
 

@@ -86,10 +86,7 @@ func processFromKeystore(ctx context.Context, data *dataIn) (*dataOut, error) {
 		return nil, errors.Wrap(err, "failed to import wallet")
 	}
 
-	var account e2wtypes.Account
-	for account = range wallet.Accounts(ctx) {
-		// Only one account.
-	}
+	account := <-wallet.Accounts(ctx)
 	privateKeyProvider, isPrivateKeyProvider := account.(e2wtypes.AccountPrivateKeyProvider)
 	if !isPrivateKeyProvider {
 		return nil, errors.New("account does not provide its private key")

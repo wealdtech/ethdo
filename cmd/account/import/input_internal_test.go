@@ -102,7 +102,7 @@ func TestInput(t *testing.T) {
 				"account":    "Test wallet/Test account",
 				"passphrase": "ce%NohGhah4ye5ra",
 			},
-			err: "key is required",
+			err: "key or keystore is required",
 		},
 		{
 			name: "KeyMalformed",
@@ -113,6 +113,26 @@ func TestInput(t *testing.T) {
 				"key":        "invalid",
 			},
 			err: "key is malformed: encoding/hex: invalid byte: U+0069 'i'",
+		},
+		{
+			name: "KeyandKeystore",
+			vars: map[string]interface{}{
+				"timeout":    "5s",
+				"account":    "Test wallet/Test account",
+				"passphrase": "ce%NohGhah4ye5ra",
+				"key":        "0x25295f0d1d592a90b333e26e85149708208e9f8e8bc18f6c77bd62f8ad7a6866",
+				"keystore":   "{}",
+			},
+			err: "only one of key and keystore is required",
+		},
+		{
+			name: "KeystoreNoKeystorePassphrase",
+			vars: map[string]interface{}{
+				"timeout":  "5s",
+				"account":  "Test wallet/Test account",
+				"keystore": "{}",
+			},
+			err: "must supply keystore passphrase with keystore-passphrase when supplying keystore",
 		},
 		{
 			name: "Good",

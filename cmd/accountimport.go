@@ -48,10 +48,18 @@ func init() {
 	accountCmd.AddCommand(accountImportCmd)
 	accountFlags(accountImportCmd)
 	accountImportCmd.Flags().String("key", "", "Private key of the account to import (0x...)")
+	accountImportCmd.Flags().String("keystore", "", "Keystore, or path to keystore ")
+	accountImportCmd.Flags().String("keystore-passphrase", "", "Passphrase of keystore")
 }
 
 func accountImportBindings() {
 	if err := viper.BindPFlag("key", accountImportCmd.Flags().Lookup("key")); err != nil {
+		panic(err)
+	}
+	if err := viper.BindPFlag("keystore", accountImportCmd.Flags().Lookup("keystore")); err != nil {
+		panic(err)
+	}
+	if err := viper.BindPFlag("keystore-passphrase", accountImportCmd.Flags().Lookup("keystore-passphrase")); err != nil {
 		panic(err)
 	}
 }

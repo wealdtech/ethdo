@@ -1,3 +1,6 @@
+1.19.1:
+  - add the ability to import keystores to ethdo wallets
+
 1.19.0:
   - add "epoch summary"
 

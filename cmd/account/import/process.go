@@ -1,4 +1,4 @@
-// Copyright © 2019, 2020 Weald Technology Trading
+// Copyright © 2019 -2022 Weald Technology Trading
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -15,9 +15,14 @@ package accountimport
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/pkg/errors"
 	"github.com/wealdtech/ethdo/util"
+	"github.com/wealdtech/go-ecodec"
+	keystorev4 "github.com/wealdtech/go-eth2-wallet-encryptor-keystorev4"
+	nd "github.com/wealdtech/go-eth2-wallet-nd/v2"
+	scratch "github.com/wealdtech/go-eth2-wallet-store-scratch"
 	e2wtypes "github.com/wealdtech/go-eth2-wallet-types/v2"
 )
 
@@ -43,6 +48,16 @@ func process(ctx context.Context, data *dataIn) (*dataOut, error) {
 		}()
 	}
 
+	if len(data.key) > 0 {
+		return processFromKey(ctx, data)
+	}
+	if len(data.keystore) > 0 {
+		return processFromKeystore(ctx, data)
+	}
+	return nil, errors.New("unsupported import mechanism")
+}
+
+func processFromKey(ctx context.Context, data *dataIn) (*dataOut, error) {
 	results := &dataOut{}
 
 	account, err := data.wallet.(e2wtypes.WalletAccountImporter).ImportAccount(ctx, data.accountName, data.key, []byte(data.passphrase))
@@ -52,4 +67,43 @@ func process(ctx context.Context, data *dataIn) (*dataOut, error) {
 	results.account = account
 
 	return results, nil
+}
+
+func processFromKeystore(ctx context.Context, data *dataIn) (*dataOut, error) {
+	// Need to import the keystore in to a temporary wallet to fetch the private key.
+	store := scratch.New()
+	encryptor := keystorev4.New()
+
+	// Need to add a couple of fields to the keystore to make it compliant.
+	keystoreData := fmt.Sprintf(`{"name":"Import","encryptor":"keystore",%s`, string(data.keystore[1:]))
+	walletData := fmt.Sprintf(`{"wallet":{"name":"ImportTest","type":"non-deterministic","uuid":"e1526407-1dc7-4f3f-9d05-ab696f40707c","version":1},"accounts":[%s]}`, keystoreData)
+	encryptedData, err := ecodec.Encrypt([]byte(walletData), data.keystorePassphrase)
+	if err != nil {
+		return nil, err
+	}
+	wallet, err := nd.Import(ctx, encryptedData, data.keystorePassphrase, store, encryptor)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to import wallet")
+	}
+
+	var account e2wtypes.Account
+	for account = range wallet.Accounts(ctx) {
+		// Only one account.
+	}
+	privateKeyProvider, isPrivateKeyProvider := account.(e2wtypes.AccountPrivateKeyProvider)
+	if !isPrivateKeyProvider {
+		return nil, errors.New("account does not provide its private key")
+	}
+	if locker, isLocker := account.(e2wtypes.AccountLocker); isLocker {
+		if err = locker.Unlock(ctx, data.keystorePassphrase); err != nil {
+			return nil, errors.Wrap(err, "failed to unlock account")
+		}
+	}
+	key, err := privateKeyProvider.PrivateKey(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to obtain private key")
+	}
+	data.key = key.Marshal()
+	// We have the key from the keystore; import it.
+	return processFromKey(ctx, data)
 }

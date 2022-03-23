@@ -1,4 +1,4 @@
-// Copyright © 2019, 2020 Weald Technology Trading
+// Copyright © 2019 - 2022 Weald Technology Trading.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -16,6 +16,7 @@ package accountimport
 import (
 	"context"
 	"encoding/hex"
+	"io/ioutil"
 	"strings"
 	"time"
 
@@ -27,12 +28,14 @@ import (
 )
 
 type dataIn struct {
-	timeout          time.Duration
-	wallet           e2wtypes.Wallet
-	key              []byte
-	accountName      string
-	passphrase       string
-	walletPassphrase string
+	timeout            time.Duration
+	wallet             e2wtypes.Wallet
+	key                []byte
+	accountName        string
+	passphrase         string
+	walletPassphrase   string
+	keystore           []byte
+	keystorePassphrase []byte
 }
 
 func input(ctx context.Context) (*dataIn, error) {
@@ -74,14 +77,55 @@ func input(ctx context.Context) (*dataIn, error) {
 	// Wallet passphrase.
 	data.walletPassphrase = util.GetWalletPassphrase()
 
-	// Key.
-	if viper.GetString("key") == "" {
-		return nil, errors.New("key is required")
+	if viper.GetString("key") == "" && viper.GetString("keystore") == "" {
+		return nil, errors.New("key or keystore is required")
 	}
-	data.key, err = hex.DecodeString(strings.TrimPrefix(viper.GetString("key"), "0x"))
-	if err != nil {
-		return nil, errors.Wrap(err, "key is malformed")
+	if viper.GetString("key") != "" && viper.GetString("keystore") != "" {
+		return nil, errors.New("only one of key and keystore is required")
+	}
+
+	if viper.GetString("key") != "" {
+		data.key, err = hex.DecodeString(strings.TrimPrefix(viper.GetString("key"), "0x"))
+		if err != nil {
+			return nil, errors.Wrap(err, "key is malformed")
+		}
+	}
+
+	if viper.GetString("keystore") != "" {
+		data.keystorePassphrase = []byte(viper.GetString("keystore-passphrase"))
+		if len(data.keystorePassphrase) == 0 {
+			return nil, errors.New("must supply keystore passphrase with keystore-passphrase when supplying keystore")
+		}
+		data.keystore, err = obtainKeystore(viper.GetString("keystore"))
+		if err != nil {
+			return nil, errors.Wrap(err, "invalid keystore")
+		}
 	}
 
 	return data, nil
+}
+
+// obtainKeystore obtains keystore from an input, could be JSON itself or a path to JSON.
+func obtainKeystore(input string) ([]byte, error) {
+	var err error
+	var data []byte
+	// Input could be JSON or a path to JSON
+	if strings.HasPrefix(input, "{") {
+		// Looks like JSON
+		data = []byte(input)
+	} else {
+		// Assume it's a path to JSON
+		data, err = ioutil.ReadFile(input)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to find deposit data file")
+		}
+	}
+	return data, nil
+	//	exitData := &util.ValidatorExitData{}
+	//	err = json.Unmarshal(data, exitData)
+	//	if err != nil {
+	//		return nil, errors.Wrap(err, "data is not valid JSON")
+	//	}
+
+	//	return exitData, nil
 }

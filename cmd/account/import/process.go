@@ -60,7 +60,11 @@ func process(ctx context.Context, data *dataIn) (*dataOut, error) {
 func processFromKey(ctx context.Context, data *dataIn) (*dataOut, error) {
 	results := &dataOut{}
 
-	account, err := data.wallet.(e2wtypes.WalletAccountImporter).ImportAccount(ctx, data.accountName, data.key, []byte(data.passphrase))
+	importer, isImporter := data.wallet.(e2wtypes.WalletAccountImporter)
+	if !isImporter {
+		return nil, fmt.Errorf("%s wallets do not support importing accounts", data.wallet.Type())
+	}
+	account, err := importer.ImportAccount(ctx, data.accountName, data.key, []byte(data.passphrase))
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to import account")
 	}

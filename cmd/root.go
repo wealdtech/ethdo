@@ -211,7 +211,7 @@ func init() {
 	if err := viper.BindPFlag("debug", RootCmd.PersistentFlags().Lookup("debug")); err != nil {
 		panic(err)
 	}
-	RootCmd.PersistentFlags().String("connection", "http://localhost:3500", "URL to an Ethereum 2 node's RET API endpoint")
+	RootCmd.PersistentFlags().String("connection", "", "URL to an Ethereum 2 node's RET API endpoint")
 	if err := viper.BindPFlag("connection", RootCmd.PersistentFlags().Lookup("connection")); err != nil {
 		panic(err)
 	}

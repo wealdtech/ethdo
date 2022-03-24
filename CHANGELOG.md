@@ -1,5 +1,6 @@
 1.19.1:
   - add the ability to import keystores to ethdo wallets
+  - use defaults to connect to beacon nodes if no explicit connection defined
 
 1.19.0:
   - add "epoch summary"

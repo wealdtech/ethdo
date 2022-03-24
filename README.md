@@ -11,6 +11,7 @@ A command-line tool for managing common tasks in Ethereum 2.
   - [Binaries](#binaries)
   - [Docker](#docker)
   - [Source](#source)
+- [Setting up](#setting-up)
 - [Usage](#usage)
 - [Maintainers](#maintainers)
 - [Contribute](#contribute)
@@ -61,13 +62,37 @@ docker run --network=host ethdo chain status
 
 Alternatively, if the beacon node is running in a separate docker container a shared network can be created with `docker network create eth2` and accessed by adding `--network=eth2` added to both the beacon node and `ethdo` containers.
 
+## Setting up
+
+`ethdo` needs a connection to a beacon node for many of its features.  `ethdo` can connect to any beacon node that fully supports the [standard REST API](https://ethereum.github.io/beacon-APIs/).  The following changes are required to beacon nodes to make this available.
+
+### Lighthouse
+Lighthouse disables the REST API by default.  To enable it, the beacon node must be started with the `--http` parameter.  If you want to access the REST API from a remote server then you should also look to change the `--http-address` and `--http-allow-origin` options as per the Lighthouse documentation.
+
+The default port for the REST API is 5052, which can be changed with the `--http-port` parameter.
+
+### Nimbus
+Nimbus disables the REST API by default.  To enable it, the beacon node must be started with the `--rest` parameter.  If you want to access the REST API from a remote server then you should also look to change the `--rest-address` and `--rest-allow-origin` options as per the Nimbus documentation.
+
+The default port for the REST API is 5052, which can be changed with the `--rest-port` parameter.
+
+### Prysm
+Prysm enables the REST API by default.  You will need to add the parameter `--grpc-max-msg-size 268435456` to be obtain to obtain large sets of information such as the list of current validators.  If you want to access the REST API from a remote server then you should also look to change the `--grpc-gateway-host` and `--grpc-gateway-corsdomain` options as per the Prysm documentation.
+
+The default port for the REST API is 3500, which can be changed with the `--grpc-gateway-port` parameter.
+
+### Teku
+Teku disables the REST API by default.  To enable it, the beacon node must be started with the `--rest-api-enabled` parameter.  If you want to access the REST API from a remote server then you should also look to change the `--rest-api-interface`, `--rest-api-host-allowlist` and `--rest-api-cors-origins` options as per the Teku documentation.
+
+The default port for the REST API is 5051, which can be changed with the `--rest-api-port` parameter.
+
 ## Usage
 
-ethdo contains a large number of features that are useful for day-to-day interactions with the Ethereum 2 blockchain.
+`ethdo` contains a large number of features that are useful for day-to-day interactions with the Ethereum 2 blockchain.
 
 ### Wallets and accounts
 
-ethdo uses the [go-eth2-wallet](https://github.com/wealdtech/go-eth2-wallet) system to provide unified access to different wallet types.  When on the filesystem the locations of the created wallets and accounts are:
+`ethdo` uses the [go-eth2-wallet](https://github.com/wealdtech/go-eth2-wallet) system to provide unified access to different wallet types.  When on the filesystem the locations of the created wallets and accounts are:
 
     - for Linux: $HOME/.config/ethereum2/wallets
     - for OSX: $HOME/Library/Application Support/ethereum2/wallets

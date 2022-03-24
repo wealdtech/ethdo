@@ -21,10 +21,17 @@ import (
 	"time"
 
 	eth2client "github.com/attestantio/go-eth2-client"
-	"github.com/attestantio/go-eth2-client/auto"
+	"github.com/attestantio/go-eth2-client/http"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 )
+
+// defaultBeaconNodeAddresses are default REST endpoint addresses for beacon nodes.
+var defaultBeaconNodeAddresses = []string{
+	"localhost:5052", // Lighthouse, Nimbus
+	"localhost:5051", // Teku
+	"localhost:3500", // Prysm
+}
 
 // ConnectToBeaconNode connects to a beacon node at the given address.
 func ConnectToBeaconNode(ctx context.Context, address string, timeout time.Duration, allowInsecure bool) (eth2client.Service, error) {
@@ -32,6 +39,23 @@ func ConnectToBeaconNode(ctx context.Context, address string, timeout time.Durat
 		return nil, errors.New("no timeout specified")
 	}
 
+	if address != "" {
+		// We have an explicit address; use it.
+		return connectToBeaconNode(ctx, address, timeout, allowInsecure)
+	}
+
+	// Try the defaults.
+	for _, address := range defaultBeaconNodeAddresses {
+		client, err := connectToBeaconNode(ctx, address, timeout, allowInsecure)
+		if err == nil {
+			return client, nil
+		}
+	}
+
+	return nil, errors.New("failed to connect to any beacon node")
+}
+
+func connectToBeaconNode(ctx context.Context, address string, timeout time.Duration, allowInsecure bool) (eth2client.Service, error) {
 	if !strings.HasPrefix(address, "http") {
 		address = fmt.Sprintf("http://%s", address)
 	}
@@ -49,10 +73,10 @@ func ConnectToBeaconNode(ctx context.Context, address string, timeout time.Durat
 			fmt.Println("Connections to remote beacon nodes should be secure.  This warning can be silenced with --allow-insecure-connections")
 		}
 	}
-	eth2Client, err := auto.New(ctx,
-		auto.WithLogLevel(zerolog.Disabled),
-		auto.WithAddress(address),
-		auto.WithTimeout(timeout),
+	eth2Client, err := http.New(ctx,
+		http.WithLogLevel(zerolog.Disabled),
+		http.WithAddress(address),
+		http.WithTimeout(timeout),
 	)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to connect to beacon node")

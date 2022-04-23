@@ -356,6 +356,17 @@ Seconds per slot:	12
 Slots per epoch:	32
 ```
 
+#### `queues`
+
+`ethdo chain queues` obtains the activation and exit queue lengths of an Ethereum chain from the node's point of view.  Options include:
+  - `epoch` show the queue length at a given epoch
+  - `json` provide JSON output
+
+```sh
+$ ethdo chain queues
+Activation queue: 14798
+```
+
 #### `status`
 
 `ethdo chain status` obtains the status of an Ethereum 2 chain from the node's point of view.  Options include:

@@ -148,7 +148,7 @@ func validatorInfoAccount(ctx context.Context, eth2Client eth2client.Service) (e
 			index,
 		})
 		if err != nil {
-			return nil, errors.Wrap(err, "failed to obtain validator information.")
+			return nil, errors.Wrap(err, "failed to obtain validator information")
 		}
 		if len(validators) == 0 {
 			return nil, errors.New("unknown validator index")

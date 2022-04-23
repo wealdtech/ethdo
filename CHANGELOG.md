@@ -1,3 +1,6 @@
+1.20.0:
+  - add "chain queues"
+
 1.19.1:
   - add the ability to import keystores to ethdo wallets
   - use defaults to connect to beacon nodes if no explicit connection defined

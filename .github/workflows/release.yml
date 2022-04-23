@@ -50,11 +50,11 @@ jobs:
 
     - name: Fetch xgo
       run: |
-       go install github.com/wealdtech/xgo@latest
+       go install github.com/crazy-max/xgo@v0.14.0
 
     - name: Cross-compile linux
       run: |
-        xgo -v -x -ldflags="-X github.com/wealdtech/ethdo/cmd.ReleaseVersion=${RELEASE_VERSION}" --targets="linux/amd64" github.com/wealdtech/ethdo
+        xgo -v -x -ldflags="-X github.com/wealdtech/ethdo/cmd.ReleaseVersion=${RELEASE_VERSION}" --targets="linux/amd64,linux/arm64" github.com/wealdtech/ethdo
 
     - name: Cross-compile windows
       run: |
@@ -72,11 +72,11 @@ jobs:
        tar zcf ethdo-${RELEASE_VERSION}-linux-amd64.tar.gz ethdo
        sha256sum ethdo-${RELEASE_VERSION}-linux-amd64.tar.gz >ethdo-${RELEASE_VERSION}-linux-amd64.sha256
 
-       # - name: Create linux ARM64 tgz file
-       #   run: |
-       #    mv ethdo-linux-arm64 ethdo
-       #    tar zcf ethdo-${RELEASE_VERSION}-linux-arm64.tar.gz ethdo
-       #    sha256sum ethdo-${RELEASE_VERSION}-linux-arm64.tar.gz >ethdo-${RELEASE_VERSION}-linux-arm64.sha256
+    - name: Create linux ARM64 tgz file
+      run: |
+       mv ethdo-linux-arm64 ethdo
+       tar zcf ethdo-${RELEASE_VERSION}-linux-arm64.tar.gz ethdo
+       sha256sum ethdo-${RELEASE_VERSION}-linux-arm64.tar.gz >ethdo-${RELEASE_VERSION}-linux-arm64.sha256
 
     - name: Create release
       id: create_release
@@ -133,24 +133,24 @@ jobs:
         asset_name: ethdo-${{ env.RELEASE_VERSION }}-linux-amd64.tar.gz
         asset_content_type: application/gzip
 
-          # - name: Upload linux ARM64 checksum file
-          #   id: upload-release-asset-linux-arm64-checksum
-          #   uses: actions/upload-release-asset@v1
-          #   env:
-          #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          #   with:
-          #     upload_url: ${{ steps.create_release.outputs.upload_url }}
-          #     asset_path: ./ethdo-${{ env.RELEASE_VERSION }}-linux-arm64.sha256
-          #     asset_name: ethdo-${{ env.RELEASE_VERSION }}-linux-arm64.sha256
-          #     asset_content_type: text/plain
+    - name: Upload linux ARM64 checksum file
+      id: upload-release-asset-linux-arm64-checksum
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./ethdo-${{ env.RELEASE_VERSION }}-linux-arm64.sha256
+        asset_name: ethdo-${{ env.RELEASE_VERSION }}-linux-arm64.sha256
+        asset_content_type: text/plain
 
-          # - name: Upload linux ARM64 tgz file
-          #   id: upload-release-asset-linux-arm64
-          #   uses: actions/upload-release-asset@v1
-          #   env:
-          #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          #   with:
-          #     upload_url: ${{ steps.create_release.outputs.upload_url }}
-          #     asset_path: ./ethdo-${{ env.RELEASE_VERSION }}-linux-arm64.tar.gz
-          #     asset_name: ethdo-${{ env.RELEASE_VERSION }}-linux-arm64.tar.gz
-          #     asset_content_type: application/gzip
+    - name: Upload linux ARM64 tgz file
+      id: upload-release-asset-linux-arm64
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./ethdo-${{ env.RELEASE_VERSION }}-linux-arm64.tar.gz
+        asset_name: ethdo-${{ env.RELEASE_VERSION }}-linux-arm64.tar.gz
+        asset_content_type: application/gzip

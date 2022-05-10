@@ -1,3 +1,6 @@
+1.21.0:
+  - add "validator credentials get"
+
 1.20.0:
   - add "chain queues"
 

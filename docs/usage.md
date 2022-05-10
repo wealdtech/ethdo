@@ -560,6 +560,17 @@ $ ethdo synccommittee members
 
 Validator commands focus on interaction with Ethereum 2 validators.
 
+#### `credentials get`
+
+`ethdo validator credentials get` provides information about the withdrawal credentials for the provided validator.  Options include:
+  - `account` the account for which to obtain the withdrawal credentials (in format "wallet/account")
+  - `pubkey` the public key of the validator for which to obtain the withdrawal credentials
+  - `index` the index of the validator for which to obtain the withdrawal credentials
+
+```sh
+$ ethdo validator credentials get --account=Validators/1
+```
+
 #### `depositdata`
 
 `ethdo validator depositdata` generates the data required to deposit one or more Ethereum 2 validators.  Options include:

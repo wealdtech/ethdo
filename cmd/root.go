@@ -111,6 +111,8 @@ func includeCommandBindings(cmd *cobra.Command) {
 		synccommitteeInclusionBindings()
 	case "synccommittee/members":
 		synccommitteeMembersBindings()
+	case "validator/credentials/get":
+		validatorCredentialsGetBindings()
 	case "validator/depositdata":
 		validatorDepositdataBindings()
 	case "validator/duties":

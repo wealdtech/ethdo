@@ -35,11 +35,11 @@ import (
 func TestInput(t *testing.T) {
 	require.NoError(t, e2types.InitBLS())
 
-	dir := os.TempDir()
-	datFile := filepath.Join(dir, "backup.dat")
-	err := ioutil.WriteFile(datFile, []byte("dummy"), 0600)
+	dir, err := os.MkdirTemp("", "")
 	require.NoError(t, err)
-	// defer os.RemoveAll(dir)
+	datFile := filepath.Join(dir, "backup.dat")
+	require.NoError(t, ioutil.WriteFile(datFile, []byte("dummy"), 0600))
+	defer os.RemoveAll(dir)
 
 	store := scratch.New()
 	require.NoError(t, e2wallet.UseStore(store))

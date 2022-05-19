@@ -37,10 +37,10 @@ func TestProcess(t *testing.T) {
 		"ed2166659f7b5412a169ec83627386bc6ff1a31e67735d405b2bf7cb122ad7ced35c87e42c8e8f7ba90b5899a94be506687a9c5b353af2a216018d9f1bf61745a5",
 	}
 
-	dir := os.TempDir()
-	datFile := filepath.Join(dir, "backup.dat")
-	err := ioutil.WriteFile(datFile, export, 0600)
+	dir, err := os.MkdirTemp("", "")
 	require.NoError(t, err)
+	datFile := filepath.Join(dir, "backup.dat")
+	require.NoError(t, ioutil.WriteFile(datFile, export, 0600))
 	defer os.RemoveAll(dir)
 
 	tests := []struct {

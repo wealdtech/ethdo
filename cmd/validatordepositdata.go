@@ -1,4 +1,4 @@
-// Copyright © 2019, 2020 Weald Technology Trading
+// Copyright © 2019 - 2022 Weald Technology Trading
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -55,7 +55,7 @@ func init() {
 	validatorDepositDataCmd.Flags().String("withdrawaladdress", "", "Ethereum 1 address of the account to which the validator funds will be withdrawn")
 	validatorDepositDataCmd.Flags().String("depositvalue", "", "Value of the amount to be deposited")
 	validatorDepositDataCmd.Flags().Bool("raw", false, "Print raw deposit data transaction data")
-	validatorDepositDataCmd.Flags().String("forkversion", "", "Use a hard-coded fork version (default is to fetch it from the node)")
+	validatorDepositDataCmd.Flags().String("forkversion", "", "Use a hard-coded fork version (default is to use mainnet value)")
 	validatorDepositDataCmd.Flags().Bool("launchpad", false, "Print launchpad-compatible JSON")
 }
 

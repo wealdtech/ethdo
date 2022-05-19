@@ -575,10 +575,11 @@ $ ethdo validator credentials get --account=Validators/1
 
 `ethdo validator depositdata` generates the data required to deposit one or more Ethereum 2 validators.  Options include:
   - `withdrawalaccount` specify the account to be used for the withdrawal credentials (if withdrawalpubkey is not supplied)
+  - `withdrawaladdress` specify the Ethereum execution address to be used for the withdrawal credentials (if withdrawalpubkey is not supplied)
   - `withdrawalpubkey` specify the public key to be used for the withdrawal credentials (if withdrawalaccount is not supplied)
   - `validatoraccount` specify the account to be used for the validator
   - `depositvalue` specify the amount of the deposit
-  - `forkversion` specify the fork version for the deposit signature; this should not be included unless the deposit is being generated offline.  Note that supplying an incorrect value could result in the loss of your deposit, so only supply this value if you are sure you know what you are doing
+  - `forkversion` specify the fork version for the deposit signature; this defaults to mainnet.  Note that supplying an incorrect value could result in the loss of your deposit, so only supply this value if you are sure you know what you are doing.  You can find the value for other chains by fetching the value supplied in "Genesis fork version" of the `ethdo chain info` command
   - `raw` generate raw hex output that can be supplied as the data to an Ethereum 1 deposit transaction
 
 #### `exit`

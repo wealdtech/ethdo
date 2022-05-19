@@ -1,3 +1,6 @@
+1.22.0:
+  - add "ropsten" to the list of supported networks
+
 1.21.0:
   - add "validator credentials get"
 

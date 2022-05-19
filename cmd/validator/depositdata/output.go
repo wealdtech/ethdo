@@ -1,4 +1,4 @@
-// Copyright © 2019, 2020 Weald Technology Trading
+// Copyright © 2019 - 2022 Weald Technology Trading.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -110,6 +110,7 @@ func validatorDepositDataOutputLaunchpad(datum *dataOut) (string, error) {
 		[4]byte{0x00, 0x00, 0x00, 0x00}: "mainnet",
 		[4]byte{0x00, 0x00, 0x20, 0x09}: "pyrmont",
 		[4]byte{0x00, 0x00, 0x10, 0x20}: "prater",
+		[4]byte{0x80, 0x00, 0x00, 0x69}: "ropsten",
 	}
 
 	if datum.validatorPubKey == nil {

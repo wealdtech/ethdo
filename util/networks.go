@@ -27,6 +27,7 @@ var networks = map[string]string{
 	"07b39f4fde4a38bace212b546dac87c58dfe3fdc": "Medalla",
 	"8c5fecdc472e27bc447696f431e425d02dd46a8c": "Pyrmont",
 	"ff50ed3d0ec03ac01d4c79aad74928bff48a7b2b": "Prater",
+	"6f22ffbc56eff051aecf839396dd1ed9ad6bba9d": "Ropsten",
 }
 
 // Network returns the name of the network., calculated from the deposit contract information.

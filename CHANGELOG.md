@@ -1,3 +1,6 @@
+dev:
+  - ensure that "attester inclusion" without validator returns appropriate error
+
 1.22.0:
   - add "ropsten" to the list of supported networks
 

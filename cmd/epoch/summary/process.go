@@ -16,8 +16,10 @@ package epochsummary
 import (
 	"context"
 	"fmt"
+	"sort"
 
 	eth2client "github.com/attestantio/go-eth2-client"
+	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
 	"github.com/attestantio/go-eth2-client/spec"
 	"github.com/attestantio/go-eth2-client/spec/altair"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
@@ -79,7 +81,97 @@ func (c *command) processProposerDuties(ctx context.Context) error {
 
 func (c *command) processAttesterDuties(ctx context.Context) error {
 	// Obtain all active validators for the given epoch.
-	// Do in future.
+	validators, err := c.validatorsProvider.Validators(ctx, fmt.Sprintf("%d", c.chainTime.FirstSlotOfEpoch(c.summary.Epoch)), nil)
+	if err != nil {
+		return errors.Wrap(err, "failed to obtain validators for epoch")
+	}
+	activeValidators := make(map[phase0.ValidatorIndex]*apiv1.Validator)
+	for _, validator := range validators {
+		if validator.Validator.ActivationEpoch <= c.summary.Epoch && validator.Validator.ExitEpoch > c.summary.Epoch {
+			activeValidators[validator.Index] = validator
+		}
+	}
+
+	// Obtain number of validators that voted for blocks in the epoch.
+	// These votes can be included anywhere from the second slot of
+	// the epoch to the first slot of the next-but-one epoch.
+	firstSlot := c.chainTime.FirstSlotOfEpoch(c.summary.Epoch) + 1
+	lastSlot := c.chainTime.FirstSlotOfEpoch(c.summary.Epoch + 2)
+	if lastSlot > c.chainTime.CurrentSlot() {
+		lastSlot = c.chainTime.CurrentSlot()
+	}
+
+	votes := make(map[phase0.ValidatorIndex]struct{})
+	allCommittees := make(map[phase0.Slot]map[phase0.CommitteeIndex][]phase0.ValidatorIndex)
+	participations := make(map[phase0.ValidatorIndex]*nonParticipatingValidator)
+
+	for slot := firstSlot; slot <= lastSlot; slot++ {
+		block, err := c.blocksProvider.SignedBeaconBlock(ctx, fmt.Sprintf("%d", slot))
+		if err != nil {
+			return errors.Wrap(err, fmt.Sprintf("failed to obtain block for slot %d", slot))
+		}
+		if block == nil {
+			// No block at this slot; that's fine.
+			continue
+		}
+		attestations, err := block.Attestations()
+		if err != nil {
+			return err
+		}
+		for _, attestation := range attestations {
+			if attestation.Data.Slot < c.chainTime.FirstSlotOfEpoch(c.summary.Epoch) || attestation.Data.Slot >= c.chainTime.FirstSlotOfEpoch(c.summary.Epoch+1) {
+				// Outside of this epoch's range.
+				continue
+			}
+			slotCommittees, exists := allCommittees[attestation.Data.Slot]
+			if !exists {
+				beaconCommittees, err := c.beaconCommitteesProvider.BeaconCommittees(ctx, fmt.Sprintf("%d", attestation.Data.Slot))
+				if err != nil {
+					return errors.Wrap(err, fmt.Sprintf("failed to obtain committees for slot %d", attestation.Data.Slot))
+				}
+				for _, beaconCommittee := range beaconCommittees {
+					if _, exists := allCommittees[beaconCommittee.Slot]; !exists {
+						allCommittees[beaconCommittee.Slot] = make(map[phase0.CommitteeIndex][]phase0.ValidatorIndex)
+					}
+					allCommittees[beaconCommittee.Slot][beaconCommittee.Index] = beaconCommittee.Validators
+					for _, index := range beaconCommittee.Validators {
+						participations[index] = &nonParticipatingValidator{
+							Validator: index,
+							Slot:      beaconCommittee.Slot,
+							Committee: beaconCommittee.Index,
+						}
+
+					}
+				}
+				slotCommittees = allCommittees[attestation.Data.Slot]
+			}
+			committee := slotCommittees[attestation.Data.Index]
+			for i := uint64(0); i < attestation.AggregationBits.Len(); i++ {
+				if attestation.AggregationBits.BitAt(i) {
+					votes[committee[int(i)]] = struct{}{}
+				}
+			}
+		}
+	}
+
+	c.summary.ActiveValidators = len(activeValidators)
+	c.summary.ParticipatingValidators = len(votes)
+	c.summary.NonParticipatingValidators = make([]*nonParticipatingValidator, 0, len(activeValidators)-len(votes))
+	for activeValidatorIndex := range activeValidators {
+		if _, exists := votes[activeValidatorIndex]; !exists {
+			c.summary.NonParticipatingValidators = append(c.summary.NonParticipatingValidators, participations[activeValidatorIndex])
+		}
+	}
+	sort.Slice(c.summary.NonParticipatingValidators, func(i int, j int) bool {
+		if c.summary.NonParticipatingValidators[i].Slot != c.summary.NonParticipatingValidators[j].Slot {
+			return c.summary.NonParticipatingValidators[i].Slot < c.summary.NonParticipatingValidators[j].Slot
+		}
+		if c.summary.NonParticipatingValidators[i].Committee != c.summary.NonParticipatingValidators[j].Committee {
+			return c.summary.NonParticipatingValidators[i].Committee < c.summary.NonParticipatingValidators[j].Committee
+		}
+		return c.summary.NonParticipatingValidators[i].Validator < c.summary.NonParticipatingValidators[j].Validator
+	})
+
 	return nil
 }
 
@@ -140,6 +232,16 @@ func (c *command) processSyncCommitteeDuties(ctx context.Context) error {
 		}
 	}
 
+	sort.Slice(c.summary.SyncCommittee, func(i int, j int) bool {
+		missedDiff := c.summary.SyncCommittee[i].Missed - c.summary.SyncCommittee[j].Missed
+		if missedDiff != 0 {
+			// Actually want to order by missed descending, so invert the expected condition.
+			return missedDiff > 0
+		}
+		// Then order by validator index.
+		return c.summary.SyncCommittee[i].Index < c.summary.SyncCommittee[j].Index
+	})
+
 	return nil
 }
 
@@ -173,6 +275,14 @@ func (c *command) setup(ctx context.Context) error {
 	c.syncCommitteesProvider, isProvider = c.eth2Client.(eth2client.SyncCommitteesProvider)
 	if !isProvider {
 		return errors.New("connection does not provide sync committee duties")
+	}
+	c.validatorsProvider, isProvider = c.eth2Client.(eth2client.ValidatorsProvider)
+	if !isProvider {
+		return errors.New("connection does not provide validators")
+	}
+	c.beaconCommitteesProvider, isProvider = c.eth2Client.(eth2client.BeaconCommitteesProvider)
+	if !isProvider {
+		return errors.New("connection does not provide beacon committees")
 	}
 
 	return nil

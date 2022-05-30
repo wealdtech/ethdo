@@ -40,22 +40,27 @@ type command struct {
 	jsonOutput bool
 
 	// Data access.
-	eth2Client             eth2client.Service
-	chainTime              chaintime.Service
-	proposerDutiesProvider eth2client.ProposerDutiesProvider
-	blocksProvider         eth2client.SignedBeaconBlockProvider
-	syncCommitteesProvider eth2client.SyncCommitteesProvider
+	eth2Client               eth2client.Service
+	chainTime                chaintime.Service
+	proposerDutiesProvider   eth2client.ProposerDutiesProvider
+	blocksProvider           eth2client.SignedBeaconBlockProvider
+	syncCommitteesProvider   eth2client.SyncCommitteesProvider
+	validatorsProvider       eth2client.ValidatorsProvider
+	beaconCommitteesProvider eth2client.BeaconCommitteesProvider
 
 	// Results.
 	summary *epochSummary
 }
 
 type epochSummary struct {
-	Epoch         phase0.Epoch          `json:"epoch"`
-	FirstSlot     phase0.Slot           `json:"first_slot"`
-	LastSlot      phase0.Slot           `json:"last_slot"`
-	Proposals     []*epochProposal      `json:"proposals"`
-	SyncCommittee []*epochSyncCommittee `json:"sync_committees"`
+	Epoch                      phase0.Epoch                 `json:"epoch"`
+	FirstSlot                  phase0.Slot                  `json:"first_slot"`
+	LastSlot                   phase0.Slot                  `json:"last_slot"`
+	Proposals                  []*epochProposal             `json:"proposals"`
+	SyncCommittee              []*epochSyncCommittee        `json:"sync_committees"`
+	ActiveValidators           int                          `json:"active_validators"`
+	ParticipatingValidators    int                          `json:"participating_validators"`
+	NonParticipatingValidators []*nonParticipatingValidator `json:"nonparticipating_validators"`
 }
 
 type epochProposal struct {
@@ -67,6 +72,12 @@ type epochProposal struct {
 type epochSyncCommittee struct {
 	Index  phase0.ValidatorIndex `json:"index"`
 	Missed int                   `json:"missed"`
+}
+
+type nonParticipatingValidator struct {
+	Validator phase0.ValidatorIndex `json:"validator_index"`
+	Slot      phase0.Slot           `json:"slot"`
+	Committee phase0.CommitteeIndex `json:"committee_index"`
 }
 
 func newCommand(ctx context.Context) (*command, error) {

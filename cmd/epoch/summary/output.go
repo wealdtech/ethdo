@@ -47,59 +47,55 @@ func (c *command) outputTxt(_ context.Context) (string, error) {
 	builder.WriteString(fmt.Sprintf("%d:\n", c.summary.Epoch))
 
 	proposedBlocks := 0
+	missedProposals := make([]string, 0, len(c.summary.Proposals))
+	for _, proposal := range c.summary.Proposals {
+		if !proposal.Block {
+			missedProposals = append(missedProposals, fmt.Sprintf("    Slot %d (validator %d)\n", proposal.Slot, proposal.Proposer))
+		} else {
+			proposedBlocks++
+		}
+	}
+	builder.WriteString(fmt.Sprintf("  Proposals: %d/%d (%0.2f%%)\n", proposedBlocks, len(missedProposals)+proposedBlocks, 100.0*float64(proposedBlocks)/float64(len(missedProposals)+proposedBlocks)))
 	if c.verbose {
 		for _, proposal := range c.summary.Proposals {
-			builder.WriteString("  Slot ")
-			builder.WriteString(fmt.Sprintf("%d (%d/%d):\n", proposal.Slot, uint64(proposal.Slot)%uint64(len(c.summary.Proposals)), len(c.summary.Proposals)))
-			builder.WriteString("    Proposer: ")
-			builder.WriteString(fmt.Sprintf("%d\n", proposal.Proposer))
-			builder.WriteString("    Proposed: ")
 			if proposal.Block {
-				proposedBlocks++
-				builder.WriteString("✓\n")
-			} else {
-				builder.WriteString("✕\n")
+				continue
 			}
-		}
-	} else {
-		missedProposals := make([]string, 0, len(c.summary.Proposals))
-		for _, proposal := range c.summary.Proposals {
-			if !proposal.Block {
-				missedProposals = append(missedProposals, fmt.Sprintf("    Slot %d (validator %d)\n", proposal.Slot, proposal.Proposer))
-			} else {
-				proposedBlocks++
-			}
-		}
-		if len(missedProposals) > 0 {
-			builder.WriteString("  Missed proposals:\n")
-			for _, missedProposal := range missedProposals {
-				builder.WriteString(missedProposal)
-			}
+			builder.WriteString("    Slot ")
+			builder.WriteString(fmt.Sprintf("%d (%d/%d)", proposal.Slot, uint64(proposal.Slot)%uint64(len(c.summary.Proposals)), len(c.summary.Proposals)))
+			builder.WriteString(" validator ")
+			builder.WriteString(fmt.Sprintf("%d", proposal.Proposer))
+			builder.WriteString(" not proposed or not included\n")
 		}
 	}
 
+	builder.WriteString(fmt.Sprintf("  Attestations: %d/%d (%0.2f%%)\n", c.summary.ParticipatingValidators, c.summary.ActiveValidators, 100.0*float64(c.summary.ParticipatingValidators)/float64(c.summary.ActiveValidators)))
+	if c.verbose {
+		// Sort list by validator index.
+		for _, validator := range c.summary.NonParticipatingValidators {
+			builder.WriteString("    Slot ")
+			builder.WriteString(fmt.Sprintf("%d", validator.Slot))
+			builder.WriteString(" committee ")
+			builder.WriteString(fmt.Sprintf("%d", validator.Committee))
+			builder.WriteString(" validator ")
+			builder.WriteString(fmt.Sprintf("%d", validator.Validator))
+			builder.WriteString(" failed to participate\n")
+		}
+	}
+
+	contributions := proposedBlocks * 512 // SYNC_COMMITTEE_SIZE
+	totalMissed := 0
+	for _, contribution := range c.summary.SyncCommittee {
+		totalMissed += contribution.Missed
+	}
+	builder.WriteString(fmt.Sprintf("  Sync committees: %d/%d (%0.2f%%)", contributions-totalMissed, contributions, 100.0*float64(contributions-totalMissed)/float64(contributions)))
 	if c.verbose {
 		for _, syncCommittee := range c.summary.SyncCommittee {
-			builder.WriteString("  Sync committee validator ")
-			builder.WriteString(fmt.Sprintf("%d:\n", syncCommittee.Index))
-			builder.WriteString("    Chances: ")
-			builder.WriteString(fmt.Sprintf("%d\n", proposedBlocks))
-			builder.WriteString("    Included: ")
-			builder.WriteString(fmt.Sprintf("%d\n", proposedBlocks-syncCommittee.Missed))
-			builder.WriteString("    Inclusion %: ")
-			builder.WriteString(fmt.Sprintf("%0.2f\n", 100.0*float64(proposedBlocks-syncCommittee.Missed)/float64(proposedBlocks)))
-		}
-	} else {
-		missedSyncCommittees := make([]string, 0, len(c.summary.SyncCommittee))
-		for _, syncCommittee := range c.summary.SyncCommittee {
-			missedPct := 100.0 * float64(syncCommittee.Missed) / float64(proposedBlocks)
-			missedSyncCommittees = append(missedSyncCommittees, fmt.Sprintf("    %d (%0.2f%%) by validator %d\n", syncCommittee.Missed, missedPct, syncCommittee.Index))
-		}
-		if len(missedSyncCommittees) > 0 {
-			builder.WriteString("  Missed sync committees (excluding missed blocks):\n")
-			for _, missedSyncCommittee := range missedSyncCommittees {
-				builder.WriteString(missedSyncCommittee)
-			}
+			builder.WriteString("\n    Validator ")
+			builder.WriteString(fmt.Sprintf("%d", syncCommittee.Index))
+			builder.WriteString(" included ")
+			builder.WriteString(fmt.Sprintf("%d/%d", proposedBlocks-syncCommittee.Missed, proposedBlocks))
+			builder.WriteString(fmt.Sprintf(" (%0.2f%%)", 100.0*float64(proposedBlocks-syncCommittee.Missed)/float64(proposedBlocks)))
 		}
 	}
 

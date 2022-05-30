@@ -1,6 +1,7 @@
 dev:
   - do not fetch sync committee information for epoch summaries prior to Altair
   - ensure that "attester inclusion" without validator returns appropriate error
+  - provide more information in "epoch summary" with verbose flag
 
 1.22.0:
   - add "ropsten" to the list of supported networks

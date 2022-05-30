@@ -1,4 +1,5 @@
 dev:
+  - do not fetch sync committee information for epoch summaries prior to Altair
   - ensure that "attester inclusion" without validator returns appropriate error
 
 1.22.0:

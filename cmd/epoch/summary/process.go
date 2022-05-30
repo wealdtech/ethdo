@@ -84,12 +84,17 @@ func (c *command) processAttesterDuties(ctx context.Context) error {
 }
 
 func (c *command) processSyncCommitteeDuties(ctx context.Context) error {
+	if c.summary.Epoch < c.chainTime.AltairInitialEpoch() {
+		// The epoch is pre-Altair.  No info but no error.
+		return nil
+	}
+
 	committee, err := c.syncCommitteesProvider.SyncCommittee(ctx, fmt.Sprintf("%d", c.summary.FirstSlot))
 	if err != nil {
 		return errors.Wrap(err, "failed to obtain sync committee")
 	}
 	if len(committee.Validators) == 0 {
-		return errors.New("empty sync committee")
+		return errors.Wrap(err, "empty sync committee")
 	}
 
 	missed := make(map[phase0.ValidatorIndex]int)

@@ -50,52 +50,54 @@ func (c *command) outputTxt(_ context.Context) (string, error) {
 	missedProposals := make([]string, 0, len(c.summary.Proposals))
 	for _, proposal := range c.summary.Proposals {
 		if !proposal.Block {
-			missedProposals = append(missedProposals, fmt.Sprintf("    Slot %d (validator %d)\n", proposal.Slot, proposal.Proposer))
+			missedProposals = append(missedProposals, fmt.Sprintf("\n    Slot %d (validator %d)", proposal.Slot, proposal.Proposer))
 		} else {
 			proposedBlocks++
 		}
 	}
-	builder.WriteString(fmt.Sprintf("  Proposals: %d/%d (%0.2f%%)\n", proposedBlocks, len(missedProposals)+proposedBlocks, 100.0*float64(proposedBlocks)/float64(len(missedProposals)+proposedBlocks)))
+	builder.WriteString(fmt.Sprintf("  Proposals: %d/%d (%0.2f%%)", proposedBlocks, len(missedProposals)+proposedBlocks, 100.0*float64(proposedBlocks)/float64(len(missedProposals)+proposedBlocks)))
 	if c.verbose {
 		for _, proposal := range c.summary.Proposals {
 			if proposal.Block {
 				continue
 			}
-			builder.WriteString("    Slot ")
+			builder.WriteString("\n    Slot ")
 			builder.WriteString(fmt.Sprintf("%d (%d/%d)", proposal.Slot, uint64(proposal.Slot)%uint64(len(c.summary.Proposals)), len(c.summary.Proposals)))
 			builder.WriteString(" validator ")
 			builder.WriteString(fmt.Sprintf("%d", proposal.Proposer))
-			builder.WriteString(" not proposed or not included\n")
+			builder.WriteString(" not proposed or not included")
 		}
 	}
 
-	builder.WriteString(fmt.Sprintf("  Attestations: %d/%d (%0.2f%%)\n", c.summary.ParticipatingValidators, c.summary.ActiveValidators, 100.0*float64(c.summary.ParticipatingValidators)/float64(c.summary.ActiveValidators)))
+	builder.WriteString(fmt.Sprintf("\n  Attestations: %d/%d (%0.2f%%)", c.summary.ParticipatingValidators, c.summary.ActiveValidators, 100.0*float64(c.summary.ParticipatingValidators)/float64(c.summary.ActiveValidators)))
 	if c.verbose {
 		// Sort list by validator index.
 		for _, validator := range c.summary.NonParticipatingValidators {
-			builder.WriteString("    Slot ")
+			builder.WriteString("\n    Slot ")
 			builder.WriteString(fmt.Sprintf("%d", validator.Slot))
 			builder.WriteString(" committee ")
 			builder.WriteString(fmt.Sprintf("%d", validator.Committee))
 			builder.WriteString(" validator ")
 			builder.WriteString(fmt.Sprintf("%d", validator.Validator))
-			builder.WriteString(" failed to participate\n")
+			builder.WriteString(" failed to participate")
 		}
 	}
 
-	contributions := proposedBlocks * 512 // SYNC_COMMITTEE_SIZE
-	totalMissed := 0
-	for _, contribution := range c.summary.SyncCommittee {
-		totalMissed += contribution.Missed
-	}
-	builder.WriteString(fmt.Sprintf("  Sync committees: %d/%d (%0.2f%%)", contributions-totalMissed, contributions, 100.0*float64(contributions-totalMissed)/float64(contributions)))
-	if c.verbose {
-		for _, syncCommittee := range c.summary.SyncCommittee {
-			builder.WriteString("\n    Validator ")
-			builder.WriteString(fmt.Sprintf("%d", syncCommittee.Index))
-			builder.WriteString(" included ")
-			builder.WriteString(fmt.Sprintf("%d/%d", proposedBlocks-syncCommittee.Missed, proposedBlocks))
-			builder.WriteString(fmt.Sprintf(" (%0.2f%%)", 100.0*float64(proposedBlocks-syncCommittee.Missed)/float64(proposedBlocks)))
+	if c.summary.Epoch >= c.chainTime.AltairInitialEpoch() {
+		contributions := proposedBlocks * 512 // SYNC_COMMITTEE_SIZE
+		totalMissed := 0
+		for _, contribution := range c.summary.SyncCommittee {
+			totalMissed += contribution.Missed
+		}
+		builder.WriteString(fmt.Sprintf("\n  Sync committees: %d/%d (%0.2f%%)", contributions-totalMissed, contributions, 100.0*float64(contributions-totalMissed)/float64(contributions)))
+		if c.verbose {
+			for _, syncCommittee := range c.summary.SyncCommittee {
+				builder.WriteString("\n    Validator ")
+				builder.WriteString(fmt.Sprintf("%d", syncCommittee.Index))
+				builder.WriteString(" included ")
+				builder.WriteString(fmt.Sprintf("%d/%d", proposedBlocks-syncCommittee.Missed, proposedBlocks))
+				builder.WriteString(fmt.Sprintf(" (%0.2f%%)", 100.0*float64(proposedBlocks-syncCommittee.Missed)/float64(proposedBlocks)))
+			}
 		}
 	}
 

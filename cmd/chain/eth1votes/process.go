@@ -38,7 +38,11 @@ func (c *command) process(ctx context.Context) error {
 	}
 
 	// Need to fetch the state from the last slot of the epoch.
-	state, err := c.beaconStateProvider.BeaconState(ctx, fmt.Sprintf("%d", c.chainTime.FirstSlotOfEpoch(epoch+1)-1))
+	fetchSlot := c.chainTime.FirstSlotOfEpoch(epoch+1) - 1
+	if fetchSlot > c.chainTime.CurrentSlot() {
+		fetchSlot = c.chainTime.CurrentSlot()
+	}
+	state, err := c.beaconStateProvider.BeaconState(ctx, fmt.Sprintf("%d", fetchSlot))
 	if err != nil {
 		return errors.Wrap(err, "failed to obtain state")
 	}

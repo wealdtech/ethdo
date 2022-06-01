@@ -337,6 +337,22 @@ Voluntary exits: 0
 
 Chain commands focus on providing information about Ethereum 2 chains.
 
+#### `eth1votes`
+
+`ethdo chain eth1votes` obtains information about the votes for the next Ethereum 1 block to be incorporated in to the chain for deposits.  Options include:
+  - `epoch` show the votes at the end of the given epoch
+  - `json` provide JSON output
+
+```sh
+$ ethdo chain eth1votes
+Voting period: 6
+Slots through period: 1000
+Votes this period: 959
+Leading vote is for block 0x0ae5716ac1906592dbfb243ccadf90191f706d6f8c925b4f2712d2e24687553a with 356 votes
+```
+
+Additional information is supplied when using `--verbose`
+
 #### `info`
 
 `ethdo chain info` obtains information about an Ethereum 2 chain.

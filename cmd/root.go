@@ -93,6 +93,8 @@ func includeCommandBindings(cmd *cobra.Command) {
 		blockAnalyzeBindings()
 	case "block/info":
 		blockInfoBindings()
+	case "chain/eth1votes":
+		chainEth1VotesBindings()
 	case "chain/queues":
 		chainQueuesBindings()
 	case "chain/time":

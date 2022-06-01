@@ -1,3 +1,6 @@
+1.23.1:
+  - do not fetch future state for chain eth1votes
+
 1.23.0:
   - do not fetch sync committee information for epoch summaries prior to Altair
   - ensure that "attester inclusion" without validator returns appropriate error

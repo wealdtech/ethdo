@@ -17,6 +17,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strconv"
 
 	eth2client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/spec"
@@ -32,13 +33,28 @@ func (c *command) process(ctx context.Context) error {
 		return err
 	}
 
-	epoch, err := util.ParseEpoch(ctx, c.chainTime, c.epoch)
-	if err != nil {
-		return err
+	var err error
+	if c.xperiod != "" {
+		period, err := strconv.ParseUint(c.xperiod, 10, 64)
+		if err != nil {
+			return err
+		}
+		c.epoch = phase0.Epoch(c.epochsPerEth1VotingPeriod*(period+1)) - 1
+	} else {
+		c.epoch, err = util.ParseEpoch(ctx, c.chainTime, c.xepoch)
+		if err != nil {
+			return err
+		}
+	}
+
+	// Do not fetch from the future.
+	if c.epoch > c.chainTime.CurrentEpoch() {
+		c.epoch = c.chainTime.CurrentEpoch()
 	}
 
 	// Need to fetch the state from the last slot of the epoch.
-	fetchSlot := c.chainTime.FirstSlotOfEpoch(epoch+1) - 1
+	fetchSlot := c.chainTime.FirstSlotOfEpoch(c.epoch+1) - 1
+	// Do not fetch from the future.
 	if fetchSlot > c.chainTime.CurrentSlot() {
 		fetchSlot = c.chainTime.CurrentSlot()
 	}
@@ -74,7 +90,7 @@ func (c *command) process(ctx context.Context) error {
 		return fmt.Errorf("unhandled beacon state version %v", state.Version)
 	}
 
-	c.period = uint64(c.slot) / (c.slotsPerEpoch * c.epochsPerEth1VotingPeriod)
+	c.period = uint64(c.epoch) / c.epochsPerEth1VotingPeriod
 
 	c.votes = make(map[string]*vote)
 	for _, eth1Vote := range c.eth1DataVotes {

@@ -20,8 +20,8 @@ import (
 // validatorCredentialsCmd represents the validator credentials command
 var validatorCredentialsCmd = &cobra.Command{
 	Use:   "credentials",
-	Short: "Manage Ethereum consensu validator credentials",
-	Long:  `Manage Ethereum consensu validator credentials.`,
+	Short: "Manage Ethereum consensus validator credentials",
+	Long:  `Manage Ethereum consensus validator credentials.`,
 }
 
 func init() {

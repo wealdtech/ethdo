@@ -36,7 +36,8 @@ type command struct {
 	allowInsecureConnections bool
 
 	// Input.
-	epoch string
+	xepoch  string
+	xperiod string
 
 	// Data access.
 	eth2Client                eth2client.Service
@@ -47,6 +48,7 @@ type command struct {
 
 	// Output.
 	slot          phase0.Slot
+	epoch         phase0.Epoch
 	period        uint64
 	incumbent     *phase0.ETH1Data
 	eth1DataVotes []*phase0.ETH1Data
@@ -72,9 +74,8 @@ func newCommand(ctx context.Context) (*command, error) {
 	}
 	c.timeout = viper.GetDuration("timeout")
 
-	if viper.GetString("epoch") != "" {
-		c.epoch = viper.GetString("epoch")
-	}
+	c.xepoch = viper.GetString("epoch")
+	c.xperiod = viper.GetString("period")
 
 	if viper.GetString("connection") == "" {
 		return nil, errors.New("connection is required")

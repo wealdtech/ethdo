@@ -24,8 +24,9 @@ import (
 )
 
 type jsonOutput struct {
-	Slot      phase0.Slot      `json:"slot"`
 	Period    uint64           `json:"period"`
+	Epoch     phase0.Epoch     `json:"epoch"`
+	Slot      phase0.Slot      `json:"slot"`
 	Incumbent *phase0.ETH1Data `json:"incumbent"`
 	Votes     []*vote          `json:"votes"`
 }
@@ -56,8 +57,9 @@ func (c *command) outputJSON(ctx context.Context) (string, error) {
 	})
 
 	output := &jsonOutput{
-		Slot:      c.slot,
 		Period:    c.period,
+		Epoch:     c.epoch,
+		Slot:      c.slot,
 		Incumbent: c.incumbent,
 		Votes:     votes,
 	}
@@ -71,11 +73,6 @@ func (c *command) outputJSON(ctx context.Context) (string, error) {
 
 func (c *command) outputText(ctx context.Context) (string, error) {
 	builder := strings.Builder{}
-
-	if c.verbose {
-		builder.WriteString("Slot: ")
-		builder.WriteString(fmt.Sprintf("%d\n", c.slot))
-	}
 
 	builder.WriteString("Voting period: ")
 	builder.WriteString(fmt.Sprintf("%d\n", c.period))
@@ -103,8 +100,9 @@ func (c *command) outputText(ctx context.Context) (string, error) {
 		slot = c.slot
 	}
 
+	slotsThroughPeriod := slot + 1 - phase0.Slot(c.period*(c.slotsPerEpoch*c.epochsPerEth1VotingPeriod))
 	builder.WriteString("Slots through period: ")
-	builder.WriteString(fmt.Sprintf("%d\n", slot-phase0.Slot(c.period*(c.slotsPerEpoch*c.epochsPerEth1VotingPeriod))))
+	builder.WriteString(fmt.Sprintf("%d (%d)\n", slotsThroughPeriod, c.slot))
 
 	builder.WriteString("Votes this period: ")
 	builder.WriteString(fmt.Sprintf("%d\n", totalVotes))
@@ -114,13 +112,12 @@ func (c *command) outputText(ctx context.Context) (string, error) {
 			for _, vote := range votes {
 				builder.WriteString(fmt.Sprintf("  block %#x, deposit count %d: %d vote", vote.Vote.BlockHash, vote.Vote.DepositCount, vote.Count))
 				if vote.Count != 1 {
-					builder.WriteString("s\n")
-				} else {
-					builder.WriteString("\n")
+					builder.WriteString("s")
 				}
+				builder.WriteString(fmt.Sprintf(" (%0.2f%%)\n", 100.0*float64(vote.Count)/float64(slotsThroughPeriod)))
 			}
 		} else {
-			builder.WriteString(fmt.Sprintf("Leading vote is for block %#x with %d votes\n", votes[0].Vote.BlockHash, votes[0].Count))
+			builder.WriteString(fmt.Sprintf("Leading vote is for block %#x with %d votes (%0.2f%%)\n", votes[0].Vote.BlockHash, votes[0].Count, 100.0*float64(votes[0].Count)/float64(slotsThroughPeriod)))
 		}
 	}
 

@@ -91,9 +91,14 @@ In quiet mode this will return 0 if the validator information can be obtained, o
 			os.Exit(_exitSuccess)
 		}
 
+		if validator.Status.IsPending() || validator.Status.HasActivated() {
+			fmt.Printf("Index: %d\n", validator.Index)
+		}
 		if verbose {
+			if validator.Status.IsPending() {
+				fmt.Printf("Activation eligibility epoch: %d\n", validator.Validator.ActivationEligibilityEpoch)
+			}
 			if validator.Status.HasActivated() {
-				fmt.Printf("Index: %d\n", validator.Index)
 				fmt.Printf("Activation epoch: %d\n", validator.Validator.ActivationEpoch)
 			}
 			fmt.Printf("Public key: %#x\n", validator.Validator.PublicKey)

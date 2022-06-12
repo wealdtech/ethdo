@@ -1,3 +1,6 @@
+1.24.0:
+  - add "validator yield"
+
 1.23.1:
   - do not fetch future state for chain eth1votes
 

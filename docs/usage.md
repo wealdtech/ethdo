@@ -698,6 +698,17 @@ $ ethdo attester inclusion --account=Validators/1 --epoch=6484
 Attestation included in block 207492 (inclusion delay 1)
 ```
 
+#### `yield`
+
+`ethdo validator yield` calculates the expected yield given the number of validators.  Options include:
+  - `validators` use a specified number of validators rather than the current number of active validators
+  - `json` obtain detailed information in JSON format
+
+```sh
+$ ethdo validator yield
+Yield: 4.64%
+```
+
 ## Maintainers
 
 Jim McDonald: [@mcdee](https://github.com/mcdee).

@@ -22,6 +22,7 @@ require (
 	github.com/prysmaticlabs/go-bitfield v0.0.0-20210809151128-385d8c5e3fb7
 	github.com/prysmaticlabs/go-ssz v0.0.0-20210121151755-f6208871c388
 	github.com/rs/zerolog v1.26.1
+	github.com/shopspring/decimal v1.3.1
 	github.com/spf13/afero v1.8.0 // indirect
 	github.com/spf13/cobra v1.3.0
 	github.com/spf13/pflag v1.0.5
@@ -42,7 +43,7 @@ require (
 	github.com/wealdtech/go-eth2-wallet-store-s3 v1.10.0
 	github.com/wealdtech/go-eth2-wallet-store-scratch v1.7.0
 	github.com/wealdtech/go-eth2-wallet-types/v2 v2.9.0
-	github.com/wealdtech/go-string2eth v1.1.0
+	github.com/wealdtech/go-string2eth v1.2.0
 	golang.org/x/crypto v0.0.0-20220128200615-198e4374d7ed // indirect
 	golang.org/x/text v0.3.7
 	google.golang.org/genproto v0.0.0-20220126215142-9970aeb2e350 // indirect

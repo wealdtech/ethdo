@@ -159,7 +159,9 @@ func (c *command) processAttesterDuties(ctx context.Context) error {
 	c.summary.NonParticipatingValidators = make([]*nonParticipatingValidator, 0, len(activeValidators)-len(votes))
 	for activeValidatorIndex := range activeValidators {
 		if _, exists := votes[activeValidatorIndex]; !exists {
-			c.summary.NonParticipatingValidators = append(c.summary.NonParticipatingValidators, participations[activeValidatorIndex])
+			if _, exists := participations[activeValidatorIndex]; exists {
+				c.summary.NonParticipatingValidators = append(c.summary.NonParticipatingValidators, participations[activeValidatorIndex])
+			}
 		}
 	}
 	sort.Slice(c.summary.NonParticipatingValidators, func(i int, j int) bool {

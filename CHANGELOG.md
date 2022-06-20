@@ -1,3 +1,6 @@
+dev:
+  - fix potential crash when new validators are activated
+
 1.24.0:
   - add "validator yield"
 

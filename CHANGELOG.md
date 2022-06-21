@@ -1,5 +1,6 @@
-dev:
+1.24.1:
   - fix potential crash when new validators are activated
+  - add "sepolia" to the list of supported networks
 
 1.24.0:
   - add "validator yield"

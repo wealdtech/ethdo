@@ -111,6 +111,7 @@ func validatorDepositDataOutputLaunchpad(datum *dataOut) (string, error) {
 		[4]byte{0x00, 0x00, 0x20, 0x09}: "pyrmont",
 		[4]byte{0x00, 0x00, 0x10, 0x20}: "prater",
 		[4]byte{0x80, 0x00, 0x00, 0x69}: "ropsten",
+		[4]byte{0x90, 0x00, 0x00, 0x69}: "sepolia",
 	}
 
 	if datum.validatorPubKey == nil {

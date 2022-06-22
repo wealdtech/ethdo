@@ -453,23 +453,25 @@ Epoch commands focus on information about a beacon chain epoch.
 
 ```sh
 $ ethdo epoch summary
-Epoch 1406:
-  Slot 44992 (0/32):
-    Proposer: 31501
-    Proposed: ✓
-  Slot 44993 (1/32):
-    Proposer: 9302
-    Proposed: ✓
-  ...
-  Sync committee validator 71248:
-    Chances: 29
-    Included: 7
-    Inclusion %: 24.14
-  Sync committee validator 87371:
-    Chances: 29
-    Included: 0
-    Inclusion %: 0.00
-  ...
+Epoch 380:
+  Proposals: 31/32 (96.88%)
+  Attestations: 1530/1572 (97.33%)
+  Sync committees: 13086/15872 (82.45%)
+```
+
+More detailed information can be obtained with the `--verbose` flag:
+
+```sh
+$ ethdo epoch summary --verbose
+Epoch 380:
+  Proposals: 31/32 (96.88%)
+    Slot 12188 (28/32) validator 1518 not proposed or not included
+  Attestations: 1530/1572 (97.33%)
+    Slot 12160 committee 0 validator 292 failed to participate
+    Slot 12162 committee 0 validator 204 failed to participate
+    Slot 12163 committee 0 validator 297 failed to participate
+    Slot 12164 committee 0 validator 209 failed to participate
+    ...
 ```
 
 ### `exit` comands
@@ -707,6 +709,26 @@ Attestation included in block 207492 (inclusion delay 1)
 ```sh
 $ ethdo validator yield
 Yield: 4.64%
+```
+
+### `proposer` commands
+
+Proposer commands focus on Ethereum 2 validators' actions as proposers.
+
+#### `duties`
+
+`ethdo proposer duties` provides information on the proposal duties for a given epoch.  Options include:
+  - `epoch` the epoch in which to obtain the duties (defaults to current epoch)
+  - `json` obtain detailed information in JSON format
+
+```sh
+$ ethdo proposer duties --epoch=5
+Epoch 5:
+  Slot 160: validator 8221
+  Slot 161: validator 11193
+  Slot 162: validator 4116
+  Slot 163: validator 631
+  ...
 ```
 
 ## Maintainers

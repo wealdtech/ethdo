@@ -40,24 +40,15 @@ func TestInput(t *testing.T) {
 		{
 			name: "ConnectionMissing",
 			vars: map[string]interface{}{
-				"validators": "1",
-				"timeout":    "5s",
+				"blockid": "1",
+				"timeout": "5s",
 			},
 			err: "connection is required",
 		},
 		{
-			name: "ValidatorsZero",
-			vars: map[string]interface{}{
-				"timeout":    "5s",
-				"validators": "0",
-				"connection": os.Getenv("ETHDO_TEST_CONNECTION"),
-			},
-			err: "validators must be at least 1",
-		},
-		{
 			name: "Good",
 			vars: map[string]interface{}{
-				"validators": "1",
+				"blockid":    "1",
 				"timeout":    "5s",
 				"connection": os.Getenv("ETHDO_TEST_CONNECTION"),
 			},

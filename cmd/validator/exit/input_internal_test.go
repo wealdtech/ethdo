@@ -158,7 +158,7 @@ func TestInput(t *testing.T) {
 				"timeout":                    "5s",
 				"key":                        "0x25295f0d1d592a90b333e26e85149708208e9f8e8bc18f6c77bd62f8ad7a6866",
 			},
-			err: "failed to connect to Ethereum 2 beacon node: failed to connect to beacon node: failed to connect to Ethereum 2 client with any known method",
+			err: "failed to connect to Ethereum 2 beacon node: failed to connect to beacon node: failed to confirm node connection: failed to fetch genesis: failed to request genesis: failed to call GET endpoint: Get \"http://localhost:1/eth/v1/beacon/genesis\": dial tcp 127.0.0.1:1: connect: connection refused",
 		},
 		{
 			name: "EpochProvided",

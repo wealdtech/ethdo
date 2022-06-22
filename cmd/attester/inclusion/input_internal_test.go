@@ -73,7 +73,7 @@ func TestInput(t *testing.T) {
 				"timeout": "5s",
 				"pubkey":  "0xa99a76ed7796f7be22d5b7e85deeb7c5677e88e511e0b337618f8c4eb61349b4bf2d153f649f7b53359fe8b94a38e44c",
 			},
-			err: "failed to connect to beacon node: failed to connect to Ethereum 2 client with any known method",
+			err: "failed to connect to any beacon node",
 		},
 	}
 

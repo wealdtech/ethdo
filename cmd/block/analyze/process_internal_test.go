@@ -33,13 +33,13 @@ func TestProcess(t *testing.T) {
 		err  string
 	}{
 		{
-			name: "InvalidData",
+			name: "NoBlock",
 			vars: map[string]interface{}{
 				"timeout":    "60s",
-				"validators": "1",
-				"data":       "[[",
 				"connection": os.Getenv("ETHDO_TEST_CONNECTION"),
+				"blockid":    "invalid",
 			},
+			err: "failed to obtain beacon block: failed to request signed beacon block: GET failed with status 400: {\"code\":400,\"message\":\"Invalid block: invalid\"}",
 		},
 	}
 

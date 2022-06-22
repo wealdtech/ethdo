@@ -33,13 +33,21 @@ func TestProcess(t *testing.T) {
 		err  string
 	}{
 		{
+			name: "MissingConnection",
+			vars: map[string]interface{}{
+				"timeout": "5s",
+				"index":   "1",
+			},
+			err: "failed to connect to any beacon node",
+		},
+		{
 			name: "InvalidConnection",
 			vars: map[string]interface{}{
 				"timeout":    "5s",
 				"index":      "1",
 				"connection": "invalid",
 			},
-			err: "failed to connect to beacon node: failed to connect to Ethereum 2 client with any known method",
+			err: "failed to connect to beacon node: failed to confirm node connection: failed to fetch genesis: failed to request genesis: failed to call GET endpoint: Get \"http://invalid/eth/v1/beacon/genesis\": dial tcp: lookup invalid: no such host",
 		},
 		{
 			name: "Good",

@@ -77,6 +77,7 @@ func persistentPreRunE(cmd *cobra.Command, args []string) error {
 	return util.SetupStore()
 }
 
+// nolint:gocyclo
 func includeCommandBindings(cmd *cobra.Command) {
 	switch commandPath(cmd) {
 	case "account/create":
@@ -107,6 +108,8 @@ func includeCommandBindings(cmd *cobra.Command) {
 		exitVerifyBindings()
 	case "node/events":
 		nodeEventsBindings()
+	case "proposer/duties":
+		proposerDutiesBindings()
 	case "slot/time":
 		slotTimeBindings()
 	case "synccommittee/inclusion":

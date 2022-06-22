@@ -27,3 +27,6 @@ var proposerCmd = &cobra.Command{
 func init() {
 	RootCmd.AddCommand(proposerCmd)
 }
+
+func proposerFlags(cmd *cobra.Command) {
+}

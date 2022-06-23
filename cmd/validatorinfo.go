@@ -80,7 +80,7 @@ In quiet mode this will return 0 if the validator information can be obtained, o
 			pubKey, err := bestPublicKey(account)
 			if err == nil {
 				deposits, totalDeposited, err := graphData(network, pubKey.Marshal())
-				if err == nil {
+				if err == nil && deposits > 0 {
 					fmt.Printf("Number of deposits: %d\n", deposits)
 					fmt.Printf("Total deposited: %s\n", string2eth.GWeiToString(uint64(totalDeposited), true))
 				}

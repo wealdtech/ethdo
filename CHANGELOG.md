@@ -1,4 +1,4 @@
-dev:
+1.25.0:
   - add "proposer duties"
   - add deposit signature verification to "deposit verify"
 

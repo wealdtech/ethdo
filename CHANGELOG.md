@@ -1,5 +1,6 @@
 dev:
   - add "proposer duties"
+  - add deposit signature verification to "deposit verify"
 
 1.24.1:
   - fix potential crash when new validators are activated

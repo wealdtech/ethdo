@@ -21,7 +21,7 @@ import (
 	"os"
 	"strings"
 
-	spec "github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/wealdtech/ethdo/util"
@@ -219,15 +219,15 @@ func verifyDeposit(deposit *util.DepositInfo, withdrawalCredentials []byte, vali
 		outputIf(!quiet, "Validator public key verified")
 	}
 
-	var pubKey spec.BLSPubKey
+	var pubKey phase0.BLSPubKey
 	copy(pubKey[:], deposit.PublicKey)
-	var signature spec.BLSSignature
+	var signature phase0.BLSSignature
 	copy(signature[:], deposit.Signature)
 
-	depositData := &spec.DepositData{
+	depositData := &phase0.DepositData{
 		PublicKey:             pubKey,
 		WithdrawalCredentials: deposit.WithdrawalCredentials,
-		Amount:                spec.Gwei(deposit.Amount),
+		Amount:                phase0.Gwei(deposit.Amount),
 		Signature:             signature,
 	}
 	depositDataRoot, err := depositData.HashTreeRoot()
@@ -248,7 +248,7 @@ func verifyDeposit(deposit *util.DepositInfo, withdrawalCredentials []byte, vali
 		}
 	} else {
 		if depositVerifyForkVersion == "" {
-			outputIf(!quiet, "fork version not supplied; NOT checked")
+			outputIf(!quiet, "fork version not supplied; not checked")
 		} else {
 			forkVersion, err := hex.DecodeString(strings.TrimPrefix(depositVerifyForkVersion, "0x"))
 			if err != nil {
@@ -259,6 +259,49 @@ func verifyDeposit(deposit *util.DepositInfo, withdrawalCredentials []byte, vali
 			} else {
 				outputIf(!quiet, "Fork version incorrect")
 				return false, nil
+			}
+
+			if len(deposit.DepositMessageRoot) != 32 {
+				outputIf(!quiet, "Deposit message root not supplied; not checked")
+			} else {
+				// We can also verify the deposit message signature.
+				depositMessage := &phase0.DepositMessage{
+					PublicKey:             pubKey,
+					WithdrawalCredentials: withdrawalCredentials,
+					Amount:                phase0.Gwei(deposit.Amount),
+				}
+				depositMessageRoot, err := depositMessage.HashTreeRoot()
+				if err != nil {
+					return false, errors.Wrap(err, "failed to generate deposit message root")
+				}
+
+				domainBytes := e2types.Domain(e2types.DomainDeposit, forkVersion, e2types.ZeroGenesisValidatorsRoot)
+				var domain phase0.Domain
+				copy(domain[:], domainBytes)
+				container := &phase0.SigningData{
+					ObjectRoot: depositMessageRoot,
+					Domain:     domain,
+				}
+				containerRoot, err := container.HashTreeRoot()
+				if err != nil {
+					return false, errors.New("failed to generate root for container")
+				}
+
+				validatorPubKey, err := e2types.BLSPublicKeyFromBytes(pubKey[:])
+				if err != nil {
+					return false, errors.Wrap(err, "failed to generate validator public key")
+				}
+				blsSig, err := e2types.BLSSignatureFromBytes(signature[:])
+				if err != nil {
+					return false, errors.New("failed to verify BLS signature")
+				}
+				signatureVerified := blsSig.Verify(containerRoot[:], validatorPubKey)
+				if signatureVerified {
+					outputIf(!quiet, "Deposit message signature verified")
+				} else {
+					outputIf(!quiet, "Deposit message signature NOT verified")
+					return false, nil
+				}
 			}
 		}
 	}

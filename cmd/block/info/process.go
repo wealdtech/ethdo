@@ -82,6 +82,9 @@ func process(ctx context.Context, data *dataIn) (*dataOut, error) {
 	if data.stream {
 		jsonOutput = data.jsonOutput
 		sszOutput = data.sszOutput
+		if !jsonOutput && !sszOutput {
+			fmt.Println("")
+		}
 		err := data.eth2Client.(eth2client.EventsProvider).Events(ctx, []string{"head"}, headEventHandler)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to start block stream")
@@ -101,13 +104,13 @@ func headEventHandler(event *api.Event) {
 	blockID := fmt.Sprintf("%#x", event.Data.(*api.HeadEvent).Block[:])
 	signedBlock, err := results.eth2Client.(eth2client.SignedBeaconBlockProvider).SignedBeaconBlock(context.Background(), blockID)
 	if err != nil {
-		if !jsonOutput {
+		if !jsonOutput && !sszOutput {
 			fmt.Printf("Failed to obtain block: %v\n", err)
 		}
 		return
 	}
 	if signedBlock == nil {
-		if !jsonOutput {
+		if !jsonOutput && !sszOutput {
 			fmt.Println("Empty beacon block")
 		}
 		return
@@ -115,30 +118,33 @@ func headEventHandler(event *api.Event) {
 	switch signedBlock.Version {
 	case spec.DataVersionPhase0:
 		if err := outputPhase0Block(context.Background(), jsonOutput, signedBlock.Phase0); err != nil {
-			if !jsonOutput {
+			if !jsonOutput && !sszOutput {
 				fmt.Printf("Failed to output block: %v\n", err)
 			}
 			return
 		}
 	case spec.DataVersionAltair:
 		if err := outputAltairBlock(context.Background(), jsonOutput, sszOutput, signedBlock.Altair); err != nil {
-			if !jsonOutput {
+			if !jsonOutput && !sszOutput {
 				fmt.Printf("Failed to output block: %v\n", err)
 			}
 			return
 		}
 	case spec.DataVersionBellatrix:
 		if err := outputBellatrixBlock(context.Background(), jsonOutput, sszOutput, signedBlock.Bellatrix); err != nil {
-			if !jsonOutput {
+			if !jsonOutput && !sszOutput {
 				fmt.Printf("Failed to output block: %v\n", err)
 			}
 			return
 		}
 	default:
-		if !jsonOutput {
+		if !jsonOutput && !sszOutput {
 			fmt.Printf("Unknown block version: %v\n", signedBlock.Version)
 		}
 		return
+	}
+	if !jsonOutput && !sszOutput {
+		fmt.Println("")
 	}
 }
 
@@ -155,7 +161,7 @@ func outputPhase0Block(ctx context.Context, jsonOutput bool, signedBlock *phase0
 		if err != nil {
 			return errors.Wrap(err, "failed to generate text")
 		}
-		fmt.Printf("%s\n", data)
+		fmt.Print(data)
 	}
 	return nil
 }
@@ -179,7 +185,7 @@ func outputAltairBlock(ctx context.Context, jsonOutput bool, sszOutput bool, sig
 		if err != nil {
 			return errors.Wrap(err, "failed to generate text")
 		}
-		fmt.Printf("%s\n", data)
+		fmt.Print(data)
 	}
 	return nil
 }
@@ -203,7 +209,7 @@ func outputBellatrixBlock(ctx context.Context, jsonOutput bool, sszOutput bool, 
 		if err != nil {
 			return errors.Wrap(err, "failed to generate text")
 		}
-		fmt.Printf("%s\n", data)
+		fmt.Print(data)
 	}
 	return nil
 }

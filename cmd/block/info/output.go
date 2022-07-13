@@ -540,6 +540,8 @@ func outputBlockExecutionPayload(ctx context.Context,
 	if !verbose {
 		res.WriteString("Execution block number: ")
 		res.WriteString(fmt.Sprintf("%d\n", payload.BlockNumber))
+		res.WriteString("Transactions: ")
+		res.WriteString(fmt.Sprintf("%d\n", len(payload.Transactions)))
 	} else {
 		res.WriteString("Execution payload:\n")
 		res.WriteString("  Execution block number: ")
@@ -573,6 +575,8 @@ func outputBlockExecutionPayload(ctx context.Context,
 		res.WriteString(fmt.Sprintf("%#x\n", payload.ExtraData))
 		res.WriteString("  Logs bloom: ")
 		res.WriteString(fmt.Sprintf("%#x\n", payload.LogsBloom))
+		res.WriteString("  Transactions: ")
+		res.WriteString(fmt.Sprintf("%d\n", len(payload.Transactions)))
 	}
 
 	return res.String(), nil

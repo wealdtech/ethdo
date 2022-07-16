@@ -275,6 +275,13 @@ func verifyDeposit(deposit *util.DepositInfo, withdrawalCredentials []byte, vali
 					return false, errors.Wrap(err, "failed to generate deposit message root")
 				}
 
+				if bytes.Equal(deposit.DepositMessageRoot, depositMessageRoot[:]) {
+					outputIf(!quiet, "Deposit message root verified")
+				} else {
+					outputIf(!quiet, "Deposit message root incorrect")
+					return false, nil
+				}
+
 				domainBytes := e2types.Domain(e2types.DomainDeposit, forkVersion, e2types.ZeroGenesisValidatorsRoot)
 				var domain phase0.Domain
 				copy(domain[:], domainBytes)

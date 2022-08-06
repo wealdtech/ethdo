@@ -425,6 +425,13 @@ func (c *command) analyzeSyncCommittees(ctx context.Context, block *spec.Version
 		c.analysis.SyncCommitee.Value = c.analysis.SyncCommitee.Score * float64(c.analysis.SyncCommitee.Contributions)
 		c.analysis.Value += c.analysis.SyncCommitee.Value
 		return nil
+	case spec.DataVersionBellatrix:
+		c.analysis.SyncCommitee.Contributions = int(block.Bellatrix.Message.Body.SyncAggregate.SyncCommitteeBits.Count())
+		c.analysis.SyncCommitee.PossibleContributions = int(block.Bellatrix.Message.Body.SyncAggregate.SyncCommitteeBits.Len())
+		c.analysis.SyncCommitee.Score = float64(c.syncRewardWeight) / float64(c.weightDenominator)
+		c.analysis.SyncCommitee.Value = c.analysis.SyncCommitee.Score * float64(c.analysis.SyncCommitee.Contributions)
+		c.analysis.Value += c.analysis.SyncCommitee.Value
+		return nil
 	default:
 		return fmt.Errorf("unsupported block version %d", block.Version)
 	}

@@ -76,9 +76,6 @@ func newCommand(ctx context.Context) (*command, error) {
 	}
 	c.data = viper.GetString("data")
 
-	if viper.GetString("connection") == "" {
-		return nil, errors.New("connection is required")
-	}
 	c.connection = viper.GetString("connection")
 	c.allowInsecureConnections = viper.GetBool("allow-insecure-connections")
 

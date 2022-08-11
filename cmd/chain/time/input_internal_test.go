@@ -61,14 +61,6 @@ func TestInput(t *testing.T) {
 			err:  "timeout is required",
 		},
 		{
-			name: "ConnectionMissing",
-			vars: map[string]interface{}{
-				"timeout": "5s",
-				"slot":    "1",
-			},
-			err: "connection is required",
-		},
-		{
 			name: "IDMissing",
 			vars: map[string]interface{}{
 				"timeout":    "5s",

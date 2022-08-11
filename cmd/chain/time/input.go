@@ -71,9 +71,6 @@ func input(ctx context.Context) (*dataIn, error) {
 		return nil, errors.New("one of timestamp, slot or epoch required")
 	}
 
-	if viper.GetString("connection") == "" {
-		return nil, errors.New("connection is required")
-	}
 	data.connection = viper.GetString("connection")
 	data.allowInsecureConnections = viper.GetBool("allow-insecure-connections")
 

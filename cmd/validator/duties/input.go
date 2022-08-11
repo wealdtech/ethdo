@@ -49,9 +49,6 @@ func input(ctx context.Context) (*dataIn, error) {
 
 	// Ethereum 2 connection.
 	data.eth2Client = viper.GetString("connection")
-	if data.eth2Client == "" {
-		return nil, errors.New("connection is required")
-	}
 	data.allowInsecure = viper.GetBool("allow-insecure-connections")
 
 	// Account.

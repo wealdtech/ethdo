@@ -65,9 +65,6 @@ func newCommand(ctx context.Context) (*command, error) {
 		c.epoch = viper.GetString("epoch")
 	}
 
-	if viper.GetString("connection") == "" {
-		return nil, errors.New("connection is required")
-	}
 	c.connection = viper.GetString("connection")
 	c.allowInsecureConnections = viper.GetBool("allow-insecure-connections")
 

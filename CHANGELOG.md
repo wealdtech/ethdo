@@ -1,3 +1,8 @@
+1.25.1:
+  - no longer require connection parameter
+  - support "block analyze" on bellatrix (thanks @tcrossland)
+  - check deposit message root match for verifying deposits (thanks @aaron-alderman)
+
 1.25.0:
   - add "proposer duties"
   - add deposit signature verification to "deposit verify"

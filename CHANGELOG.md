@@ -1,4 +1,4 @@
-1.25.1:
+1.25.2:
   - no longer require connection parameter
   - support "block analyze" on bellatrix (thanks @tcrossland)
   - check deposit message root match for verifying deposits (thanks @aaron-alderman)

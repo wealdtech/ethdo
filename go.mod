@@ -11,7 +11,6 @@ require (
 	github.com/gofrs/uuid v4.2.0+incompatible
 	github.com/google/uuid v1.3.0
 	github.com/hako/durafmt v0.0.0-20210608085754-5c1018a4e16b
-	github.com/hashicorp/hcl v1.0.1-vault-3 // indirect
 	github.com/herumi/bls-eth-go-binary v0.0.0-20220103074059-01b0ca9e9ef7
 	github.com/jackc/puddle v1.2.1 // indirect
 	github.com/minio/highwayhash v1.0.2 // indirect

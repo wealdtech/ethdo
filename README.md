@@ -35,7 +35,7 @@ docker pull wealdtech/ethdo
 `ethdo` is a standard Go program which can be installed with:
 
 ```sh
-GO111MODULE=on go get github.com/wealdtech/ethdo
+go install github.com/wealdtech/ethdo@latest
 ```
 
 Note that `ethdo` requires at least version 1.13 of go to operate.  The version of go can be found with `go version`.

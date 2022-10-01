@@ -70,6 +70,11 @@ func (c *command) outputTxt(_ context.Context) (string, error) {
 	}
 
 	builder.WriteString(fmt.Sprintf("\n  Attestations: %d/%d (%0.2f%%)", c.summary.ParticipatingValidators, c.summary.ActiveValidators, 100.0*float64(c.summary.ParticipatingValidators)/float64(c.summary.ActiveValidators)))
+	builder.WriteString(fmt.Sprintf("\n    Source timely: %d/%d (%0.2f%%)", c.summary.SourceTimelyValidators, c.summary.ActiveValidators, 100.0*float64(c.summary.SourceTimelyValidators)/float64(c.summary.ActiveValidators)))
+	builder.WriteString(fmt.Sprintf("\n    Target correct: %d/%d (%0.2f%%)", c.summary.TargetCorrectValidators, c.summary.ActiveValidators, 100.0*float64(c.summary.TargetCorrectValidators)/float64(c.summary.ActiveValidators)))
+	builder.WriteString(fmt.Sprintf("\n    Target timely: %d/%d (%0.2f%%)", c.summary.TargetTimelyValidators, c.summary.ActiveValidators, 100.0*float64(c.summary.TargetTimelyValidators)/float64(c.summary.ActiveValidators)))
+	builder.WriteString(fmt.Sprintf("\n    Head correct: %d/%d (%0.2f%%)", c.summary.HeadCorrectValidators, c.summary.ActiveValidators, 100.0*float64(c.summary.HeadCorrectValidators)/float64(c.summary.ActiveValidators)))
+	builder.WriteString(fmt.Sprintf("\n    Head timely: %d/%d (%0.2f%%)", c.summary.HeadTimelyValidators, c.summary.ActiveValidators, 100.0*float64(c.summary.HeadTimelyValidators)/float64(c.summary.ActiveValidators)))
 	if c.verbose {
 		// Sort list by validator index.
 		for _, validator := range c.summary.NonParticipatingValidators {

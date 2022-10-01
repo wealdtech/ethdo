@@ -1,3 +1,6 @@
+dev:
+  - add more information to "epoch summary"
+
 1.25.2:
   - no longer require connection parameter
   - support "block analyze" on bellatrix (thanks @tcrossland)

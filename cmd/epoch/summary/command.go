@@ -40,13 +40,14 @@ type command struct {
 	jsonOutput bool
 
 	// Data access.
-	eth2Client               eth2client.Service
-	chainTime                chaintime.Service
-	proposerDutiesProvider   eth2client.ProposerDutiesProvider
-	blocksProvider           eth2client.SignedBeaconBlockProvider
-	syncCommitteesProvider   eth2client.SyncCommitteesProvider
-	validatorsProvider       eth2client.ValidatorsProvider
-	beaconCommitteesProvider eth2client.BeaconCommitteesProvider
+	eth2Client                 eth2client.Service
+	chainTime                  chaintime.Service
+	proposerDutiesProvider     eth2client.ProposerDutiesProvider
+	blocksProvider             eth2client.SignedBeaconBlockProvider
+	syncCommitteesProvider     eth2client.SyncCommitteesProvider
+	validatorsProvider         eth2client.ValidatorsProvider
+	beaconCommitteesProvider   eth2client.BeaconCommitteesProvider
+	beaconBlockHeadersProvider eth2client.BeaconBlockHeadersProvider
 
 	// Results.
 	summary *epochSummary
@@ -60,6 +61,11 @@ type epochSummary struct {
 	SyncCommittee              []*epochSyncCommittee        `json:"sync_committees"`
 	ActiveValidators           int                          `json:"active_validators"`
 	ParticipatingValidators    int                          `json:"participating_validators"`
+	HeadCorrectValidators      int                          `json:"head_correct_validators"`
+	HeadTimelyValidators       int                          `json:"head_timely_validators"`
+	SourceTimelyValidators     int                          `json:"source_timely_validators"`
+	TargetCorrectValidators    int                          `json:"target_correct_validators"`
+	TargetTimelyValidators     int                          `json:"target_timely_validators"`
 	NonParticipatingValidators []*nonParticipatingValidator `json:"nonparticipating_validators"`
 }
 

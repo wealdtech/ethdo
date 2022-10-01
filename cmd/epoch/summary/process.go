@@ -79,11 +79,10 @@ func (c *command) processProposerDuties(ctx context.Context) error {
 	return nil
 }
 
-func (c *command) processAttesterDuties(ctx context.Context) error {
-	// Obtain all active validators for the given epoch.
+func (c *command) activeValidators(ctx context.Context) (map[phase0.ValidatorIndex]*apiv1.Validator, error) {
 	validators, err := c.validatorsProvider.Validators(ctx, fmt.Sprintf("%d", c.chainTime.FirstSlotOfEpoch(c.summary.Epoch)), nil)
 	if err != nil {
-		return errors.Wrap(err, "failed to obtain validators for epoch")
+		return nil, errors.Wrap(err, "failed to obtain validators for epoch")
 	}
 	activeValidators := make(map[phase0.ValidatorIndex]*apiv1.Validator)
 	for _, validator := range validators {
@@ -91,6 +90,15 @@ func (c *command) processAttesterDuties(ctx context.Context) error {
 			activeValidators[validator.Index] = validator
 		}
 	}
+
+	return activeValidators, nil
+}
+func (c *command) processAttesterDuties(ctx context.Context) error {
+	activeValidators, err := c.activeValidators(ctx)
+	if err != nil {
+		return err
+	}
+	c.summary.ActiveValidators = len(activeValidators)
 
 	// Obtain number of validators that voted for blocks in the epoch.
 	// These votes can be included anywhere from the second slot of
@@ -101,61 +109,13 @@ func (c *command) processAttesterDuties(ctx context.Context) error {
 		lastSlot = c.chainTime.CurrentSlot()
 	}
 
-	votes := make(map[phase0.ValidatorIndex]struct{})
-	allCommittees := make(map[phase0.Slot]map[phase0.CommitteeIndex][]phase0.ValidatorIndex)
-	participations := make(map[phase0.ValidatorIndex]*nonParticipatingValidator)
-
-	for slot := firstSlot; slot <= lastSlot; slot++ {
-		block, err := c.blocksProvider.SignedBeaconBlock(ctx, fmt.Sprintf("%d", slot))
-		if err != nil {
-			return errors.Wrap(err, fmt.Sprintf("failed to obtain block for slot %d", slot))
-		}
-		if block == nil {
-			// No block at this slot; that's fine.
-			continue
-		}
-		attestations, err := block.Attestations()
-		if err != nil {
-			return err
-		}
-		for _, attestation := range attestations {
-			if attestation.Data.Slot < c.chainTime.FirstSlotOfEpoch(c.summary.Epoch) || attestation.Data.Slot >= c.chainTime.FirstSlotOfEpoch(c.summary.Epoch+1) {
-				// Outside of this epoch's range.
-				continue
-			}
-			slotCommittees, exists := allCommittees[attestation.Data.Slot]
-			if !exists {
-				beaconCommittees, err := c.beaconCommitteesProvider.BeaconCommittees(ctx, fmt.Sprintf("%d", attestation.Data.Slot))
-				if err != nil {
-					return errors.Wrap(err, fmt.Sprintf("failed to obtain committees for slot %d", attestation.Data.Slot))
-				}
-				for _, beaconCommittee := range beaconCommittees {
-					if _, exists := allCommittees[beaconCommittee.Slot]; !exists {
-						allCommittees[beaconCommittee.Slot] = make(map[phase0.CommitteeIndex][]phase0.ValidatorIndex)
-					}
-					allCommittees[beaconCommittee.Slot][beaconCommittee.Index] = beaconCommittee.Validators
-					for _, index := range beaconCommittee.Validators {
-						participations[index] = &nonParticipatingValidator{
-							Validator: index,
-							Slot:      beaconCommittee.Slot,
-							Committee: beaconCommittee.Index,
-						}
-
-					}
-				}
-				slotCommittees = allCommittees[attestation.Data.Slot]
-			}
-			committee := slotCommittees[attestation.Data.Index]
-			for i := uint64(0); i < attestation.AggregationBits.Len(); i++ {
-				if attestation.AggregationBits.BitAt(i) {
-					votes[committee[int(i)]] = struct{}{}
-				}
-			}
-		}
+	var votes map[phase0.ValidatorIndex]struct{}
+	var participations map[phase0.ValidatorIndex]*nonParticipatingValidator
+	c.summary.ParticipatingValidators, c.summary.HeadCorrectValidators, c.summary.HeadTimelyValidators, c.summary.SourceTimelyValidators, c.summary.TargetCorrectValidators, c.summary.TargetTimelyValidators, votes, participations, err = c.processSlots(ctx, firstSlot, lastSlot)
+	if err != nil {
+		return err
 	}
 
-	c.summary.ActiveValidators = len(activeValidators)
-	c.summary.ParticipatingValidators = len(votes)
 	c.summary.NonParticipatingValidators = make([]*nonParticipatingValidator, 0, len(activeValidators)-len(votes))
 	for activeValidatorIndex := range activeValidators {
 		if _, exists := votes[activeValidatorIndex]; !exists {
@@ -175,6 +135,121 @@ func (c *command) processAttesterDuties(ctx context.Context) error {
 	})
 
 	return nil
+}
+
+func (c *command) processSlots(ctx context.Context,
+	firstSlot phase0.Slot,
+	lastSlot phase0.Slot,
+) (
+	int,
+	int,
+	int,
+	int,
+	int,
+	int,
+	map[phase0.ValidatorIndex]struct{},
+	map[phase0.ValidatorIndex]*nonParticipatingValidator,
+	error,
+) {
+	votes := make(map[phase0.ValidatorIndex]struct{})
+	headCorrects := make(map[phase0.ValidatorIndex]struct{})
+	headTimelys := make(map[phase0.ValidatorIndex]struct{})
+	sourceTimelys := make(map[phase0.ValidatorIndex]struct{})
+	targetCorrects := make(map[phase0.ValidatorIndex]struct{})
+	targetTimelys := make(map[phase0.ValidatorIndex]struct{})
+	allCommittees := make(map[phase0.Slot]map[phase0.CommitteeIndex][]phase0.ValidatorIndex)
+	participations := make(map[phase0.ValidatorIndex]*nonParticipatingValidator)
+
+	// Need a cache of beacon block headers to reduce lookup times.
+	headersCache := util.NewBeaconBlockHeaderCache(c.beaconBlockHeadersProvider)
+
+	for slot := firstSlot; slot <= lastSlot; slot++ {
+		block, err := c.blocksProvider.SignedBeaconBlock(ctx, fmt.Sprintf("%d", slot))
+		if err != nil {
+			return 0, 0, 0, 0, 0, 0, nil, nil, errors.Wrap(err, fmt.Sprintf("failed to obtain block for slot %d", slot))
+		}
+		if block == nil {
+			// No block at this slot; that's fine.
+			continue
+		}
+		slot, err := block.Slot()
+		if err != nil {
+			return 0, 0, 0, 0, 0, 0, nil, nil, err
+		}
+		attestations, err := block.Attestations()
+		if err != nil {
+			return 0, 0, 0, 0, 0, 0, nil, nil, err
+		}
+		for _, attestation := range attestations {
+			if attestation.Data.Slot < c.chainTime.FirstSlotOfEpoch(c.summary.Epoch) || attestation.Data.Slot >= c.chainTime.FirstSlotOfEpoch(c.summary.Epoch+1) {
+				// Outside of this epoch's range.
+				continue
+			}
+			slotCommittees, exists := allCommittees[attestation.Data.Slot]
+			if !exists {
+				beaconCommittees, err := c.beaconCommitteesProvider.BeaconCommittees(ctx, fmt.Sprintf("%d", attestation.Data.Slot))
+				if err != nil {
+					return 0, 0, 0, 0, 0, 0, nil, nil, errors.Wrap(err, fmt.Sprintf("failed to obtain committees for slot %d", attestation.Data.Slot))
+				}
+				for _, beaconCommittee := range beaconCommittees {
+					if _, exists := allCommittees[beaconCommittee.Slot]; !exists {
+						allCommittees[beaconCommittee.Slot] = make(map[phase0.CommitteeIndex][]phase0.ValidatorIndex)
+					}
+					allCommittees[beaconCommittee.Slot][beaconCommittee.Index] = beaconCommittee.Validators
+					for _, index := range beaconCommittee.Validators {
+						participations[index] = &nonParticipatingValidator{
+							Validator: index,
+							Slot:      beaconCommittee.Slot,
+							Committee: beaconCommittee.Index,
+						}
+
+					}
+				}
+				slotCommittees = allCommittees[attestation.Data.Slot]
+			}
+			committee := slotCommittees[attestation.Data.Index]
+
+			inclusionDistance := slot - attestation.Data.Slot
+			headCorrect, err := util.AttestationHeadCorrect(ctx, headersCache, attestation)
+			if err != nil {
+				return 0, 0, 0, 0, 0, 0, nil, nil, err
+			}
+			targetCorrect, err := util.AttestationTargetCorrect(ctx, headersCache, c.chainTime, attestation)
+			if err != nil {
+				return 0, 0, 0, 0, 0, 0, nil, nil, err
+			}
+
+			for i := uint64(0); i < attestation.AggregationBits.Len(); i++ {
+				if attestation.AggregationBits.BitAt(i) {
+					votes[committee[int(i)]] = struct{}{}
+					if _, exists := headCorrects[committee[int(i)]]; !exists && headCorrect {
+						headCorrects[committee[int(i)]] = struct{}{}
+					}
+					if _, exists := headTimelys[committee[int(i)]]; !exists && headCorrect && inclusionDistance == 1 {
+						headTimelys[committee[int(i)]] = struct{}{}
+					}
+					if _, exists := sourceTimelys[committee[int(i)]]; !exists && inclusionDistance <= 5 {
+						sourceTimelys[committee[int(i)]] = struct{}{}
+					}
+					if _, exists := targetCorrects[committee[int(i)]]; !exists && targetCorrect {
+						targetCorrects[committee[int(i)]] = struct{}{}
+					}
+					if _, exists := targetTimelys[committee[int(i)]]; !exists && targetCorrect && inclusionDistance <= 32 {
+						targetTimelys[committee[int(i)]] = struct{}{}
+					}
+				}
+			}
+		}
+	}
+	return len(votes),
+		len(headCorrects),
+		len(headTimelys),
+		len(sourceTimelys),
+		len(targetCorrects),
+		len(targetTimelys),
+		votes,
+		participations,
+		nil
 }
 
 func (c *command) processSyncCommitteeDuties(ctx context.Context) error {
@@ -285,6 +360,10 @@ func (c *command) setup(ctx context.Context) error {
 	c.beaconCommitteesProvider, isProvider = c.eth2Client.(eth2client.BeaconCommitteesProvider)
 	if !isProvider {
 		return errors.New("connection does not provide beacon committees")
+	}
+	c.beaconBlockHeadersProvider, isProvider = c.eth2Client.(eth2client.BeaconBlockHeadersProvider)
+	if !isProvider {
+		return errors.New("connection does not provide beacon block headers")
 	}
 
 	return nil

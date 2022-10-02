@@ -15,14 +15,10 @@ package validatorcredentialsget
 
 import (
 	"context"
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"strconv"
-	"strings"
 
 	eth2client "github.com/attestantio/go-eth2-client"
-	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 	"github.com/wealdtech/ethdo/util"
 )
@@ -68,71 +64,20 @@ func (c *command) setup(ctx context.Context) error {
 }
 
 func (c *command) fetchValidator(ctx context.Context) error {
-	if c.account != "" {
-		_, account, err := util.WalletAndAccountFromInput(ctx)
-		if err != nil {
-			return errors.Wrap(err, "unable to obtain account")
-		}
-
-		accPubKey, err := util.BestPublicKey(account)
-		if err != nil {
-			return errors.Wrap(err, "unable to obtain public key for account")
-		}
-		pubKey := phase0.BLSPubKey{}
-		copy(pubKey[:], accPubKey.Marshal())
-		validators, err := c.validatorsProvider.ValidatorsByPubKey(ctx,
-			"head",
-			[]phase0.BLSPubKey{pubKey},
-		)
-		if err != nil {
-			return errors.Wrap(err, "failed to obtain validator information")
-		}
-		if len(validators) == 0 {
-			return errors.New("unknown validator")
-		}
-		for _, validator := range validators {
-			c.validator = validator
-		}
+	var err error
+	switch {
+	case c.account != "":
+		c.validator, err = util.ParseValidator(ctx, c.validatorsProvider, c.account, "head")
+	case c.index != "":
+		c.validator, err = util.ParseValidator(ctx, c.validatorsProvider, c.index, "head")
+	case c.pubKey != "":
+		c.validator, err = util.ParseValidator(ctx, c.validatorsProvider, c.pubKey, "head")
+	default:
+		return errors.New("account, index or public key must be supplied")
 	}
-	if c.index != "" {
-		tmp, err := strconv.ParseUint(c.index, 10, 64)
-		if err != nil {
-			return errors.Wrap(err, "invalid validator index")
-		}
-		index := phase0.ValidatorIndex(tmp)
-		validators, err := c.validatorsProvider.Validators(ctx,
-			"head",
-			[]phase0.ValidatorIndex{index},
-		)
-		if err != nil {
-			return errors.Wrap(err, "failed to obtain validator information")
-		}
-		if _, exists := validators[index]; !exists {
-			return errors.New("unknown validator")
-		}
-		c.validator = validators[index]
-	}
-	if c.pubKey != "" {
-		bytes, err := hex.DecodeString(strings.TrimPrefix(c.pubKey, "0x"))
-		if err != nil {
-			return errors.Wrap(err, "invalid validator public key")
-		}
-		pubKey := phase0.BLSPubKey{}
-		copy(pubKey[:], bytes)
 
-		validators, err := c.validatorsProvider.ValidatorsByPubKey(ctx,
-			"head",
-			[]phase0.BLSPubKey{pubKey},
-		)
-		if err != nil {
-			return errors.Wrap(err, "failed to obtain validator information")
-		}
-		if len(validators) == 0 {
-			return errors.New("unknown validator")
-		}
-		for _, validator := range validators {
-			c.validator = validator
-		}
+	if err != nil {
+		return errors.Wrap(err, "failed to obtain validator information")
 	}
 
 	return nil

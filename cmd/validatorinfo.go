@@ -77,7 +77,7 @@ In quiet mode this will return 0 if the validator information can be obtained, o
 			network, err := util.Network(ctx, eth2Client)
 			errCheck(err, "Failed to obtain network")
 			outputIf(debug, fmt.Sprintf("Network is %s", network))
-			pubKey, err := bestPublicKey(account)
+			pubKey, err := util.BestPublicKey(account)
 			if err == nil {
 				deposits, totalDeposited, err := graphData(network, pubKey.Marshal())
 				if err == nil && deposits > 0 {

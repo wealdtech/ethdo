@@ -375,24 +375,6 @@ func walletAndAccountFromPath(ctx context.Context, path string) (e2wtypes.Wallet
 	return wallet, account, nil
 }
 
-// bestPublicKey returns the best public key for operations.
-// It prefers the composite public key if present, otherwise the public key.
-func bestPublicKey(account e2wtypes.Account) (e2types.PublicKey, error) {
-	var pubKey e2types.PublicKey
-	publicKeyProvider, isCompositePublicKeyProvider := account.(e2wtypes.AccountCompositePublicKeyProvider)
-	if isCompositePublicKeyProvider {
-		pubKey = publicKeyProvider.CompositePublicKey()
-	} else {
-		publicKeyProvider, isPublicKeyProvider := account.(e2wtypes.AccountPublicKeyProvider)
-		if isPublicKeyProvider {
-			pubKey = publicKeyProvider.PublicKey()
-		} else {
-			return nil, errors.New("account does not provide a public key")
-		}
-	}
-	return pubKey, nil
-}
-
 // remotesToEndpoints generates endpoints from remote addresses.
 func remotesToEndpoints(remotes []string) ([]*dirk.Endpoint, error) {
 	endpoints := make([]*dirk.Endpoint, 0)

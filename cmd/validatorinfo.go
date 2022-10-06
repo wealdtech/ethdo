@@ -31,7 +31,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/wealdtech/ethdo/util"
-	e2wtypes "github.com/wealdtech/go-eth2-wallet-types/v2"
 	string2eth "github.com/wealdtech/go-string2eth"
 )
 
@@ -59,6 +58,7 @@ In quiet mode this will return 0 if the validator information can be obtained, o
 		}
 
 		validator, err := util.ParseValidator(ctx, eth2Client.(eth2client.ValidatorsProvider), viper.GetString("validator"), "head")
+		errCheck(err, "Failed to obtain validator")
 
 		if verbose {
 			network, err := util.Network(ctx, eth2Client)
@@ -107,11 +107,6 @@ In quiet mode this will return 0 if the validator information can be obtained, o
 
 		os.Exit(_exitSuccess)
 	},
-}
-
-// validatorInfoAccount obtains the account for the validator info command.
-func validatorInfoAccount(ctx context.Context, eth2Client eth2client.Service) (e2wtypes.Account, error) {
-	return util.ParseAccount(ctx, viper.GetString("validator"), nil, false)
 }
 
 // graphData returns data from the graph about number and amount of deposits

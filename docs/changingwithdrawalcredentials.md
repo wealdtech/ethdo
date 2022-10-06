@@ -124,7 +124,7 @@ Once you are comfortable that the mnemonic and path provide the correct result y
 ethdo validator credentials set --validator=123 --execution-address=0x8f…9F --mnemonic='abandon … art' --path='m/12381/3600/0/0'
 ```
 
-again replacing the first '0' in the path with the validator number, and using your own execution address as explained earlier in the guide.
+again replacing the first '0' in the path with the validator number.
 
 #### Using a private key
 If you have the private key from which the current withdrawal credentials were derived this can be used to generate and broadcast the credentials change operation with the following command:
@@ -133,7 +133,7 @@ If you have the private key from which the current withdrawal credentials were d
 ethdo validator credentials set --validator=123 --execution-address=0x8f…9F --private-key=0x3b…9c
 ```
 
-using your own execution address as explained earlier in the guide, and your own private key.
+using your own private key.
 
 #### Using an account
 If you used `ethdo` to generate your validator deposit data you will likely have used a separate account to generate the withdrawal credentials.  You can specify the account to generate and broadcast the credentials change operation with the following command:
@@ -142,10 +142,10 @@ If you used `ethdo` to generate your validator deposit data you will likely have
 ethdo validator credentials set --validator=123 --execution-address=0x8f…9F --account=Wallet/Account --passphrase=secret
 ```
 
-setting the execution address, account and passphrase to your own values.
+using your own account and passphrase.
 
 ### Generate the credentials change operation (offline)
-Generating the credentials change operation offline requires information from the online component, so is somewhat more involved than the online process, however does not expose mnemonics, private keys, or passphrases to servers that are connected to the internet.  The process is below.
+Generating the credentials change operation offline requires information from the online component and is more involved than the online process, however does not expose mnemonics, private keys, or passphrases to servers that are connected to the internet.  The process is below.
 
 #### Obtain data required for offline generation.
 Generating the credentials change operation requires information that comes from an online beacon node.  As such, on your _online_ server you need to run the following command:
@@ -164,7 +164,7 @@ Add the following to your command to run it offline:
 This information needs to be copied to your offline server to continue.
 
 #### Generate signed operation
-Generating the signed operation offline
+Generating the signed operation offline is different from the online operation in that it will produce an output that can be copied to the online server for broadcast.  Separating generation from broadcast allows the offline server to remain securely disconnected from the internet.  The generation steps should be run on the _offline_ server.
 
 #### Using a mnemonic
 Many stakers will have generated their validators from a mnemonic.  A mnemonic is a 24-word phrase from which withdrawal and validator keys are derived using a path.
@@ -247,7 +247,7 @@ An online server can broadcast the result of the previous step.  Note that the d
 ethdo validator credentials set --signed-operation='{"message":{"validator_index":"123","from_bls_pubkey":"0xad1868210a0cff7aff22633c003c503d4c199c8dcca13bba5b3232fc784d39d3855936e94ce184c3ce27bf15d4347695","to_execution_address":"0x388ea662ef2c223ec0b047d41bf3c0f362142ad5"},"signature":"0x8fcc8ceb75cbea891540150efc7df3e482a74592f89f3fc62a2d034381c776fcd42faad82af7a4af7fb84168a74981ce0ec96cf059e134eaa979c67425138f1915d1a8b1b6056401a9f7a2e79ed673f4b0c6b6ae1f60cff5996318e4769d0642"}'
 ```
 
-Alternatively, if the operation is stored on a filesystem, for example on a USB device from where it was copied from the offline server, it can be used with:
+Alternatively, if the operation is stored on a filesystem, for example on a USB device from where it was copied from the offline server, it can be accessed with:
 
 ```
 ethdo validator credentials set --signed-operation=/path/to/signed/operation

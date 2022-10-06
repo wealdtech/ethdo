@@ -15,16 +15,12 @@ package accountderive
 
 import (
 	"context"
-	"regexp"
 
 	"github.com/pkg/errors"
 	"github.com/wealdtech/ethdo/util"
 	e2types "github.com/wealdtech/go-eth2-types/v2"
 	e2wtypes "github.com/wealdtech/go-eth2-wallet-types/v2"
 )
-
-// pathRegex is the regular expression that matches an HD path.
-var pathRegex = regexp.MustCompile("^m/[0-9]+/[0-9]+(/[0-9+])+")
 
 func process(ctx context.Context, data *dataIn) (*dataOut, error) {
 	if data == nil {

@@ -4,7 +4,7 @@ When creating a validator it is possible to set its withdrawal credentials to th
 **Once a validator has Ethereum execution credentials set they cannot be changed.  Please be careful when following this or any similar process to ensure you end up with the ability to access the rewards that will be sent to the execution address within the credentials.**
 
 ## Preparing for the process
-A number of steps need to be taken to prepare for creating and broadcasting the credentials change operation.
+A number of steps need to be taken to prepare for generating and broadcasting the credentials change operation.
 
 ### Accessing the beacon node
 `ethdo` requires access to the beacon node at various points during the operation.  `ethdo` will attempt to find a local beacon node automatically, but if not then an explicit connection value will be required.  To find out if `ethdo` has access to the beacon node run:
@@ -78,13 +78,13 @@ BLS credentials: 0x00ebf119d469a31ff2a534d176e6d594046a2367f7a36848009f70f3cb9a9
 This result should start with the phrase "BLS credentials", which means that these credentials must be upgraded to an Ethereum execution address to receive withdrawals.  If instead the result starts with the phrase "Ethereum execution address" it means that the credentials are already set to an Ethereum execution address and no further action is necessary (or possible).
 
 
-The next step depends on if you have access to your keys 
+Once you have the correct information to refer to your validator you can generate the credentials change operation.
 
 ### Generate and publish the credentials change operation (online)
 The steps for generating and publishing the credentials change operation online depend on the method by which you access your current withdrawal key.
 
 #### Using a mnemonic
-Many stakers will have generated their validators from a mnemonic.  A mnemonic is a 24-word phrase from which withdrawal and validator keys are derived using a path.
+Many stakers will have generated their validators from a mnemonic.  A mnemonic is a 24-word phrase from which withdrawal and validator keys are derived using a _path_.  Commonly, keys will have been generated using two paths:
 
 - m/12381/3600/_i_/0 is the path to a withdrawal key, where _i_ starts at 0 for the first validator, 1 for the second validator, _etc._
 - m/12381/3600/_i_/0/0 is the path to a validator key, where _i_ starts at 0 for the first validator, 1 for the second validator, _etc._
@@ -103,10 +103,10 @@ Public key: 0xb384f767d964e100c8a9b21018d08c25ffebae268b3ab6d610353897541971726d
 
 The displayed public key should match the public key of the validator of which you are attempting to change the credentials.  If not, then do not proceed further and obtain help to understand why there is a mismatch.
 
-Assuming the displayed public key does match the public key of the validator the next step is to confirm the current withdrawal credentials.  To do su run:
+Assuming the displayed public key does match the public key of the validator the next step is to confirm the current withdrawal credentials.  To do so run:
 
 ```
-ethdo account derive --mnemonic='abandon … art' --path='m/12381/0/0' --show-withdrawal-credentials
+ethdo account derive --mnemonic='abandon … art' --path='m/12381/3600/0/0' --show-withdrawal-credentials
 ```
 
 again replacing the first '0' in the path with the validator number.  This will provide an output similar to:
@@ -121,7 +121,7 @@ The displayed withdrawal credentials should match the current withdrawal credent
 Once you are comfortable that the mnemonic and path provide the correct result you can generate and broadcast the credentials change operation with the following command:
 
 ```
-ethdo validator credentials set --validator=123 --execution-address=0x8f…9F --mnemonic='abandon … art' --path='m/12381/0/0'
+ethdo validator credentials set --validator=123 --execution-address=0x8f…9F --mnemonic='abandon … art' --path='m/12381/3600/0/0'
 ```
 
 again replacing the first '0' in the path with the validator number, and using your own execution address as explained earlier in the guide.
@@ -186,10 +186,10 @@ Public key: 0xb384f767d964e100c8a9b21018d08c25ffebae268b3ab6d610353897541971726d
 
 The displayed public key should match the public key of the validator of which you are attempting to change the credentials.  If not, then do not proceed further and obtain help to understand why there is a mismatch.
 
-Assuming the displayed public key does match the public key of the validator the next step is to confirm the current withdrawal credentials.  To do su run:
+Assuming the displayed public key does match the public key of the validator the next step is to confirm the current withdrawal credentials.  To do so run:
 
 ```
-ethdo account derive --mnemonic='abandon … art' --path='m/12381/0/0' --show-withdrawal-credentials
+ethdo account derive --mnemonic='abandon … art' --path='m/12381/3600/0/0' --show-withdrawal-credentials
 ```
 
 again replacing the first '0' in the path with the validator number.  This will provide an output similar to:
@@ -204,7 +204,7 @@ The displayed withdrawal credentials should match the current withdrawal credent
 Once you are comfortable that the mnemonic and path provide the correct result you can generate the credentials change operation with the following command:
 
 ```
-ethdo validator credentials set --offline --genesis-validators=root=0x04…fb --fork-version=0x03…20 --validator=123 --execution-address=0x8f…9F --mnemonic='abandon … art' --path='m/12381/0/0'
+ethdo validator credentials set --offline --genesis-validators=root=0x04…fb --fork-version=0x03…20 --validator=123 --execution-address=0x8f…9F --mnemonic='abandon … art' --path='m/12381/3600/0/0'
 ```
 
 again replacing the first '0' in the path with the validator number, and using your own execution address as explained earlier in the guide.  This will produce output similar to the following:

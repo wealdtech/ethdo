@@ -15,6 +15,7 @@ package accountderive
 
 import (
 	"context"
+	"strings"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -45,5 +46,5 @@ func Run(cmd *cobra.Command) (string, error) {
 		return "", errors.Wrap(err, "failed to obtain output")
 	}
 
-	return results, nil
+	return strings.TrimSuffix(results, "\n"), nil
 }

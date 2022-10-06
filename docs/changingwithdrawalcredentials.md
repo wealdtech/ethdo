@@ -112,7 +112,6 @@ ethdo account derive --mnemonic='abandon … art' --path='m/12381/3600/0/0' --sh
 again replacing the first '0' in the path with the validator number.  This will provide an output similar to:
 
 ```
-Public key: 0x99b1f1d84d76185466d86c34bde1101316afddae76217aa86cd066979b19858c2c9d9e56eebc1e067ac54277a61790db
 Withdrawal credentials: 0x008ba1cc4b091b91c1202bba3f508075d6ff565c77e559f0803c0792e0302bf1
 ```
 

@@ -587,6 +587,14 @@ Validator commands focus on interaction with Ethereum 2 validators.
 $ ethdo validator credentials get --validator=Validators/1
 ```
 
+#### `credentials set`
+
+`ethdo validator credentials set` updates withdrawal credentials from BLS "type 0" credentials to execution "type 1" credentials.  Full information about using this command can be found in the [specific documentation](./changingwithdrawalcredentials.md).
+
+```sh
+$ ethdo validator credentials set --validator=Validators/1 --execution-address=0x8f…9F --private-key=0x3b…9c
+```
+
 #### `depositdata`
 
 `ethdo validator depositdata` generates the data required to deposit one or more Ethereum 2 validators.  Options include:

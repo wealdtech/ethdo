@@ -1,5 +1,5 @@
 # Changing withdrawal credentials.
-When creating a validator it is possible to set is withdrawal credentials to those based upon a BLS private key (known as BLS withdrawal credentials, or "type 0" withdrawal credentials) or based upon an Ethereum execution address (known as execution withdrawal credentials, or "type 1" withdrawal credentials).  With the advent of the Capella hard fork, it is possible for rewards accrued on the consensus chain (also known as the beacon chain) to be sent to the execution chain.  However, for this to occur the validator's withdrawal credentials must be type 1.  Capella also brings a mechanism to change existing type 0 withdrawal credentials to type 1 withdrawal credentials, and this document outlines the process to change withdrawal credentials from type 0 to type 1 so that such rewards can be accessed.
+When creating a validator it is possible to set its withdrawal credentials to those based upon a BLS private key (known as BLS withdrawal credentials, or "type 0" withdrawal credentials) or based upon an Ethereum execution address (known as execution withdrawal credentials, or "type 1" withdrawal credentials).  With the advent of the Capella hard fork, it is possible for rewards accrued on the consensus chain (also known as the beacon chain) to be sent to the execution chain.  However, for this to occur the validator's withdrawal credentials must be type 1.  Capella also brings a mechanism to change existing type 0 withdrawal credentials to type 1 withdrawal credentials, and this document outlines the process to change withdrawal credentials from type 0 to type 1 so that consensus rewards can be accessed.
 
 **Once a validator has Ethereum execution credentials set they cannot be changed.  Please be careful when following this or any similar process to ensure you end up with the ability to access the rewards that will be sent to the execution address within the credentials.**
 
@@ -34,8 +34,8 @@ Note that some beacon nodes may require configuration to serve their REST API.  
 There are three options to reference a validator:
 
 - the `ethdo` account of the validator (in format wallet/account)
-- the validator's public key (in format 0x...)
-- the validator's index (in format 123...)
+- the validator's public key (in format 0x…)
+- the validator's index (in format 123…)
 
 Any of these can be passed to the following commands with the `--validator` parameter.  You need to ensure that you have this information before starting the process.
 
@@ -49,6 +49,8 @@ The execution address will be the address to which all Ether held by the validat
 - the Ethereum address is that of a smart contract with the ability to withdraw funds
 
 The execution address must be supplied in [EIP-55](https://eips.ethereum.org/EIPS/eip-55) format, _i.e._ using mixed case for checksum.  An example of a mixed-case Ethereum address is `0x8f0844Fd51E31ff6Bf5baBe21DCcf7328E19Fd9F`
+
+**In the following examples we will use an execution address of 0x8f…9F.  Please replace this with the your execution address in all commands.**
 
 ### Online or offline
 It is possible to generate the withdrawal credentials change operation either online or offline.
@@ -84,13 +86,13 @@ The steps for generating and publishing the credentials change operation online 
 #### Using a mnemonic
 Many stakers will have generated their validators from a mnemonic.  A mnemonic is a 24-word phrase from which withdrawal and validator keys are derived using a path.
 
-- m/12381/3600/_i_/0 is the path to the _i_th withdrawal key, where _i_ starts at 0 for the first validator, 1 for the second validator, _etc._
-- m/12381/3600/_i_/0/0 is the path to the _i_th validator key, where _i_ starts at 0 for the first validator, 1 for the second validator, _etc._
+- m/12381/3600/_i_/0 is the path to a withdrawal key, where _i_ starts at 0 for the first validator, 1 for the second validator, _etc._
+- m/12381/3600/_i_/0/0 is the path to a validator key, where _i_ starts at 0 for the first validator, 1 for the second validator, _etc._
 
 The first step will be to confirm that the mnemonic provides the appropriate validator key.  To do so run:
 
 ```
-ethdo account derive --mnemonic='abandon ... art' --path='m/12381/3600/0/0/0'
+ethdo account derive --mnemonic='abandon … art' --path='m/12381/3600/0/0/0'
 ```
 
 replacing the first '0' in the path with the validator number (remember that numbering starts at 0 for the first validator).  This will provide an output similar to:
@@ -104,7 +106,7 @@ The displayed public key should match the public key of the validator of which y
 Assuming the displayed public key does match the public key of the validator the next step is to confirm the current withdrawal credentials.  To do su run:
 
 ```
-ethdo account derive --mnemonic='abandon ... art' --path='m/12381/0/0' --show-withdrawal-credentials
+ethdo account derive --mnemonic='abandon … art' --path='m/12381/0/0' --show-withdrawal-credentials
 ```
 
 again replacing the first '0' in the path with the validator number.  This will provide an output similar to:
@@ -119,7 +121,7 @@ The displayed withdrawal credentials should match the current withdrawal credent
 Once you are comfortable that the mnemonic and path provide the correct result you can generate and broadcast the credentials change operation with the following command:
 
 ```
-ethdo validator credentials set --validator=123 --execution-address=0x00...13 --mnemonic='abandon ... art' --path='m/12381/0/0'
+ethdo validator credentials set --validator=123 --execution-address=0x8f…9F --mnemonic='abandon … art' --path='m/12381/0/0'
 ```
 
 again replacing the first '0' in the path with the validator number, and using your own execution address as explained earlier in the guide.
@@ -128,7 +130,7 @@ again replacing the first '0' in the path with the validator number, and using y
 If you have the private key from which the current withdrawal credentials were derived this can be used to generate and broadcast the credentials change operation with the following command:
 
 ```
-ethdo validator credentials set --validator=123 --execution-address=0x00...13 --private-key=0x3b...9c
+ethdo validator credentials set --validator=123 --execution-address=0x8f…9F --private-key=0x3b…9c
 ```
 
 using your own execution address as explained earlier in the guide, and your own private key.
@@ -137,7 +139,7 @@ using your own execution address as explained earlier in the guide, and your own
 If you used `ethdo` to generate your validator deposit data you will likely have used a separate account to generate the withdrawal credentials.  You can specify the account to generate and broadcast the credentials change operation with the following command:
 
 ```
-ethdo validator credentials set --validator=123 --execution-address=0x00...13 --account=Wallet/Account --passphrase=secret
+ethdo validator credentials set --validator=123 --execution-address=0x8f…9F --account=Wallet/Account --passphrase=secret
 ```
 
 setting the execution address, account and passphrase to your own values.
@@ -173,7 +175,7 @@ Many stakers will have generated their validators from a mnemonic.  A mnemonic i
 The first step will be to confirm that the mnemonic provides the appropriate validator key.  To do so run:
 
 ```
-ethdo account derive --mnemonic='abandon ... art' --path='m/12381/3600/0/0/0'
+ethdo account derive --mnemonic='abandon … art' --path='m/12381/3600/0/0/0'
 ```
 
 replacing the first '0' in the path with the validator number (remember that numbering starts at 0 for the first validator).  This will provide an output similar to:
@@ -187,7 +189,7 @@ The displayed public key should match the public key of the validator of which y
 Assuming the displayed public key does match the public key of the validator the next step is to confirm the current withdrawal credentials.  To do su run:
 
 ```
-ethdo account derive --mnemonic='abandon ... art' --path='m/12381/0/0' --show-withdrawal-credentials
+ethdo account derive --mnemonic='abandon … art' --path='m/12381/0/0' --show-withdrawal-credentials
 ```
 
 again replacing the first '0' in the path with the validator number.  This will provide an output similar to:
@@ -202,7 +204,7 @@ The displayed withdrawal credentials should match the current withdrawal credent
 Once you are comfortable that the mnemonic and path provide the correct result you can generate the credentials change operation with the following command:
 
 ```
-ethdo validator credentials set --offline --genesis-validators=root=0x04...fb --fork-version=0x03...20 --validator=123 --execution-address=0x00...13 --mnemonic='abandon ... art' --path='m/12381/0/0'
+ethdo validator credentials set --offline --genesis-validators=root=0x04…fb --fork-version=0x03…20 --validator=123 --execution-address=0x8f…9F --mnemonic='abandon … art' --path='m/12381/0/0'
 ```
 
 again replacing the first '0' in the path with the validator number, and using your own execution address as explained earlier in the guide.  This will produce output similar to the following:
@@ -216,7 +218,7 @@ again replacing the first '0' in the path with the validator number, and using y
 If you have the private key from which the current withdrawal credentials were derived this can be used to generate the credentials change operation with the following command:
 
 ```
-ethdo validator credentials set --offline --genesis-validators=root=0x04...fb --fork-version=0x03...20 --validator=123 --execution-address=0x00...13 --private-key=0x3bdb...6a9c
+ethdo validator credentials set --offline --genesis-validators=root=0x04…fb --fork-version=0x03…20 --validator=123 --execution-address=0x8f…9F --private-key=0x3b…9c
 ```
 
 using your own execution address as explained earlier in the guide, and your own private key.  This will produce output similar to the following:
@@ -229,7 +231,7 @@ using your own execution address as explained earlier in the guide, and your own
 If you used `ethdo` to generate your validator deposit data you will likely have used a separate account to generate the withdrawal credentials.  You can specify the account to generate the credentials change operation with the following command:
 
 ```
-ethdo validator credentials set --offline --genesis-validators=root=0x04...fb --fork-version=0x03...20 --validator=123 --execution-address=0x00...13 --account=Wallet/Account --passphrase=secret
+ethdo validator credentials set --offline --genesis-validators=root=0x04…fb --fork-version=0x03…20 --validator=123 --execution-address=0x8f…9F --account=Wallet/Account --passphrase=secret
 ```
 
 setting the execution address, account and passphrase to your own values.  This will produce output similar to the following:

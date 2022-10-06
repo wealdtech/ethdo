@@ -26,7 +26,7 @@ var validatorCredentialsGetCmd = &cobra.Command{
 	Short: "Obtain withdrawal credentials for an Ethereum consensus validator",
 	Long: `Obtain withdrawal credentials for an Ethereum consensus validator.  For example:
 
-    ethdo validator credentials get --account=primary/validator
+    ethdo validator credentials get --validator=primary/validator
 
 In quiet mode this will return 0 if the validator exists, otherwise 1.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -47,19 +47,11 @@ In quiet mode this will return 0 if the validator exists, otherwise 1.`,
 func init() {
 	validatorCredentialsCmd.AddCommand(validatorCredentialsGetCmd)
 	validatorCredentialsFlags(validatorCredentialsGetCmd)
-	validatorCredentialsGetCmd.Flags().String("account", "", "Account for which to fetch validator credentials")
-	validatorCredentialsGetCmd.Flags().String("index", "", "Validator index for which to fetch validator credentials")
-	validatorCredentialsGetCmd.Flags().String("pubkey", "", "Validator public key for which to fetch validator credentials")
+	validatorCredentialsGetCmd.Flags().String("validator", "", "Validator for which to get validator credentials")
 }
 
 func validatorCredentialsGetBindings() {
-	if err := viper.BindPFlag("account", validatorCredentialsGetCmd.Flags().Lookup("account")); err != nil {
-		panic(err)
-	}
-	if err := viper.BindPFlag("index", validatorCredentialsGetCmd.Flags().Lookup("index")); err != nil {
-		panic(err)
-	}
-	if err := viper.BindPFlag("pubkey", validatorCredentialsGetCmd.Flags().Lookup("pubkey")); err != nil {
+	if err := viper.BindPFlag("validator", validatorCredentialsGetCmd.Flags().Lookup("validator")); err != nil {
 		panic(err)
 	}
 }

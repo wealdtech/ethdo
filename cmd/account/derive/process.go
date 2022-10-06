@@ -16,12 +16,11 @@ package accountderive
 import (
 	"context"
 	"regexp"
-	"strings"
 
 	"github.com/pkg/errors"
-	"github.com/tyler-smith/go-bip39"
-	util "github.com/wealdtech/go-eth2-util"
-	"golang.org/x/text/unicode/norm"
+	"github.com/wealdtech/ethdo/util"
+	e2types "github.com/wealdtech/go-eth2-types/v2"
+	e2wtypes "github.com/wealdtech/go-eth2-wallet-types/v2"
 )
 
 // pathRegex is the regular expression that matches an HD path.
@@ -32,40 +31,20 @@ func process(ctx context.Context, data *dataIn) (*dataOut, error) {
 		return nil, errors.New("no data")
 	}
 
-	// If there are more than 24 words we treat the additional characters as the passphrase.
-	mnemonicParts := strings.Split(data.mnemonic, " ")
-	mnemonicPassphrase := ""
-	if len(mnemonicParts) > 24 {
-		data.mnemonic = strings.Join(mnemonicParts[:24], " ")
-		mnemonicPassphrase = strings.Join(mnemonicParts[24:], " ")
-	}
-	// Normalise the input.
-	data.mnemonic = string(norm.NFKD.Bytes([]byte(data.mnemonic)))
-	mnemonicPassphrase = string(norm.NFKD.Bytes([]byte(mnemonicPassphrase)))
-
-	if !bip39.IsMnemonicValid(data.mnemonic) {
-		return nil, errors.New("mnemonic is invalid")
-	}
-
-	// Create seed from mnemonic and passphrase.
-	seed := bip39.NewSeed(data.mnemonic, mnemonicPassphrase)
-
-	// Ensure the path is valid.
-	match := pathRegex.Match([]byte(data.path))
-	if !match {
-		return nil, errors.New("path does not match expected format m/…")
-	}
-
-	// Derive private key from seed and path.
-	key, err := util.PrivateKeyFromSeedAndPath(seed, data.path)
+	account, err := util.ParseAccount(ctx, data.mnemonic, []string{data.path}, true)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to generate key")
+		return nil, errors.Wrap(err, "failed to derive account")
+	}
+
+	key, err := account.(e2wtypes.AccountPrivateKeyProvider).PrivateKey(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to obtain account private key")
 	}
 
 	results := &dataOut{
-		showPrivateKey:                   data.showPrivateKey,
+		showPrivateKey:            data.showPrivateKey,
 		showWithdrawalCredentials: data.showWithdrawalCredentials,
-		key:                       key,
+		key:                       key.(*e2types.BLSPrivateKey),
 	}
 
 	return results, nil

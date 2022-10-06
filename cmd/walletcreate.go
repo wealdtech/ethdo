@@ -45,14 +45,10 @@ func init() {
 	walletCmd.AddCommand(walletCreateCmd)
 	walletFlags(walletCreateCmd)
 	walletCreateCmd.Flags().String("type", "non-deterministic", "Type of wallet to create (non-deterministic or hierarchical deterministic)")
-	walletCreateCmd.Flags().String("mnemonic", "", "The 24-word mnemonic for a hierarchical deterministic wallet")
 }
 
 func walletCreateBindings() {
 	if err := viper.BindPFlag("type", walletCreateCmd.Flags().Lookup("type")); err != nil {
-		panic(err)
-	}
-	if err := viper.BindPFlag("mnemonic", walletCreateCmd.Flags().Lookup("mnemonic")); err != nil {
 		panic(err)
 	}
 }

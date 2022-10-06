@@ -1,4 +1,4 @@
-// Copyright © 2020 Weald Technology Trading
+// Copyright © 2020, 2022 Weald Technology Trading
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -53,6 +53,11 @@ In quiet mode this will return 0 if the chain information can be obtained, other
 			os.Exit(_exitSuccess)
 		}
 
+		if viper.GetBool("prepare-offline") {
+			fmt.Printf("Add the following to your command to run it offline:\n  --offline --genesis-validators=root=%#x --fork-version=%#x\n", genesis.GenesisValidatorsRoot, fork.CurrentVersion)
+			os.Exit(_exitSuccess)
+		}
+
 		if genesis.GenesisTime.Unix() == 0 {
 			fmt.Println("Genesis time: undefined")
 		} else {
@@ -84,4 +89,11 @@ In quiet mode this will return 0 if the chain information can be obtained, other
 func init() {
 	chainCmd.AddCommand(chainInfoCmd)
 	chainFlags(chainInfoCmd)
+	chainInfoCmd.Flags().Bool("prepare-offline", false, "Provide information useful for offline commands")
+}
+
+func chainInfoBindings() {
+	if err := viper.BindPFlag("prepare-offline", chainInfoCmd.Flags().Lookup("prepare-offline")); err != nil {
+		panic(err)
+	}
 }

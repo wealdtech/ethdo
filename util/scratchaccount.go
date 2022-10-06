@@ -75,6 +75,14 @@ func (a *ScratchAccount) PublicKey() e2types.PublicKey {
 	return a.pubKey
 }
 
+// PrivateKey returns the account private key.
+func (a *ScratchAccount) PrivateKey(ctx context.Context) (e2types.PrivateKey, error) {
+	if a.privKey == nil {
+		return nil, errors.New("no private key available")
+	}
+	return a.privKey, nil
+}
+
 // Path returns the account path.
 func (a *ScratchAccount) Path() string {
 	return ""

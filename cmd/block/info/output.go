@@ -296,7 +296,7 @@ func outputBellatrixBlockText(ctx context.Context, data *dataOut, signedBlock *b
 		bodyRoot,
 		signedBlock.Message.ParentRoot,
 		signedBlock.Message.StateRoot,
-		signedBlock.Message.Body.Graffiti,
+		signedBlock.Message.Body.Graffiti[:],
 		data.genesisTime,
 		data.slotDuration,
 		data.slotsPerEpoch)
@@ -386,7 +386,7 @@ func outputAltairBlockText(ctx context.Context, data *dataOut, signedBlock *alta
 		bodyRoot,
 		signedBlock.Message.ParentRoot,
 		signedBlock.Message.StateRoot,
-		signedBlock.Message.Body.Graffiti,
+		signedBlock.Message.Body.Graffiti[:],
 		data.genesisTime,
 		data.slotDuration,
 		data.slotsPerEpoch)
@@ -469,7 +469,7 @@ func outputPhase0BlockText(ctx context.Context, data *dataOut, signedBlock *phas
 		bodyRoot,
 		signedBlock.Message.ParentRoot,
 		signedBlock.Message.StateRoot,
-		signedBlock.Message.Body.Graffiti,
+		signedBlock.Message.Body.Graffiti[:],
 		data.genesisTime,
 		data.slotDuration,
 		data.slotsPerEpoch)

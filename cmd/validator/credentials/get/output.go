@@ -17,6 +17,8 @@ import (
 	"context"
 	"fmt"
 	"strings"
+
+	ethutil "github.com/wealdtech/go-eth2-util"
 )
 
 func (c *command) output(ctx context.Context) (string, error) {
@@ -26,19 +28,38 @@ func (c *command) output(ctx context.Context) (string, error) {
 
 	builder := strings.Builder{}
 
-	switch c.validator.Validator.WithdrawalCredentials[0] {
+	switch c.validatorInfo.Validator.WithdrawalCredentials[0] {
 	case 0:
 		builder.WriteString("BLS credentials: ")
-		builder.WriteString(fmt.Sprintf("%#x", c.validator.Validator.WithdrawalCredentials))
+		builder.WriteString(fmt.Sprintf("%#x", c.validatorInfo.Validator.WithdrawalCredentials))
 	case 1:
 		builder.WriteString("Ethereum execution address: ")
-		builder.WriteString(fmt.Sprintf("%#x", c.validator.Validator.WithdrawalCredentials[12:]))
+		builder.WriteString(addressBytesToEIP55(c.validatorInfo.Validator.WithdrawalCredentials[12:]))
 		if c.verbose {
 			builder.WriteString("\n")
 			builder.WriteString("Withdrawal credentials: ")
-			builder.WriteString(fmt.Sprintf("%#x", c.validator.Validator.WithdrawalCredentials))
+			builder.WriteString(fmt.Sprintf("%#x", c.validatorInfo.Validator.WithdrawalCredentials))
 		}
 	}
 
 	return builder.String(), nil
+}
+
+// addressBytesToEIP55 converts a byte array in to an EIP-55 string format.
+func addressBytesToEIP55(address []byte) string {
+	bytes := []byte(fmt.Sprintf("%x", address))
+	hash := ethutil.Keccak256(bytes)
+	for i := 0; i < len(bytes); i++ {
+		hashByte := hash[i/2]
+		if i%2 == 0 {
+			hashByte >>= 4
+		} else {
+			hashByte &= 0xf
+		}
+		if bytes[i] > '9' && hashByte > 7 {
+			bytes[i] -= 32
+		}
+	}
+
+	return fmt.Sprintf("0x%s", string(bytes))
 }

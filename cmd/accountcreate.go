@@ -49,7 +49,6 @@ func init() {
 	accountFlags(accountCreateCmd)
 	accountCreateCmd.Flags().Uint32("participants", 1, "Number of participants (1 for non-distributed accounts, >1 for distributed accounts)")
 	accountCreateCmd.Flags().Uint32("signing-threshold", 1, "Signing threshold (1 for non-distributed accounts)")
-	accountCreateCmd.Flags().String("path", "", "path of account (for hierarchical deterministic accounts)")
 }
 
 func accountCreateBindings() {
@@ -57,9 +56,6 @@ func accountCreateBindings() {
 		panic(err)
 	}
 	if err := viper.BindPFlag("signing-threshold", accountCreateCmd.Flags().Lookup("signing-threshold")); err != nil {
-		panic(err)
-	}
-	if err := viper.BindPFlag("path", accountCreateCmd.Flags().Lookup("path")); err != nil {
 		panic(err)
 	}
 }

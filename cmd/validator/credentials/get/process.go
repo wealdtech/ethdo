@@ -65,17 +65,7 @@ func (c *command) setup(ctx context.Context) error {
 
 func (c *command) fetchValidator(ctx context.Context) error {
 	var err error
-	switch {
-	case c.account != "":
-		c.validator, err = util.ParseValidator(ctx, c.validatorsProvider, c.account, "head")
-	case c.index != "":
-		c.validator, err = util.ParseValidator(ctx, c.validatorsProvider, c.index, "head")
-	case c.pubKey != "":
-		c.validator, err = util.ParseValidator(ctx, c.validatorsProvider, c.pubKey, "head")
-	default:
-		return errors.New("account, index or public key must be supplied")
-	}
-
+	c.validatorInfo, err = util.ParseValidator(ctx, c.validatorsProvider, c.validator, "head")
 	if err != nil {
 		return errors.Wrap(err, "failed to obtain validator information")
 	}

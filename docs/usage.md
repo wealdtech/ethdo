@@ -711,6 +711,12 @@ $ ethdo validator yield
 Yield: 4.64%
 ```
 
+#### `summary`
+`ethdo validator summary` provides a summary of the given epoch for the given validators.  Options include:
+  - `epoch`: the epoch for which to provide a summary; defaults to last complete epoch
+  - `validators`: the list of validators for which to provide a summary
+  - `json`: provide JSON output
+
 ### `proposer` commands
 
 Proposer commands focus on Ethereum 2 validators' actions as proposers.

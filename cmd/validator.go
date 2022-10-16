@@ -30,3 +30,6 @@ func init() {
 
 func validatorFlags(cmd *cobra.Command) {
 }
+
+func validatorBindings() {
+}

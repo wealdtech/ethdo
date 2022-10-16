@@ -1,5 +1,6 @@
 dev:
   - add more information to "epoch summary"
+  - add "validator summary"
 
 1.25.2:
   - no longer require connection parameter

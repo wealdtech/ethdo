@@ -128,6 +128,8 @@ func includeCommandBindings(cmd *cobra.Command) {
 		validatorInfoBindings()
 	case "validator/keycheck":
 		validatorKeycheckBindings()
+	case "validator/summary":
+		validatorSummaryBindings()
 	case "validator/yield":
 		validatorYieldBindings()
 	case "validator/expectation":

@@ -1,11 +1,11 @@
 package shamir
 
 import (
-	"crypto/rand"
+	cryptorand "crypto/rand"
 	"crypto/subtle"
+	"encoding/binary"
 	"fmt"
 	mathrand "math/rand"
-	"time"
 )
 
 const (
@@ -20,6 +20,20 @@ type polynomial struct {
 	coefficients []uint8
 }
 
+type cryptoSource struct{}
+
+func (s cryptoSource) Int63() int64 {
+	bytes := make([]byte, 8)
+	if _, err := cryptorand.Read(bytes); err != nil {
+		panic(err)
+	}
+	return int64(binary.BigEndian.Uint64(bytes) >> 1)
+}
+
+func (s cryptoSource) Seed(seed int64) {
+	panic("seed")
+}
+
 // makePolynomial constructs a random polynomial of the given
 // degree but with the provided intercept value.
 func makePolynomial(intercept, degree uint8) (polynomial, error) {
@@ -32,7 +46,7 @@ func makePolynomial(intercept, degree uint8) (polynomial, error) {
 	p.coefficients[0] = intercept
 
 	// Assign random co-efficients to the polynomial
-	if _, err := rand.Read(p.coefficients[1:]); err != nil {
+	if _, err := cryptorand.Read(p.coefficients[1:]); err != nil {
 		return p, err
 	}
 
@@ -143,8 +157,8 @@ func Split(secret []byte, parts, threshold int) ([][]byte, error) {
 	}
 
 	// Generate random list of x coordinates
-	mathrand.Seed(time.Now().UnixNano())
-	xCoordinates := mathrand.Perm(255)
+	rnd := mathrand.New(&cryptoSource{})
+	xCoordinates := rnd.Perm(255)
 
 	// Allocate the output array, initialize the final byte
 	// of the output with the offset. The representation of each

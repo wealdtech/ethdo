@@ -64,7 +64,7 @@ func TestOutput(t *testing.T) {
 				key:            blsPrivateKey("0x068dce0c90cb428ab37a74af0191eac49648035f1aaef077734b91e05985ec55"),
 				showPrivateKey: true,
 			},
-			needs: []string{"Public key", "Private key"},
+			needs: []string{"Private key"},
 		},
 		{
 			name: "WithdrawalCredentials",
@@ -72,7 +72,7 @@ func TestOutput(t *testing.T) {
 				key:                       blsPrivateKey("0x068dce0c90cb428ab37a74af0191eac49648035f1aaef077734b91e05985ec55"),
 				showWithdrawalCredentials: true,
 			},
-			needs: []string{"Public key", "Withdrawal credentials"},
+			needs: []string{"Withdrawal credentials"},
 		},
 		{
 			name: "All",
@@ -81,7 +81,7 @@ func TestOutput(t *testing.T) {
 				showPrivateKey:            true,
 				showWithdrawalCredentials: true,
 			},
-			needs: []string{"Public key", "Private key", "Withdrawal credentials"},
+			needs: []string{"Private key", "Withdrawal credentials"},
 		},
 	}
 

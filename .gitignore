@@ -18,5 +18,8 @@ coverage.html
 # Vim
 *.sw?
 
+# Local JSON files
+*.json
+
 # Local TODO
 TODO.md

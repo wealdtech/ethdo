@@ -16,6 +16,7 @@ package validatorcredentialsset
 import (
 	"context"
 	"encoding/json"
+	"os"
 
 	"github.com/pkg/errors"
 )
@@ -26,11 +27,14 @@ func (c *command) output(ctx context.Context) (string, error) {
 	}
 
 	if c.json || c.offline {
-		data, err := json.Marshal(c.signedOp)
+		data, err := json.Marshal(c.signedOperations)
 		if err != nil {
-			return "", errors.Wrap(err, "failed to marshal signed operation")
+			return "", errors.Wrap(err, "failed to marshal signed operations")
 		}
-		return string(data), nil
+		if err := os.WriteFile("credentials-operations.json", data, 0600); err != nil {
+			return "", errors.Wrap(err, "failed to write credentials-operations.json")
+		}
+		return "", nil
 	}
 
 	return "", nil

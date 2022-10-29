@@ -24,15 +24,16 @@ import (
 var validatorCredentialsSetCmd = &cobra.Command{
 	Use:   "set",
 	Short: "Set withdrawal credentials for an Ethereum consensus validator",
-	Long: `Set withdrawal credentials for an Ethereum consensus validator.  For example:
+	Long: `Set withdrawal credentials for an Ethereum consensus validator via a "change credentials" operation.  For example:
 
-    ethdo validator credentials set --validator=primary/validator --execution-address=0x00...13 --private-key=0x00...1f
+    ethdo validator credentials set --validator=primary/validator --withdrawal-address=0x00...13 --private-key=0x00...1f
 
-The existing account can be specified in one of three ways:
+The existing account can be specified in one of a number of ways:
 
-  - private key using --private-key
-  - account and passphrase using --account and --passphrase
-  - mnemonic and path using --mnemonic and --path
+  - mnemonic using --mnemonic; this will scan the mnemonic and generate all required operations
+  - mnemonic and path to the validator key using --mnemonic and --path; this will generate a single operation
+  - private key using --private-key; this will generate a single operation
+  - account and passphrase using --account and --passphrase; this will generate a single operation
 
 In quiet mode this will return 0 if the credentials operation has been generated (and successfully broadcast if online), otherwise 1.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -53,6 +54,7 @@ In quiet mode this will return 0 if the credentials operation has been generated
 func init() {
 	validatorCredentialsCmd.AddCommand(validatorCredentialsSetCmd)
 	validatorCredentialsFlags(validatorCredentialsSetCmd)
+	validatorCredentialsSetCmd.Flags().Bool("prepare-offline", false, "Create files for offline use")
 	validatorCredentialsSetCmd.Flags().String("validator", "", "Validator for which to set validator credentials")
 	validatorCredentialsSetCmd.Flags().String("withdrawal-address", "", "Execution address to which to direct withdrawals")
 	validatorCredentialsSetCmd.Flags().String("signed-operation", "", "Use pre-defined JSON signed operation as created by --json to transmit the credentials change operation")
@@ -63,6 +65,9 @@ func init() {
 }
 
 func validatorCredentialsSetBindings() {
+	if err := viper.BindPFlag("prepare-offline", validatorCredentialsSetCmd.Flags().Lookup("prepare-offline")); err != nil {
+		panic(err)
+	}
 	if err := viper.BindPFlag("validator", validatorCredentialsSetCmd.Flags().Lookup("validator")); err != nil {
 		panic(err)
 	}

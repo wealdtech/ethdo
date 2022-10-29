@@ -17,14 +17,11 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
-	"regexp"
 	"strings"
 
 	"github.com/pkg/errors"
-	"github.com/tyler-smith/go-bip39"
 	util "github.com/wealdtech/go-eth2-util"
 	e2wtypes "github.com/wealdtech/go-eth2-wallet-types/v2"
-	"golang.org/x/text/unicode/norm"
 )
 
 // ParseAccount parses input to obtain an account.
@@ -111,27 +108,11 @@ func ParseAccount(ctx context.Context,
 	return account, nil
 }
 
-// hdPathRegex is the regular expression that matches an HD path.
-var hdPathRegex = regexp.MustCompile("^m/[0-9]+/[0-9]+(/[0-9+])+")
-
 func accountFromMnemonicAndPath(mnemonic string, path string) (e2wtypes.Account, error) {
-	// If there are more than 24 words we treat the additional characters as the passphrase.
-	mnemonicParts := strings.Split(mnemonic, " ")
-	mnemonicPassphrase := ""
-	if len(mnemonicParts) > 24 {
-		mnemonic = strings.Join(mnemonicParts[:24], " ")
-		mnemonicPassphrase = strings.Join(mnemonicParts[24:], " ")
+	seed, err := SeedFromMnemonic(mnemonic)
+	if err != nil {
+		return nil, err
 	}
-	// Normalise the input.
-	mnemonic = string(norm.NFKD.Bytes([]byte(mnemonic)))
-	mnemonicPassphrase = string(norm.NFKD.Bytes([]byte(mnemonicPassphrase)))
-
-	if !bip39.IsMnemonicValid(mnemonic) {
-		return nil, errors.New("mnemonic is invalid")
-	}
-
-	// Create seed from mnemonic and passphrase.
-	seed := bip39.NewSeed(mnemonic, mnemonicPassphrase)
 
 	// Ensure the path is valid.
 	match := hdPathRegex.Match([]byte(path))

@@ -1,13 +1,54 @@
 # Changing withdrawal credentials
 When creating a validator it is possible to set its withdrawal credentials to those based upon a BLS private key (known as BLS withdrawal credentials, or "type 0" withdrawal credentials) or based upon an Ethereum execution address (known as execution withdrawal credentials, or "type 1" withdrawal credentials).  With the advent of the Capella hard fork, it is possible for rewards accrued on the consensus chain (also known as the beacon chain) to be sent to the execution chain.  However, for this to occur the validator's withdrawal credentials must be type 1.  Capella also brings a mechanism to change existing type 0 withdrawal credentials to type 1 withdrawal credentials, and this document outlines the process to change withdrawal credentials from type 0 to type 1 so that consensus rewards can be accessed.
 
-**Once a validator has Ethereum execution credentials set they cannot be changed.  Please be careful when following this or any similar process to ensure you end up with the ability to access the rewards that will be sent to the execution address within the credentials.**
+**Once a validator has Ethereum execution credentials set they cannot be changed.  Please be careful when following this or any similar process to ensure that you have access to the private key (either as a software file, a hardware key or a mnemonic) of the withdrawal address you use so that you have the ability to access your rewards.**
 
-## Preparing for the process
-A number of steps need to be taken to prepare for generating and broadcasting the credentials change operation.
+## Concepts
+The following concepts are useful when understanding the rest of this guide.
 
-### Accessing the beacon node
-`ethdo` requires access to the beacon node at various points during the operation.  `ethdo` will attempt to find a local beacon node automatically, but if not then an explicit connection value will be required.  To find out if `ethdo` has access to the beacon node run:
+### Validator
+A validator is a logical entity that secures the Ethereum beacon chain (and hence the execution chain) by proposing blocks and attesting to blocks proposed by other validators.
+
+### Withdrawal credentials
+Withdrawal credentials, held as part of a validator's on-chain definition, define where consensus rewards will be sent.
+
+### Private key
+A private key is a hexadecimal string (_e.g._ 0x010203…a1a2a3) that can be used to generate a public key and (in the case of the execution chain) Ethereum address.
+
+### Mnemonic
+A mnemonic is a 24-word phrase that can be used to generate multiple private keys with the use of _paths_.
+
+### Path
+A path is a string starting with "m" and containing a number of components separated by "/", for example "m/12381/3600/0/0".  The process to obtain a key from a mnemonic and path is known as "hierarchical derivation".
+
+### Withdrawal address
+A withdrawal address is an Ethereum execution address that will receive consensus rewards periodically during the operation of the validator and, ultimately, to which the initial deposit will be returned when the validator is exited.  It is important to understand that at time of writing this value cannot be changed, so it is critical that one of the following criteria are met:
+
+- the private keys for the Ethereum address are known
+- the Ethereum address is secured by a hardware wallet
+- the Ethereum address is that of a smart contract with the ability to withdraw funds
+
+The execution address must be supplied in [EIP-55](https://eips.ethereum.org/EIPS/eip-55) format, _i.e._ using mixed case for checksum.  An example of a mixed-case Ethereum address is `0x8f0844Fd51E31ff6Bf5baBe21DCcf7328E19Fd9F`
+
+### Online and Offline
+An _online_ computer is one that is is connected to the internet.  It should be running a consensus node connected to the larger Ethereum network.  An online computer is required to carry out the process, to obtain information from the consensus node and to broadcast your actions to the rest of the Ethereum network.
+
+An _offline_ computer is one that is not connected to the internet.  As such, it will not be running a consensus node.  It can optionally be used in conjunction with an online computer to provide higher levels of security for your mnemonic or private key, but is less convenient because it requires manual transfer of files from the online computer to the offline computer, and back.
+
+With only an online computer the flow of information is roughly as follows:
+
+![Online process](images/credentials-change-online.png)
+
+Here it can be seen that a copy of `ethdo` with access to private keys connects to a consensus node with access to the internet.  Due to its connection to the internet it is possible that the computer on which `ethdo` and the consensus node runs has been compromised, and as such would expose the private keys to an attacker.
+
+With both an offline and an online computer the flow of information is roughly as follows:
+
+![Offline process](images/credentials-change-offline.png)
+
+Here the copy of `ethdo` with access to private keys is on an offline computer, which protects it from being compromised via the internet.  Data is physically moved from the offline to the online computer via a USB storage key or similar, and none of the information on the online computer is sensitive.
+
+## Preparation
+Regardless of the method selected, preparation must take place on the online computer to ensure that `ethdo` can access your consensus node.  `ethdo` will attempt to find a local consensus node automatically, but if not then an explicit connection value will be required.  To find out if `ethdo` has access to the consensus node run:
 
 ```
 ethdo node info --verbose
@@ -22,235 +63,144 @@ Syncing: false
 
 It is important to confirm that the "Syncing" value is "false".  If this is "true" it means that the node is currently syncing, and you will need to wait for the process to finish before proceeding.
 
-If this command instead returns an error you will need to add an explicit connection string.  For example, if your beacon node is serving its REST API on port 12345 then you should add `--connection=http://localhost:12345` to all `ethdo` commands in this process, for example:
+If this command instead returns an error you will need to add an explicit connection string.  For example, if your consensus node is serving its REST API on port 12345 then you should add `--connection=http://localhost:12345` to all `ethdo` commands in this process, for example:
 
 ```sh
 ethdo --connection=http://localhost:12345 node info --verbose
 ```
 
-Note that some beacon nodes may require configuration to serve their REST API.  Please refer to the documentation of your specific beacon node to enable this.
+Note that some consensus nodes may require configuration to serve their REST API.  Please refer to the documentation of your specific consensus node to enable this.
+
+Once the preparation is complete you should select either basic or advanced operation, depending on your requirements.
+
+## Basic operation
+Given the above concepts, the purpose of this guide is to allow a change of validators' withdrawal credentials to be changed to a withdrawal address, allowing validator rewards to be accessed on the Ethereum execution chain.
+
+Basic operation is suitable in the majority of cases.  If you:
+
+- generated your validators using a mnemonic (_e.g._ using the deposit CLI or launchpad)
+- want to change all of your validators to have the same withdrawal address
+- want to change all of your validators' withdrawal credentials at the same time
+
+then this method is for you.  If any of the above does not apply then please go to the "Advanced operation" section.
+
+### Online process
+The online process generates and broadcasts the operations to change withdrawal credentials for all of your validators tied to a mnemonic in a single action.
+
+Two pieces of information are required for carrying out this process online: the mnemonic and withdrawal address.
+
+On your _online_ computer run the following:
+
+```
+ethdo validator credentials set --mnemonic="abandon abandon abandon … art" --withdrawal-address=0x0123…cdef
+```
+
+Replacing the `mnemonic` and `withdrawal-address` values with your own values.  This command will:
+
+1. obtain information from your consensus node about all currently-running validators and various additional information required to generate the operations
+2. scan your mnemonic to find any validators that were generated by it, and create the operations to change their credentials
+3. broadcast the credentials change operations to the Ethereum network
+
+### Online and Offline process
+The online and offline process contains three steps.  In the first, data is gathered on the online computer.  In the second, the credentials change operations are generated on the offline computer.  In the third, the operations are broadcast on the online computer.
+
+Two pieces of information are required for carrying out this process online: the mnemonic and withdrawal address.
+
+On your _online_ computer run the following:
+
+```
+ethdo validator credentials set --prepare-offline
+```
+
+This command will:
+
+1. obtain information from your consensus node about all currently-running validators and various additional information required to generate the operations
+2. write this information to a file called `offline-preparation.json`
+
+The `offline-preparation.json` file must be copied to your _offline_ computer.  Once this has been done, on your _offline_ computer run the following:
+
+```
+ethdo validator credentials set --offline --mnemonic="abandon abandon abandon … art" --withdrawal-address=0x0123…cdef
+```
+
+Replacing the `mnemonic` and `withdrawal-address` values with your own values.  This command will:
+
+1. read the `offline-preparation.json` file to obtain information about all currently-running validators and various additional information required to generate the operations
+2. scan your mnemonic to find any validators that were generated by it, and create the operations to change their credentials
+3. write this information to a file called `change-operations.json`
+
+The `change-operations.json` file must be copied to your _online_ computer.  Once this has been done, on your _online_ computer run the following:
+
+```
+ethdo validator credentials set
+```
+
+This command will:
+
+1. read the `change-operations.json` file to obtain the operations to change the validators' credentials
+2. broadcast the credentials change operations to the Ethereum network
+
+## Advanced operation
+Advanced operation is required when any of the following conditions are met:
+
+- your validators were created using something other than the deposit CLI or launchpad (_e.g._ `ethdo`)
+- you want to set your validators to have different withdrawal addresses
+- you want to change your validators' withdrawal credentials individually
 
 ### Validator reference
 There are three options to reference a validator:
 
 - the `ethdo` account of the validator (in format wallet/account)
 - the validator's public key (in format 0x…)
-- the validator's index (in format 123…)
+- the validator's on-chain index (in format 123…)
 
 Any of these can be passed to the following commands with the `--validator` parameter.  You need to ensure that you have this information before starting the process.
 
 **In the following examples we will use the validator with index 123.  Please replace this with the reference to your validator in all commands.**
 
-### Execution address
-The execution address will be the address to which all Ether held by the validator from the consensus chain will be sent.  It is important to understand that at time of writing this value cannot be changed, so it is critical that one of the following criteria are met:
+### Withdrawal address
+The withdrawal address is defined above in the concepts section.
 
-- the private keys for the Ethereum address are known
-- the Ethereum address is secured by a hardware wallet
-- the Ethereum address is that of a smart contract with the ability to withdraw funds
+**In the following examples we will use a withdrawal address of 0x8f…9F.  Please replace this with the your withdrawal address in all commands.**
 
-The execution address must be supplied in [EIP-55](https://eips.ethereum.org/EIPS/eip-55) format, _i.e._ using mixed case for checksum.  An example of a mixed-case Ethereum address is `0x8f0844Fd51E31ff6Bf5baBe21DCcf7328E19Fd9F`
+### Generating credentials change operations
+Note that if you are carrying out this process offline then you still need to carry out the first and third steps outlined in the "Basic operation" section above.  This is to ensure that the offline computer has the correct information to generate the operations, and that the operations are made available to the online computer for broadcasting to the network.
 
-**In the following examples we will use an execution address of 0x8f…9F.  Please replace this with the your execution address in all commands.**
+If using the online and offline process run the commands below on the offline computer, and add the `--offline` flag to the commands below.  You will need to copy the resultant `change-operations.json` file to the online computer to broadcast to the network.
 
-### Online or offline
-It is possible to generate the withdrawal credentials change operation either online or offline.
+If using the online process run the commands below on the online computer.  The operation will be broadcast to the network automatically.
 
-In _online_ mode the credentials will be generated on a server that has both access to the internet and access to the private keys of the existing withdrawal credentials.  This is the easiest process, however due to it involving private keys on a computer connected to the internet some consider this insecure.
-
-In _offline_ mode there are two servers: one with access to the internet, and one with access to the private keys.  This is the most secure process, however requires additional steps to accomplish.
-
-It is a personal choice as to if an online or offline method is chosen to generate the credentials change operation.  Instructions for both methods are present.
-
-## The process
-### Check your current validator credentials
-The first step will be to confirm that the validator can be found on-chain.  To do so, run the following command:
-
-```sh
-ethdo validator credentials get --validator=123
-```
-
-This should return information similar to the following:
-
-```
-BLS credentials: 0x00ebf119d469a31ff2a534d176e6d594046a2367f7a36848009f70f3cb9a9dd1
-```
-
-This result should start with the phrase "BLS credentials", which means that these credentials must be upgraded to an Ethereum execution address to receive withdrawals.  If instead the result starts with the phrase "Ethereum execution address" it means that the credentials are already set to an Ethereum execution address and no further action is necessary (or possible).
-
-
-Once you have the correct information to refer to your validator you can generate the credentials change operation.
-
-### Generate and publish the credentials change operation (online)
-The steps for generating and publishing the credentials change operation online depend on the method by which you access your current withdrawal key.
-
-#### Using a mnemonic
-Many stakers will have generated their validators from a mnemonic.  A mnemonic is a 24-word phrase from which withdrawal and validator keys are derived using a _path_.  Commonly, keys will have been generated using two paths:
+#### Using a mnemonic and path.
+A mnemonic is a 24-word phrase from which withdrawal and validator keys are derived using a _path_.  Commonly, keys will have been generated using two paths:
 
 - m/12381/3600/_i_/0 is the path to a withdrawal key, where _i_ starts at 0 for the first validator, 1 for the second validator, _etc._
 - m/12381/3600/_i_/0/0 is the path to a validator key, where _i_ starts at 0 for the first validator, 1 for the second validator, _etc._
 
-The first step will be to confirm that the mnemonic provides the appropriate validator key.  To do so run:
+however this is only a standard and not a restriction, and it is possible for users to have created validators using paths of their own choice.
 
 ```
-ethdo account derive --mnemonic='abandon … art' --path='m/12381/3600/0/0/0'
+ethdo validator credentials set --validator=123 --mnemonic="abandon abandon abandon … art" --path='m/12381/3600/0/0/0' --withdrawal-address=0x0123…cdef
 ```
 
-replacing the first '0' in the path with the validator number (remember that numbering starts at 0 for the first validator).  This will provide an output similar to:
-
-```
-Public key: 0xb384f767d964e100c8a9b21018d08c25ffebae268b3ab6d610353897541971726dbfc3c7463884c68a531515aab94c87
-```
-
-The displayed public key should match the public key of the validator of which you are attempting to change the credentials.  If not, then do not proceed further and obtain help to understand why there is a mismatch.
-
-Assuming the displayed public key does match the public key of the validator the next step is to confirm the current withdrawal credentials.  To do so run:
-
-```
-ethdo account derive --mnemonic='abandon … art' --path='m/12381/3600/0/0' --show-withdrawal-credentials
-```
-
-again replacing the first '0' in the path with the validator number.  This will provide an output similar to:
-
-```
-Withdrawal credentials: 0x008ba1cc4b091b91c1202bba3f508075d6ff565c77e559f0803c0792e0302bf1
-```
-
-The displayed withdrawal credentials should match the current withdrawal credentials of your validator (note that these were obtained in an earlier step so you can use the output there to confirm that they match).  If not, then do not proceed further and obtain help to understand why there is a mismatch.
-
-Once you are comfortable that the mnemonic and path provide the correct result you can generate and broadcast the credentials change operation with the following command:
-
-```
-ethdo validator credentials set --validator=123 --execution-address=0x8f…9F --mnemonic='abandon … art' --path='m/12381/3600/0/0'
-```
-
-again replacing the first '0' in the path with the validator number.
+replacing the path with the path to your _withdrawal_ key, and all other parameters with your own values.
 
 #### Using a private key
 If you have the private key from which the current withdrawal credentials were derived this can be used to generate and broadcast the credentials change operation with the following command:
 
 ```
-ethdo validator credentials set --validator=123 --execution-address=0x8f…9F --private-key=0x3b…9c
+ethdo validator credentials set --validator=123 --withdrawal-address=0x8f…9F --private-key=0x3b…9c
 ```
 
-using your own private key.
+replacing the parameters with your own values.
 
 #### Using an account
 If you used `ethdo` to generate your validator deposit data you will likely have used a separate account to generate the withdrawal credentials.  You can specify the account to generate and broadcast the credentials change operation with the following command:
 
 ```
-ethdo validator credentials set --validator=123 --execution-address=0x8f…9F --account=Wallet/Account --passphrase=secret
+ethdo validator credentials set --validator=123 --withdrawal-address=0x8f…9F --account=Wallet/Account --passphrase=secret
 ```
 
-using your own account and passphrase.
-
-### Generate the credentials change operation (offline)
-Generating the credentials change operation offline requires information from the online component and is more involved than the online process, however does not expose mnemonics, private keys, or passphrases to servers that are connected to the internet.  The process is below.
-
-#### Obtain data required for offline generation.
-Generating the credentials change operation requires information that comes from an online beacon node.  As such, on your _online_ server you need to run the following command:
-
-```
-ethdo chain info --prepare-offline
-```
-
-This will return something similar to the following response:
-
-```
-Add the following to your command to run it offline:
-  --offline --genesis-validators=root=0x043db0d9a83813551ee2f33450d23797757d430911a9320530ad8a0eabc43efb --fork-version=0x03001020
-```
-
-This information needs to be copied to your offline server to continue.
-
-#### Generate signed operation
-Generating the signed operation offline is different from the online operation in that it will produce an output that can be copied to the online server for broadcast.  Separating generation from broadcast allows the offline server to remain securely disconnected from the internet.  The generation steps should be run on the _offline_ server.
-
-#### Using a mnemonic
-Many stakers will have generated their validators from a mnemonic.  A mnemonic is a 24-word phrase from which withdrawal and validator keys are derived using a path.
-
-- m/12381/3600/_i_/0 is the path to the _i_th withdrawal key, where _i_ starts at 0 for the first validator, 1 for the second validator, _etc._
-- m/12381/3600/_i_/0/0 is the path to the _i_th validator key, where _i_ starts at 0 for the first validator, 1 for the second validator, _etc._
-
-The first step will be to confirm that the mnemonic provides the appropriate validator key.  To do so run:
-
-```
-ethdo account derive --mnemonic='abandon … art' --path='m/12381/3600/0/0/0'
-```
-
-replacing the first '0' in the path with the validator number (remember that numbering starts at 0 for the first validator).  This will provide an output similar to:
-
-```
-Public key: 0xb384f767d964e100c8a9b21018d08c25ffebae268b3ab6d610353897541971726dbfc3c7463884c68a531515aab94c87
-```
-
-The displayed public key should match the public key of the validator of which you are attempting to change the credentials.  If not, then do not proceed further and obtain help to understand why there is a mismatch.
-
-Assuming the displayed public key does match the public key of the validator the next step is to confirm the current withdrawal credentials.  To do so run:
-
-```
-ethdo account derive --mnemonic='abandon … art' --path='m/12381/3600/0/0' --show-withdrawal-credentials
-```
-
-again replacing the first '0' in the path with the validator number.  This will provide an output similar to:
-
-```
-Public key: 0x99b1f1d84d76185466d86c34bde1101316afddae76217aa86cd066979b19858c2c9d9e56eebc1e067ac54277a61790db
-Withdrawal credentials: 0x008ba1cc4b091b91c1202bba3f508075d6ff565c77e559f0803c0792e0302bf1
-```
-
-The displayed withdrawal credentials should match the current withdrawal credentials of your validator (note that these were obtained in an earlier step so you can use the output there to confirm that they match).  If not, then do not proceed further and obtain help to understand why there is a mismatch.
-
-Once you are comfortable that the mnemonic and path provide the correct result you can generate the credentials change operation with the following command:
-
-```
-ethdo validator credentials set --offline --genesis-validators=root=0x04…fb --fork-version=0x03…20 --validator=123 --execution-address=0x8f…9F --mnemonic='abandon … art' --path='m/12381/3600/0/0'
-```
-
-again replacing the first '0' in the path with the validator number, and using your own execution address as explained earlier in the guide.  This will produce output similar to the following:
-
-```
-{"message":{"validator_index":"123","from_bls_pubkey":"0xad1868210a0cff7aff22633c003c503d4c199c8dcca13bba5b3232fc784d39d3855936e94ce184c3ce27bf15d4347695","to_execution_address":"0x388ea662ef2c223ec0b047d41bf3c0f362142ad5"},"signature":"0x8fcc8ceb75cbea891540150efc7df3e482a74592f89f3fc62a2d034381c776fcd42faad82af7a4af7fb84168a74981ce0ec96cf059e134eaa979c67425138f1915d1a8b1b6056401a9f7a2e79ed673f4b0c6b6ae1f60cff5996318e4769d0642"}
-
-```
-
-#### Using a private key
-If you have the private key from which the current withdrawal credentials were derived this can be used to generate the credentials change operation with the following command:
-
-```
-ethdo validator credentials set --offline --genesis-validators=root=0x04…fb --fork-version=0x03…20 --validator=123 --execution-address=0x8f…9F --private-key=0x3b…9c
-```
-
-using your own execution address as explained earlier in the guide, and your own private key.  This will produce output similar to the following:
-
-```
-{"message":{"validator_index":"123","from_bls_pubkey":"0xad1868210a0cff7aff22633c003c503d4c199c8dcca13bba5b3232fc784d39d3855936e94ce184c3ce27bf15d4347695","to_execution_address":"0x388ea662ef2c223ec0b047d41bf3c0f362142ad5"},"signature":"0x8fcc8ceb75cbea891540150efc7df3e482a74592f89f3fc62a2d034381c776fcd42faad82af7a4af7fb84168a74981ce0ec96cf059e134eaa979c67425138f1915d1a8b1b6056401a9f7a2e79ed673f4b0c6b6ae1f60cff5996318e4769d0642"}
-```
-
-#### Using an account
-If you used `ethdo` to generate your validator deposit data you will likely have used a separate account to generate the withdrawal credentials.  You can specify the account to generate the credentials change operation with the following command:
-
-```
-ethdo validator credentials set --offline --genesis-validators=root=0x04…fb --fork-version=0x03…20 --validator=123 --execution-address=0x8f…9F --account=Wallet/Account --passphrase=secret
-```
-
-setting the execution address, account and passphrase to your own values.  This will produce output similar to the following:
-
-```
-{"message":{"validator_index":"123","from_bls_pubkey":"0xad1868210a0cff7aff22633c003c503d4c199c8dcca13bba5b3232fc784d39d3855936e94ce184c3ce27bf15d4347695","to_execution_address":"0x388ea662ef2c223ec0b047d41bf3c0f362142ad5"},"signature":"0x8fcc8ceb75cbea891540150efc7df3e482a74592f89f3fc62a2d034381c776fcd42faad82af7a4af7fb84168a74981ce0ec96cf059e134eaa979c67425138f1915d1a8b1b6056401a9f7a2e79ed673f4b0c6b6ae1f60cff5996318e4769d0642"}
-```
-
-### Broadcasting a previously-generated credentials change operation
-An online server can broadcast the result of the previous step.  Note that the data does not expose any sensitive information such as private keys, and as such is safe to be accessed by the online server.  Broadcasting the operation is a simple case of supplying it to `ethdo`:
-
-```
-ethdo validator credentials set --signed-operation='{"message":{"validator_index":"123","from_bls_pubkey":"0xad1868210a0cff7aff22633c003c503d4c199c8dcca13bba5b3232fc784d39d3855936e94ce184c3ce27bf15d4347695","to_execution_address":"0x388ea662ef2c223ec0b047d41bf3c0f362142ad5"},"signature":"0x8fcc8ceb75cbea891540150efc7df3e482a74592f89f3fc62a2d034381c776fcd42faad82af7a4af7fb84168a74981ce0ec96cf059e134eaa979c67425138f1915d1a8b1b6056401a9f7a2e79ed673f4b0c6b6ae1f60cff5996318e4769d0642"}'
-```
-
-Alternatively, if the operation is stored on a filesystem, for example on a USB device from where it was copied from the offline server, it can be accessed with:
-
-```
-ethdo validator credentials set --signed-operation=/path/to/signed/operation
-```
+replacing the parameters with your own values.
 
 ## Confirming the process has succeeded
 The final step is confirming the operation has taken place.  To do so, run the following command on an online server:

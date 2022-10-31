@@ -47,19 +47,11 @@ In quiet mode this will return 0 if the inputs can derive an account account, ot
 func init() {
 	accountCmd.AddCommand(accountDeriveCmd)
 	accountFlags(accountDeriveCmd)
-	accountDeriveCmd.Flags().String("mnemonic", "", "mnemonic from which to derive the HD seed")
-	accountDeriveCmd.Flags().String("path", "", "path from which to derive the account")
 	accountDeriveCmd.Flags().Bool("show-private-key", false, "show private key for derived account")
 	accountDeriveCmd.Flags().Bool("show-withdrawal-credentials", false, "show withdrawal credentials for derived account")
 }
 
 func accountDeriveBindings() {
-	if err := viper.BindPFlag("mnemonic", accountDeriveCmd.Flags().Lookup("mnemonic")); err != nil {
-		panic(err)
-	}
-	if err := viper.BindPFlag("path", accountDeriveCmd.Flags().Lookup("path")); err != nil {
-		panic(err)
-	}
 	if err := viper.BindPFlag("show-private-key", accountDeriveCmd.Flags().Lookup("show-private-key")); err != nil {
 		panic(err)
 	}

@@ -50,15 +50,11 @@ func init() {
 	validatorCmd.AddCommand(validatorKeycheckCmd)
 	validatorFlags(validatorKeycheckCmd)
 	validatorKeycheckCmd.Flags().String("withdrawal-credentials", "", "Withdrawal credentials to check (can run offline)")
-	validatorKeycheckCmd.Flags().String("mnemonic", "", "Mnemonic from which to generate withdrawal credentials")
 	validatorKeycheckCmd.Flags().String("privkey", "", "Private key from which to generate withdrawal credentials")
 }
 
 func validatorKeycheckBindings() {
 	if err := viper.BindPFlag("withdrawal-credentials", validatorKeycheckCmd.Flags().Lookup("withdrawal-credentials")); err != nil {
-		panic(err)
-	}
-	if err := viper.BindPFlag("mnemonic", validatorKeycheckCmd.Flags().Lookup("mnemonic")); err != nil {
 		panic(err)
 	}
 	if err := viper.BindPFlag("privkey", validatorKeycheckCmd.Flags().Lookup("privkey")); err != nil {

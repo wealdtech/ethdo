@@ -96,6 +96,8 @@ func includeCommandBindings(cmd *cobra.Command) {
 		blockInfoBindings()
 	case "chain/eth1votes":
 		chainEth1VotesBindings()
+	case "chain/info":
+		chainInfoBindings()
 	case "chain/queues":
 		chainQueuesBindings()
 	case "chain/time":
@@ -118,6 +120,8 @@ func includeCommandBindings(cmd *cobra.Command) {
 		synccommitteeMembersBindings()
 	case "validator/credentials/get":
 		validatorCredentialsGetBindings()
+	case "validator/credentials/set":
+		validatorCredentialsSetBindings()
 	case "validator/depositdata":
 		validatorDepositdataBindings()
 	case "validator/duties":
@@ -171,8 +175,24 @@ func init() {
 	if err := viper.BindPFlag("store", RootCmd.PersistentFlags().Lookup("store")); err != nil {
 		panic(err)
 	}
-	RootCmd.PersistentFlags().String("account", "", "Account name (in format \"wallet/account\")")
+	RootCmd.PersistentFlags().String("account", "", `Account name (in format "<wallet>/<account>")`)
 	if err := viper.BindPFlag("account", RootCmd.PersistentFlags().Lookup("account")); err != nil {
+		panic(err)
+	}
+	RootCmd.PersistentFlags().String("mnemonic", "", "Mnemonic to provide access to an account")
+	if err := viper.BindPFlag("mnemonic", RootCmd.PersistentFlags().Lookup("mnemonic")); err != nil {
+		panic(err)
+	}
+	RootCmd.PersistentFlags().String("path", "", "Hierarchical derivation path used with mnemonic to provide access to an account")
+	if err := viper.BindPFlag("path", RootCmd.PersistentFlags().Lookup("path")); err != nil {
+		panic(err)
+	}
+	RootCmd.PersistentFlags().String("private-key", "", "Private key to provide access to an account")
+	if err := viper.BindPFlag("private-key", RootCmd.PersistentFlags().Lookup("private-key")); err != nil {
+		panic(err)
+	}
+	RootCmd.PersistentFlags().String("public-key", "", "public key to provide access to an account")
+	if err := viper.BindPFlag("public-key", RootCmd.PersistentFlags().Lookup("public-key")); err != nil {
 		panic(err)
 	}
 	RootCmd.PersistentFlags().String("basedir", "", "Base directory for filesystem wallets")

@@ -33,6 +33,7 @@ type Service struct {
 	epochsPerSyncCommitteePeriod uint64
 	altairForkEpoch              phase0.Epoch
 	bellatrixForkEpoch           phase0.Epoch
+	capellaForkEpoch             phase0.Epoch
 }
 
 // module-wide log.
@@ -100,6 +101,13 @@ func New(ctx context.Context, params ...Parameter) (*Service, error) {
 	}
 	log.Trace().Uint64("epoch", uint64(bellatrixForkEpoch)).Msg("Obtained Bellatrix fork epoch")
 
+	capellaForkEpoch, err := fetchCapellaForkEpoch(ctx, parameters.forkScheduleProvider)
+	if err != nil {
+		// Set to far future epoch.
+		capellaForkEpoch = 0xffffffffffffffff
+	}
+	log.Trace().Uint64("epoch", uint64(capellaForkEpoch)).Msg("Obtained Capella fork epoch")
+
 	s := &Service{
 		genesisTime:                  genesisTime,
 		slotDuration:                 slotDuration,
@@ -107,6 +115,7 @@ func New(ctx context.Context, params ...Parameter) (*Service, error) {
 		epochsPerSyncCommitteePeriod: epochsPerSyncCommitteePeriod,
 		altairForkEpoch:              altairForkEpoch,
 		bellatrixForkEpoch:           bellatrixForkEpoch,
+		capellaForkEpoch:             capellaForkEpoch,
 	}
 
 	return s, nil
@@ -246,4 +255,29 @@ func fetchBellatrixForkEpoch(ctx context.Context, provider eth2client.ForkSchedu
 		count++
 	}
 	return 0, errors.New("no bellatrix fork obtained")
+}
+
+// CapellaInitialEpoch provides the epoch at which the Capella hard fork takes place.
+func (s *Service) CapellaInitialEpoch() phase0.Epoch {
+	return s.capellaForkEpoch
+}
+
+func fetchCapellaForkEpoch(ctx context.Context, provider eth2client.ForkScheduleProvider) (phase0.Epoch, error) {
+	forkSchedule, err := provider.ForkSchedule(ctx)
+	if err != nil {
+		return 0, err
+	}
+	count := 0
+	for i := range forkSchedule {
+		count++
+		if bytes.Equal(forkSchedule[i].CurrentVersion[:], forkSchedule[i].PreviousVersion[:]) {
+			// This is the genesis fork; ignore it.
+			continue
+		}
+		if count == 2 {
+			return forkSchedule[i].Epoch, nil
+		}
+		count++
+	}
+	return 0, errors.New("no capella fork obtained")
 }

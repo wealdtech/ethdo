@@ -29,9 +29,7 @@ type command struct {
 	debug   bool
 
 	// Input.
-	account string
-	index   string
-	pubKey  string
+	validator string
 
 	// Beacon node connection.
 	timeout                  time.Duration
@@ -43,7 +41,7 @@ type command struct {
 	validatorsProvider eth2client.ValidatorsProvider
 
 	// Output.
-	validator *apiv1.Validator
+	validatorInfo *apiv1.Validator
 }
 
 func newCommand(ctx context.Context) (*command, error) {
@@ -62,25 +60,10 @@ func newCommand(ctx context.Context) (*command, error) {
 	c.connection = viper.GetString("connection")
 	c.allowInsecureConnections = viper.GetBool("allow-insecure-connections")
 
-	c.account = viper.GetString("account")
-	c.index = viper.GetString("index")
-	c.pubKey = viper.GetString("pubkey")
-	nonNil := 0
-	if c.account != "" {
-		nonNil++
+	if viper.GetString("validator") == "" {
+		return nil, errors.New("validator is required")
 	}
-	if c.index != "" {
-		nonNil++
-	}
-	if c.pubKey != "" {
-		nonNil++
-	}
-	if nonNil == 0 {
-		return nil, errors.New("one of account, index or pubkey required")
-	}
-	if nonNil > 1 {
-		return nil, errors.New("only one of account, index and pubkey allowed")
-	}
+	c.validator = viper.GetString("validator")
 
 	return c, nil
 }

@@ -1,4 +1,4 @@
-// Copyright © 2020, 2021 Weald Technology Trading
+// Copyright © 2020 - 2022 Weald Technology Trading
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -16,7 +16,6 @@ package cmd
 import (
 	"bytes"
 	"context"
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -32,7 +31,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/wealdtech/ethdo/util"
-	e2wtypes "github.com/wealdtech/go-eth2-wallet-types/v2"
 	string2eth "github.com/wealdtech/go-string2eth"
 )
 
@@ -41,7 +39,7 @@ var validatorInfoCmd = &cobra.Command{
 	Short: "Obtain information about a validator",
 	Long: `Obtain information about validator.  For example:
 
-    ethdo validator info --account=primary/validator
+    ethdo validator info --validator=primary/validator
 
 In quiet mode this will return 0 if the validator information can be obtained, otherwise 1.`,
 	Run: func(cmd *cobra.Command, args []string) {
@@ -54,32 +52,21 @@ In quiet mode this will return 0 if the validator information can be obtained, o
 		)
 		errCheck(err, "Failed to connect to Ethereum 2 beacon node")
 
-		account, err := validatorInfoAccount(ctx, eth2Client)
-		errCheck(err, "Failed to obtain validator account")
-
-		pubKeys := make([]spec.BLSPubKey, 1)
-		pubKey, err := util.BestPublicKey(account)
-		errCheck(err, "Failed to obtain validator public key")
-		copy(pubKeys[0][:], pubKey.Marshal())
-		validators, err := eth2Client.(eth2client.ValidatorsProvider).ValidatorsByPubKey(ctx, "head", pubKeys)
-		errCheck(err, "Failed to obtain validator information")
-		if len(validators) == 0 {
-			fmt.Println("Validator not known by beacon node")
-			os.Exit(_exitSuccess)
+		if viper.GetString("validator") == "" {
+			fmt.Println("validator is required")
+			os.Exit(_exitFailure)
 		}
 
-		var validator *api.Validator
-		for _, v := range validators {
-			validator = v
-		}
+		validator, err := util.ParseValidator(ctx, eth2Client.(eth2client.ValidatorsProvider), viper.GetString("validator"), "head")
+		errCheck(err, "Failed to obtain validator")
 
 		if verbose {
 			network, err := util.Network(ctx, eth2Client)
 			errCheck(err, "Failed to obtain network")
 			outputIf(debug, fmt.Sprintf("Network is %s", network))
-			pubKey, err := util.BestPublicKey(account)
+			pubKey, err := validator.PubKey(ctx)
 			if err == nil {
-				deposits, totalDeposited, err := graphData(network, pubKey.Marshal())
+				deposits, totalDeposited, err := graphData(network, pubKey[:])
 				if err == nil && deposits > 0 {
 					fmt.Printf("Number of deposits: %d\n", deposits)
 					fmt.Printf("Total deposited: %s\n", string2eth.GWeiToString(uint64(totalDeposited), true))
@@ -120,54 +107,6 @@ In quiet mode this will return 0 if the validator information can be obtained, o
 
 		os.Exit(_exitSuccess)
 	},
-}
-
-// validatorInfoAccount obtains the account for the validator info command.
-func validatorInfoAccount(ctx context.Context, eth2Client eth2client.Service) (e2wtypes.Account, error) {
-	var account e2wtypes.Account
-	var err error
-	switch {
-	case viper.GetString("account") != "":
-		ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("timeout"))
-		defer cancel()
-		_, account, err = walletAndAccountFromPath(ctx, viper.GetString("account"))
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to obtain account")
-		}
-	case viper.GetString("pubkey") != "":
-		pubKeyBytes, err := hex.DecodeString(strings.TrimPrefix(viper.GetString("pubkey"), "0x"))
-		if err != nil {
-			return nil, errors.Wrap(err, fmt.Sprintf("failed to decode public key %s", viper.GetString("pubkey")))
-		}
-		account, err = util.NewScratchAccount(nil, pubKeyBytes)
-		if err != nil {
-			return nil, errors.Wrap(err, fmt.Sprintf("invalid public key %s", viper.GetString("pubkey")))
-		}
-	case viper.GetInt64("index") != -1:
-		validatorsProvider, isValidatorsProvider := eth2Client.(eth2client.ValidatorsProvider)
-		if !isValidatorsProvider {
-			return nil, errors.New("client does not provide validator information")
-		}
-		index := spec.ValidatorIndex(viper.GetInt64("index"))
-		validators, err := validatorsProvider.Validators(ctx, "head", []spec.ValidatorIndex{
-			index,
-		})
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to obtain validator information")
-		}
-		if len(validators) == 0 {
-			return nil, errors.New("unknown validator index")
-		}
-		pubKeyBytes := make([]byte, 48)
-		copy(pubKeyBytes, validators[index].Validator.PublicKey[:])
-		account, err = util.NewScratchAccount(nil, pubKeyBytes)
-		if err != nil {
-			return nil, errors.Wrap(err, fmt.Sprintf("invalid public key %s", viper.GetString("pubkey")))
-		}
-	default:
-		return nil, errors.New("neither account nor public key supplied")
-	}
-	return account, nil
 }
 
 // graphData returns data from the graph about number and amount of deposits
@@ -224,16 +163,12 @@ func graphData(network string, validatorPubKey []byte) (uint64, spec.Gwei, error
 
 func init() {
 	validatorCmd.AddCommand(validatorInfoCmd)
-	validatorInfoCmd.Flags().String("pubkey", "", "Public key for which to obtain status")
-	validatorInfoCmd.Flags().Int64("index", -1, "Index for which to obtain status")
+	validatorInfoCmd.Flags().String("validator", "", "Public key for which to obtain status")
 	validatorFlags(validatorInfoCmd)
 }
 
 func validatorInfoBindings() {
-	if err := viper.BindPFlag("pubkey", validatorInfoCmd.Flags().Lookup("pubkey")); err != nil {
-		panic(err)
-	}
-	if err := viper.BindPFlag("index", validatorInfoCmd.Flags().Lookup("index")); err != nil {
+	if err := viper.BindPFlag("validator", validatorInfoCmd.Flags().Lookup("validator")); err != nil {
 		panic(err)
 	}
 }

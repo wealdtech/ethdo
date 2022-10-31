@@ -54,4 +54,6 @@ type Service interface {
 	AltairInitialEpoch() phase0.Epoch
 	// AltairInitialSyncCommitteePeriod provides the sync committee period in which the Altair hard fork takes place.
 	AltairInitialSyncCommitteePeriod() uint64
+	// CapellaInitialEpoch provides the epoch at which the Capella hard fork takes place.
+	CapellaInitialEpoch() phase0.Epoch
 }

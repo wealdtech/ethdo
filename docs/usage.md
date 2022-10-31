@@ -581,12 +581,18 @@ Validator commands focus on interaction with Ethereum 2 validators.
 #### `credentials get`
 
 `ethdo validator credentials get` provides information about the withdrawal credentials for the provided validator.  Options include:
-  - `account` the account for which to obtain the withdrawal credentials (in format "wallet/account")
-  - `pubkey` the public key of the validator for which to obtain the withdrawal credentials
-  - `index` the index of the validator for which to obtain the withdrawal credentials
+  - `validator` the account, public key or index for which to obtain the withdrawal credentials
 
 ```sh
-$ ethdo validator credentials get --account=Validators/1
+$ ethdo validator credentials get --validator=Validators/1
+```
+
+#### `credentials set`
+
+`ethdo validator credentials set` updates withdrawal credentials from BLS "type 0" credentials to execution "type 1" credentials.  Full information about using this command can be found in the [specific documentation](./changingwithdrawalcredentials.md).
+
+```sh
+$ ethdo validator credentials set --validator=Validators/1 --execution-address=0x8f…9F --private-key=0x3b…9c
 ```
 
 #### `depositdata`
@@ -622,7 +628,7 @@ $ ethdo validator exit --key=0x01e748d098d3bcb477d636f19d510399ae18205fadf9814ee
 `ethdo validator info` provides information for a given validator.
 
 ```sh
-$ ethdo validator info --account=Validators/1
+$ ethdo validator info --validator=Validators/1
 Status:            Active
 Balance:           3.203823585 Ether
 Effective balance: 3.1 Ether
@@ -641,7 +647,7 @@ Effective balance:      3.1 Ether
 Withdrawal credentials: 0x0033ef3cb10b36d0771ffe8a02bc5bfc7e64ea2f398ce77e25bb78989edbee36
 ```
 
-If the validator is not an account it can be queried directly with `--pubkey`.
+If the validator is not an account then `--validator` option can be supplied with a validator index or public key.
 
 ```sh
 $ ethdo validator info --pubkey=0x842dd66cfeaeff4397fc7c94f7350d2131ca0c4ad14ff727963be9a1edb4526604970df6010c3da6474a9820fa81642b

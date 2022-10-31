@@ -1,4 +1,4 @@
-// Copyright © 2020 Weald Technology Trading
+// Copyright © 2022 Weald Technology Trading.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -11,40 +11,40 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package accountderive
+package validatorcredentialsset
 
 import (
 	"context"
-	"strings"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
-// Run runs the account create data command.
+// Run runs the command.
 func Run(cmd *cobra.Command) (string, error) {
 	ctx := context.Background()
-	dataIn, err := input(ctx)
+
+	c, err := newCommand(ctx)
 	if err != nil {
-		return "", errors.Wrap(err, "failed to obtain input")
+		return "", errors.Wrap(err, "failed to set up command")
 	}
 
 	// Further errors do not need a usage report.
 	cmd.SilenceUsage = true
 
-	dataOut, err := process(ctx, dataIn)
-	if err != nil {
+	if err := c.process(ctx); err != nil {
 		return "", errors.Wrap(err, "failed to process")
 	}
 
-	if dataIn.quiet {
+	if viper.GetBool("quiet") {
 		return "", nil
 	}
 
-	results, err := output(ctx, dataOut)
+	results, err := c.output(ctx)
 	if err != nil {
 		return "", errors.Wrap(err, "failed to obtain output")
 	}
 
-	return strings.TrimSuffix(results, "\n"), nil
+	return results, nil
 }

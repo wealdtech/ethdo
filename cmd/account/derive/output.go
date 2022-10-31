@@ -42,11 +42,13 @@ func output(ctx context.Context, data *dataOut) (string, error) {
 	if data.showPrivateKey {
 		builder.WriteString(fmt.Sprintf("Private key: %#x\n", data.key.Marshal()))
 	}
-	builder.WriteString(fmt.Sprintf("Public key: %#x", data.key.PublicKey().Marshal()))
 	if data.showWithdrawalCredentials {
 		withdrawalCredentials := util.SHA256(data.key.PublicKey().Marshal())
 		withdrawalCredentials[0] = byte(0) // BLS_WITHDRAWAL_PREFIX
-		builder.WriteString(fmt.Sprintf("\nWithdrawal credentials: %#x", withdrawalCredentials))
+		builder.WriteString(fmt.Sprintf("Withdrawal credentials: %#x\n", withdrawalCredentials))
+	}
+	if !(data.showPrivateKey || data.showWithdrawalCredentials) {
+		builder.WriteString(fmt.Sprintf("Public key: %#x\n", data.key.PublicKey().Marshal()))
 	}
 
 	return builder.String(), nil

@@ -37,7 +37,7 @@ func TestOutput(t *testing.T) {
 			dataOut: &dataOut{
 				startTime: time.Unix(1606824023, 0),
 			},
-			res: "2020-12-01 12:00:23 +0000 GMT",
+			res: "2020-12-01 12:00:23 +0000 UTC",
 		},
 		{
 			name: "Verbose",
@@ -46,7 +46,7 @@ func TestOutput(t *testing.T) {
 				endTime:   time.Unix(1606824035, 0),
 				verbose:   true,
 			},
-			res: "2020-12-01 12:00:23 +0000 GMT - 2020-12-01 12:00:35 +0000 GMT",
+			res: "2020-12-01 12:00:23 +0000 UTC - 2020-12-01 12:00:35 +0000 UTC",
 		},
 	}
 

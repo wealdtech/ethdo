@@ -40,7 +40,7 @@ func TestProcess(t *testing.T) {
 			dataIn: &dataIn{
 				path: "m/12381/3600/0/0",
 			},
-			err: "mnemonic is invalid",
+			err: "failed to derive account: no account specified",
 		},
 		{
 			name: "MnemonicInvalid",
@@ -48,14 +48,14 @@ func TestProcess(t *testing.T) {
 				mnemonic: "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon art",
 				path:     "m/12381/3600/0/0",
 			},
-			err: "mnemonic is invalid",
+			err: "failed to derive account: mnemonic is invalid",
 		},
 		{
 			name: "PathMissing",
 			dataIn: &dataIn{
 				mnemonic: "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon art",
 			},
-			err: "path does not match expected format m/…",
+			err: "failed to derive account: path does not match expected format m/…",
 		},
 		{
 			name: "PathInvalid",
@@ -63,7 +63,7 @@ func TestProcess(t *testing.T) {
 				mnemonic: "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon art",
 				path:     "n/12381/3600/0/0",
 			},
-			err: "path does not match expected format m/…",
+			err: "failed to derive account: path does not match expected format m/…",
 		},
 		{
 			name: "Good",

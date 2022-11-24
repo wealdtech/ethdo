@@ -1,4 +1,7 @@
-dev:
+1.26.0
+  - add commands and documentation to set user validator credentials (not usable until capella)
+
+1.25.3
   - add more information to "epoch summary"
   - add "validator summary"
 

@@ -79,13 +79,17 @@ func (c *command) process(ctx context.Context) error {
 		c.incumbent = state.Phase0.ETH1Data
 		c.eth1DataVotes = state.Phase0.ETH1DataVotes
 	case spec.DataVersionAltair:
-		c.slot = phase0.Slot(state.Altair.Slot)
+		c.slot = state.Altair.Slot
 		c.incumbent = state.Altair.ETH1Data
 		c.eth1DataVotes = state.Altair.ETH1DataVotes
 	case spec.DataVersionBellatrix:
-		c.slot = phase0.Slot(state.Bellatrix.Slot)
+		c.slot = state.Bellatrix.Slot
 		c.incumbent = state.Bellatrix.ETH1Data
 		c.eth1DataVotes = state.Bellatrix.ETH1DataVotes
+	case spec.DataVersionCapella:
+		c.slot = state.Capella.Slot
+		c.incumbent = state.Capella.ETH1Data
+		c.eth1DataVotes = state.Capella.ETH1DataVotes
 	default:
 		return fmt.Errorf("unhandled beacon state version %v", state.Version)
 	}

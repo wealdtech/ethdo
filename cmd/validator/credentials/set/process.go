@@ -114,24 +114,70 @@ func (c *command) populateChainInfo(ctx context.Context) error {
 	}
 
 	// Obtain genesis validators root.
-	genesis, err := c.consensusClient.(consensusclient.GenesisProvider).Genesis(ctx)
-	if err != nil {
-		return errors.Wrap(err, "failed to obtain genesis information")
+	if c.genesisValidatorsRoot != "" {
+		// Genesis validators root supplied manually.
+		genesisValidatorsRoot, err := hex.DecodeString(strings.TrimPrefix(c.genesisValidatorsRoot, "0x"))
+		if err != nil {
+			return errors.Wrap(err, "invalid genesis validators root supplied")
+		}
+		if len(genesisValidatorsRoot) != phase0.RootLength {
+			return errors.New("invalid length for genesis validators root")
+		}
+		copy(c.chainInfo.GenesisValidatorsRoot[:], genesisValidatorsRoot)
+	} else {
+		// Genesis validators root obtained from beacon node.
+		genesis, err := c.consensusClient.(consensusclient.GenesisProvider).Genesis(ctx)
+		if err != nil {
+			return errors.Wrap(err, "failed to obtain genesis information")
+		}
+		c.chainInfo.GenesisValidatorsRoot = genesis.GenesisValidatorsRoot
 	}
-	c.chainInfo.GenesisValidatorsRoot = genesis.GenesisValidatorsRoot
+	if c.debug {
+		fmt.Printf("Genesis validators root is %#x\n", c.chainInfo.GenesisValidatorsRoot)
+	}
 
 	// Obtain epoch.
 	c.chainInfo.Epoch = c.chainTime.CurrentEpoch()
 
 	// Obtain fork version.
-	forkSchedule, err := c.consensusClient.(consensusclient.ForkScheduleProvider).ForkSchedule(ctx)
-	if err != nil {
-		return errors.Wrap(err, "failed to obtain fork schedule")
-	}
-	for i := range forkSchedule {
-		if forkSchedule[i].Epoch <= c.chainInfo.Epoch {
-			c.chainInfo.ForkVersion = forkSchedule[i].CurrentVersion
+	if c.forkVersion != "" {
+		// Fork version supplied manually.
+		forkVersion, err := hex.DecodeString(strings.TrimPrefix(c.forkVersion, "0x"))
+		if err != nil {
+			return errors.Wrap(err, "invalid fork version supplied")
 		}
+		if len(forkVersion) != phase0.ForkVersionLength {
+			return errors.New("invalid length for fork version")
+		}
+		copy(c.chainInfo.ForkVersion[:], forkVersion)
+	} else {
+		// Fork version obtained from beacon node.
+		forkSchedule, err := c.consensusClient.(consensusclient.ForkScheduleProvider).ForkSchedule(ctx)
+		if err != nil {
+			return errors.Wrap(err, "failed to obtain fork schedule")
+		}
+		if len(forkSchedule) < 4 {
+			return errors.New("beacon node not providing capella fork schedule; provide manually with --fork-version")
+		}
+		for i := range forkSchedule {
+			// Need to be at least fork 3 (i.e. capella)
+			if i < 3 {
+				continue
+			}
+			if i == 3 {
+				// Force use of capella even if we aren't there yet, to allow credential
+				// change operations to be signed in advance with a signature that will be
+				// valid once capella goes live.
+				c.chainInfo.ForkVersion = forkSchedule[i].CurrentVersion
+				continue
+			}
+			if forkSchedule[i].Epoch <= c.chainInfo.Epoch {
+				c.chainInfo.ForkVersion = forkSchedule[i].CurrentVersion
+			}
+		}
+	}
+	if c.debug {
+		fmt.Printf("Fork version is %#x\n", c.chainInfo.ForkVersion)
 	}
 
 	// Calculate domain.

@@ -1,3 +1,6 @@
+1.26.1
+  - add ability to generate validator credentials change operations prior to the fork in which they become usable
+
 1.26.0
   - add commands and documentation to set user validator credentials (not usable until capella)
 

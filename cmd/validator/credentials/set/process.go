@@ -216,11 +216,6 @@ func (c *command) dumpRequiredInformation(ctx context.Context) error {
 }
 
 func (c *command) generateOperations(ctx context.Context) error {
-	// Ensure that we are beyond the capella hard fork epoch.
-	if c.chainTime.CurrentEpoch() < c.chainTime.CapellaInitialEpoch() {
-		return errors.New("chain not yet activated capella hard fork")
-	}
-
 	if c.account == "" && c.mnemonic == "" && c.privateKey == "" {
 		// No input information; fetch the operations from a file.
 		if err := c.loadOperations(ctx); err == nil {

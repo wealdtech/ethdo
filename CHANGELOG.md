@@ -1,3 +1,6 @@
+1.26.2
+  - remove check that requires capella prior to generating validator credentials change operations
+
 1.26.1
   - add ability to generate validator credentials change operations prior to the fork in which they become usable
 

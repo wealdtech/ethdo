@@ -1,3 +1,6 @@
+dev:
+  - provide support for additional S3 store options
+
 1.26.2
   - remove check that requires capella prior to generating validator credentials change operations
 

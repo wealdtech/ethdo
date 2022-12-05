@@ -138,6 +138,24 @@ ethdo also supports environment variables.  Environment variables are prefixed w
 export ETHDO_PASSPHRASE="my account passphrase"
 ```
 
+### S3 store options
+
+Amazon S3-compatible stores have additional options available, which can be configured under the "stores.s3" key.  An example configuration is as follows:
+
+```json
+{
+  "stores": {
+    "s3": {
+      "bucket":"mybucketname",
+      "path":"path/in/bucket",
+      "passphrase":"secret"
+    }
+  }
+}
+```
+
+Information on these and other options can be found in the S3 store repository.
+
 ### Output and exit status
 
 If set, the `--quiet` argument will suppress all output.

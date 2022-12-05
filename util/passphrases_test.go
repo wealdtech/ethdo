@@ -24,10 +24,16 @@ import (
 func TestGetStorePassphrase(t *testing.T) {
 	tests := []struct {
 		name       string
+		env        map[string]string
+		store      string
 		passphrase string
 	}{
 		{
-			name:       "Good",
+			name: "Default",
+			env: map[string]string{
+				"store-passphrase": "pass",
+			},
+			store:      "test",
 			passphrase: "pass",
 		},
 	}
@@ -35,8 +41,10 @@ func TestGetStorePassphrase(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			viper.Reset()
-			viper.Set("store-passphrase", test.passphrase)
-			require.Equal(t, test.passphrase, util.GetStorePassphrase())
+			for k, v := range test.env {
+				viper.Set(k, v)
+			}
+			require.Equal(t, test.passphrase, util.GetStorePassphrase(test.passphrase))
 		})
 	}
 }
@@ -165,6 +173,7 @@ func TestStorePassphrase(t *testing.T) {
 	tests := []struct {
 		name     string
 		inputs   map[string]interface{}
+		store    string
 		expected string
 	}{
 		{
@@ -192,6 +201,16 @@ func TestStorePassphrase(t *testing.T) {
 			},
 			expected: "secret2",
 		},
+		{
+			name: "StoreSpecific",
+			inputs: map[string]interface{}{
+				"storepassphrase":        "secret",
+				"store-passphrase":       "secret2",
+				"stores.test.passphrase": "secret3",
+			},
+			store:    "test",
+			expected: "secret3",
+		},
 	}
 
 	for _, test := range tests {
@@ -200,7 +219,7 @@ func TestStorePassphrase(t *testing.T) {
 			for k, v := range test.inputs {
 				viper.Set(k, v)
 			}
-			res := util.GetStorePassphrase()
+			res := util.GetStorePassphrase(test.store)
 			require.Equal(t, test.expected, res)
 		})
 	}

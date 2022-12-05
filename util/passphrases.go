@@ -14,13 +14,20 @@
 package util
 
 import (
+	"fmt"
+
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
 )
 
 // GetStorePassphrase fetches the store passphrase supplied by the user.
-func GetStorePassphrase() string {
-	storePassphrase := viper.GetString("store-passphrase")
+func GetStorePassphrase(store string) string {
+	// Try store-specific passphrase.
+	storePassphrase := viper.GetString(fmt.Sprintf("stores.%s.passphrase", store))
+	if storePassphrase == "" {
+		// Try generic passphrase.
+		storePassphrase = viper.GetString("store-passphrase")
+	}
 	if storePassphrase == "" {
 		// Try deprecated name.
 		storePassphrase = viper.GetString("storepassphrase")

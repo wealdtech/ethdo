@@ -46,14 +46,19 @@ func SetupStore() error {
 		if GetBaseDir() != "" {
 			return errors.New("basedir does not apply to the s3 store")
 		}
-		store, err = s3.New(s3.WithPassphrase([]byte(GetStorePassphrase())))
+		store, err = s3.New(s3.WithPassphrase([]byte(GetStorePassphrase("s3"))),
+			s3.WithEndpoint(viper.GetString("stores.s3.endpoint")),
+			s3.WithRegion(viper.GetString("stores.s3.region")),
+			s3.WithBucket(viper.GetString("stores.s3.bucket")),
+			s3.WithPath(viper.GetString("stores.s3.path")),
+		)
 		if err != nil {
 			return errors.Wrap(err, "failed to access Amazon S3 wallet store")
 		}
 	case "filesystem":
 		opts := make([]filesystem.Option, 0)
-		if GetStorePassphrase() != "" {
-			opts = append(opts, filesystem.WithPassphrase([]byte(GetStorePassphrase())))
+		if GetStorePassphrase("filesystem") != "" {
+			opts = append(opts, filesystem.WithPassphrase([]byte(GetStorePassphrase("filesystem"))))
 		}
 		if GetBaseDir() != "" {
 			opts = append(opts, filesystem.WithLocation(GetBaseDir()))

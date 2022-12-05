@@ -15,6 +15,7 @@ package walletdelete
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"path/filepath"
 
@@ -35,6 +36,10 @@ func process(ctx context.Context, data *dataIn) (*dataOut, error) {
 		return nil, errors.New("cannot obtain store for the wallet")
 	}
 	store := storeProvider.Store()
+
+	if store.Name() != "filesystem" {
+		return nil, fmt.Errorf("cannot delete %s wallet automatically, please remove manually", store.Name())
+	}
 	storeLocationProvider, isProvider := store.(e2wtypes.StoreLocationProvider)
 	if !isProvider {
 		return nil, errors.New("cannot obtain store location for the wallet")

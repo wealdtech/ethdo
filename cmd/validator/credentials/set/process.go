@@ -99,6 +99,10 @@ func (c *command) obtainRequiredInformation(ctx context.Context) error {
 
 // populateChainInfo populates chain info structure from a beacon node.
 func (c *command) populateChainInfo(ctx context.Context) error {
+	if c.debug {
+		fmt.Printf("Populating chain info from beacon node\n")
+	}
+
 	// Obtain validators.
 	validators, err := c.consensusClient.(consensusclient.ValidatorsProvider).Validators(ctx, "head", nil)
 	if err != nil {
@@ -155,6 +159,12 @@ func (c *command) populateChainInfo(ctx context.Context) error {
 		forkSchedule, err := c.consensusClient.(consensusclient.ForkScheduleProvider).ForkSchedule(ctx)
 		if err != nil {
 			return errors.Wrap(err, "failed to obtain fork schedule")
+		}
+		if len(forkSchedule) == 0 {
+			return errors.New("beacon node did not provide any fork schedule; provide manually with --fork-version")
+		}
+		if c.debug {
+			fmt.Printf("Genesis fork version is %#x\n", forkSchedule[0].CurrentVersion)
 		}
 		if len(forkSchedule) < 4 {
 			return errors.New("beacon node not providing capella fork schedule; provide manually with --fork-version")
@@ -260,6 +270,7 @@ func (c *command) loadChainInfo(ctx context.Context) error {
 		if c.debug {
 			fmt.Printf("Failed to read offline preparation file: %v\n", err)
 		}
+		return errors.Wrap(err, fmt.Sprintf("cannot find %s", offlinePreparationFilename))
 	}
 
 	if c.debug {

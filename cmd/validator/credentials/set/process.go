@@ -43,6 +43,24 @@ var offlinePreparationFilename = "offline-preparation.json"
 var changeOperationsFilename = "change-operations.json"
 
 func (c *command) process(ctx context.Context) error {
+	// We should have exactly 1 specifier to know what we're working with.
+	validatorSpecifiers := 0
+	if c.validator != "" {
+		validatorSpecifiers++
+	}
+	if c.mnemonic != "" {
+		validatorSpecifiers++
+	}
+	if c.privateKey != "" {
+		validatorSpecifiers++
+	}
+	if validatorSpecifiers == 0 {
+		return errors.New("one of validator, mmenomic or private key should be specified")
+	}
+	if validatorSpecifiers > 1 {
+		return errors.New("only one of validator, mmenomic or private key should be specified")
+	}
+
 	if err := c.setup(ctx); err != nil {
 		return err
 	}

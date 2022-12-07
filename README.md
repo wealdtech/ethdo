@@ -64,7 +64,7 @@ Alternatively, if the beacon node is running in a separate docker container a sh
 
 ## Setting up
 
-`ethdo` needs a connection to a beacon node for many of its features.  `ethdo` can connect to any beacon node that fully supports the [standard REST API](https://ethereum.github.io/beacon-APIs/).  The following changes are required to beacon nodes to make this available.
+`ethdo` needs a connection to a beacon node for many of its features.  `ethdo` can connect to any beacon node that fully supports the [standard REST API](https://ethereum.github.io/beacon-APIs/) using the `--connection <beacon-node:port>` argument.  The following changes are required to beacon nodes to make this available.
 
 ### Lighthouse
 Lighthouse disables the REST API by default.  To enable it, the beacon node must be started with the `--http` parameter.  If you want to access the REST API from a remote server then you should also look to change the `--http-address` and `--http-allow-origin` options as per the Lighthouse documentation.
@@ -88,7 +88,7 @@ The default port for the REST API is 5051, which can be changed with the `--rest
 
 ## Usage
 
-`ethdo` contains a large number of features that are useful for day-to-day interactions with the Ethereum 2 blockchain.
+`ethdo` contains a large number of features that are useful for day-to-day interactions with the different consensus clients.
 
 ### Wallets and accounts
 
@@ -98,12 +98,12 @@ The default port for the REST API is 5051, which can be changed with the `--rest
     - for OSX: $HOME/Library/Application Support/ethereum2/wallets
     - for Windows: %APPDATA%\ethereum2\wallets
 
-If using the filesystem store, the additional parameter `basedir` can be supplied to change this location.
+If using the filesystem store, the additional parameter `base-dir` can be supplied to change this location.
 
 > If using docker as above you can make this directory accessible to docker to make wallets and accounts persistent.  For example, for linux you could use the following command to list your wallets on Linux:
 >
 > ```
-> docker run -v $HOME/.config/ethereum2/wallets:/data ethdo --basedir=/data wallet list
+> docker run -v $HOME/.config/ethereum2/wallets:/data ethdo --base-dir=/data wallet list
 > ```
 >
 > This will allow you to use `ethdo` with or without docker, with the same location for wallets and accounts.
@@ -196,7 +196,7 @@ There is a [HOWTO](https://github.com/wealdtech/ethdo/blob/master/docs/howto.md)
 
 Jim McDonald: [@mcdee](https://github.com/mcdee).
 
-Special thanks to [@SuburbanDad](https://github.com/SuburbanDad) for updating xgo to allow for cross-compilation of `ethdo` releaes.
+Special thanks to [@SuburbanDad](https://github.com/SuburbanDad) for updating xgo to allow for cross-compilation of `ethdo` releases.
 
 ## Contribute
 

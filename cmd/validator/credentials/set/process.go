@@ -105,7 +105,7 @@ func (c *command) obtainRequiredInformation(ctx context.Context) error {
 	}
 
 	if c.offline {
-		return fmt.Errorf("could not find the %s file; this is required to have been previously generated using --offline-preparation on an online mcahine and be readable in the directory in which this command is being run", offlinePreparationFilename)
+		return fmt.Errorf("could not find the %s file; this is required to have been previously generated using --offline-preparation on an online machine and be readable in the directory in which this command is being run", offlinePreparationFilename)
 	}
 
 	if err := c.populateChainInfo(ctx); err != nil {

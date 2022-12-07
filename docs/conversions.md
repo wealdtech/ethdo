@@ -10,7 +10,7 @@ A seed is a 24-word phrase that is used as the start point of a process called h
 
 The first thing you need to do is to create a wallet.  To do this run the command below with the following changes:
 
-  - put your mnemonic in place of the sample `abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon   abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon art`
+  - put your mnemonic in place of the sample `abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon art`
   - pick a suitable passphrase for your wallet in place of `secret`.  You will need to use this in all subsequent commands
   - rename the wallet to something other than `Wallet` if you so desire.  If so, you will need to change it in all subsequent commands
 

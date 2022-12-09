@@ -24,6 +24,7 @@ import (
 	"github.com/attestantio/go-eth2-client/spec"
 	"github.com/attestantio/go-eth2-client/spec/altair"
 	"github.com/attestantio/go-eth2-client/spec/bellatrix"
+	"github.com/attestantio/go-eth2-client/spec/capella"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 )
@@ -73,6 +74,10 @@ func process(ctx context.Context, data *dataIn) (*dataOut, error) {
 		}
 	case spec.DataVersionBellatrix:
 		if err := outputBellatrixBlock(ctx, data.jsonOutput, data.sszOutput, signedBlock.Bellatrix); err != nil {
+			return nil, errors.Wrap(err, "failed to output block")
+		}
+	case spec.DataVersionCapella:
+		if err := outputCapellaBlock(ctx, data.jsonOutput, data.sszOutput, signedBlock.Capella); err != nil {
 			return nil, errors.Wrap(err, "failed to output block")
 		}
 	default:
@@ -132,6 +137,13 @@ func headEventHandler(event *api.Event) {
 		}
 	case spec.DataVersionBellatrix:
 		if err := outputBellatrixBlock(context.Background(), jsonOutput, sszOutput, signedBlock.Bellatrix); err != nil {
+			if !jsonOutput && !sszOutput {
+				fmt.Printf("Failed to output block: %v\n", err)
+			}
+			return
+		}
+	case spec.DataVersionCapella:
+		if err := outputCapellaBlock(context.Background(), jsonOutput, sszOutput, signedBlock.Capella); err != nil {
 			if !jsonOutput && !sszOutput {
 				fmt.Printf("Failed to output block: %v\n", err)
 			}
@@ -206,6 +218,30 @@ func outputBellatrixBlock(ctx context.Context, jsonOutput bool, sszOutput bool, 
 		fmt.Printf("%x\n", data)
 	default:
 		data, err := outputBellatrixBlockText(ctx, results, signedBlock)
+		if err != nil {
+			return errors.Wrap(err, "failed to generate text")
+		}
+		fmt.Print(data)
+	}
+	return nil
+}
+
+func outputCapellaBlock(ctx context.Context, jsonOutput bool, sszOutput bool, signedBlock *capella.SignedBeaconBlock) error {
+	switch {
+	case jsonOutput:
+		data, err := json.Marshal(signedBlock)
+		if err != nil {
+			return errors.Wrap(err, "failed to generate JSON")
+		}
+		fmt.Printf("%s\n", string(data))
+	case sszOutput:
+		data, err := signedBlock.MarshalSSZ()
+		if err != nil {
+			return errors.Wrap(err, "failed to generate SSZ")
+		}
+		fmt.Printf("%x\n", data)
+	default:
+		data, err := outputCapellaBlockText(ctx, results, signedBlock)
 		if err != nil {
 			return errors.Wrap(err, "failed to generate text")
 		}

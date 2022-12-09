@@ -289,6 +289,8 @@ func (c *command) processSyncCommitteeDuties(ctx context.Context) error {
 			aggregate = block.Altair.Message.Body.SyncAggregate
 		case spec.DataVersionBellatrix:
 			aggregate = block.Bellatrix.Message.Body.SyncAggregate
+		case spec.DataVersionCapella:
+			aggregate = block.Capella.Message.Body.SyncAggregate
 		default:
 			return fmt.Errorf("unhandled block version %v", block.Version)
 		}

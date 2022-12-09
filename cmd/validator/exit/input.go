@@ -101,6 +101,9 @@ func inputKey(ctx context.Context, data *dataIn) (*dataIn, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create acount from key")
 	}
+	if err := data.account.(e2wtypes.AccountLocker).Unlock(ctx, nil); err != nil {
+		return nil, errors.Wrap(err, "failed to unlock account")
+	}
 	return inputChainData(ctx, data)
 }
 

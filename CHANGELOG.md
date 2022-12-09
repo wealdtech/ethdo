@@ -1,3 +1,6 @@
+dev:
+  - provide details of BLS to execution change operations with verbose block output
+
 1.26.3:
   - provide support for additional S3 store options
   - show error when attempting to delete non-filesystem wallets

@@ -224,7 +224,7 @@ func outputBlockVoluntaryExits(ctx context.Context, eth2Client eth2client.Servic
 			if err != nil {
 				res.WriteString(fmt.Sprintf("  Error: failed to obtain validators: %v\n", err))
 			} else {
-				res.WriteString(fmt.Sprintf("    Validator: %#x (%d)\n", validators[0].Validator.PublicKey, voluntaryExit.Message.ValidatorIndex))
+				res.WriteString(fmt.Sprintf("    Validator: %#x (%d)\n", validators[voluntaryExit.Message.ValidatorIndex].Validator.PublicKey, voluntaryExit.Message.ValidatorIndex))
 				res.WriteString(fmt.Sprintf("    Epoch: %d\n", voluntaryExit.Message.Epoch))
 			}
 		}
@@ -244,7 +244,7 @@ func outputBlockBLSToExecutionChanges(ctx context.Context, eth2Client eth2client
 			if err != nil {
 				res.WriteString(fmt.Sprintf("  Error: failed to obtain validators: %v\n", err))
 			} else {
-				res.WriteString(fmt.Sprintf("    Validator: %#x (%d)\n", validators[0].Validator.PublicKey, op.Message.ValidatorIndex))
+				res.WriteString(fmt.Sprintf("    Validator: %#x (%d)\n", validators[op.Message.ValidatorIndex].Validator.PublicKey, op.Message.ValidatorIndex))
 				res.WriteString(fmt.Sprintf("    BLS public key: %#x\n", op.Message.FromBLSPubkey))
 				res.WriteString(fmt.Sprintf("    Execution address: %#x\n", op.Message.ToExecutionAddress))
 			}

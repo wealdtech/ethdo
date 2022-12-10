@@ -1,4 +1,4 @@
-dev:
+1.26.5:
   - provide validator information in "chain status" verbose output
 
 1.26.4:

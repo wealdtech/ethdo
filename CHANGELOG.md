@@ -1,4 +1,4 @@
-dev:
+1.26.4:
   - provide details of BLS to execution change operations with verbose block output
 
 1.26.3:

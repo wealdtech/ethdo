@@ -21,10 +21,13 @@ import (
 	"time"
 
 	eth2client "github.com/attestantio/go-eth2-client"
+	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	standardchaintime "github.com/wealdtech/ethdo/services/chaintime/standard"
 	"github.com/wealdtech/ethdo/util"
+	string2eth "github.com/wealdtech/go-string2eth"
 )
 
 var chainStatusCmd = &cobra.Command{
@@ -114,6 +117,34 @@ In quiet mode this will return 0 if the chain status can be obtained, otherwise 
 			res.WriteString("Finalized epoch distance: ")
 			res.WriteString(fmt.Sprintf("%d", distance))
 			res.WriteString("\n")
+		}
+
+		if verbose {
+			validatorsProvider, isProvider := eth2Client.(eth2client.ValidatorsProvider)
+			if isProvider {
+				validators, err := validatorsProvider.Validators(ctx, "head", nil)
+				errCheck(err, "Failed to obtain validators information")
+				// Stats of inteest.
+				totalBalance := phase0.Gwei(0)
+				activeEffectiveBalance := phase0.Gwei(0)
+				validatorCount := make(map[apiv1.ValidatorState]int)
+				for _, validator := range validators {
+					validatorCount[validator.Status]++
+					totalBalance += validator.Balance
+					if validator.Status.IsActive() {
+						activeEffectiveBalance += validator.Validator.EffectiveBalance
+					}
+				}
+				res.WriteString(fmt.Sprintf("Total balance: %s\n", string2eth.GWeiToString(uint64(totalBalance), true)))
+				res.WriteString(fmt.Sprintf("Active effective balance: %s\n", string2eth.GWeiToString(uint64(activeEffectiveBalance), true)))
+				res.WriteString("Validator states:\n")
+				res.WriteString(fmt.Sprintf("  Pending: %d\n", validatorCount[apiv1.ValidatorStatePendingInitialized]))
+				res.WriteString(fmt.Sprintf("  Activating: %d\n", validatorCount[apiv1.ValidatorStatePendingQueued]))
+				res.WriteString(fmt.Sprintf("  Active: %d\n", validatorCount[apiv1.ValidatorStateActiveOngoing]+validatorCount[apiv1.ValidatorStateActiveSlashed]))
+				res.WriteString(fmt.Sprintf("  Exiting: %d\n", validatorCount[apiv1.ValidatorStateActiveExiting]))
+				res.WriteString(fmt.Sprintf("  Exited: %d\n", validatorCount[apiv1.ValidatorStateExitedUnslashed]+validatorCount[apiv1.ValidatorStateExitedSlashed]+validatorCount[apiv1.ValidatorStateWithdrawalPossible]+validatorCount[apiv1.ValidatorStateWithdrawalDone]))
+				res.WriteString(fmt.Sprintf("  Unknown: %d\n", validatorCount[apiv1.ValidatorStateUnknown]))
+			}
 		}
 
 		if epoch >= chainTime.AltairInitialEpoch() {

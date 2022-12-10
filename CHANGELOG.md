@@ -1,3 +1,6 @@
+dev:
+  - provide validator information in "chain status" verbose output
+
 1.26.4:
   - provide details of BLS to execution change operations with verbose block output
 

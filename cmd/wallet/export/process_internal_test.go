@@ -15,7 +15,6 @@ package walletexport
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"testing"
 	"time"
@@ -31,7 +30,7 @@ import (
 func TestProcess(t *testing.T) {
 	require.NoError(t, e2types.InitBLS())
 
-	base, err := ioutil.TempDir("", "")
+	base, err := os.MkdirTemp("", "")
 	require.NoError(t, err)
 	defer os.RemoveAll(base)
 	store := filesystem.New(filesystem.WithLocation(base))

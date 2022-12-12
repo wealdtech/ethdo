@@ -16,7 +16,7 @@ package accountimport
 import (
 	"context"
 	"encoding/hex"
-	"io/ioutil"
+	"os"
 	"strings"
 	"time"
 
@@ -115,7 +115,7 @@ func obtainKeystore(input string) ([]byte, error) {
 		data = []byte(input)
 	} else {
 		// Assume it's a path to JSON
-		data, err = ioutil.ReadFile(input)
+		data, err = os.ReadFile(input)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to find deposit data file")
 		}

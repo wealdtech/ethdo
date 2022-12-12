@@ -1,4 +1,4 @@
-// Copyright © 2021 Weald Technology Trading
+// Copyright © 2021, 2022 Weald Technology Trading
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -16,7 +16,6 @@ package walletsharedimport
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -38,7 +37,7 @@ func TestInput(t *testing.T) {
 	dir, err := os.MkdirTemp("", "")
 	require.NoError(t, err)
 	datFile := filepath.Join(dir, "backup.dat")
-	require.NoError(t, ioutil.WriteFile(datFile, []byte("dummy"), 0600))
+	require.NoError(t, os.WriteFile(datFile, []byte("dummy"), 0600))
 	defer os.RemoveAll(dir)
 
 	store := scratch.New()

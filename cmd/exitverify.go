@@ -1,4 +1,4 @@
-// Copyright © 2020 Weald Technology Trading
+// Copyright © 2020, 2022 Weald Technology Trading
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -19,7 +19,6 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"strings"
 
@@ -97,7 +96,7 @@ func obtainExitData(input string) (*util.ValidatorExitData, error) {
 		data = []byte(input)
 	} else {
 		// Assume it's a path to JSON
-		data, err = ioutil.ReadFile(input)
+		data, err = os.ReadFile(input)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to find deposit data file")
 		}

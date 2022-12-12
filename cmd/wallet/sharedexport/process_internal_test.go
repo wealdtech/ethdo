@@ -1,4 +1,4 @@
-// Copyright © 2021 Weald Technology Trading
+// Copyright © 2021, 2022 Weald Technology Trading
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -15,7 +15,6 @@ package walletsharedexport
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"testing"
 	"time"
@@ -31,7 +30,7 @@ import (
 func TestProcess(t *testing.T) {
 	require.NoError(t, e2types.InitBLS())
 
-	base, err := ioutil.TempDir("", "")
+	base, err := os.MkdirTemp("", "")
 	require.NoError(t, err)
 	defer os.RemoveAll(base)
 	store := filesystem.New(filesystem.WithLocation(base))

@@ -16,7 +16,7 @@ package walletimport
 import (
 	"context"
 	"encoding/hex"
-	"io/ioutil"
+	"os"
 	"strings"
 	"time"
 
@@ -58,7 +58,7 @@ func input(ctx context.Context) (*dataIn, error) {
 	}
 	if !strings.HasPrefix(viper.GetString("data"), "0x") {
 		// Assume this is a path; read the file and replace the path with its contents.
-		fileData, err := ioutil.ReadFile(viper.GetString("data"))
+		fileData, err := os.ReadFile(viper.GetString("data"))
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to read wallet import data")
 		}

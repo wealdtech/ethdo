@@ -1,4 +1,4 @@
-// Copyright © 2021 Weald Technology Trading
+// Copyright © 2021, 2022 Weald Technology Trading
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -15,7 +15,7 @@ package walletsharedimport
 
 import (
 	"context"
-	"io/ioutil"
+	"os"
 	"time"
 
 	"github.com/pkg/errors"
@@ -52,7 +52,7 @@ func input(ctx context.Context) (*dataIn, error) {
 	if viper.GetString("file") == "" {
 		return nil, errors.New("file is required")
 	}
-	data.file, err = ioutil.ReadFile(viper.GetString("file"))
+	data.file, err = os.ReadFile(viper.GetString("file"))
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to read wallet import file")
 	}

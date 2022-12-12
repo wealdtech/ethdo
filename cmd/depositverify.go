@@ -1,4 +1,4 @@
-// Copyright © 2019-2021 Weald Technology Limited.
+// Copyright © 2019-2022 Weald Technology Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -17,7 +17,6 @@ import (
 	"bytes"
 	"encoding/hex"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"strings"
 
@@ -64,7 +63,7 @@ In quiet mode this will return 0 if the the data is verified correctly, otherwis
 			data = []byte(depositVerifyData)
 		default:
 			// Assume it's a path to JSON.
-			data, err = ioutil.ReadFile(depositVerifyData)
+			data, err = os.ReadFile(depositVerifyData)
 			errCheck(err, "Failed to read deposit data file")
 			if data[0] == '{' {
 				data = []byte("[" + string(data) + "]")
@@ -155,7 +154,7 @@ func validatorPubKeysFromInput(input string) (map[[48]byte]bool, error) {
 		pubKeys[key] = true
 	} else {
 		// Assume it's a path to a file of public keys.
-		data, err = ioutil.ReadFile(input)
+		data, err = os.ReadFile(input)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to find public key file")
 		}

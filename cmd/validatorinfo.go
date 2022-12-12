@@ -18,7 +18,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"os"
 	"strconv"
@@ -125,7 +125,7 @@ func graphData(network string, validatorPubKey []byte) (uint64, spec.Gwei, error
 		return 0, 0, errors.Wrap(err, "failed to check if there is already a deposit for this validator")
 	}
 	defer graphResp.Body.Close()
-	body, err := ioutil.ReadAll(graphResp.Body)
+	body, err := io.ReadAll(graphResp.Body)
 	if err != nil {
 		return 0, 0, errors.Wrap(err, "bad information returned from existing deposit check")
 	}

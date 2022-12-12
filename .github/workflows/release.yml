@@ -7,150 +7,195 @@ on:
     - 't*'
 
 jobs:
-  build:
-    name: Build
+  # Set variables that will be available to all builds.
+  env_vars:
     runs-on: ubuntu-latest
+    outputs:
+      release_version: ${{ steps.release_version.outputs.release_version }}
+      binary: ${{ steps.binary.outputs.binary }}
     steps:
+      - id: release_version
+        run: |
+          RELEASE_VERSION=$(echo ${{ github.ref_name }} | sed -e 's/^[vt]//')
+          echo "release_version=${RELEASE_VERSION}" >> $GITHUB_OUTPUT
+      - id: binary
+        run: |
+          BINARY=$(basename ${{ github.repository }})
+          echo "binary=${BINARY}" >> $GITHUB_OUTPUT
 
-    - name: Set up Go 1.x
-      uses: actions/setup-go@v3
-      with:
-        go-version: 1.17
+  # Create a github release to hold the assets once built.
+  create_release:
+    runs-on: ubuntu-latest
+    needs: env_vars
+    outputs:
+      upload_url: ${{ steps.release_action.outputs.upload_url }}
+    steps:
+      - name: Create Release
+        id: release_action
+        uses: ncipollo/release-action@v1
+        with:
+          name: Release ${{ needs.env_vars.outputs.release_version }}
+          draft: true
+          prerelease: false
 
-    - name: Check out code into the Go module directory
-      uses: actions/checkout@v2
+  # Build and pack the binaries for linux.
+  build_linux:
+    runs-on: ubuntu-latest
+    needs: [create_release, env_vars]
+    steps:
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: ^1.19
 
-    - name: Get dependencies
-      run: |
-       go get -v -t -d ./...
-       if [ -f Gopkg.toml ]; then
-         curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
-         dep ensure
-       fi
+      - name: Check out repository into the Go module directory
+        uses: actions/checkout@v3
 
-    - name: Set env
-      run: |
-       echo "GO111MODULE=on" >> $GITHUB_ENV
-       # Release tag comes from the github reference.
-       RELEASE_TAG=$(echo ${GITHUB_REF} | sed -e 's!.*/!!')
-       echo "RELEASE_TAG=${RELEASE_TAG}" >> $GITHUB_ENV
-       echo "::set-output name=RELEASE_TAG::${RELEASE_TAG}"
-       # Ensure the release tag has expected format.
-       echo ${RELEASE_TAG} | grep -q '^[vt]' || exit 1
-       # Release version is same as release tag without leading 'v'.
-       RELEASE_VERSION=$(echo ${GITHUB_REF} | sed -e 's!.*/[vt]!!')
-       echo "RELEASE_VERSION=${RELEASE_VERSION}" >> $GITHUB_ENV
-       echo "::set-output name=RELEASE_VERSION::${RELEASE_VERSION}"
+      - name: Select correct tag
+        run: git checkout ${{ github.ref_name }}
 
-    - name: Build
-      run: go build -v -ldflags="-X github.com/wealdtech/ethdo/cmd.ReleaseVersion=${RELEASE_VERSION}" .
+      - name: Fetch repository dependencies
+        run: go get -v -t ./...
 
-    - name: Test
-      run: go test -v .
+      - name: Compile
+        run: |
+          go build -tags osusergo,netgo -ldflags="-extldflags=-static" -v -ldflags="-X github.com/${{ github.repository }}/cmd.ReleaseVersion=${{ needs.env_vars.outputs.release_version }}"
+          tar zcf ${{ needs.env_vars.outputs.binary }}-${{ needs.env_vars.outputs.release_version }}-linux-amd64.tar.gz ${{ needs.env_vars.outputs.binary }}
+          sha256sum ${{ needs.env_vars.outputs.binary }}-${{ needs.env_vars.outputs.release_version }}-linux-amd64.tar.gz | sed -e 's/ .*//' >${{ needs.env_vars.outputs.binary }}-${{ needs.env_vars.outputs.release_version }}-linux-amd64.tar.gz.sha256
+      - name: Upload binary
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          upload_url: ${{ needs.create_release.outputs.upload_url }}
+          asset_path: ./${{ needs.env_vars.outputs.binary }}-${{ needs.env_vars.outputs.release_version }}-linux-amd64.tar.gz
+          asset_name: ${{ needs.env_vars.outputs.binary }}-${{ needs.env_vars.outputs.release_version }}-linux-amd64.tar.gz
+          asset_content_type: application/octet-stream
 
-    - name: Fetch xgo
-      run: |
-       go install github.com/wealdtech/xgo@latest
+      - name: Upload hash
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          upload_url: ${{ needs.create_release.outputs.upload_url }}
+          asset_path: ./${{ needs.env_vars.outputs.binary }}-${{ needs.env_vars.outputs.release_version }}-linux-amd64.tar.gz.sha256
+          asset_name: ${{ needs.env_vars.outputs.binary }}-${{ needs.env_vars.outputs.release_version }}-linux-amd64.tar.gz.sha256
+          asset_content_type: text/plain
 
-    - name: Cross-compile linux
-      run: |
-        xgo -v -x -ldflags="-X github.com/wealdtech/ethdo/cmd.ReleaseVersion=${RELEASE_VERSION}" --targets="linux/amd64,linux/arm64" github.com/wealdtech/ethdo
+      - name: Cross compile (ARM64)
+        run: |
+          GOOS=linux GOARCH=arm64 go build -tags osusergo,netgo -ldflags="-extldflags=-static" -v -ldflags="-X github.com/${{ github.repository }}/cmd.ReleaseVersion=${{ needs.env_vars.outputs.release_version }}"
+          tar zcf ${{ needs.env_vars.outputs.binary }}-${{ needs.env_vars.outputs.release_version }}-linux-arm64.tar.gz ${{ needs.env_vars.outputs.binary }}
+          sha256sum ${{ needs.env_vars.outputs.binary }}-${{ needs.env_vars.outputs.release_version }}-linux-arm64.tar.gz | sed -e 's/ .*//' >${{ needs.env_vars.outputs.binary }}-${{ needs.env_vars.outputs.release_version }}-linux-arm64.tar.gz.sha256
 
-    - name: Cross-compile windows
-      run: |
-        xgo -v -x -ldflags="-X github.com/wealdtech/ethdo/cmd.ReleaseVersion=${RELEASE_VERSION} -s -w -extldflags -static" --targets="windows/amd64" github.com/wealdtech/ethdo
+      - name: Upload binary (ARM64)
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          upload_url: ${{ needs.create_release.outputs.upload_url }}
+          asset_path: ./${{ needs.env_vars.outputs.binary }}-${{ needs.env_vars.outputs.release_version }}-linux-arm64.tar.gz
+          asset_name: ${{ needs.env_vars.outputs.binary }}-${{ needs.env_vars.outputs.release_version }}-linux-arm64.tar.gz
+          asset_content_type: application/octet-stream
 
-    - name: Create windows release files
-      run: |
-       mv ethdo-windows-4.0-amd64.exe ethdo.exe
-       zip --junk-paths ethdo-${RELEASE_VERSION}-windows-exe.zip ethdo.exe
-       sha256sum ethdo-${RELEASE_VERSION}-windows-exe.zip >ethdo-${RELEASE_VERSION}-windows.sha256
+      - name: Upload hash (ARM64)
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          upload_url: ${{ needs.create_release.outputs.upload_url }}
+          asset_path: ./${{ needs.env_vars.outputs.binary }}-${{ needs.env_vars.outputs.release_version }}-linux-arm64.tar.gz.sha256
+          asset_name: ${{ needs.env_vars.outputs.binary }}-${{ needs.env_vars.outputs.release_version }}-linux-arm64.tar.gz.sha256
+          asset_content_type: text/plain
 
-    - name: Create linux AMD64 tgz file
-      run: |
-       mv ethdo-linux-amd64 ethdo
-       tar zcf ethdo-${RELEASE_VERSION}-linux-amd64.tar.gz ethdo
-       sha256sum ethdo-${RELEASE_VERSION}-linux-amd64.tar.gz >ethdo-${RELEASE_VERSION}-linux-amd64.sha256
+  # Build and pack the binaries for OSX.
+  build_macos:
+    runs-on: macos-latest
+    needs: [create_release, env_vars]
+    steps:
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: ^1.19
 
-    - name: Create linux ARM64 tgz file
-      run: |
-       mv ethdo-linux-arm64 ethdo
-       tar zcf ethdo-${RELEASE_VERSION}-linux-arm64.tar.gz ethdo
-       sha256sum ethdo-${RELEASE_VERSION}-linux-arm64.tar.gz >ethdo-${RELEASE_VERSION}-linux-arm64.sha256
+      - name: Check out repository into the Go module directory
+        uses: actions/checkout@v3
 
-    - name: Create release
-      id: create_release
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        tag_name: ${{ github.ref }}
-        release_name: Release ${{ env.RELEASE_VERSION }}
-        draft: true
-        prerelease: false
+      - name: Select correct tag
+        run: git checkout ${{ github.ref_name }}
 
-    - name: Upload windows checksum file
-      id: upload-release-asset-windows-checksum
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./ethdo-${{ env.RELEASE_VERSION }}-windows.sha256
-        asset_name: ethdo-${{ env.RELEASE_VERSION }}-windows.sha256
-        asset_content_type: text/plain
+      - name: Fetch repository dependencies
+        run: go get -v -t ./...
 
-    - name: Upload windows zip file
-      id: upload-release-asset-windows
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./ethdo-${{ env.RELEASE_VERSION }}-windows-exe.zip
-        asset_name: ethdo-${{ env.RELEASE_VERSION }}-windows-exe.zip
-        asset_content_type: application/zip
+      - name: Compile
+        run: |
+          go build -tags osusergo,netgo -ldflags="-extldflags=-static" -v -ldflags="-X github.com/${{ github.repository }}/cmd.ReleaseVersion=${{ needs.env_vars.outputs.release_version }}"
+          tar zcf ${{ needs.env_vars.outputs.binary }}-${{ needs.env_vars.outputs.release_version }}-darwin-amd64.tar.gz ${{ needs.env_vars.outputs.binary }}
+          brew install coreutils
+          sha256sum ${{ needs.env_vars.outputs.binary }}-${{ needs.env_vars.outputs.release_version }}-darwin-amd64.tar.gz | sed -e 's/ .*//' >${{ needs.env_vars.outputs.binary }}-${{ needs.env_vars.outputs.release_version }}-darwin-amd64.tar.gz.sha256
+      - name: Upload binary
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          upload_url: ${{ needs.create_release.outputs.upload_url }}
+          asset_path: ./${{ needs.env_vars.outputs.binary }}-${{ needs.env_vars.outputs.release_version }}-darwin-amd64.tar.gz
+          asset_name: ${{ needs.env_vars.outputs.binary }}-${{ needs.env_vars.outputs.release_version }}-darwin-amd64.tar.gz
+          asset_content_type: application/octet-stream
 
-    - name: Upload linux AMD64 checksum file
-      id: upload-release-asset-linux-amd64-checksum
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./ethdo-${{ env.RELEASE_VERSION }}-linux-amd64.sha256
-        asset_name: ethdo-${{ env.RELEASE_VERSION }}-linux-amd64.sha256
-        asset_content_type: text/plain
+      - name: Upload hash
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          upload_url: ${{ needs.create_release.outputs.upload_url }}
+          asset_path: ./${{ needs.env_vars.outputs.binary }}-${{ needs.env_vars.outputs.release_version }}-darwin-amd64.tar.gz.sha256
+          asset_name: ${{ needs.env_vars.outputs.binary }}-${{ needs.env_vars.outputs.release_version }}-darwin-amd64.tar.gz.sha256
+          asset_content_type: text/plain
 
-    - name: Upload linux AMD64 tgz file
-      id: upload-release-asset-linux-amd64
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./ethdo-${{ env.RELEASE_VERSION }}-linux-amd64.tar.gz
-        asset_name: ethdo-${{ env.RELEASE_VERSION }}-linux-amd64.tar.gz
-        asset_content_type: application/gzip
+  # Build and pack the binaries for Windows.
+  build_windows:
+    runs-on: windows-latest
+    needs: [create_release, env_vars]
+    steps:
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: ^1.19
 
-    - name: Upload linux ARM64 checksum file
-      id: upload-release-asset-linux-arm64-checksum
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./ethdo-${{ env.RELEASE_VERSION }}-linux-arm64.sha256
-        asset_name: ethdo-${{ env.RELEASE_VERSION }}-linux-arm64.sha256
-        asset_content_type: text/plain
+      - name: Check out repository into the Go module directory
+        uses: actions/checkout@v3
 
-    - name: Upload linux ARM64 tgz file
-      id: upload-release-asset-linux-arm64
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./ethdo-${{ env.RELEASE_VERSION }}-linux-arm64.tar.gz
-        asset_name: ethdo-${{ env.RELEASE_VERSION }}-linux-arm64.tar.gz
-        asset_content_type: application/gzip
+      - name: Select correct tag
+        run: git checkout ${{ github.ref_name }}
+
+      - name: Fetch repository dependencies
+        run: go get -v -t ./...
+
+      - name: Compile
+        run: |
+          go build -tags osusergo,netgo -ldflags="-extldflags=-static" -v -ldflags="-X github.com/${{ github.repository }}/cmd.ReleaseVersion=${{ needs.env_vars.outputs.release_version }}"
+          choco install zip
+          zip --junk-paths ${{ needs.env_vars.outputs.binary }}-${{ needs.env_vars.outputs.release_version }}-windows-exe.zip ${{ needs.env_vars.outputs.binary }}.exe
+          $FileHash=(certutil -hashfile ${{ needs.env_vars.outputs.binary }}-${{ needs.env_vars.outputs.release_version }}-windows-exe.zip SHA256 | findstr /v hash | findstr /v SHA).replace(" ", "")
+          echo "$FileHash" > ${{ needs.env_vars.outputs.binary }}-${{ needs.env_vars.outputs.release_version }}-windows-exe-zip.sha256
+
+      - name: Upload binary
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          upload_url: ${{ needs.create_release.outputs.upload_url }}
+          asset_path: ./${{ needs.env_vars.outputs.binary }}-${{ needs.env_vars.outputs.release_version }}-windows-exe.zip
+          asset_name: ${{ needs.env_vars.outputs.binary }}-${{ needs.env_vars.outputs.release_version }}-windows-exe.zip
+          asset_content_type: application/octet-stream
+
+      - name: Upload hash
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          upload_url: ${{ needs.create_release.outputs.upload_url }}
+          asset_path: ./${{ needs.env_vars.outputs.binary }}-${{ needs.env_vars.outputs.release_version }}-windows-exe-zip.sha256
+          asset_name: ${{ needs.env_vars.outputs.binary }}-${{ needs.env_vars.outputs.release_version }}-windows-exe-zip.sha256
+          asset_content_type: text/plain

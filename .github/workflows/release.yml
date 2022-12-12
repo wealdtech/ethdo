@@ -9,7 +9,7 @@ on:
 jobs:
   # Set variables that will be available to all builds.
   env_vars:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     outputs:
       release_version: ${{ steps.release_version.outputs.release_version }}
       binary: ${{ steps.binary.outputs.binary }}
@@ -25,7 +25,7 @@ jobs:
 
   # Create a github release to hold the assets once built.
   create_release:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     needs: env_vars
     outputs:
       upload_url: ${{ steps.release_action.outputs.upload_url }}
@@ -40,7 +40,7 @@ jobs:
 
   # Build and pack the binaries for linux.
   build_linux:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     needs: [create_release, env_vars]
     steps:
       - name: Set up Go
@@ -84,7 +84,8 @@ jobs:
 
       - name: Cross compile (ARM64)
         run: |
-          GOOS=linux GOARCH=arm64 go build -tags osusergo,netgo -ldflags="-extldflags=-static" -v -ldflags="-X github.com/${{ github.repository }}/cmd.ReleaseVersion=${{ needs.env_vars.outputs.release_version }}"
+          apt install -y gcc-aarch64-linux-gnu libstdc++-12-pic-arm64-cross
+          CGO_ENABLED=1 CC=aarch64-linux-gnu-gcc GOOS=linux GOARCH=arm64 go build -tags osusergo,netgo -ldflags="-extldflags=-static" -v -ldflags="-X github.com/${{ github.repository }}/cmd.ReleaseVersion=${{ needs.env_vars.outputs.release_version }}"
           tar zcf ${{ needs.env_vars.outputs.binary }}-${{ needs.env_vars.outputs.release_version }}-linux-arm64.tar.gz ${{ needs.env_vars.outputs.binary }}
           sha256sum ${{ needs.env_vars.outputs.binary }}-${{ needs.env_vars.outputs.release_version }}-linux-arm64.tar.gz | sed -e 's/ .*//' >${{ needs.env_vars.outputs.binary }}-${{ needs.env_vars.outputs.release_version }}-linux-arm64.tar.gz.sha256
 

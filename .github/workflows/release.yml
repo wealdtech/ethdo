@@ -84,7 +84,9 @@ jobs:
 
       - name: Cross compile (ARM64)
         run: |
-          apt install -y gcc-aarch64-linux-gnu libstdc++-12-pic-arm64-cross
+          sudo apt-get update
+          sudo apt-get upgrade
+          sudo apt install -y gcc-aarch64-linux-gnu libstdc++-11-pic-arm64-cross
           CGO_ENABLED=1 CC=aarch64-linux-gnu-gcc GOOS=linux GOARCH=arm64 go build -tags osusergo,netgo -ldflags="-extldflags=-static" -v -ldflags="-X github.com/${{ github.repository }}/cmd.ReleaseVersion=${{ needs.env_vars.outputs.release_version }}"
           tar zcf ${{ needs.env_vars.outputs.binary }}-${{ needs.env_vars.outputs.release_version }}-linux-arm64.tar.gz ${{ needs.env_vars.outputs.binary }}
           sha256sum ${{ needs.env_vars.outputs.binary }}-${{ needs.env_vars.outputs.release_version }}-linux-arm64.tar.gz | sed -e 's/ .*//' >${{ needs.env_vars.outputs.binary }}-${{ needs.env_vars.outputs.release_version }}-linux-arm64.tar.gz.sha256

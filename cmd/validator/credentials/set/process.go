@@ -217,13 +217,22 @@ func (c *command) populateChainInfo(ctx context.Context) error {
 	if !exists {
 		return errors.New("failed to obtain DOMAIN_BLS_TO_EXECUTION_CHANGE")
 	}
-	domainProvider, isProvider := c.consensusClient.(consensusclient.DomainProvider)
-	if !isProvider {
-		return errors.New("consensus node does not provide domain information")
+	if c.debug {
+		fmt.Printf("Domain type is %#x\n", domainType)
 	}
-	c.chainInfo.Domain, err = domainProvider.Domain(ctx, domainType, c.chainInfo.Epoch)
+	copy(c.chainInfo.Domain[:], domainType[:])
+
+	root, err := (&phase0.ForkData{
+		CurrentVersion:        c.chainInfo.ForkVersion,
+		GenesisValidatorsRoot: c.chainInfo.GenesisValidatorsRoot,
+	}).HashTreeRoot()
 	if err != nil {
-		return errors.Wrap(err, "failed to obtain domain")
+		return errors.Wrap(err, "failed to calculate signature domain")
+	}
+	copy(c.chainInfo.Domain[4:], root[:])
+
+	if c.debug {
+		fmt.Printf("Domain is %#x\n", c.chainInfo.Domain)
 	}
 
 	return nil
@@ -546,14 +555,7 @@ func (c *command) validateOperation(ctx context.Context,
 }
 
 func (c *command) broadcastOperations(ctx context.Context) error {
-	// Broadcast the operations.
-	for _, signedOperation := range c.signedOperations {
-		if err := c.consensusClient.(consensusclient.BLSToExecutionChangeSubmitter).SubmitBLSToExecutionChange(ctx, signedOperation); err != nil {
-			return err
-		}
-	}
-
-	return nil
+	return c.consensusClient.(consensusclient.BLSToExecutionChangesSubmitter).SubmitBLSToExecutionChanges(ctx, c.signedOperations)
 }
 
 func (c *command) setup(ctx context.Context) error {

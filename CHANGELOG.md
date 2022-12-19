@@ -1,3 +1,7 @@
+dev:
+  - use new build system
+  - support S3 credentials
+
 1.26.5:
   - provide validator information in "chain status" verbose output
 

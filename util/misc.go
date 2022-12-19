@@ -47,10 +47,13 @@ func SetupStore() error {
 			return errors.New("basedir does not apply to the s3 store")
 		}
 		store, err = s3.New(s3.WithPassphrase([]byte(GetStorePassphrase("s3"))),
+			s3.WithID([]byte(viper.GetString("stores.s3.id"))),
 			s3.WithEndpoint(viper.GetString("stores.s3.endpoint")),
 			s3.WithRegion(viper.GetString("stores.s3.region")),
 			s3.WithBucket(viper.GetString("stores.s3.bucket")),
 			s3.WithPath(viper.GetString("stores.s3.path")),
+			s3.WithCredentialsID(viper.GetString("stores.s3.credentials.id")),
+			s3.WithCredentialsSecret(viper.GetString("stores.s3.credentials.secret")),
 		)
 		if err != nil {
 			return errors.Wrap(err, "failed to access Amazon S3 wallet store")

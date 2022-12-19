@@ -32,7 +32,7 @@ require (
 	github.com/wealdtech/go-eth2-wallet-hd/v2 v2.6.0
 	github.com/wealdtech/go-eth2-wallet-nd/v2 v2.4.0
 	github.com/wealdtech/go-eth2-wallet-store-filesystem v1.17.0
-	github.com/wealdtech/go-eth2-wallet-store-s3 v1.11.0
+	github.com/wealdtech/go-eth2-wallet-store-s3 v1.11.1
 	github.com/wealdtech/go-eth2-wallet-store-scratch v1.7.0
 	github.com/wealdtech/go-eth2-wallet-types/v2 v2.10.0
 	github.com/wealdtech/go-string2eth v1.2.0

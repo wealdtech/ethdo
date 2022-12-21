@@ -59,7 +59,7 @@ jobs:
 
       - name: Compile
         run: |
-          go build -tags osusergo,netgo -ldflags="-extldflags=-static" -v -ldflags="-X github.com/${{ github.repository }}/cmd.ReleaseVersion=${{ needs.env_vars.outputs.release_version }}"
+          go build -tags osusergo,netgo -v -ldflags="-X github.com/${{ github.repository }}/cmd.ReleaseVersion=${{ needs.env_vars.outputs.release_version }} -extldflgs -static"
           tar zcf ${{ needs.env_vars.outputs.binary }}-${{ needs.env_vars.outputs.release_version }}-linux-amd64.tar.gz ${{ needs.env_vars.outputs.binary }}
           sha256sum ${{ needs.env_vars.outputs.binary }}-${{ needs.env_vars.outputs.release_version }}-linux-amd64.tar.gz | sed -e 's/ .*//' >${{ needs.env_vars.outputs.binary }}-${{ needs.env_vars.outputs.release_version }}-linux-amd64.tar.gz.sha256
       - name: Upload binary
@@ -87,7 +87,7 @@ jobs:
           sudo apt-get update
           sudo apt-get upgrade
           sudo apt install -y gcc-aarch64-linux-gnu libstdc++-11-pic-arm64-cross
-          CGO_ENABLED=1 CC=aarch64-linux-gnu-gcc GOOS=linux GOARCH=arm64 go build -tags osusergo,netgo -ldflags="-extldflags=-static" -v -ldflags="-X github.com/${{ github.repository }}/cmd.ReleaseVersion=${{ needs.env_vars.outputs.release_version }}"
+          CGO_ENABLED=1 CC=aarch64-linux-gnu-gcc GOOS=linux GOARCH=arm64 go build -tags osusergo,netgo -v -ldflags="-X github.com/${{ github.repository }}/cmd.ReleaseVersion=${{ needs.env_vars.outputs.release_version }} -extldflags -static"
           tar zcf ${{ needs.env_vars.outputs.binary }}-${{ needs.env_vars.outputs.release_version }}-linux-arm64.tar.gz ${{ needs.env_vars.outputs.binary }}
           sha256sum ${{ needs.env_vars.outputs.binary }}-${{ needs.env_vars.outputs.release_version }}-linux-arm64.tar.gz | sed -e 's/ .*//' >${{ needs.env_vars.outputs.binary }}-${{ needs.env_vars.outputs.release_version }}-linux-arm64.tar.gz.sha256
 
@@ -132,7 +132,7 @@ jobs:
 
       - name: Compile
         run: |
-          go build -tags osusergo,netgo -ldflags="-extldflags=-static" -v -ldflags="-X github.com/${{ github.repository }}/cmd.ReleaseVersion=${{ needs.env_vars.outputs.release_version }}"
+          go build -tags osusergo,netgo -v -ldflags="-X github.com/${{ github.repository }}/cmd.ReleaseVersion=${{ needs.env_vars.outputs.release_version }} -extldflags static"
           tar zcf ${{ needs.env_vars.outputs.binary }}-${{ needs.env_vars.outputs.release_version }}-darwin-amd64.tar.gz ${{ needs.env_vars.outputs.binary }}
           brew install coreutils
           sha256sum ${{ needs.env_vars.outputs.binary }}-${{ needs.env_vars.outputs.release_version }}-darwin-amd64.tar.gz | sed -e 's/ .*//' >${{ needs.env_vars.outputs.binary }}-${{ needs.env_vars.outputs.release_version }}-darwin-amd64.tar.gz.sha256

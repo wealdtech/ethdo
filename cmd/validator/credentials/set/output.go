@@ -22,7 +22,8 @@ import (
 	"github.com/pkg/errors"
 )
 
-func (c *command) output(ctx context.Context) (string, error) {
+//nolint:unparam
+func (c *command) output(_ context.Context) (string, error) {
 	if c.quiet {
 		return "", nil
 	}

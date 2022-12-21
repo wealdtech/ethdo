@@ -43,24 +43,6 @@ var offlinePreparationFilename = "offline-preparation.json"
 var changeOperationsFilename = "change-operations.json"
 
 func (c *command) process(ctx context.Context) error {
-	// We should have exactly 1 specifier to know what we're working with.
-	validatorSpecifiers := 0
-	if c.validator != "" {
-		validatorSpecifiers++
-	}
-	if c.mnemonic != "" {
-		validatorSpecifiers++
-	}
-	if c.privateKey != "" {
-		validatorSpecifiers++
-	}
-	if validatorSpecifiers == 0 {
-		return errors.New("one of validator, mmenomic or private key should be specified")
-	}
-	if validatorSpecifiers > 1 {
-		return errors.New("only one of validator, mmenomic or private key should be specified")
-	}
-
 	if err := c.setup(ctx); err != nil {
 		return err
 	}
@@ -82,6 +64,9 @@ func (c *command) process(ctx context.Context) error {
 	}
 
 	if c.json || c.offline {
+		if c.debug {
+			fmt.Fprintf(os.Stderr, "Not broadcasting credentials change operations\n")
+		}
 		// Want JSON output, or cannot broadcast.
 		return nil
 	}
@@ -118,7 +103,7 @@ func (c *command) obtainRequiredInformation(ctx context.Context) error {
 // populateChainInfo populates chain info structure from a beacon node.
 func (c *command) populateChainInfo(ctx context.Context) error {
 	if c.debug {
-		fmt.Printf("Populating chain info from beacon node\n")
+		fmt.Fprintf(os.Stderr, "Populating chain info from beacon node\n")
 	}
 
 	// Obtain validators.
@@ -155,7 +140,7 @@ func (c *command) populateChainInfo(ctx context.Context) error {
 		c.chainInfo.GenesisValidatorsRoot = genesis.GenesisValidatorsRoot
 	}
 	if c.debug {
-		fmt.Printf("Genesis validators root is %#x\n", c.chainInfo.GenesisValidatorsRoot)
+		fmt.Fprintf(os.Stderr, "Genesis validators root is %#x\n", c.chainInfo.GenesisValidatorsRoot)
 	}
 
 	// Obtain epoch.
@@ -163,49 +148,16 @@ func (c *command) populateChainInfo(ctx context.Context) error {
 
 	// Obtain fork version.
 	if c.forkVersion != "" {
-		// Fork version supplied manually.
-		forkVersion, err := hex.DecodeString(strings.TrimPrefix(c.forkVersion, "0x"))
-		if err != nil {
-			return errors.Wrap(err, "invalid fork version supplied")
+		if err := c.populateChainInfoForkVersionFromInput(ctx); err != nil {
+			return err
 		}
-		if len(forkVersion) != phase0.ForkVersionLength {
-			return errors.New("invalid length for fork version")
-		}
-		copy(c.chainInfo.ForkVersion[:], forkVersion)
 	} else {
-		// Fork version obtained from beacon node.
-		forkSchedule, err := c.consensusClient.(consensusclient.ForkScheduleProvider).ForkSchedule(ctx)
-		if err != nil {
-			return errors.Wrap(err, "failed to obtain fork schedule")
-		}
-		if len(forkSchedule) == 0 {
-			return errors.New("beacon node did not provide any fork schedule; provide manually with --fork-version")
-		}
-		if c.debug {
-			fmt.Printf("Genesis fork version is %#x\n", forkSchedule[0].CurrentVersion)
-		}
-		if len(forkSchedule) < 4 {
-			return errors.New("beacon node not providing capella fork schedule; provide manually with --fork-version")
-		}
-		for i := range forkSchedule {
-			// Need to be at least fork 3 (i.e. capella)
-			if i < 3 {
-				continue
-			}
-			if i == 3 {
-				// Force use of capella even if we aren't there yet, to allow credential
-				// change operations to be signed in advance with a signature that will be
-				// valid once capella goes live.
-				c.chainInfo.ForkVersion = forkSchedule[i].CurrentVersion
-				continue
-			}
-			if forkSchedule[i].Epoch <= c.chainInfo.Epoch {
-				c.chainInfo.ForkVersion = forkSchedule[i].CurrentVersion
-			}
+		if err := c.populateChainInfoForkVersionFromChain(ctx); err != nil {
+			return err
 		}
 	}
 	if c.debug {
-		fmt.Printf("Fork version is %#x\n", c.chainInfo.ForkVersion)
+		fmt.Fprintf(os.Stderr, "Fork version is %#x\n", c.chainInfo.ForkVersion)
 	}
 
 	// Calculate domain.
@@ -218,7 +170,7 @@ func (c *command) populateChainInfo(ctx context.Context) error {
 		return errors.New("failed to obtain DOMAIN_BLS_TO_EXECUTION_CHANGE")
 	}
 	if c.debug {
-		fmt.Printf("Domain type is %#x\n", domainType)
+		fmt.Fprintf(os.Stderr, "Domain type is %#x\n", domainType)
 	}
 	copy(c.chainInfo.Domain[:], domainType[:])
 
@@ -232,7 +184,56 @@ func (c *command) populateChainInfo(ctx context.Context) error {
 	copy(c.chainInfo.Domain[4:], root[:])
 
 	if c.debug {
-		fmt.Printf("Domain is %#x\n", c.chainInfo.Domain)
+		fmt.Fprintf(os.Stderr, "Domain is %#x\n", c.chainInfo.Domain)
+	}
+
+	return nil
+}
+
+func (c *command) populateChainInfoForkVersionFromInput(_ context.Context) error {
+	// Fork version supplied manually.
+	forkVersion, err := hex.DecodeString(strings.TrimPrefix(c.forkVersion, "0x"))
+	if err != nil {
+		return errors.Wrap(err, "invalid fork version supplied")
+	}
+	if len(forkVersion) != phase0.ForkVersionLength {
+		return errors.New("invalid length for fork version")
+	}
+	copy(c.chainInfo.ForkVersion[:], forkVersion)
+
+	return nil
+}
+
+func (c *command) populateChainInfoForkVersionFromChain(ctx context.Context) error {
+	// Fetch the capella fork version from the specification.
+	spec, err := c.consensusClient.(consensusclient.SpecProvider).Spec(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to obtain spec")
+	}
+	tmp, exists := spec["CAPELLA_FORK_VERSION"]
+	if !exists {
+		return errors.New("capella fork version not known by chain")
+	}
+	capellaForkVersion, isForkVersion := tmp.(phase0.Version)
+	if !isForkVersion {
+		//nolint:revive
+		return errors.New("CAPELLA_FORK_VERSION is not a fork version!")
+	}
+	c.chainInfo.ForkVersion = capellaForkVersion
+
+	// Work through the fork schedule to find the latest current fork post-Capella.
+	forkSchedule, err := c.consensusClient.(consensusclient.ForkScheduleProvider).ForkSchedule(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to obtain fork schedule")
+	}
+	foundCapella := false
+	for i := range forkSchedule {
+		if foundCapella && forkSchedule[i].Epoch <= c.chainInfo.Epoch {
+			c.chainInfo.ForkVersion = forkSchedule[i].CurrentVersion
+		}
+		if bytes.Equal(forkSchedule[i].CurrentVersion[:], capellaForkVersion[:]) {
+			foundCapella = true
+		}
 	}
 
 	return nil
@@ -240,7 +241,7 @@ func (c *command) populateChainInfo(ctx context.Context) error {
 
 // dumpRequiredInformation prepares for an offline run of this command by dumping
 // the chain information to a file.
-func (c *command) dumpRequiredInformation(ctx context.Context) error {
+func (c *command) dumpRequiredInformation(_ context.Context) error {
 	data, err := json.Marshal(c.chainInfo)
 	if err != nil {
 		return err
@@ -253,7 +254,7 @@ func (c *command) dumpRequiredInformation(ctx context.Context) error {
 }
 
 func (c *command) generateOperations(ctx context.Context) error {
-	if c.account == "" && c.mnemonic == "" && c.privateKey == "" {
+	if c.account == "" && c.mnemonic == "" && c.privateKey == "" && c.validator == "" {
 		// No input information; fetch the operations from a file.
 		if err := c.loadOperations(ctx); err == nil {
 			return nil
@@ -261,47 +262,53 @@ func (c *command) generateOperations(ctx context.Context) error {
 		return fmt.Errorf("no account, mnemonic or private key specified and no %s file found; cannot proceed", changeOperationsFilename)
 	}
 
-	if c.mnemonic != "" && c.path == "" {
-		// Have a mnemonic and no path; scan mnemonic.
-		return c.generateOperationsFromMnemonic(ctx)
+	if c.mnemonic != "" {
+		switch {
+		case c.path != "":
+			// Have a mnemonic and path.
+			return c.generateOperationsFromMnemonicAndPath(ctx)
+		case c.validator != "":
+			// Have a mnemonic and validator.
+			return c.generateOperationsFromMnemonicAndValidator(ctx)
+		case c.privateKey != "":
+			// Have a mnemonic and a private key for the withdrawal address.
+			return c.generateOperationsFromMnemonicAndPrivateKey(ctx)
+		default:
+			// Have a mnemonic and nothing else; scan.
+			return c.generateOperationsFromMnemonic(ctx)
+		}
 	}
 
-	if c.mnemonic != "" && c.path != "" {
-		// Have a mnemonic and path.
-		return c.generateOperationsFromMnemonicAndPath(ctx)
+	if c.account != "" {
+		switch {
+		case c.withdrawalAccount != "":
+			// Have an account and a withdrawal account.
+			return c.generateOperationsFromAccountAndWithdrawalAccount(ctx)
+		case c.privateKey != "":
+			// Have an account and a private key for the withdrawal address.
+			return c.generateOperationsFromAccountAndPrivateKey(ctx)
+		}
 	}
 
-	// Have a validator index or public key ; fetch the validator info.
-	validatorInfo, err := c.fetchValidatorInfo(ctx)
-	if err != nil {
-		return err
+	if c.validator != "" && c.privateKey != "" {
+		// Have a validator and a private key for the withdrawal address.
+		return c.generateOperationsFromValidatorAndPrivateKey(ctx)
 	}
 
-	// Fetch the individual account.
-	withdrawalAccount, err := c.fetchAccount(ctx)
-	if err != nil {
-		return err
-	}
-
-	// Generate the operation.
-	if err := c.generateOperationFromAccount(ctx, validatorInfo, withdrawalAccount); err != nil {
-		return err
-	}
-
-	return nil
+	return errors.New("unsupported combination of inputs; see help for details of supported combinations")
 }
 
-func (c *command) loadChainInfo(ctx context.Context) error {
+func (c *command) loadChainInfo(_ context.Context) error {
 	_, err := os.Stat(offlinePreparationFilename)
 	if err != nil {
 		if c.debug {
-			fmt.Printf("Failed to read offline preparation file: %v\n", err)
+			fmt.Fprintf(os.Stderr, "Failed to read offline preparation file: %v\n", err)
 		}
 		return errors.Wrap(err, fmt.Sprintf("cannot find %s", offlinePreparationFilename))
 	}
 
 	if c.debug {
-		fmt.Printf("%s found; loading chain state\n", offlinePreparationFilename)
+		fmt.Fprintf(os.Stderr, "%s found; loading chain state\n", offlinePreparationFilename)
 	}
 	data, err := os.ReadFile(offlinePreparationFilename)
 	if err != nil {
@@ -314,17 +321,17 @@ func (c *command) loadChainInfo(ctx context.Context) error {
 	return nil
 }
 
-func (c *command) loadOperations(ctx context.Context) error {
+func (c *command) loadOperations(_ context.Context) error {
 	_, err := os.Stat(changeOperationsFilename)
 	if err != nil {
 		if c.debug {
-			fmt.Printf("Failed to read change operations file: %v\n", err)
+			fmt.Fprintf(os.Stderr, "Failed to read change operations file: %v\n", err)
 		}
 		return err
 	}
 
 	if c.debug {
-		fmt.Printf("%s found; loading operations\n", changeOperationsFilename)
+		fmt.Fprintf(os.Stderr, "%s found; loading operations\n", changeOperationsFilename)
 	}
 	data, err := os.ReadFile(changeOperationsFilename)
 	if err != nil {
@@ -355,7 +362,7 @@ func (c *command) generateOperationsFromMnemonic(ctx context.Context) error {
 	for i := 0; ; i++ {
 		if i-lastFoundIndex > maxDistance {
 			if c.debug {
-				fmt.Printf("Gone %d indices without finding a validator, not scanning any further\n", maxDistance)
+				fmt.Fprintf(os.Stderr, "Gone %d indices without finding a validator, not scanning any further\n", maxDistance)
 			}
 			break
 		}
@@ -369,6 +376,68 @@ func (c *command) generateOperationsFromMnemonic(ctx context.Context) error {
 			lastFoundIndex = i
 		}
 	}
+	return nil
+}
+
+func (c *command) generateOperationsFromMnemonicAndPrivateKey(ctx context.Context) error {
+	// Functionally identical to a simple scan, so use that.
+	return c.generateOperationsFromMnemonic(ctx)
+}
+
+func (c *command) generateOperationsFromMnemonicAndValidator(ctx context.Context) error {
+	seed, err := util.SeedFromMnemonic(c.mnemonic)
+	if err != nil {
+		return err
+	}
+
+	validator, err := c.fetchValidatorInfo(ctx)
+	if err != nil {
+		return err
+	}
+
+	// Scan the keys from the seed to find the path.
+	maxDistance := 1024
+	// Start scanning the validator keys.
+	for i := 0; ; i++ {
+		if i == maxDistance {
+			if c.debug {
+				fmt.Fprintf(os.Stderr, "Gone %d indices without finding the validator, not scanning any further\n", maxDistance)
+			}
+			break
+		}
+		validatorKeyPath := fmt.Sprintf("m/12381/3600/%d/0/0", i)
+		validatorPrivkey, err := ethutil.PrivateKeyFromSeedAndPath(seed, validatorKeyPath)
+		if err != nil {
+			return errors.Wrap(err, "failed to generate validator private key")
+		}
+		validatorPubkey := validatorPrivkey.PublicKey().Marshal()
+		if bytes.Equal(validatorPubkey, validator.Pubkey[:]) {
+			// Recreate the withdrawal credentials to ensure a match.
+			withdrawalKeyPath := strings.TrimSuffix(validatorKeyPath, "/0")
+			withdrawalPrivkey, err := ethutil.PrivateKeyFromSeedAndPath(seed, withdrawalKeyPath)
+			if err != nil {
+				return errors.Wrap(err, "failed to generate withdrawal private key")
+			}
+			withdrawalPubkey := withdrawalPrivkey.PublicKey()
+			withdrawalCredentials := ethutil.SHA256(withdrawalPubkey.Marshal())
+			withdrawalCredentials[0] = byte(0) // BLS_WITHDRAWAL_PREFIX
+			if !bytes.Equal(withdrawalCredentials, validator.WithdrawalCredentials) {
+				return fmt.Errorf("validator %#x withdrawal credentials %#x do not match expected credentials, cannot update", validatorPubkey, validator.WithdrawalCredentials)
+			}
+
+			withdrawalAccount, err := util.ParseAccount(ctx, c.mnemonic, []string{withdrawalKeyPath}, true)
+			if err != nil {
+				return errors.Wrap(err, "failed to create withdrawal account")
+			}
+
+			err = c.generateOperationFromAccount(ctx, validator, withdrawalAccount)
+			if err != nil {
+				return err
+			}
+			break
+		}
+	}
+
 	return nil
 }
 
@@ -388,45 +457,56 @@ func (c *command) generateOperationFromSeedAndPath(ctx context.Context,
 	validator, exists := validators[validatorPubkey]
 	if !exists {
 		if c.debug {
-			fmt.Printf("No validator found with public key %s at path %s\n", validatorPubkey, path)
+			fmt.Fprintf(os.Stderr, "No validator found with public key %s at path %s\n", validatorPubkey, path)
 		}
 		return false, nil
 	}
 
 	if c.verbose {
-		fmt.Printf("Validator %d found with public key %s at path %s\n", validator.Index, validatorPubkey, path)
+		fmt.Fprintf(os.Stderr, "Validator %d found with public key %s at path %s\n", validator.Index, validatorPubkey, path)
 	}
 
 	if validator.WithdrawalCredentials[0] != byte(0) {
 		if c.debug {
-			fmt.Printf("Validator %s has non-BLS withdrawal credentials %#x\n", validatorPubkey, validator.WithdrawalCredentials)
+			fmt.Fprintf(os.Stderr, "Validator %s has non-BLS withdrawal credentials %#x\n", validatorPubkey, validator.WithdrawalCredentials)
 		}
 		return false, nil
 	}
 
-	// Recreate the withdrawal credentials to ensure a match.
-	withdrawalKeyPath := strings.TrimSuffix(path, "/0")
-	withdrawalPrivkey, err := ethutil.PrivateKeyFromSeedAndPath(seed, withdrawalKeyPath)
-	if err != nil {
-		return false, errors.Wrap(err, "failed to generate withdrawal private key")
+	var withdrawalPubkey []byte
+	var withdrawalAccount e2wtypes.Account
+	if c.privateKey == "" {
+		// Recreate the withdrawal credentials to ensure a match.
+		withdrawalKeyPath := strings.TrimSuffix(path, "/0")
+		withdrawalPrivkey, err := ethutil.PrivateKeyFromSeedAndPath(seed, withdrawalKeyPath)
+		if err != nil {
+			return false, errors.Wrap(err, "failed to generate withdrawal private key")
+		}
+		withdrawalPubkey = withdrawalPrivkey.PublicKey().Marshal()
+		withdrawalAccount, err = util.ParseAccount(ctx, c.mnemonic, []string{withdrawalKeyPath}, true)
+		if err != nil {
+			return false, errors.Wrap(err, "failed to create withdrawal account")
+		}
+
+	} else {
+		// Need the withdrawal credentials from the private key.
+		withdrawalAccount, err = util.ParseAccount(ctx, c.privateKey, nil, true)
+		if err != nil {
+			return false, err
+		}
+		withdrawalPubkey = withdrawalAccount.PublicKey().Marshal()
 	}
-	withdrawalPubkey := withdrawalPrivkey.PublicKey()
-	withdrawalCredentials := ethutil.SHA256(withdrawalPubkey.Marshal())
+	withdrawalCredentials := ethutil.SHA256(withdrawalPubkey)
 	withdrawalCredentials[0] = byte(0) // BLS_WITHDRAWAL_PREFIX
 	if !bytes.Equal(withdrawalCredentials, validator.WithdrawalCredentials) {
-		if c.verbose {
-			fmt.Printf("Validator %s withdrawal credentials %#x do not match expected credentials, cannot update\n", validatorPubkey, validator.WithdrawalCredentials)
+		if c.verbose && c.privateKey == "" {
+			fmt.Fprintf(os.Stderr, "Validator %s withdrawal credentials %#x do not match expected credentials, cannot update\n", validatorPubkey, validator.WithdrawalCredentials)
 		}
 		return false, nil
 	}
 
 	if c.debug {
-		fmt.Printf("Validator %s eligible for setting credentials\n", validatorPubkey)
-	}
-
-	withdrawalAccount, err := util.ParseAccount(ctx, c.mnemonic, []string{withdrawalKeyPath}, true)
-	if err != nil {
-		return false, errors.Wrap(err, "failed to create withdrawal account")
+		fmt.Fprintf(os.Stderr, "Validator %s eligible for setting credentials\n", validatorPubkey)
 	}
 
 	err = c.generateOperationFromAccount(ctx, validator, withdrawalAccount)
@@ -489,7 +569,7 @@ func (c *command) createSignedOperation(ctx context.Context,
 	}, nil
 }
 
-func (c *command) parseWithdrawalAddress(ctx context.Context) error {
+func (c *command) parseWithdrawalAddress(_ context.Context) error {
 	withdrawalAddressBytes, err := hex.DecodeString(strings.TrimPrefix(c.withdrawalAddressStr, "0x"))
 	if err != nil {
 		return errors.Wrap(err, "failed to obtain execution address")
@@ -522,7 +602,7 @@ func (c *command) validateOperations(ctx context.Context) (bool, string) {
 	return true, ""
 }
 
-func (c *command) validateOperation(ctx context.Context,
+func (c *command) validateOperation(_ context.Context,
 	validators map[phase0.ValidatorIndex]*validatorInfo,
 	signedOperation *capella.SignedBLSToExecutionChange,
 ) (
@@ -534,8 +614,8 @@ func (c *command) validateOperation(ctx context.Context,
 		return false, "validator not known on chain"
 	}
 	if c.debug {
-		fmt.Printf("Credentials change operation: %v", signedOperation)
-		fmt.Printf("On-chain validator info: %v\n", validator)
+		fmt.Fprintf(os.Stderr, "Credentials change operation: %v", signedOperation)
+		fmt.Fprintf(os.Stderr, "On-chain validator info: %v\n", validator)
 	}
 
 	if validator.WithdrawalCredentials[0] != byte(0) {
@@ -546,7 +626,7 @@ func (c *command) validateOperation(ctx context.Context,
 	withdrawalCredentials[0] = byte(0) // BLS_WITHDRAWAL_PREFIX
 	if !bytes.Equal(withdrawalCredentials, validator.WithdrawalCredentials) {
 		if c.debug {
-			fmt.Printf("validator withdrawal credentials %#x do not match calculated operation withdrawal credentials %#x\n", validator.WithdrawalCredentials, withdrawalCredentials)
+			fmt.Fprintf(os.Stderr, "validator withdrawal credentials %#x do not match calculated operation withdrawal credentials %#x\n", validator.WithdrawalCredentials, withdrawalCredentials)
 		}
 		return false, "validator withdrawal credentials do not match those in the operation"
 	}
@@ -635,24 +715,6 @@ func (c *command) fetchValidatorInfo(ctx context.Context) (*validatorInfo, error
 	return validatorInfo, nil
 }
 
-func (c *command) fetchAccount(ctx context.Context) (e2wtypes.Account, error) {
-	var account e2wtypes.Account
-	var err error
-
-	switch {
-	case c.account != "":
-		account, err = util.ParseAccount(ctx, c.account, c.passphrases, true)
-	case c.mnemonic != "":
-		account, err = util.ParseAccount(ctx, c.mnemonic, []string{c.path}, true)
-	case c.privateKey != "":
-		account, err = util.ParseAccount(ctx, c.privateKey, nil, true)
-	default:
-		err = errors.New("account, mnemonic or private key must be supplied")
-	}
-
-	return account, err
-}
-
 // addressBytesToEIP55 converts a byte array in to an EIP-55 string format.
 func addressBytesToEIP55(address []byte) string {
 	bytes := []byte(fmt.Sprintf("%x", address))
@@ -692,6 +754,104 @@ func (c *command) generateOperationsFromMnemonicAndPath(ctx context.Context) err
 
 	if _, err := c.generateOperationFromSeedAndPath(ctx, validators, seed, validatorKeyPath); err != nil {
 		return errors.Wrap(err, "failed to generate operation from seed and path")
+	}
+
+	return nil
+}
+
+func (c *command) generateOperationsFromAccountAndWithdrawalAccount(ctx context.Context) error {
+	validatorAccount, err := util.ParseAccount(ctx, c.account, nil, true)
+	if err != nil {
+		return err
+	}
+
+	withdrawalAccount, err := util.ParseAccount(ctx, c.withdrawalAccount, c.passphrases, true)
+	if err != nil {
+		return err
+	}
+
+	// Find the validator info given its account information.
+	validatorPubkey := validatorAccount.PublicKey().Marshal()
+	var validatorInfo *validatorInfo
+	for _, validator := range c.chainInfo.Validators {
+		if bytes.Equal(validator.Pubkey[:], validatorPubkey) {
+			// Found it.
+			validatorInfo = validator
+		}
+	}
+	if validatorInfo == nil {
+		return errors.New("could not find information for that validator on the chain")
+	}
+
+	if err := c.generateOperationFromAccount(ctx, validatorInfo, withdrawalAccount); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (c *command) generateOperationsFromAccountAndPrivateKey(ctx context.Context) error {
+	validatorAccount, err := util.ParseAccount(ctx, c.account, nil, true)
+	if err != nil {
+		return err
+	}
+
+	withdrawalAccount, err := util.ParseAccount(ctx, c.privateKey, nil, true)
+	if err != nil {
+		return err
+	}
+
+	// Find the validator info given its account information.
+	validatorPubkey := validatorAccount.PublicKey().Marshal()
+	var validatorInfo *validatorInfo
+	for _, validator := range c.chainInfo.Validators {
+		if bytes.Equal(validator.Pubkey[:], validatorPubkey) {
+			// Found it.
+			validatorInfo = validator
+		}
+	}
+	if validatorInfo == nil {
+		return errors.New("could not find information for that validator on the chain")
+	}
+
+	if err := c.generateOperationFromAccount(ctx, validatorInfo, withdrawalAccount); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (c *command) generateOperationsFromValidatorAndPrivateKey(ctx context.Context) error {
+	validator, err := c.fetchValidatorInfo(ctx)
+	if err != nil {
+		return err
+	}
+
+	validatorAccount, err := util.ParseAccount(ctx, validator.Pubkey.String(), nil, false)
+	if err != nil {
+		return err
+	}
+
+	withdrawalAccount, err := util.ParseAccount(ctx, c.privateKey, nil, true)
+	if err != nil {
+		return err
+	}
+
+	// Find the validator info given its account information.
+	validatorPubkey := validatorAccount.PublicKey().Marshal()
+	var validatorInfo *validatorInfo
+	for _, validator := range c.chainInfo.Validators {
+		if bytes.Equal(validator.Pubkey[:], validatorPubkey) {
+			// Found it.
+			validatorInfo = validator
+		}
+	}
+	if validatorInfo == nil {
+		return errors.New("could not find information for that validator on the chain")
+	}
+
+	if err := c.generateOperationFromAccount(ctx, validatorInfo, withdrawalAccount); err != nil {
+		return err
 	}
 
 	return nil

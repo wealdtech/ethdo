@@ -179,28 +179,36 @@ A mnemonic is a 24-word phrase from which withdrawal and validator keys are deri
 however this is only a standard and not a restriction, and it is possible for users to have created validators using paths of their own choice.
 
 ```
-ethdo validator credentials set --validator=123 --mnemonic="abandon abandon abandon … art" --path='m/12381/3600/0/0/0' --withdrawal-address=0x0123…cdef
+ethdo validator credentials set --mnemonic="abandon abandon abandon … art" --path='m/12381/3600/0/0/0' --withdrawal-address=0x0123…cdef
 ```
 
 replacing the path with the path to your _withdrawal_ key, and all other parameters with your own values.
 
-#### Using a private key
-If you have the private key from which the current withdrawal credentials were derived this can be used to generate and broadcast the credentials change operation with the following command:
+#### Using a mnemonic and validator.
+Similar to the previous section, however instead of specifying a path instead the index, public key or account of the validator is provided.
 
 ```
-ethdo validator credentials set --validator=123 --withdrawal-address=0x8f…9F --private-key=0x3b…9c
+ethdo validator credentials set --mnemonic="abandon abandon abandon … art" --validator=123 --withdrawal-address=0x0123…cdef
 ```
 
-replacing the parameters with your own values.
+#### Using a mnemonic and withdrawal private key.
+If the withdrawal address was created using a non-standard method then it is possible that you have the private key for the withdrawal address.  In this situation you can supply the withdrawal private key.
+
+
+```
+ethdo validator credentials set --mnemonic="abandon abandon abandon … art" --private-key=0x3b…9c
+```
+
+Note that it is possible for there to be multiple validators that use the provided private key for a withdrawal address, in which case an operation will be generated for each validator that is eligible for change.
 
 #### Using an account
-If you used `ethdo` to generate your validator deposit data you will likely have used a separate account to generate the withdrawal credentials.  You can specify the account to generate and broadcast the credentials change operation with the following command:
+If you used `ethdo` to generate your validator deposit data you will likely have used a separate account to generate the withdrawal credentials.  You can specify the accout of the validator and the accout of the withdrawal credentials to generate and broadcast the credentials change operation with the following command:
 
 ```
-ethdo validator credentials set --validator=123 --withdrawal-address=0x8f…9F --account=Wallet/Account --passphrase=secret
+ethdo validator credentials set --withdrawal-address=0x8f…9F --account=Wallet/Account --withdrawal-account=Withdrawals/Account --passphrase=secret
 ```
 
-replacing the parameters with your own values.
+replacing the parameters with your own values.  Note that the passphrase here is the passphrsae of the withdrawal account, not the validator account.
 
 ## Confirming the process has succeeded
 The final step is confirming the operation has taken place.  To do so, run the following command on an online server:

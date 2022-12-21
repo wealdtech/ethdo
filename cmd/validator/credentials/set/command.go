@@ -35,6 +35,7 @@ type command struct {
 
 	// Input.
 	account               string
+	withdrawalAccount     string
 	passphrases           []string
 	mnemonic              string
 	path                  string
@@ -62,7 +63,7 @@ type command struct {
 	signedOperations []*capella.SignedBLSToExecutionChange
 }
 
-func newCommand(ctx context.Context) (*command, error) {
+func newCommand(_ context.Context) (*command, error) {
 	c := &command{
 		quiet:                    viper.GetBool("quiet"),
 		verbose:                  viper.GetBool("verbose"),
@@ -74,6 +75,7 @@ func newCommand(ctx context.Context) (*command, error) {
 		allowInsecureConnections: viper.GetBool("allow-insecure-connections"),
 		prepareOffline:           viper.GetBool("prepare-offline"),
 		account:                  viper.GetString("account"),
+		withdrawalAccount:        viper.GetString("withdrawal-account"),
 		passphrases:              util.GetPassphrases(),
 		mnemonic:                 viper.GetString("mnemonic"),
 		path:                     viper.GetString("path"),
@@ -96,8 +98,8 @@ func newCommand(ctx context.Context) (*command, error) {
 		return c, nil
 	}
 
-	if c.account != "" && len(c.passphrases) == 0 {
-		return nil, errors.New("passphrase required with account")
+	if c.withdrawalAccount != "" && len(c.passphrases) == 0 {
+		return nil, errors.New("passphrase required with withdrawal-account")
 	}
 
 	return c, nil

@@ -28,12 +28,14 @@ var validatorCredentialsSetCmd = &cobra.Command{
 
     ethdo validator credentials set --validator=primary/validator --withdrawal-address=0x00...13 --private-key=0x00...1f
 
-The existing account can be specified in one of a number of ways:
+The validator account can be specified in one of a number of ways:
 
-  - mnemonic using --mnemonic; this will scan the mnemonic and generate all required operations
+  - mnemonic using --mnemonic; this will scan the mnemonic and generate all applicable operations
   - mnemonic and path to the validator key using --mnemonic and --path; this will generate a single operation
-  - private key using --private-key; this will generate a single operation
-  - account and passphrase using --account and --passphrase; this will generate a single operation
+  - mnemonic and validator index or public key --mnemonic and --validator; this will generate a single operation
+  - mnemonic and withdrawal private key using --mnemonic and --private-key; this will generate all applicable operations
+  - validator and withdrawal private key using --validator and --private-key; this will generate a single operation
+  - account and withdrawal account using --account and --withdrawal-account; this will generate a single operation
 
 In quiet mode this will return 0 if the credentials operation has been generated (and successfully broadcast if online), otherwise 1.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -56,6 +58,7 @@ func init() {
 	validatorCredentialsFlags(validatorCredentialsSetCmd)
 	validatorCredentialsSetCmd.Flags().Bool("prepare-offline", false, "Create files for offline use")
 	validatorCredentialsSetCmd.Flags().String("validator", "", "Validator for which to set validator credentials")
+	validatorCredentialsSetCmd.Flags().String("withdrawal-account", "", "Account with which the validator's withdrawal credentials were set")
 	validatorCredentialsSetCmd.Flags().String("withdrawal-address", "", "Execution address to which to direct withdrawals")
 	validatorCredentialsSetCmd.Flags().String("signed-operation", "", "Use pre-defined JSON signed operation as created by --json to transmit the credentials change operation")
 	validatorCredentialsSetCmd.Flags().Bool("json", false, "Generate JSON data containing a signed operation rather than broadcast it to the network (implied when offline)")
@@ -72,6 +75,9 @@ func validatorCredentialsSetBindings() {
 		panic(err)
 	}
 	if err := viper.BindPFlag("signed-operation", validatorCredentialsSetCmd.Flags().Lookup("signed-operation")); err != nil {
+		panic(err)
+	}
+	if err := viper.BindPFlag("withdrawal-account", validatorCredentialsSetCmd.Flags().Lookup("withdrawal-account")); err != nil {
 		panic(err)
 	}
 	if err := viper.BindPFlag("withdrawal-address", validatorCredentialsSetCmd.Flags().Lookup("withdrawal-address")); err != nil {

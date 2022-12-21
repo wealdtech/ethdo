@@ -59,7 +59,7 @@ jobs:
 
       - name: Compile
         run: |
-          go build -tags osusergo,netgo -v -ldflags="-X github.com/${{ github.repository }}/cmd.ReleaseVersion=${{ needs.env_vars.outputs.release_version }} -extldflgs -static"
+          go build -tags osusergo,netgo -v -ldflags="-X github.com/${{ github.repository }}/cmd.ReleaseVersion=${{ needs.env_vars.outputs.release_version }} -extldflags -static"
           tar zcf ${{ needs.env_vars.outputs.binary }}-${{ needs.env_vars.outputs.release_version }}-linux-amd64.tar.gz ${{ needs.env_vars.outputs.binary }}
           sha256sum ${{ needs.env_vars.outputs.binary }}-${{ needs.env_vars.outputs.release_version }}-linux-amd64.tar.gz | sed -e 's/ .*//' >${{ needs.env_vars.outputs.binary }}-${{ needs.env_vars.outputs.release_version }}-linux-amd64.tar.gz.sha256
       - name: Upload binary

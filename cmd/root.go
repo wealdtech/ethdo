@@ -342,7 +342,12 @@ func walletFromPath(ctx context.Context, path string) (e2wtypes.Wallet, error) {
 			return nil, errors.Wrap(err, "failed to parse remote servers")
 		}
 
-		return dirk.OpenWallet(ctx, walletName, credentials, endpoints)
+		return dirk.Open(ctx,
+			dirk.WithName(walletName),
+			dirk.WithCredentials(credentials),
+			dirk.WithEndpoints(endpoints),
+			dirk.WithTimeout(viper.GetDuration("timeout")),
+		)
 	}
 	wallet, err := e2wallet.OpenWallet(walletName)
 	if err != nil {

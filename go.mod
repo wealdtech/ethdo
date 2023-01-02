@@ -26,7 +26,7 @@ require (
 	github.com/wealdtech/go-eth2-types/v2 v2.8.0
 	github.com/wealdtech/go-eth2-util v1.8.0
 	github.com/wealdtech/go-eth2-wallet v1.15.0
-	github.com/wealdtech/go-eth2-wallet-dirk v1.4.1
+	github.com/wealdtech/go-eth2-wallet-dirk v1.4.2
 	github.com/wealdtech/go-eth2-wallet-distributed v1.1.4
 	github.com/wealdtech/go-eth2-wallet-encryptor-keystorev4 v1.3.0
 	github.com/wealdtech/go-eth2-wallet-hd/v2 v2.6.0

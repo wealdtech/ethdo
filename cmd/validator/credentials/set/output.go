@@ -33,6 +33,9 @@ func (c *command) output(_ context.Context) (string, error) {
 		if err != nil {
 			return "", errors.Wrap(err, "failed to marshal signed operations")
 		}
+		if c.json {
+			return string(data), nil
+		}
 		if err := os.WriteFile(changeOperationsFilename, data, 0600); err != nil {
 			return "", errors.Wrap(err, fmt.Sprintf("failed to write %s", changeOperationsFilename))
 		}

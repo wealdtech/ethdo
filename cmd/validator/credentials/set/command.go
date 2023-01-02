@@ -45,6 +45,7 @@ type command struct {
 	forkVersion           string
 	genesisValidatorsRoot string
 	prepareOffline        bool
+	signedOperationsInput string
 
 	// Beacon node connection.
 	timeout                  time.Duration
@@ -80,6 +81,7 @@ func newCommand(_ context.Context) (*command, error) {
 		mnemonic:                 viper.GetString("mnemonic"),
 		path:                     viper.GetString("path"),
 		privateKey:               viper.GetString("private-key"),
+		signedOperationsInput:    viper.GetString("signed-operations"),
 
 		validator:             viper.GetString("validator"),
 		withdrawalAddressStr:  viper.GetString("withdrawal-address"),

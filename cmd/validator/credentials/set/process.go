@@ -321,7 +321,13 @@ func (c *command) loadChainInfo(_ context.Context) error {
 	return nil
 }
 
-func (c *command) loadOperations(_ context.Context) error {
+func (c *command) loadOperations(ctx context.Context) error {
+	// Start off by attempting to use the provided signed operations.
+	if c.signedOperationsInput != "" {
+		return c.loadOperationsFromInput(ctx)
+	}
+
+	// If not, read it from the file with the standard name.
 	_, err := os.Stat(changeOperationsFilename)
 	if err != nil {
 		if c.debug {
@@ -329,7 +335,6 @@ func (c *command) loadOperations(_ context.Context) error {
 		}
 		return err
 	}
-
 	if c.debug {
 		fmt.Fprintf(os.Stderr, "%s found; loading operations\n", changeOperationsFilename)
 	}
@@ -339,6 +344,28 @@ func (c *command) loadOperations(_ context.Context) error {
 	}
 	if err := json.Unmarshal(data, &c.signedOperations); err != nil {
 		return errors.Wrap(err, "failed to parse change operations file")
+	}
+
+	return nil
+}
+
+func (c *command) loadOperationsFromInput(_ context.Context) error {
+	if strings.HasPrefix(c.signedOperationsInput, "{") {
+		// This looks like a single entry; turn it in to an array.
+		c.signedOperationsInput = fmt.Sprintf("[%s]", c.signedOperationsInput)
+	}
+
+	if !strings.HasPrefix(c.signedOperationsInput, "[") {
+		// This looks like a file; read it in.
+		data, err := os.ReadFile(c.signedOperationsInput)
+		if err != nil {
+			return errors.Wrap(err, "failed to read input file")
+		}
+		c.signedOperationsInput = string(data)
+	}
+
+	if err := json.Unmarshal([]byte(c.signedOperationsInput), &c.signedOperations); err != nil {
+		return errors.Wrap(err, "failed to parse change operations input")
 	}
 
 	return nil

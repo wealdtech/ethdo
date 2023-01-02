@@ -29,9 +29,11 @@ import (
 	capella "github.com/attestantio/go-eth2-client/spec/capella"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
+	"github.com/prysmaticlabs/go-ssz"
 	standardchaintime "github.com/wealdtech/ethdo/services/chaintime/standard"
 	"github.com/wealdtech/ethdo/signing"
 	"github.com/wealdtech/ethdo/util"
+	e2types "github.com/wealdtech/go-eth2-types/v2"
 	ethutil "github.com/wealdtech/go-eth2-util"
 	e2wtypes "github.com/wealdtech/go-eth2-wallet-types/v2"
 )
@@ -256,10 +258,12 @@ func (c *command) dumpRequiredInformation(_ context.Context) error {
 func (c *command) generateOperations(ctx context.Context) error {
 	if c.account == "" && c.mnemonic == "" && c.privateKey == "" && c.validator == "" {
 		// No input information; fetch the operations from a file.
-		if err := c.loadOperations(ctx); err == nil {
+		err := c.loadOperations(ctx)
+		if err == nil {
+			// Success.
 			return nil
 		}
-		return fmt.Errorf("no account, mnemonic or private key specified and no %s file found; cannot proceed", changeOperationsFilename)
+		return fmt.Errorf("no account, mnemonic or private key specified and no %s file loaded: %v", changeOperationsFilename, err)
 	}
 
 	if c.mnemonic != "" {
@@ -330,10 +334,7 @@ func (c *command) loadOperations(ctx context.Context) error {
 	// If not, read it from the file with the standard name.
 	_, err := os.Stat(changeOperationsFilename)
 	if err != nil {
-		if c.debug {
-			fmt.Fprintf(os.Stderr, "Failed to read change operations file: %v\n", err)
-		}
-		return err
+		return errors.Wrap(err, "failed to read change operations file")
 	}
 	if c.debug {
 		fmt.Fprintf(os.Stderr, "%s found; loading operations\n", changeOperationsFilename)
@@ -344,6 +345,47 @@ func (c *command) loadOperations(ctx context.Context) error {
 	}
 	if err := json.Unmarshal(data, &c.signedOperations); err != nil {
 		return errors.Wrap(err, "failed to parse change operations file")
+	}
+
+	for _, op := range c.signedOperations {
+		if err := c.verifyOperation(ctx, op); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (c *command) verifyOperation(ctx context.Context, op *capella.SignedBLSToExecutionChange) error {
+	root, err := op.Message.HashTreeRoot()
+	if err != nil {
+		return errors.Wrap(err, "failed to generate message root")
+	}
+
+	sigBytes := make([]byte, len(op.Signature))
+	copy(sigBytes, op.Signature[:])
+	sig, err := e2types.BLSSignatureFromBytes(sigBytes)
+	if err != nil {
+		return errors.Wrap(err, "invalid signature")
+	}
+
+	container := &phase0.SigningData{
+		ObjectRoot: root,
+		Domain:     c.chainInfo.Domain,
+	}
+	signingRoot, err := ssz.HashTreeRoot(container)
+	if err != nil {
+		return errors.Wrap(err, "failed to generate signing root")
+	}
+
+	pubkeyBytes := make([]byte, len(op.Message.FromBLSPubkey))
+	copy(pubkeyBytes, op.Message.FromBLSPubkey[:])
+	pubkey, err := e2types.BLSPublicKeyFromBytes(pubkeyBytes)
+	if err != nil {
+		return errors.Wrap(err, "invalid public key")
+	}
+	if !sig.Verify(signingRoot[:], pubkey) {
+		return errors.New("signature does not verify")
 	}
 
 	return nil
@@ -566,6 +608,9 @@ func (c *command) createSignedOperation(ctx context.Context,
 	pubkey, err := util.BestPublicKey(withdrawalAccount)
 	if err != nil {
 		return nil, err
+	}
+	if c.debug {
+		fmt.Fprintf(os.Stderr, "Using %#x as best public key for %s\n", pubkey.Marshal(), withdrawalAccount.Name())
 	}
 	blsPubkey := phase0.BLSPubKey{}
 	copy(blsPubkey[:], pubkey.Marshal())

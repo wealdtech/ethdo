@@ -1,4 +1,4 @@
-// Copyright © 2019, 2020 Weald Technology Trading
+// Copyright © 2023 Weald Technology Trading.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -16,42 +16,35 @@ package validatorexit
 import (
 	"context"
 	"encoding/json"
+	"fmt"
+	"os"
 
-	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
-	"github.com/wealdtech/ethdo/util"
 )
 
-type dataOut struct {
-	jsonOutput          bool
-	forkVersion         spec.Version
-	signedVoluntaryExit *spec.SignedVoluntaryExit
-}
-
-func output(ctx context.Context, data *dataOut) (string, error) {
-	if data == nil {
-		return "", errors.New("no data")
+//nolint:unparam
+func (c *command) output(_ context.Context) (string, error) {
+	if c.quiet {
+		return "", nil
 	}
 
-	if data.signedVoluntaryExit == nil {
-		return "", errors.New("no signed voluntary exit")
+	if c.prepareOffline {
+		return fmt.Sprintf("%s generated", offlinePreparationFilename), nil
 	}
 
-	if data.jsonOutput {
-		return outputJSON(ctx, data)
+	if c.json || c.offline {
+		data, err := json.Marshal(c.signedOperation)
+		if err != nil {
+			return "", errors.Wrap(err, "failed to marshal signed operation")
+		}
+		if c.json {
+			return string(data), nil
+		}
+		if err := os.WriteFile(exitOperationFilename, data, 0600); err != nil {
+			return "", errors.Wrap(err, fmt.Sprintf("failed to write %s", exitOperationFilename))
+		}
+		return "", nil
 	}
 
 	return "", nil
-}
-
-func outputJSON(ctx context.Context, data *dataOut) (string, error) {
-	validatorExitData := &util.ValidatorExitData{
-		Exit:        data.signedVoluntaryExit,
-		ForkVersion: data.forkVersion,
-	}
-	bytes, err := json.Marshal(validatorExitData)
-	if err != nil {
-		return "", errors.Wrap(err, "failed to generate JSON")
-	}
-	return string(bytes), nil
 }

@@ -20,10 +20,9 @@ import (
 )
 
 type parameters struct {
-	logLevel             zerolog.Level
-	genesisTimeProvider  eth2client.GenesisTimeProvider
-	specProvider         eth2client.SpecProvider
-	forkScheduleProvider eth2client.ForkScheduleProvider
+	logLevel            zerolog.Level
+	genesisTimeProvider eth2client.GenesisTimeProvider
+	specProvider        eth2client.SpecProvider
 }
 
 // Parameter is the interface for service parameters.
@@ -58,13 +57,6 @@ func WithSpecProvider(provider eth2client.SpecProvider) Parameter {
 	})
 }
 
-// WithForkScheduleProvider sets the fork schedule provider.
-func WithForkScheduleProvider(provider eth2client.ForkScheduleProvider) Parameter {
-	return parameterFunc(func(p *parameters) {
-		p.forkScheduleProvider = provider
-	})
-}
-
 // parseAndCheckParameters parses and checks parameters to ensure that mandatory parameters are present and correct.
 func parseAndCheckParameters(params ...Parameter) (*parameters, error) {
 	parameters := parameters{
@@ -81,9 +73,6 @@ func parseAndCheckParameters(params ...Parameter) (*parameters, error) {
 	}
 	if parameters.genesisTimeProvider == nil {
 		return nil, errors.New("no genesis time provider specified")
-	}
-	if parameters.forkScheduleProvider == nil {
-		return nil, errors.New("no fork schedule provider specified")
 	}
 
 	return &parameters, nil

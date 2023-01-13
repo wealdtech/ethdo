@@ -1,6 +1,7 @@
-dev:
+1.27.0:
   - use new build system
   - support S3 credentials
+  - update operation of validator exit to match validator credentials set
 
 1.26.5:
   - provide validator information in "chain status" verbose output

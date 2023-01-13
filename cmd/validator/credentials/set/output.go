@@ -28,6 +28,10 @@ func (c *command) output(_ context.Context) (string, error) {
 		return "", nil
 	}
 
+	if c.prepareOffline {
+		return fmt.Sprintf("%s generated", offlinePreparationFilename), nil
+	}
+
 	if c.json || c.offline {
 		data, err := json.Marshal(c.signedOperations)
 		if err != nil {

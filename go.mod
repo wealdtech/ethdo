@@ -3,7 +3,7 @@ module github.com/wealdtech/ethdo
 go 1.18
 
 require (
-	github.com/attestantio/go-eth2-client v0.15.1
+	github.com/attestantio/go-eth2-client v0.15.2
 	github.com/ferranbt/fastssz v0.1.2
 	github.com/gofrs/uuid v4.2.0+incompatible
 	github.com/google/uuid v1.3.0
@@ -21,6 +21,7 @@ require (
 	github.com/spf13/viper v1.13.0
 	github.com/stretchr/testify v1.8.1
 	github.com/tyler-smith/go-bip39 v1.1.0
+	github.com/wealdtech/chaind v0.6.17
 	github.com/wealdtech/go-bytesutil v1.2.0
 	github.com/wealdtech/go-ecodec v1.1.2
 	github.com/wealdtech/go-eth2-types/v2 v2.8.0
@@ -50,7 +51,7 @@ require (
 	github.com/fsnotify/fsnotify v1.5.4 // indirect
 	github.com/go-logr/logr v1.2.3 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
-	github.com/goccy/go-yaml v1.9.2 // indirect
+	github.com/goccy/go-yaml v1.9.5 // indirect
 	github.com/golang/glog v1.0.0 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
@@ -73,7 +74,7 @@ require (
 	github.com/prometheus/common v0.37.0 // indirect
 	github.com/prometheus/procfs v0.8.0 // indirect
 	github.com/protolambda/zssz v0.1.5 // indirect
-	github.com/r3labs/sse/v2 v2.7.4 // indirect
+	github.com/r3labs/sse/v2 v2.8.1 // indirect
 	github.com/shibukawa/configdir v0.0.0-20170330084843-e180dbdc8da0 // indirect
 	github.com/spf13/afero v1.9.2 // indirect
 	github.com/spf13/cast v1.5.0 // indirect

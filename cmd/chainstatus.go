@@ -46,7 +46,6 @@ In quiet mode this will return 0 if the chain status can be obtained, otherwise 
 
 		chainTime, err := standardchaintime.New(ctx,
 			standardchaintime.WithGenesisTimeProvider(eth2Client.(eth2client.GenesisTimeProvider)),
-			standardchaintime.WithForkScheduleProvider(eth2Client.(eth2client.ForkScheduleProvider)),
 			standardchaintime.WithSpecProvider(eth2Client.(eth2client.SpecProvider)),
 		)
 		errCheck(err, "Failed to configure chaintime service")

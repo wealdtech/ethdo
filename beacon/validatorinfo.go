@@ -1,4 +1,4 @@
-// Copyright © 2022 Weald Technology Trading.
+// Copyright © 2023 Weald Technology Trading.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -11,7 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package validatorcredentialsset
+package beacon
 
 import (
 	"encoding/hex"
@@ -20,33 +20,37 @@ import (
 	"strconv"
 	"strings"
 
+	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 )
 
-type validatorInfo struct {
+type ValidatorInfo struct {
 	Index                 phase0.ValidatorIndex
 	Pubkey                phase0.BLSPubKey
+	State                 apiv1.ValidatorState
 	WithdrawalCredentials []byte
 }
 
 type validatorInfoJSON struct {
-	Index                 string `json:"index"`
-	Pubkey                string `json:"pubkey"`
-	WithdrawalCredentials string `json:"withdrawal_credentials"`
+	Index                 string               `json:"index"`
+	Pubkey                string               `json:"pubkey"`
+	State                 apiv1.ValidatorState `json:"state"`
+	WithdrawalCredentials string               `json:"withdrawal_credentials"`
 }
 
 // MarshalJSON implements json.Marshaler.
-func (v *validatorInfo) MarshalJSON() ([]byte, error) {
+func (v *ValidatorInfo) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&validatorInfoJSON{
 		Index:                 fmt.Sprintf("%d", v.Index),
 		Pubkey:                fmt.Sprintf("%#x", v.Pubkey),
+		State:                 v.State,
 		WithdrawalCredentials: fmt.Sprintf("%#x", v.WithdrawalCredentials),
 	})
 }
 
 // UnmarshalJSON implements json.Unmarshaler.
-func (v *validatorInfo) UnmarshalJSON(input []byte) error {
+func (v *ValidatorInfo) UnmarshalJSON(input []byte) error {
 	var data validatorInfoJSON
 	if err := json.Unmarshal(input, &data); err != nil {
 		return errors.Wrap(err, "invalid JSON")
@@ -73,6 +77,11 @@ func (v *validatorInfo) UnmarshalJSON(input []byte) error {
 	}
 	copy(v.Pubkey[:], pubkey)
 
+	if data.State == apiv1.ValidatorStateUnknown {
+		return errors.New("state unknown")
+	}
+	v.State = data.State
+
 	if data.WithdrawalCredentials == "" {
 		return errors.New("withdrawal credentials missing")
 	}
@@ -88,7 +97,7 @@ func (v *validatorInfo) UnmarshalJSON(input []byte) error {
 }
 
 // String implements the Stringer interface.
-func (v *validatorInfo) String() string {
+func (v *ValidatorInfo) String() string {
 	data, err := json.Marshal(v)
 	if err != nil {
 		return fmt.Sprintf("Err: %v\n", err)

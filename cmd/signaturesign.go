@@ -1,4 +1,4 @@
-// Copyright © 2017-2020 Weald Technology Trading
+// Copyright © 2017-2023 Weald Technology Trading
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -24,6 +24,7 @@ import (
 	"github.com/wealdtech/ethdo/util"
 	"github.com/wealdtech/go-bytesutil"
 	e2types "github.com/wealdtech/go-eth2-types/v2"
+	e2wtypes "github.com/wealdtech/go-eth2-wallet-types/v2"
 )
 
 // signatureSignCmd represents the signature sign command
@@ -52,14 +53,20 @@ In quiet mode this will return 0 if the data can be signed, otherwise 1.`,
 		}
 		outputIf(debug, fmt.Sprintf("Domain is %#x", domain))
 
-		assert(viper.GetString("account") != "", "--account is required")
-		_, account, err := walletAndAccountFromInput(ctx)
+		var account e2wtypes.Account
+		switch {
+		case viper.GetString("account") != "":
+			account, err = util.ParseAccount(ctx, viper.GetString("account"), util.GetPassphrases(), true)
+		case viper.GetString("private-key") != "":
+			account, err = util.ParseAccount(ctx, viper.GetString("private-key"), nil, true)
+		}
 		errCheck(err, "Failed to obtain account")
 
 		var specDomain spec.Domain
 		copy(specDomain[:], domain)
 		var fixedSizeData [32]byte
 		copy(fixedSizeData[:], data)
+		fmt.Printf("Signing %#x with domain %#x by public key %#x\n", fixedSizeData, specDomain, account.PublicKey().Marshal())
 		signature, err := util.SignRoot(account, fixedSizeData, specDomain)
 		errCheck(err, "Failed to sign")
 

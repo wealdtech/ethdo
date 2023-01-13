@@ -35,7 +35,6 @@ func process(ctx context.Context, data *dataIn) (*dataOut, error) {
 
 	data.chainTime, err = standardchaintime.New(ctx,
 		standardchaintime.WithSpecProvider(data.eth2Client.(eth2client.SpecProvider)),
-		standardchaintime.WithForkScheduleProvider(data.eth2Client.(eth2client.ForkScheduleProvider)),
 		standardchaintime.WithGenesisTimeProvider(data.eth2Client.(eth2client.GenesisTimeProvider)),
 	)
 	if err != nil {

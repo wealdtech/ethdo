@@ -59,7 +59,6 @@ func input(ctx context.Context) (*dataIn, error) {
 	// Chain time.
 	data.chainTime, err = standardchaintime.New(ctx,
 		standardchaintime.WithGenesisTimeProvider(data.eth2Client.(eth2client.GenesisTimeProvider)),
-		standardchaintime.WithForkScheduleProvider(data.eth2Client.(eth2client.ForkScheduleProvider)),
 		standardchaintime.WithSpecProvider(data.eth2Client.(eth2client.SpecProvider)),
 	)
 	if err != nil {

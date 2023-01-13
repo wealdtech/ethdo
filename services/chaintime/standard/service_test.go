@@ -31,22 +31,9 @@ func TestService(t *testing.T) {
 	slotDuration := 12 * time.Second
 	slotsPerEpoch := uint64(32)
 	epochsPerSyncCommitteePeriod := uint64(256)
-	forkSchedule := []*phase0.Fork{
-		{
-			PreviousVersion: phase0.Version{0x01, 0x02, 0x03, 0x04},
-			CurrentVersion:  phase0.Version{0x01, 0x02, 0x03, 0x04},
-			Epoch:           0,
-		},
-		{
-			PreviousVersion: phase0.Version{0x01, 0x02, 0x03, 0x04},
-			CurrentVersion:  phase0.Version{0x05, 0x06, 0x07, 0x08},
-			Epoch:           10,
-		},
-	}
 
 	mockGenesisTimeProvider := mock.NewGenesisTimeProvider(genesisTime)
 	mockSpecProvider := mock.NewSpecProvider(slotDuration, slotsPerEpoch, epochsPerSyncCommitteePeriod)
-	mockForkScheduleProvider := mock.NewForkScheduleProvider(forkSchedule)
 
 	tests := []struct {
 		name   string
@@ -58,7 +45,6 @@ func TestService(t *testing.T) {
 			params: []standard.Parameter{
 				standard.WithLogLevel(zerolog.Disabled),
 				standard.WithSpecProvider(mockSpecProvider),
-				standard.WithForkScheduleProvider(mockForkScheduleProvider),
 			},
 			err: "problem with parameters: no genesis time provider specified",
 		},
@@ -67,18 +53,8 @@ func TestService(t *testing.T) {
 			params: []standard.Parameter{
 				standard.WithLogLevel(zerolog.Disabled),
 				standard.WithGenesisTimeProvider(mockGenesisTimeProvider),
-				standard.WithForkScheduleProvider(mockForkScheduleProvider),
 			},
 			err: "problem with parameters: no spec provider specified",
-		},
-		{
-			name: "ForkScheduleProviderMissing",
-			params: []standard.Parameter{
-				standard.WithLogLevel(zerolog.Disabled),
-				standard.WithGenesisTimeProvider(mockGenesisTimeProvider),
-				standard.WithSpecProvider(mockSpecProvider),
-			},
-			err: "problem with parameters: no fork schedule provider specified",
 		},
 		{
 			name: "Good",
@@ -86,7 +62,6 @@ func TestService(t *testing.T) {
 				standard.WithLogLevel(zerolog.Disabled),
 				standard.WithGenesisTimeProvider(mockGenesisTimeProvider),
 				standard.WithSpecProvider(mockSpecProvider),
-				standard.WithForkScheduleProvider(mockForkScheduleProvider),
 			},
 		},
 	}
@@ -123,11 +98,9 @@ func createService(genesisTime time.Time) (chaintime.Service, time.Duration, uin
 
 	mockGenesisTimeProvider := mock.NewGenesisTimeProvider(genesisTime)
 	mockSpecProvider := mock.NewSpecProvider(slotDuration, slotsPerEpoch, epochsPerSyncCommitteePeriod)
-	mockForkScheduleProvider := mock.NewForkScheduleProvider(forkSchedule)
 	s, err := standard.New(context.Background(),
 		standard.WithGenesisTimeProvider(mockGenesisTimeProvider),
 		standard.WithSpecProvider(mockSpecProvider),
-		standard.WithForkScheduleProvider(mockForkScheduleProvider),
 	)
 	return s, slotDuration, slotsPerEpoch, epochsPerSyncCommitteePeriod, forkSchedule, err
 }

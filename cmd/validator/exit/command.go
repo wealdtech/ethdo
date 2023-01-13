@@ -1,4 +1,4 @@
-// Copyright © 2022 Weald Technology Trading.
+// Copyright © 2023 Weald Technology Trading.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -11,15 +11,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package validatorcredentialsset
+package validatorexit
 
 import (
 	"context"
 	"time"
 
 	consensusclient "github.com/attestantio/go-eth2-client"
-	"github.com/attestantio/go-eth2-client/spec/bellatrix"
-	capella "github.com/attestantio/go-eth2-client/spec/capella"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
@@ -36,18 +34,15 @@ type command struct {
 	json    bool
 
 	// Input.
-	account               string
-	withdrawalAccount     string
 	passphrases           []string
 	mnemonic              string
 	path                  string
 	privateKey            string
 	validator             string
-	withdrawalAddressStr  string
 	forkVersion           string
 	genesisValidatorsRoot string
 	prepareOffline        bool
-	signedOperationsInput string
+	signedOperationInput  string
 
 	// Beacon node connection.
 	timeout                  time.Duration
@@ -55,16 +50,15 @@ type command struct {
 	allowInsecureConnections bool
 
 	// Information required to generate the operations.
-	withdrawalAddress bellatrix.ExecutionAddress
-	chainInfo         *beacon.ChainInfo
-	domain            phase0.Domain
+	chainInfo *beacon.ChainInfo
+	domain    phase0.Domain
 
 	// Processing.
 	consensusClient consensusclient.Service
 	chainTime       chaintime.Service
 
 	// Output.
-	signedOperations []*capella.SignedBLSToExecutionChange
+	signedOperation *phase0.SignedVoluntaryExit
 }
 
 func newCommand(_ context.Context) (*command, error) {
@@ -78,18 +72,14 @@ func newCommand(_ context.Context) (*command, error) {
 		connection:               viper.GetString("connection"),
 		allowInsecureConnections: viper.GetBool("allow-insecure-connections"),
 		prepareOffline:           viper.GetBool("prepare-offline"),
-		account:                  viper.GetString("account"),
-		withdrawalAccount:        viper.GetString("withdrawal-account"),
 		passphrases:              util.GetPassphrases(),
 		mnemonic:                 viper.GetString("mnemonic"),
 		path:                     viper.GetString("path"),
 		privateKey:               viper.GetString("private-key"),
-		signedOperationsInput:    viper.GetString("signed-operations"),
-
-		validator:             viper.GetString("validator"),
-		withdrawalAddressStr:  viper.GetString("withdrawal-address"),
-		forkVersion:           viper.GetString("fork-version"),
-		genesisValidatorsRoot: viper.GetString("genesis-validators-root"),
+		signedOperationInput:     viper.GetString("signed-operation"),
+		validator:                viper.GetString("validator"),
+		forkVersion:              viper.GetString("fork-version"),
+		genesisValidatorsRoot:    viper.GetString("genesis-validators-root"),
 	}
 
 	// Timeout is required.
@@ -101,10 +91,6 @@ func newCommand(_ context.Context) (*command, error) {
 	// related to the accounts or signing.
 	if c.prepareOffline {
 		return c, nil
-	}
-
-	if c.withdrawalAccount != "" && len(c.passphrases) == 0 {
-		return nil, errors.New("passphrase required with withdrawal-account")
 	}
 
 	return c, nil

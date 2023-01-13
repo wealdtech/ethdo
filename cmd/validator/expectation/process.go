@@ -130,7 +130,6 @@ func (c *command) setup(ctx context.Context) error {
 
 	chainTime, err := standardchaintime.New(ctx,
 		standardchaintime.WithSpecProvider(c.eth2Client.(eth2client.SpecProvider)),
-		standardchaintime.WithForkScheduleProvider(c.eth2Client.(eth2client.ForkScheduleProvider)),
 		standardchaintime.WithGenesisTimeProvider(c.eth2Client.(eth2client.GenesisTimeProvider)),
 	)
 	if err != nil {

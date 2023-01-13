@@ -61,7 +61,7 @@ func ParseAccount(ctx context.Context,
 			// Private key.
 			account, err = newScratchAccountFromPrivKey(data)
 			if err != nil {
-				return nil, errors.Wrap(err, "failed to create account from public key")
+				return nil, errors.Wrap(err, "failed to create account from private key")
 			}
 			if unlock {
 				_, err = UnlockAccount(ctx, account, nil)

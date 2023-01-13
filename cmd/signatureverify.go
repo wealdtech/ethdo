@@ -1,4 +1,4 @@
-// Copyright © 2017-2020 Weald Technology Trading
+// Copyright © 2017-2023 Weald Technology Trading
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -15,13 +15,10 @@ package cmd
 
 import (
 	"context"
-	"encoding/hex"
 	"fmt"
 	"os"
-	"strings"
 
 	spec "github.com/attestantio/go-eth2-client/spec/phase0"
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/wealdtech/ethdo/util"
@@ -43,6 +40,9 @@ var signatureVerifyCmd = &cobra.Command{
 
 In quiet mode this will return 0 if the data can be signed, otherwise 1.`,
 	Run: func(cmd *cobra.Command, args []string) {
+		ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("timeout"))
+		defer cancel()
+
 		assert(viper.GetString("signature-data") != "", "--data is required")
 		data, err := bytesutil.FromHexString(viper.GetString("signature-data"))
 		errCheck(err, "Failed to parse data")
@@ -61,7 +61,15 @@ In quiet mode this will return 0 if the data can be signed, otherwise 1.`,
 			assert(len(domain) == 32, "Domain data invalid")
 		}
 
-		account, err := signatureVerifyAccount()
+		var account e2wtypes.Account
+		switch {
+		case viper.GetString("account") != "":
+			account, err = util.ParseAccount(ctx, viper.GetString("account"), nil, false)
+		case viper.GetString("private-key") != "":
+			account, err = util.ParseAccount(ctx, viper.GetString("private-key"), nil, false)
+		case viper.GetString("public-key") != "":
+			account, err = util.ParseAccount(ctx, viper.GetString("public-key"), nil, false)
+		}
 		errCheck(err, "Failed to obtain account")
 		outputIf(debug, fmt.Sprintf("Public key is %#x", account.PublicKey().Marshal()))
 
@@ -78,29 +86,6 @@ In quiet mode this will return 0 if the data can be signed, otherwise 1.`,
 	},
 }
 
-// signatureVerifyAccount obtains the account for the signature verify command.
-func signatureVerifyAccount() (e2wtypes.Account, error) {
-	var account e2wtypes.Account
-	var err error
-	if viper.GetString("account") != "" {
-		ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("timeout"))
-		defer cancel()
-		_, account, err = walletAndAccountFromPath(ctx, viper.GetString("account"))
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to obtain account")
-		}
-	} else {
-		pubKeyBytes, err := hex.DecodeString(strings.TrimPrefix(signatureVerifySigner, "0x"))
-		if err != nil {
-			return nil, errors.Wrap(err, fmt.Sprintf("failed to decode public key %s", signatureVerifySigner))
-		}
-		account, err = util.NewScratchAccount(nil, pubKeyBytes)
-		if err != nil {
-			return nil, errors.Wrap(err, fmt.Sprintf("invalid public key %s", signatureVerifySigner))
-		}
-	}
-	return account, nil
-}
 func init() {
 	signatureCmd.AddCommand(signatureVerifyCmd)
 	signatureFlags(signatureVerifyCmd)

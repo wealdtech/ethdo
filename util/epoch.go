@@ -24,11 +24,15 @@ import (
 
 // ParseEpoch parses input to calculate the desired epoch.
 func ParseEpoch(ctx context.Context, chainTime chaintime.Service, epochStr string) (phase0.Epoch, error) {
+	currentEpoch := chainTime.CurrentEpoch()
 	switch epochStr {
-	case "", "current":
-		return chainTime.CurrentEpoch(), nil
+	case "", "current", "-0":
+		return currentEpoch, nil
 	case "last":
-		return chainTime.CurrentEpoch() - 1, nil
+		if currentEpoch > 0 {
+			currentEpoch--
+		}
+		return currentEpoch, nil
 	default:
 		val, err := strconv.ParseInt(epochStr, 10, 64)
 		if err != nil {
@@ -37,6 +41,9 @@ func ParseEpoch(ctx context.Context, chainTime chaintime.Service, epochStr strin
 		if val >= 0 {
 			return phase0.Epoch(val), nil
 		}
-		return chainTime.CurrentEpoch() + phase0.Epoch(val), nil
+		if phase0.Epoch(-val) > currentEpoch {
+			return 0, nil
+		}
+		return currentEpoch + phase0.Epoch(val), nil
 	}
 }

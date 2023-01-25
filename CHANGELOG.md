@@ -1,3 +1,6 @@
+1.27.1:
+  - fix issue with voluntary exits using incorrect domain (thanks to @0xTylerHolmes)
+
 1.27.0:
   - use new build system
   - support S3 credentials

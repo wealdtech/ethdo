@@ -31,6 +31,7 @@ func (c *command) obtainChainInfo(ctx context.Context) error {
 		if err == nil {
 			return nil
 		}
+		return err
 	}
 
 	if c.offline {

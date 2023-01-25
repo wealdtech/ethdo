@@ -43,6 +43,7 @@ type command struct {
 	path                  string
 	privateKey            string
 	validator             string
+	allValidators         bool
 	withdrawalAddressStr  string
 	forkVersion           string
 	genesisValidatorsRoot string
@@ -87,6 +88,7 @@ func newCommand(_ context.Context) (*command, error) {
 		signedOperationsInput:    viper.GetString("signed-operations"),
 
 		validator:             viper.GetString("validator"),
+		allValidators:         viper.GetBool("all-validators"),
 		withdrawalAddressStr:  viper.GetString("withdrawal-address"),
 		forkVersion:           viper.GetString("fork-version"),
 		genesisValidatorsRoot: viper.GetString("genesis-validators-root"),

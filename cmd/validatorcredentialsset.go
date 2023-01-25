@@ -58,6 +58,7 @@ func init() {
 	validatorCredentialsFlags(validatorCredentialsSetCmd)
 	validatorCredentialsSetCmd.Flags().Bool("prepare-offline", false, "Create files for offline use")
 	validatorCredentialsSetCmd.Flags().String("validator", "", "Validator for which to set validator credentials")
+	validatorCredentialsSetCmd.Flags().Bool("all-validators", false, "Use all Validators in chain-info to set validator credentials")
 	validatorCredentialsSetCmd.Flags().String("withdrawal-account", "", "Account with which the validator's withdrawal credentials were set")
 	validatorCredentialsSetCmd.Flags().String("withdrawal-address", "", "Execution address to which to direct withdrawals")
 	validatorCredentialsSetCmd.Flags().String("signed-operations", "", "Use pre-defined JSON signed operation as created by --json to transmit the credentials change operation (reads from change-operations.json if not present)")
@@ -72,6 +73,9 @@ func validatorCredentialsSetBindings() {
 		panic(err)
 	}
 	if err := viper.BindPFlag("validator", validatorCredentialsSetCmd.Flags().Lookup("validator")); err != nil {
+		panic(err)
+	}
+	if err := viper.BindPFlag("all-validators", validatorCredentialsSetCmd.Flags().Lookup("all-validators")); err != nil {
 		panic(err)
 	}
 	if err := viper.BindPFlag("signed-operations", validatorCredentialsSetCmd.Flags().Lookup("signed-operations")); err != nil {

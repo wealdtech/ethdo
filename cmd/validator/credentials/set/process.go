@@ -127,6 +127,11 @@ func (c *command) obtainOperations(ctx context.Context) error {
 		return c.generateOperationsFromValidatorAndPrivateKey(ctx)
 	}
 
+	if c.allValidators && c.privateKey != "" {
+		// Use all validators from chain info and a private key for the withdrawal address.
+		return c.generateOperationsFromChainInfoAndPrivateKey(ctx)
+	}
+
 	return errors.New("unsupported combination of inputs; see help for details of supported combinations")
 }
 
@@ -310,6 +315,20 @@ func (c *command) generateOperationsFromValidatorAndPrivateKey(ctx context.Conte
 		return err
 	}
 
+	return nil
+}
+
+func (c *command) generateOperationsFromChainInfoAndPrivateKey(ctx context.Context) error {
+	for _, validatorInfo := range c.chainInfo.Validators {
+		withdrawalAccount, err := util.ParseAccount(ctx, c.privateKey, nil, true)
+		if err != nil {
+			return err
+		}
+
+		if err := c.generateOperationFromAccount(ctx, validatorInfo, withdrawalAccount); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 

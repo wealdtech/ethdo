@@ -325,6 +325,18 @@ func (c *command) generateOperationsFromChainInfoAndPrivateKey(ctx context.Conte
 			return err
 		}
 
+		// skip validators which withdrawal key don't match with supplied withdrawal account public key
+		pubkey, err := util.BestPublicKey(withdrawalAccount)
+		if err != nil {
+			return err
+		}
+		withdrawalCredentials := ethutil.SHA256(pubkey.Marshal())
+		withdrawalCredentials[0] = byte(0) // BLS_WITHDRAWAL_PREFIX
+		if !bytes.Equal(withdrawalCredentials, validatorInfo.WithdrawalCredentials) {
+			fmt.Printf("Skipping validator due to withdrawal credentials mismatch index=%v pubkey=%v\n", validatorInfo.Index, validatorInfo.Pubkey.String())
+			continue
+		}
+
 		if err := c.generateOperationFromAccount(ctx, validatorInfo, withdrawalAccount); err != nil {
 			return err
 		}

@@ -472,7 +472,7 @@ func (c *command) generateDomain(ctx context.Context) error {
 		return errors.Wrap(err, "failed to calculate signature domain")
 	}
 
-	copy(c.domain[:], c.chainInfo.BLSToExecutionChangeDomainType[:])
+	copy(c.domain[:], c.chainInfo.VoluntaryExitDomainType[:])
 	copy(c.domain[4:], root[:])
 	if c.debug {
 		fmt.Fprintf(os.Stderr, "Domain is %#x\n", c.domain)

@@ -70,7 +70,7 @@ func (c *command) process(ctx context.Context) error {
 
 	if c.json || c.offline {
 		if c.debug {
-			fmt.Fprintf(os.Stderr, "Not broadcasting credentials change operations\n")
+			fmt.Fprintf(os.Stderr, "Not broadcasting exit operation\n")
 		}
 		// Want JSON output, or cannot broadcast.
 		return nil

@@ -1,3 +1,6 @@
+dev:
+  - increase minimum timeout for commands that fetch all validators to 2 minutes
+
 1.27.1:
   - fix issue with voluntary exits using incorrect domain (thanks to @0xTylerHolmes)
 

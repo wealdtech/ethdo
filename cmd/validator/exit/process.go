@@ -22,6 +22,7 @@ import (
 	"os"
 	"regexp"
 	"strings"
+	"time"
 
 	consensusclient "github.com/attestantio/go-eth2-client"
 	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
@@ -36,6 +37,11 @@ import (
 	ethutil "github.com/wealdtech/go-eth2-util"
 	e2wtypes "github.com/wealdtech/go-eth2-wallet-types/v2"
 )
+
+// minTimeout is the minimum timeout for this command.
+// It needs to be set here as we want timeouts to be low in general, but this can be pulling
+// a lot of data for an unsophisticated audience so it's easier to set a higher timeout..
+var minTimeout = 2 * time.Minute
 
 // validatorPath is the regular expression that matches a validator  path.
 var validatorPath = regexp.MustCompile("^m/12381/3600/[0-9]+/0/0$")
@@ -433,6 +439,14 @@ func (c *command) broadcastOperation(ctx context.Context) error {
 func (c *command) setup(ctx context.Context) error {
 	if c.offline {
 		return nil
+	}
+
+	// Ensure timeout is at least the minimum.
+	if c.timeout < minTimeout {
+		if c.debug {
+			fmt.Fprintf(os.Stderr, "Increasing timeout to %v\n", minTimeout)
+			c.timeout = minTimeout
+		}
 	}
 
 	// Connect to the consensus node.

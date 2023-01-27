@@ -16,7 +16,16 @@ Withdrawal credentials, held as part of a validator's on-chain definition, defin
 A private key is a hexadecimal string (_e.g._ 0x010203…a1a2a3) that can be used to generate a public key and (in the case of the execution chain) Ethereum address.
 
 ### Mnemonic
-A mnemonic is a 24-word phrase that can be used to generate multiple private keys with the use of _paths_.
+A mnemonic is a 24-word phrase that can be used to generate multiple private keys with the use of _paths_.  Mnemonics are supported in the following languages:
+* chinese simplified
+* chinese traditional
+* czech
+* english
+* french
+* italian
+* japanese
+* korean
+* spanish
 
 ### Path
 A path is a string starting with "m" and containing a number of components separated by "/", for example "m/12381/3600/0/0".  The process to obtain a key from a mnemonic and path is known as "hierarchical derivation".

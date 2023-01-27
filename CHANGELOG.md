@@ -1,4 +1,5 @@
 dev:
+  - support additional mnemonic word list languages
   - increase minimum timeout for commands that fetch all validators to 2 minutes
 
 1.27.1:

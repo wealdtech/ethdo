@@ -37,7 +37,7 @@ func TestInput(t *testing.T) {
 	dir, err := os.MkdirTemp("", "")
 	require.NoError(t, err)
 	datFile := filepath.Join(dir, "backup.dat")
-	require.NoError(t, os.WriteFile(datFile, []byte("dummy"), 0600))
+	require.NoError(t, os.WriteFile(datFile, []byte("dummy"), 0o600))
 	defer os.RemoveAll(dir)
 
 	store := scratch.New()

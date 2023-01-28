@@ -29,12 +29,14 @@ import (
 	string2eth "github.com/wealdtech/go-string2eth"
 )
 
-var depositVerifyData string
-var depositVerifyWithdrawalPubKey string
-var depositVerifyWithdrawalAddress string
-var depositVerifyValidatorPubKey string
-var depositVerifyDepositAmount string
-var depositVerifyForkVersion string
+var (
+	depositVerifyData              string
+	depositVerifyWithdrawalPubKey  string
+	depositVerifyWithdrawalAddress string
+	depositVerifyValidatorPubKey   string
+	depositVerifyDepositAmount     string
+	depositVerifyForkVersion       string
+)
 
 var depositVerifyCmd = &cobra.Command{
 	Use:   "verify",

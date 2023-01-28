@@ -22,7 +22,6 @@ import (
 )
 
 func TestUnmarshal(t *testing.T) {
-
 	tests := []struct {
 		name string
 		in   []byte

@@ -93,6 +93,7 @@ func (c *command) activeValidators(ctx context.Context) (map[phase0.ValidatorInd
 
 	return activeValidators, nil
 }
+
 func (c *command) processAttesterDuties(ctx context.Context) error {
 	activeValidators, err := c.activeValidators(ctx)
 	if err != nil {

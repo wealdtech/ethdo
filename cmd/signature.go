@@ -31,8 +31,10 @@ func init() {
 	RootCmd.AddCommand(signatureCmd)
 }
 
-var dataFlag *pflag.Flag
-var domainFlag *pflag.Flag
+var (
+	dataFlag   *pflag.Flag
+	domainFlag *pflag.Flag
+)
 
 func signatureFlags(cmd *cobra.Command) {
 	if dataFlag == nil {

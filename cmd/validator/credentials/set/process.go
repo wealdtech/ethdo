@@ -47,8 +47,10 @@ var minTimeout = 2 * time.Minute
 // validatorPath is the regular expression that matches a validator  path.
 var validatorPath = regexp.MustCompile("^m/12381/3600/[0-9]+/0/0$")
 
-var offlinePreparationFilename = "offline-preparation.json"
-var changeOperationsFilename = "change-operations.json"
+var (
+	offlinePreparationFilename = "offline-preparation.json"
+	changeOperationsFilename   = "change-operations.json"
+)
 
 func (c *command) process(ctx context.Context) error {
 	if err := c.setup(ctx); err != nil {

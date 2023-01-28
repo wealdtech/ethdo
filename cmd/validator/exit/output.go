@@ -40,7 +40,7 @@ func (c *command) output(_ context.Context) (string, error) {
 		if c.json {
 			return string(data), nil
 		}
-		if err := os.WriteFile(exitOperationFilename, data, 0600); err != nil {
+		if err := os.WriteFile(exitOperationFilename, data, 0o600); err != nil {
 			return "", errors.Wrap(err, fmt.Sprintf("failed to write %s", exitOperationFilename))
 		}
 		return "", nil

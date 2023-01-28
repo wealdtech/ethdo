@@ -27,8 +27,10 @@ import (
 	e2wtypes "github.com/wealdtech/go-eth2-wallet-types/v2"
 )
 
-var signatureVerifySignature string
-var signatureVerifySigner string
+var (
+	signatureVerifySignature string
+	signatureVerifySigner    string
+)
 
 // signatureVerifyCmd represents the signature verify command.
 var signatureVerifyCmd = &cobra.Command{

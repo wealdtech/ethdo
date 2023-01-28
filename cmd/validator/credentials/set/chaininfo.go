@@ -97,7 +97,7 @@ func (c *command) writeChainInfoToFile(_ context.Context) error {
 	if err != nil {
 		return err
 	}
-	if err := os.WriteFile(offlinePreparationFilename, data, 0600); err != nil {
+	if err := os.WriteFile(offlinePreparationFilename, data, 0o600); err != nil {
 		return err
 	}
 

@@ -33,10 +33,12 @@ import (
 	e2wtypes "github.com/wealdtech/go-eth2-wallet-types/v2"
 )
 
-var cfgFile string
-var quiet bool
-var verbose bool
-var debug bool
+var (
+	cfgFile string
+	quiet   bool
+	verbose bool
+	debug   bool
+)
 
 // RootCmd represents the base command when called without any subcommands.
 var RootCmd = &cobra.Command{

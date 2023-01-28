@@ -157,6 +157,7 @@ func Split(secret []byte, parts, threshold int) ([][]byte, error) {
 	}
 
 	// Generate random list of x coordinates
+	//nolint
 	rnd := mathrand.New(&cryptoSource{})
 	xCoordinates := rnd.Perm(255)
 

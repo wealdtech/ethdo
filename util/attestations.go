@@ -33,7 +33,7 @@ func AttestationHeadCorrect(ctx context.Context,
 	for {
 		header, err := headersCache.Fetch(ctx, slot)
 		if err != nil {
-			return false, nil
+			return false, err
 		}
 		if header == nil {
 			// No block.
@@ -63,7 +63,7 @@ func AttestationTargetCorrect(ctx context.Context,
 	for {
 		header, err := headersCache.Fetch(ctx, slot)
 		if err != nil {
-			return false, nil
+			return false, err
 		}
 		if header == nil {
 			// No block.

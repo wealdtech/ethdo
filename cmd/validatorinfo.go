@@ -109,7 +109,7 @@ In quiet mode this will return 0 if the validator information can be obtained, o
 	},
 }
 
-// graphData returns data from the graph about number and amount of deposits
+// graphData returns data from the graph about number and amount of deposits.
 func graphData(network string, validatorPubKey []byte) (uint64, spec.Gwei, error) {
 	subgraph := ""
 	if network == "Mainnet" {
@@ -119,8 +119,12 @@ func graphData(network string, validatorPubKey []byte) (uint64, spec.Gwei, error
 	}
 	query := fmt.Sprintf(`{"query": "{deposits(where: {validatorPubKey:\"%#x\"}) { id amount withdrawalCredentials }}"}`, validatorPubKey)
 	url := fmt.Sprintf("https://api.thegraph.com/subgraphs/name/%s", subgraph)
-	// #nosec G107
-	graphResp, err := http.Post(url, "application/json", bytes.NewBufferString(query))
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodPost, url, bytes.NewBufferString(query))
+	if err != nil {
+		return 0, 0, errors.Wrap(err, "failed to start request")
+	}
+	req.Header.Set("Accept", "application/json")
+	graphResp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return 0, 0, errors.Wrap(err, "failed to check if there is already a deposit for this validator")
 	}
@@ -131,8 +135,10 @@ func graphData(network string, validatorPubKey []byte) (uint64, spec.Gwei, error
 	}
 
 	type graphDeposit struct {
-		Index                 string `json:"index"`
-		Amount                string `json:"amount"`
+		Index  string `json:"index"`
+		Amount string `json:"amount"`
+		// Using graph API JSON names in camel case.
+		//nolint:tagliatelle
 		WithdrawalCredentials string `json:"withdrawalCredentials"`
 	}
 	type graphData struct {

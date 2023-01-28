@@ -17,7 +17,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// proposerCmd represents the proposer command
+// proposerCmd represents the proposer command.
 var proposerCmd = &cobra.Command{
 	Use:   "proposer",
 	Short: "Obtain information about Ethereum 2 proposers",

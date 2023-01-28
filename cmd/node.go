@@ -17,7 +17,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// nodeCmd represents the node command
+// nodeCmd represents the node command.
 var nodeCmd = &cobra.Command{
 	Use:   "node",
 	Short: "Obtain information about an Ethereum 2 node",

@@ -17,7 +17,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// validatorCmd represents the validator command
+// validatorCmd represents the validator command.
 var validatorCmd = &cobra.Command{
 	Use:   "validator",
 	Short: "Manage Ethereum 2 validators",

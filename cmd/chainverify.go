@@ -18,7 +18,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-// chainVerifyCmd represents the chain verify command
+// chainVerifyCmd represents the chain verify command.
 var chainVerifyCmd = &cobra.Command{
 	Use:   "verify",
 	Short: "Verify a beacon chain signature",

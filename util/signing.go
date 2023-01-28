@@ -24,7 +24,7 @@ import (
 	e2wtypes "github.com/wealdtech/go-eth2-wallet-types/v2"
 )
 
-// SignRoot signs the hash tree root of a data structure
+// SignRoot signs the hash tree root of a data structure.
 func SignRoot(account e2wtypes.Account, root spec.Root, domain spec.Domain) (e2types.Signature, error) {
 	if _, isProtectingSigner := account.(e2wtypes.AccountProtectingSigner); isProtectingSigner {
 		// Signer builds the signing data.

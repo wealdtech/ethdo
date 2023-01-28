@@ -19,7 +19,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-// signatureCmd represents the signature command
+// signatureCmd represents the signature command.
 var signatureCmd = &cobra.Command{
 	Use:     "signature",
 	Aliases: []string{"sig"},

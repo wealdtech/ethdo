@@ -21,7 +21,7 @@ import (
 	accountkey "github.com/wealdtech/ethdo/cmd/account/key"
 )
 
-// accountKeyCmd represents the account key command
+// accountKeyCmd represents the account key command.
 var accountKeyCmd = &cobra.Command{
 	Use:   "key",
 	Short: "Obtain the private key of an account.",

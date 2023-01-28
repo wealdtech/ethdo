@@ -15,7 +15,7 @@ const (
 	ShareOverhead = 1
 )
 
-// polynomial represents a polynomial of arbitrary degree
+// polynomial represents a polynomial of arbitrary degree.
 type polynomial struct {
 	coefficients []uint8
 }
@@ -53,7 +53,7 @@ func makePolynomial(intercept, degree uint8) (polynomial, error) {
 	return p, nil
 }
 
-// evaluate returns the value of the polynomial for the given x
+// evaluate returns the value of the polynomial for the given x.
 func (p *polynomial) evaluate(x uint8) uint8 {
 	// Special case the origin
 	if x == 0 {
@@ -92,7 +92,7 @@ func interpolatePolynomial(xSamples, ySamples []uint8, x uint8) uint8 {
 	return result
 }
 
-// div divides two numbers in GF(2^8)
+// div divides two numbers in GF(2^8).
 func div(a, b uint8) uint8 {
 	if b == 0 {
 		// leaks some timing information but we don't care anyways as this
@@ -111,8 +111,8 @@ func div(a, b uint8) uint8 {
 	return uint8(ret)
 }
 
-// mult multiplies two numbers in GF(2^8)
-func mult(a, b uint8) (out uint8) {
+// mult multiplies two numbers in GF(2^8).
+func mult(a, b uint8) uint8 {
 	logA := logTable[a]
 	logB := logTable[b]
 	sum := (int(logA) + int(logB)) % 255

@@ -30,7 +30,7 @@ import (
 var signatureVerifySignature string
 var signatureVerifySigner string
 
-// signatureVerifyCmd represents the signature verify command
+// signatureVerifyCmd represents the signature verify command.
 var signatureVerifyCmd = &cobra.Command{
 	Use:   "verify",
 	Short: "Verify signed data",

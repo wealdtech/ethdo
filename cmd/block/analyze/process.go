@@ -363,7 +363,7 @@ func (c *command) calcHeadCorrect(ctx context.Context, attestation *phase0.Attes
 		for {
 			header, err := c.blockHeadersProvider.BeaconBlockHeader(ctx, fmt.Sprintf("%d", slot))
 			if err != nil {
-				return false, nil
+				return false, err
 			}
 			if header == nil {
 				// No block.
@@ -392,7 +392,7 @@ func (c *command) calcTargetCorrect(ctx context.Context, attestation *phase0.Att
 		for {
 			header, err := c.blockHeadersProvider.BeaconBlockHeader(ctx, fmt.Sprintf("%d", slot))
 			if err != nil {
-				return false, nil
+				return false, err
 			}
 			if header == nil {
 				// No block.

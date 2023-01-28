@@ -426,7 +426,6 @@ func (c *command) generateOperationFromSeedAndPath(ctx context.Context,
 		if err != nil {
 			return false, errors.Wrap(err, "failed to create withdrawal account")
 		}
-
 	} else {
 		// Need the withdrawal credentials from the private key.
 		withdrawalAccount, err = util.ParseAccount(ctx, c.privateKey, nil, true)

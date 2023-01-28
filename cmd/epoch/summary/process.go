@@ -202,7 +202,6 @@ func (c *command) processSlots(ctx context.Context,
 							Slot:      beaconCommittee.Slot,
 							Committee: beaconCommittee.Index,
 						}
-
 					}
 				}
 				slotCommittees = allCommittees[attestation.Data.Slot]

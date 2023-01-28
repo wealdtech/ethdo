@@ -38,7 +38,7 @@ var quiet bool
 var verbose bool
 var debug bool
 
-// RootCmd represents the base command when called without any subcommands
+// RootCmd represents the base command when called without any subcommands.
 var RootCmd = &cobra.Command{
 	Use:               "ethdo",
 	Short:             "Ethereum 2 CLI",

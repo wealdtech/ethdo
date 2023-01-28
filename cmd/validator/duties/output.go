@@ -65,7 +65,6 @@ func output(ctx context.Context, data *dataOut) (string, error) {
 			} else {
 				builder.WriteString("\n")
 			}
-
 		}
 	}
 

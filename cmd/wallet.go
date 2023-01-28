@@ -19,7 +19,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-// walletCmd represents the wallet command
+// walletCmd represents the wallet command.
 var walletCmd = &cobra.Command{
 	Use:   "wallet",
 	Short: "Manage wallets",

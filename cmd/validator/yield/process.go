@@ -46,7 +46,6 @@ var epochsPerYear = decimal.New(225*365, 0)
 
 // calculateYield calculates yield from the number of active validators.
 func (c *command) calculateYield(ctx context.Context) error {
-
 	spec, err := c.eth2Client.(eth2client.SpecProvider).Spec(ctx)
 	if err != nil {
 		return err

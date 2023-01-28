@@ -17,7 +17,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// attesterCmd represents the attester command
+// attesterCmd represents the attester command.
 var attesterCmd = &cobra.Command{
 	Use:   "attester",
 	Short: "Obtain information about Ethereum 2 attesters",

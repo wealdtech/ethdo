@@ -17,7 +17,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// exitCmd represents the exit command
+// exitCmd represents the exit command.
 var exitCmd = &cobra.Command{
 	Use:   "exit",
 	Short: "Manage Ethereum 2 voluntary exits",

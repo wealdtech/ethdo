@@ -128,7 +128,7 @@ func (c *command) obtainOperations(ctx context.Context) error {
 	}
 
 	if c.privateKey != "" {
-		// Use all validators from chain info and a private key for the withdrawal address.
+		// Have a private key.
 		return c.generateOperationsFromPrivateKey(ctx)
 	}
 

@@ -127,9 +127,9 @@ func (c *command) obtainOperations(ctx context.Context) error {
 		return c.generateOperationsFromValidatorAndPrivateKey(ctx)
 	}
 
-	if c.allValidators && c.privateKey != "" {
+	if c.privateKey != "" {
 		// Use all validators from chain info and a private key for the withdrawal address.
-		return c.generateOperationsFromChainInfoAndPrivateKey(ctx)
+		return c.generateOperationsFromPrivateKey(ctx)
 	}
 
 	return errors.New("unsupported combination of inputs; see help for details of supported combinations")
@@ -318,14 +318,14 @@ func (c *command) generateOperationsFromValidatorAndPrivateKey(ctx context.Conte
 	return nil
 }
 
-func (c *command) generateOperationsFromChainInfoAndPrivateKey(ctx context.Context) error {
-	for _, validatorInfo := range c.chainInfo.Validators {
-		withdrawalAccount, err := util.ParseAccount(ctx, c.privateKey, nil, true)
-		if err != nil {
-			return err
-		}
+func (c *command) generateOperationsFromPrivateKey(ctx context.Context) error {
+	withdrawalAccount, err := util.ParseAccount(ctx, c.privateKey, nil, true)
+	if err != nil {
+		return err
+	}
 
-		// skip validators which withdrawal key don't match with supplied withdrawal account public key
+	for _, validatorInfo := range c.chainInfo.Validators {
+		// Skip validators which withdrawal key don't match with supplied withdrawal account public key.
 		pubkey, err := util.BestPublicKey(withdrawalAccount)
 		if err != nil {
 			return err
@@ -333,7 +333,6 @@ func (c *command) generateOperationsFromChainInfoAndPrivateKey(ctx context.Conte
 		withdrawalCredentials := ethutil.SHA256(pubkey.Marshal())
 		withdrawalCredentials[0] = byte(0) // BLS_WITHDRAWAL_PREFIX
 		if !bytes.Equal(withdrawalCredentials, validatorInfo.WithdrawalCredentials) {
-			fmt.Printf("Skipping validator due to withdrawal credentials mismatch index=%v pubkey=%v\n", validatorInfo.Index, validatorInfo.Pubkey.String())
 			continue
 		}
 

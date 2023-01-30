@@ -206,7 +206,7 @@ Similar to the previous section, however instead of specifying the mnemonic, it 
 
 
 ```
-ethdo validator credentials set --all-validators --private-key=0x3b…9c --withdrawal-address=0x8f…9F
+ethdo validator credentials set --private-key=0x3b…9c --withdrawal-address=0x8f…9F
 ```
 
 #### Using an account

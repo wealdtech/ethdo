@@ -319,19 +319,20 @@ func (c *command) generateOperationsFromValidatorAndPrivateKey(ctx context.Conte
 }
 
 func (c *command) generateOperationsFromPrivateKey(ctx context.Context) error {
+	// Extract withdrawal account public key from supplied private key.
 	withdrawalAccount, err := util.ParseAccount(ctx, c.privateKey, nil, true)
 	if err != nil {
 		return err
 	}
+	pubkey, err := util.BestPublicKey(withdrawalAccount)
+	if err != nil {
+		return err
+	}
+	withdrawalCredentials := ethutil.SHA256(pubkey.Marshal())
+	withdrawalCredentials[0] = byte(0) // BLS_WITHDRAWAL_PREFIX
 
 	for _, validatorInfo := range c.chainInfo.Validators {
 		// Skip validators which withdrawal key don't match with supplied withdrawal account public key.
-		pubkey, err := util.BestPublicKey(withdrawalAccount)
-		if err != nil {
-			return err
-		}
-		withdrawalCredentials := ethutil.SHA256(pubkey.Marshal())
-		withdrawalCredentials[0] = byte(0) // BLS_WITHDRAWAL_PREFIX
 		if !bytes.Equal(withdrawalCredentials, validatorInfo.WithdrawalCredentials) {
 			continue
 		}

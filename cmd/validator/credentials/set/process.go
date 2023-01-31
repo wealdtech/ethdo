@@ -135,6 +135,11 @@ func (c *command) obtainOperations(ctx context.Context) error {
 		return c.generateOperationsFromValidatorAndPrivateKey(ctx)
 	}
 
+	if c.privateKey != "" {
+		// Have a private key.
+		return c.generateOperationsFromPrivateKey(ctx)
+	}
+
 	return errors.New("unsupported combination of inputs; see help for details of supported combinations")
 }
 
@@ -318,6 +323,32 @@ func (c *command) generateOperationsFromValidatorAndPrivateKey(ctx context.Conte
 		return err
 	}
 
+	return nil
+}
+
+func (c *command) generateOperationsFromPrivateKey(ctx context.Context) error {
+	// Extract withdrawal account public key from supplied private key.
+	withdrawalAccount, err := util.ParseAccount(ctx, c.privateKey, nil, true)
+	if err != nil {
+		return err
+	}
+	pubkey, err := util.BestPublicKey(withdrawalAccount)
+	if err != nil {
+		return err
+	}
+	withdrawalCredentials := ethutil.SHA256(pubkey.Marshal())
+	withdrawalCredentials[0] = byte(0) // BLS_WITHDRAWAL_PREFIX
+
+	for _, validatorInfo := range c.chainInfo.Validators {
+		// Skip validators which withdrawal key don't match with supplied withdrawal account public key.
+		if !bytes.Equal(withdrawalCredentials, validatorInfo.WithdrawalCredentials) {
+			continue
+		}
+
+		if err := c.generateOperationFromAccount(ctx, validatorInfo, withdrawalAccount); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 

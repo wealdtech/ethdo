@@ -210,6 +210,14 @@ ethdo validator credentials set --mnemonic="abandon abandon abandon … art" --p
 
 Note that it is possible for there to be multiple validators that use the provided private key for a withdrawal address, in which case an operation will be generated for each validator that is eligible for change.
 
+#### Using withdrawal private key only.
+Similar to the previous section, however instead of specifying the mnemonic, it will select multiple validators that use provided private key for their withdrawal address.
+
+
+```
+ethdo validator credentials set --private-key=0x3b…9c --withdrawal-address=0x8f…9F
+```
+
 #### Using an account
 If you used `ethdo` to generate your validator deposit data you will likely have used a separate account to generate the withdrawal credentials.  You can specify the accout of the validator and the accout of the withdrawal credentials to generate and broadcast the credentials change operation with the following command:
 

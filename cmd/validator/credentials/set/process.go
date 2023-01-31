@@ -250,14 +250,14 @@ func (c *command) generateOperationsFromMnemonic(ctx context.Context) error {
 }
 
 func (c *command) generateOperationsFromAccountAndWithdrawalAccount(ctx context.Context) error {
-	validatorAccount, err := util.ParseAccount(ctx, c.account, nil, true)
+	validatorAccount, err := util.ParseAccount(ctx, c.account, nil, false)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "failed to obtain validator account")
 	}
 
 	withdrawalAccount, err := util.ParseAccount(ctx, c.withdrawalAccount, c.passphrases, true)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "failed to obtain withdrawal account")
 	}
 
 	validatorPubkey, err := util.BestPublicKey(validatorAccount)

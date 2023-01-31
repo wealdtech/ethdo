@@ -1,6 +1,7 @@
 dev:
   - support additional mnemonic word list languages
   - increase minimum timeout for commands that fetch all validators to 2 minutes
+  - provide better error messages when offline preparation file cannot be read
 
 1.27.1:
   - fix issue with voluntary exits using incorrect domain (thanks to @0xTylerHolmes)

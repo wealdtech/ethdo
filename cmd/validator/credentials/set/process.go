@@ -143,6 +143,11 @@ func (c *command) generateOperationFromMnemonicAndPath(ctx context.Context) erro
 	}
 
 	validatorKeyPath := c.path
+	// err if no path is provided
+	if validatorKeyPath == "" {
+		return errors.New("no validator path provided")
+	}
+
 	match := validatorPath.Match([]byte(c.path))
 	if !match {
 		return fmt.Errorf("path %s does not match EIP-2334 format for a validator", c.path)
@@ -509,6 +514,10 @@ func (c *command) createSignedOperation(ctx context.Context,
 }
 
 func (c *command) parseWithdrawalAddress(_ context.Context) error {
+	// check that the withdrawal address contains a 0x prefix.
+	if !strings.HasPrefix(c.withdrawalAddressStr, "0x") {
+		return fmt.Errorf("withdrawal address %s does not contain a 0x prefix", c.withdrawalAddressStr)
+	}
 	withdrawalAddressBytes, err := hex.DecodeString(strings.TrimPrefix(c.withdrawalAddressStr, "0x"))
 	if err != nil {
 		return errors.Wrap(err, "failed to obtain execution address")

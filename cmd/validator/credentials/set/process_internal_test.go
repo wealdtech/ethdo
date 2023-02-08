@@ -68,7 +68,7 @@ func TestGenerateOperationFromMnemonicAndPath(t *testing.T) {
 			err: "mnemonic is invalid",
 		},
 		{
-			name: "PathInvalid",
+			name: "PathInvalidNoIndex",
 			command: &command{
 				mnemonic:             "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon art",
 				path:                 "m/12381/3600/0/0",
@@ -77,6 +77,47 @@ func TestGenerateOperationFromMnemonicAndPath(t *testing.T) {
 				withdrawalAddressStr: "0x8c1Ff978036F2e9d7CC382Eff7B4c8c53C22ac15",
 			},
 			err: "path m/12381/3600/0/0 does not match EIP-2334 format for a validator",
+		},
+		{
+			name: "NoPathProvided",
+			command: &command{
+				mnemonic:             "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon art",
+				chainInfo:            chainInfo,
+				signedOperations:     make([]*capella.SignedBLSToExecutionChange, 0),
+				withdrawalAddressStr: "0x8c1Ff978036F2e9d7CC382Eff7B4c8c53C22ac15",
+			},
+			err: "no validator path provided",
+		},
+		{
+			name: "PathInvlaidIndexNot2334Format",
+			command: &command{
+				mnemonic:             "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon art",
+				path:                 "1",
+				chainInfo:            chainInfo,
+				signedOperations:     make([]*capella.SignedBLSToExecutionChange, 0),
+				withdrawalAddressStr: "0x8c1Ff978036F2e9d7CC382Eff7B4c8c53C22ac15",
+			},
+			err: "path 1 does not match EIP-2334 format for a validator",
+		},
+		{
+			name: "withdrawalAddressNo0xPrefix",
+			command: &command{mnemonic: "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon art",
+				path:                 "m/12381/3600/0/0/0",
+				chainInfo:            chainInfo,
+				signedOperations:     make([]*capella.SignedBLSToExecutionChange, 0),
+				withdrawalAddressStr: "8c1Ff978036F2e9d7CC382Eff7B4c8c53C22ac15",
+			},
+			err: "failed to generate operation from seed and path: invalid withdrawal address: withdrawal address 8c1Ff978036F2e9d7CC382Eff7B4c8c53C22ac15 does not contain a 0x prefix",
+		},
+		{
+			name: "withdrawalAddressInvalid",
+			command: &command{mnemonic: "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon art",
+				path:                 "m/12381/3600/0/0/0",
+				chainInfo:            chainInfo,
+				signedOperations:     make([]*capella.SignedBLSToExecutionChange, 0),
+				withdrawalAddressStr: "0x8c1Ff978036F2e9d7CC382Eff7B4c8c53C22ac",
+			},
+			err: "failed to generate operation from seed and path: invalid withdrawal address: withdrawal address must be exactly 20 bytes in length",
 		},
 		{
 			name: "Good",

@@ -27,7 +27,7 @@ import (
 	e2wtypes "github.com/wealdtech/go-eth2-wallet-types/v2"
 )
 
-// signatureSignCmd represents the signature sign command
+// signatureSignCmd represents the signature sign command.
 var signatureSignCmd = &cobra.Command{
 	Use:   "sign",
 	Short: "Sign a 32-byte piece of data",

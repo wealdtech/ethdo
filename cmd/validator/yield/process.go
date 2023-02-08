@@ -40,13 +40,14 @@ func (c *command) process(ctx context.Context) error {
 	return c.calculateYield(ctx)
 }
 
-var weiPerGwei = decimal.New(1e9, 0)
-var one = decimal.New(1, 0)
-var epochsPerYear = decimal.New(225*365, 0)
+var (
+	weiPerGwei    = decimal.New(1e9, 0)
+	one           = decimal.New(1, 0)
+	epochsPerYear = decimal.New(225*365, 0)
+)
 
 // calculateYield calculates yield from the number of active validators.
 func (c *command) calculateYield(ctx context.Context) error {
-
 	spec, err := c.eth2Client.(eth2client.SpecProvider).Spec(ctx)
 	if err != nil {
 		return err

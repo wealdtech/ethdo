@@ -100,7 +100,6 @@ func process(ctx context.Context, data *dataIn) (*dataOut, error) {
 			if attestation.Data.Slot == duty.Slot &&
 				attestation.Data.Index == duty.CommitteeIndex &&
 				attestation.AggregationBits.BitAt(duty.ValidatorCommitteeIndex) {
-
 				headCorrect := false
 				targetCorrect := false
 				if data.verbose {
@@ -138,7 +137,7 @@ func calcHeadCorrect(ctx context.Context, data *dataIn, attestation *phase0.Atte
 	for {
 		header, err := data.eth2Client.(eth2client.BeaconBlockHeadersProvider).BeaconBlockHeader(ctx, fmt.Sprintf("%d", slot))
 		if err != nil {
-			return false, nil
+			return false, err
 		}
 		if header == nil {
 			// No block.
@@ -160,7 +159,7 @@ func calcTargetCorrect(ctx context.Context, data *dataIn, attestation *phase0.At
 	for {
 		header, err := data.eth2Client.(eth2client.BeaconBlockHeadersProvider).BeaconBlockHeader(ctx, fmt.Sprintf("%d", slot))
 		if err != nil {
-			return false, nil
+			return false, err
 		}
 		if header == nil {
 			// No block.

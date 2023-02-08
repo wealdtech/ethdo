@@ -38,6 +38,7 @@ func (c *command) process(ctx context.Context) error {
 	err := json.Unmarshal([]byte(c.data), c.item)
 	if err != nil {
 		c.additionalInfo = err.Error()
+		//nolint:nilerr
 		return nil
 	}
 	c.itemStructureValid = true
@@ -124,7 +125,7 @@ func (c *command) setup(ctx context.Context) error {
 	return nil
 }
 
-// isAggregator returns true if the given
+// isAggregator returns true if the given.
 func (c *command) isAggregator(ctx context.Context) (bool, error) {
 	// Calculate the modulo.
 	specProvider, isProvider := c.eth2Client.(eth2client.SpecProvider)
@@ -204,6 +205,7 @@ func (c *command) confirmContributionSignature(ctx context.Context) error {
 	_, err := e2types.BLSSignatureFromBytes(sigBytes)
 	if err != nil {
 		c.additionalInfo = err.Error()
+		//nolint:nilerr
 		return nil
 	}
 	c.contributionSignatureValidFormat = true
@@ -256,6 +258,7 @@ func (c *command) confirmContributionAndProofSignature(ctx context.Context) erro
 	sig, err := e2types.BLSSignatureFromBytes(sigBytes)
 	if err != nil {
 		c.additionalInfo = err.Error()
+		//nolint:nilerr
 		return nil
 	}
 	c.contributionAndProofSignatureValidFormat = true

@@ -17,7 +17,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// accountCmd represents the account command
+// accountCmd represents the account command.
 var accountCmd = &cobra.Command{
 	Use:   "account",
 	Short: "Manage account",

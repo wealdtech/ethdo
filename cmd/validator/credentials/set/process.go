@@ -22,6 +22,7 @@ import (
 	"os"
 	"regexp"
 	"strings"
+	"time"
 
 	consensusclient "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/spec/bellatrix"
@@ -38,11 +39,18 @@ import (
 	e2wtypes "github.com/wealdtech/go-eth2-wallet-types/v2"
 )
 
+// minTimeout is the minimum timeout for this command.
+// It needs to be set here as we want timeouts to be low in general, but this can be pulling
+// a lot of data for an unsophisticated audience so it's easier to set a higher timeout..
+var minTimeout = 2 * time.Minute
+
 // validatorPath is the regular expression that matches a validator  path.
 var validatorPath = regexp.MustCompile("^m/12381/3600/[0-9]+/0/0$")
 
-var offlinePreparationFilename = "offline-preparation.json"
-var changeOperationsFilename = "change-operations.json"
+var (
+	offlinePreparationFilename = "offline-preparation.json"
+	changeOperationsFilename   = "change-operations.json"
+)
 
 func (c *command) process(ctx context.Context) error {
 	if err := c.setup(ctx); err != nil {
@@ -125,6 +133,11 @@ func (c *command) obtainOperations(ctx context.Context) error {
 	if c.validator != "" && c.privateKey != "" {
 		// Have a validator and a private key for the withdrawal address.
 		return c.generateOperationsFromValidatorAndPrivateKey(ctx)
+	}
+
+	if c.privateKey != "" {
+		// Have a private key.
+		return c.generateOperationsFromPrivateKey(ctx)
 	}
 
 	return errors.New("unsupported combination of inputs; see help for details of supported combinations")
@@ -247,14 +260,14 @@ func (c *command) generateOperationsFromMnemonic(ctx context.Context) error {
 }
 
 func (c *command) generateOperationsFromAccountAndWithdrawalAccount(ctx context.Context) error {
-	validatorAccount, err := util.ParseAccount(ctx, c.account, nil, true)
+	validatorAccount, err := util.ParseAccount(ctx, c.account, nil, false)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "failed to obtain validator account")
 	}
 
 	withdrawalAccount, err := util.ParseAccount(ctx, c.withdrawalAccount, c.passphrases, true)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "failed to obtain withdrawal account")
 	}
 
 	validatorPubkey, err := util.BestPublicKey(validatorAccount)
@@ -315,6 +328,32 @@ func (c *command) generateOperationsFromValidatorAndPrivateKey(ctx context.Conte
 		return err
 	}
 
+	return nil
+}
+
+func (c *command) generateOperationsFromPrivateKey(ctx context.Context) error {
+	// Extract withdrawal account public key from supplied private key.
+	withdrawalAccount, err := util.ParseAccount(ctx, c.privateKey, nil, true)
+	if err != nil {
+		return err
+	}
+	pubkey, err := util.BestPublicKey(withdrawalAccount)
+	if err != nil {
+		return err
+	}
+	withdrawalCredentials := ethutil.SHA256(pubkey.Marshal())
+	withdrawalCredentials[0] = byte(0) // BLS_WITHDRAWAL_PREFIX
+
+	for _, validatorInfo := range c.chainInfo.Validators {
+		// Skip validators which withdrawal key don't match with supplied withdrawal account public key.
+		if !bytes.Equal(withdrawalCredentials, validatorInfo.WithdrawalCredentials) {
+			continue
+		}
+
+		if err := c.generateOperationFromAccount(ctx, validatorInfo, withdrawalAccount); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
@@ -425,7 +464,6 @@ func (c *command) generateOperationFromSeedAndPath(ctx context.Context,
 		if err != nil {
 			return false, errors.Wrap(err, "failed to create withdrawal account")
 		}
-
 	} else {
 		// Need the withdrawal credentials from the private key.
 		withdrawalAccount, err = util.ParseAccount(ctx, c.privateKey, nil, true)
@@ -624,6 +662,14 @@ func (c *command) broadcastOperations(ctx context.Context) error {
 func (c *command) setup(ctx context.Context) error {
 	if c.offline {
 		return nil
+	}
+
+	// Ensure timeout is at least the minimum.
+	if c.timeout < minTimeout {
+		if c.debug {
+			fmt.Fprintf(os.Stderr, "Increasing timeout to %v\n", minTimeout)
+			c.timeout = minTimeout
+		}
 	}
 
 	// Connect to the consensus node.

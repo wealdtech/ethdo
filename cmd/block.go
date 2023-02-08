@@ -17,7 +17,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// blockCmd represents the block command
+// blockCmd represents the block command.
 var blockCmd = &cobra.Command{
 	Use:   "block",
 	Short: "Obtain information about an Ethereum 2 block",

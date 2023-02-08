@@ -17,7 +17,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// synccommitteeCmd represents the synccommittee command
+// synccommitteeCmd represents the synccommittee command.
 var synccommitteeCmd = &cobra.Command{
 	Use:   "synccommittee",
 	Short: "Obtain information about Ethereum 2 sync committees",

@@ -1,4 +1,4 @@
-// Copyright © 2020, 2022 Weald Technology Trading
+// Copyright © 2020 - 2023 Weald Technology Trading
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -19,11 +19,24 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/tyler-smith/go-bip39"
+	"github.com/tyler-smith/go-bip39/wordlists"
 	"golang.org/x/text/unicode/norm"
 )
 
 // hdPathRegex is the regular expression that matches an HD path.
 var hdPathRegex = regexp.MustCompile("^m/[0-9]+/[0-9]+(/[0-9+])+")
+
+var mnemonicWordLists = [][]string{
+	wordlists.English,
+	wordlists.ChineseSimplified,
+	wordlists.ChineseTraditional,
+	wordlists.Czech,
+	wordlists.French,
+	wordlists.Italian,
+	wordlists.Japanese,
+	wordlists.Korean,
+	wordlists.Spanish,
+}
 
 // SeedFromMnemonic creates a seed from a mnemonic.
 func SeedFromMnemonic(mnemonic string) ([]byte, error) {
@@ -38,10 +51,14 @@ func SeedFromMnemonic(mnemonic string) ([]byte, error) {
 	mnemonic = string(norm.NFKD.Bytes([]byte(mnemonic)))
 	mnemonicPassphrase = string(norm.NFKD.Bytes([]byte(mnemonicPassphrase)))
 
-	if !bip39.IsMnemonicValid(mnemonic) {
-		return nil, errors.New("mnemonic is invalid")
+	// Try with the various word lists.
+	for _, wl := range mnemonicWordLists {
+		bip39.SetWordList(wl)
+		seed, err := bip39.NewSeedWithErrorChecking(mnemonic, mnemonicPassphrase)
+		if err == nil {
+			return seed, nil
+		}
 	}
 
-	// Create seed from mnemonic and passphrase.
-	return bip39.NewSeed(mnemonic, mnemonicPassphrase), nil
+	return nil, errors.New("mnemonic is invalid")
 }

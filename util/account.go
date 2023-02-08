@@ -66,7 +66,7 @@ func ParseAccount(ctx context.Context,
 			if unlock {
 				_, err = UnlockAccount(ctx, account, nil)
 				if err != nil {
-					return nil, errors.Wrap(err, "failed to unlock account")
+					return nil, err
 				}
 			}
 		default:
@@ -82,7 +82,7 @@ func ParseAccount(ctx context.Context,
 			// Supplementary will be the unlock passphrase(s).
 			_, err = UnlockAccount(ctx, account, supplementary)
 			if err != nil {
-				return nil, errors.Wrap(err, "failed to unlock account")
+				return nil, err
 			}
 		}
 	case strings.Contains(accountStr, " "):

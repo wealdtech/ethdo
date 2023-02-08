@@ -17,7 +17,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// slotCmd represents the slot command
+// slotCmd represents the slot command.
 var slotCmd = &cobra.Command{
 	Use:   "slot",
 	Short: "Obtain information about an Ethereum 2 slot",

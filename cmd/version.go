@@ -24,9 +24,9 @@ import (
 
 // ReleaseVersion is the release version of the codebase.
 // Usually overridden by tag names when building binaries.
-var ReleaseVersion = "local build (latest release 1.27.1)"
+var ReleaseVersion = "local build (latest release 1.28.0)"
 
-// versionCmd represents the version command
+// versionCmd represents the version command.
 var versionCmd = &cobra.Command{
 	Use:   "version",
 	Short: "Version of ethdo",

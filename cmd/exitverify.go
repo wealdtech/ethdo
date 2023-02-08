@@ -41,7 +41,7 @@ var exitVerifyCmd = &cobra.Command{
 
     ethdo exit verify --data=exitdata.json --account=primary/current
 
-In quiet mode this will return 0 if the the exit is verified correctly, otherwise 1.`,
+In quiet mode this will return 0 if the exit is verified correctly, otherwise 1.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		ctx := context.Background()
 

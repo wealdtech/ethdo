@@ -19,7 +19,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-// signatureCmd represents the signature command
+// signatureCmd represents the signature command.
 var signatureCmd = &cobra.Command{
 	Use:     "signature",
 	Aliases: []string{"sig"},
@@ -31,8 +31,10 @@ func init() {
 	RootCmd.AddCommand(signatureCmd)
 }
 
-var dataFlag *pflag.Flag
-var domainFlag *pflag.Flag
+var (
+	dataFlag   *pflag.Flag
+	domainFlag *pflag.Flag
+)
 
 func signatureFlags(cmd *cobra.Command) {
 	if dataFlag == nil {

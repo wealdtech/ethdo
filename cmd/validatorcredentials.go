@@ -17,7 +17,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// validatorCredentialsCmd represents the validator credentials command
+// validatorCredentialsCmd represents the validator credentials command.
 var validatorCredentialsCmd = &cobra.Command{
 	Use:   "credentials",
 	Short: "Manage Ethereum consensus validator credentials",

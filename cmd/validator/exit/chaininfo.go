@@ -19,22 +19,22 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/pkg/errors"
 	"github.com/wealdtech/ethdo/beacon"
 )
 
 // obtainChainInfo obtains the chain information required to create an exit operation.
 func (c *command) obtainChainInfo(ctx context.Context) error {
+	var err error
 	// Use the offline preparation file if present (and we haven't been asked to recreate it).
 	if !c.prepareOffline {
-		err := c.obtainChainInfoFromFile(ctx)
-		if err == nil {
+		if err = c.obtainChainInfoFromFile(ctx); err == nil {
 			return nil
 		}
 	}
 
 	if c.offline {
-		return fmt.Errorf("%s is unavailable or outdated; this is required to have been previously generated using --offline-preparation on an online machine and be readable in the directory in which this command is being run", offlinePreparationFilename)
+		// If we are here it means that we are offline without chain information, and cannot continue.
+		return fmt.Errorf("failed to obtain offline preparation file: %w", err)
 	}
 
 	if err := c.obtainChainInfoFromNode(ctx); err != nil {
@@ -51,7 +51,7 @@ func (c *command) obtainChainInfoFromFile(_ context.Context) error {
 		if c.debug {
 			fmt.Fprintf(os.Stderr, "Failed to read offline preparation file: %v\n", err)
 		}
-		return errors.Wrap(err, fmt.Sprintf("cannot find %s", offlinePreparationFilename))
+		return err
 	}
 
 	if c.debug {
@@ -60,16 +60,16 @@ func (c *command) obtainChainInfoFromFile(_ context.Context) error {
 	data, err := os.ReadFile(offlinePreparationFilename)
 	if err != nil {
 		if c.debug {
-			fmt.Fprintf(os.Stderr, "failed to load chain state: %v\n", err)
+			fmt.Fprintf(os.Stderr, "failed to load offline preparation file: %v\n", err)
 		}
-		return errors.Wrap(err, "failed to read offline preparation file")
+		return err
 	}
 	c.chainInfo = &beacon.ChainInfo{}
 	if err := json.Unmarshal(data, c.chainInfo); err != nil {
 		if c.debug {
-			fmt.Fprintf(os.Stderr, "chain state invalid: %v\n", err)
+			fmt.Fprintf(os.Stderr, "offline preparation file invalid: %v\n", err)
 		}
-		return errors.Wrap(err, "failed to parse offline preparation file")
+		return err
 	}
 
 	return nil
@@ -97,7 +97,7 @@ func (c *command) writeChainInfoToFile(_ context.Context) error {
 	if err != nil {
 		return err
 	}
-	if err := os.WriteFile(offlinePreparationFilename, data, 0600); err != nil {
+	if err := os.WriteFile(offlinePreparationFilename, data, 0o600); err != nil {
 		return err
 	}
 

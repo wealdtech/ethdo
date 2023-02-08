@@ -18,7 +18,7 @@ import (
 	"os"
 )
 
-// errCheck checks for an error and quits if it is present
+// errCheck checks for an error and quits if it is present.
 func errCheck(err error, msg string) {
 	if err != nil {
 		if !quiet {
@@ -48,14 +48,14 @@ func errCheck(err error, msg string) {
 // 	}
 // }
 
-// assert checks a condition and quits if it is false
+// assert checks a condition and quits if it is false.
 func assert(condition bool, msg string) {
 	if !condition {
 		die(msg)
 	}
 }
 
-// die prints an error and quits
+// die prints an error and quits.
 func die(msg string) {
 	if msg != "" && !quiet {
 		fmt.Fprintf(os.Stderr, "%s\n", msg)

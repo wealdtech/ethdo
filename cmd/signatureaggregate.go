@@ -28,7 +28,7 @@ import (
 
 var signatureAggregateSignatures []string
 
-// signatureAggregateCmd represents the signature aggregate command
+// signatureAggregateCmd represents the signature aggregate command.
 var signatureAggregateCmd = &cobra.Command{
 	Use:   "aggregate",
 	Short: "Aggregate signatures",

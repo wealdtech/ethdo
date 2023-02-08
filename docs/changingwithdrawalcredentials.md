@@ -16,7 +16,16 @@ Withdrawal credentials, held as part of a validator's on-chain definition, defin
 A private key is a hexadecimal string (_e.g._ 0x010203…a1a2a3) that can be used to generate a public key and (in the case of the execution chain) Ethereum address.
 
 ### Mnemonic
-A mnemonic is a 24-word phrase that can be used to generate multiple private keys with the use of _paths_.
+A mnemonic is a 24-word phrase that can be used to generate multiple private keys with the use of _paths_.  Mnemonics are supported in the following languages:
+* chinese simplified
+* chinese traditional
+* czech
+* english
+* french
+* italian
+* japanese
+* korean
+* spanish
 
 ### Path
 A path is a string starting with "m" and containing a number of components separated by "/", for example "m/12381/3600/0/0".  The process to obtain a key from a mnemonic and path is known as "hierarchical derivation".
@@ -200,6 +209,14 @@ ethdo validator credentials set --mnemonic="abandon abandon abandon … art" --p
 ```
 
 Note that it is possible for there to be multiple validators that use the provided private key for a withdrawal address, in which case an operation will be generated for each validator that is eligible for change.
+
+#### Using withdrawal private key only.
+Similar to the previous section, however instead of specifying the mnemonic, it will select multiple validators that use provided private key for their withdrawal address.
+
+
+```
+ethdo validator credentials set --private-key=0x3b…9c --withdrawal-address=0x8f…9F
+```
 
 #### Using an account
 If you used `ethdo` to generate your validator deposit data you will likely have used a separate account to generate the withdrawal credentials.  You can specify the accout of the validator and the accout of the withdrawal credentials to generate and broadcast the credentials change operation with the following command:

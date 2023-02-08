@@ -17,7 +17,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// depositCmd represents the deposit command
+// depositCmd represents the deposit command.
 var depositCmd = &cobra.Command{
 	Use:   "deposit",
 	Short: "Manage Ethereum 2 deposits",

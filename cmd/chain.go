@@ -17,7 +17,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// chainCmd represents the chain command
+// chainCmd represents the chain command.
 var chainCmd = &cobra.Command{
 	Use:   "chain",
 	Short: "Obtain information about an Ethereum 2 chain",

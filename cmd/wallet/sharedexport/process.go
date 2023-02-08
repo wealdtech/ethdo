@@ -74,7 +74,7 @@ func process(ctx context.Context, data *dataIn) (*dataOut, error) {
 		return nil, errors.Wrap(err, "failed to marshal shamir export")
 	}
 
-	if err := os.WriteFile(data.file, sharedFile, 0600); err != nil {
+	if err := os.WriteFile(data.file, sharedFile, 0o600); err != nil {
 		return nil, errors.Wrap(err, "failed to write export file")
 	}
 

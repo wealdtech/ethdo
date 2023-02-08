@@ -29,9 +29,11 @@ import (
 	"github.com/pkg/errors"
 )
 
-var jsonOutput bool
-var sszOutput bool
-var results *dataOut
+var (
+	jsonOutput bool
+	sszOutput  bool
+	results    *dataOut
+)
 
 func process(ctx context.Context, data *dataIn) (*dataOut, error) {
 	if data == nil {

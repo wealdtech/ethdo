@@ -18,7 +18,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-// epochCmd represents the epoch command
+// epochCmd represents the epoch command.
 var epochCmd = &cobra.Command{
 	Use:   "epoch",
 	Short: "Obtain information about Ethereum 2 epochs",

@@ -39,7 +39,7 @@ func TestProcess(t *testing.T) {
 	dir, err := os.MkdirTemp("", "")
 	require.NoError(t, err)
 	datFile := filepath.Join(dir, "backup.dat")
-	require.NoError(t, os.WriteFile(datFile, export, 0600))
+	require.NoError(t, os.WriteFile(datFile, export, 0o600))
 	defer os.RemoveAll(dir)
 
 	tests := []struct {

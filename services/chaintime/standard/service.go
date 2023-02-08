@@ -285,14 +285,14 @@ func fetchCapellaForkEpoch(ctx context.Context,
 	if err != nil {
 		return 0, errors.Wrap(err, "failed to obtain spec")
 	}
-	tmp, exists := spec["CAPELLAELLATRIX_FORK_EPOCH"]
+	tmp, exists := spec["CAPELLA_FORK_EPOCH"]
 	if !exists {
 		return 0, errors.New("capella fork version not known by chain")
 	}
 	epoch, isEpoch := tmp.(uint64)
 	if !isEpoch {
 		//nolint:revive
-		return 0, errors.New("CAPELLAELLATRIX_FORK_EPOCH is not a uint64!")
+		return 0, errors.New("CAPELLA_FORK_EPOCH is not a uint64!")
 	}
 
 	return phase0.Epoch(epoch), nil

@@ -17,7 +17,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// attestationCmd represents the attestation command
+// attestationCmd represents the attestation command.
 var attestationCmd = &cobra.Command{
 	Use:   "attestation",
 	Short: "Obtain information about an Ethereum 2 attestation",

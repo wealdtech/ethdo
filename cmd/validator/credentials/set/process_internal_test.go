@@ -100,7 +100,7 @@ func TestGenerateOperationFromMnemonicAndPath(t *testing.T) {
 			err: "path 1 does not match EIP-2334 format for a validator",
 		},
 		{
-			name: "withdrawalAddressNo0xPrefix",
+			name: "WithdrawalAddressNo0xPrefix",
 			command: &command{mnemonic: "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon art",
 				path:                 "m/12381/3600/0/0/0",
 				chainInfo:            chainInfo,
@@ -110,7 +110,7 @@ func TestGenerateOperationFromMnemonicAndPath(t *testing.T) {
 			err: "failed to generate operation from seed and path: invalid withdrawal address: withdrawal address 8c1Ff978036F2e9d7CC382Eff7B4c8c53C22ac15 does not contain a 0x prefix",
 		},
 		{
-			name: "withdrawalAddressInvalid",
+			name: "WithdrawalAddressInvalid",
 			command: &command{mnemonic: "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon art",
 				path:                 "m/12381/3600/0/0/0",
 				chainInfo:            chainInfo,
@@ -118,6 +118,26 @@ func TestGenerateOperationFromMnemonicAndPath(t *testing.T) {
 				withdrawalAddressStr: "0x8c1Ff978036F2e9d7CC382Eff7B4c8c53C22ac",
 			},
 			err: "failed to generate operation from seed and path: invalid withdrawal address: withdrawal address must be exactly 20 bytes in length",
+		},
+		{
+			name: "WithdrawalAddressMissing",
+			command: &command{mnemonic: "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon art",
+				path:             "m/12381/3600/0/0/0",
+				chainInfo:        chainInfo,
+				signedOperations: make([]*capella.SignedBLSToExecutionChange, 0),
+			},
+			err: "failed to generate operation from seed and path: invalid withdrawal address: no withdrawal address provided",
+		},
+		{
+			name: "InvalidWithdrawalAddressNotHex",
+			command: &command{
+				mnemonic:             "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon art",
+				path:                 "m/12381/3600/0/0/0",
+				chainInfo:            chainInfo,
+				signedOperations:     make([]*capella.SignedBLSToExecutionChange, 0),
+				withdrawalAddressStr: "0xrc1Ff978036F2e9d7CC382Eff7B4c8c53C22acaa",
+			},
+			err: "failed to generate operation from seed and path: invalid withdrawal address: failed to obtain execution address: encoding/hex: invalid byte: U+0072 'r'",
 		},
 		{
 			name: "Good",
@@ -205,6 +225,85 @@ func TestGenerateOperationFromMnemonicAndValidator(t *testing.T) {
 				withdrawalAddressStr: "0x8c1Ff978036F2e9d7CC382Eff7B4c8c53C22ac15",
 			},
 			err: "no validator specified",
+		},
+		{
+			name: "WithdrawalAddressMissing",
+			command: &command{
+				mnemonic:         "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon art",
+				validator:        "0",
+				chainInfo:        chainInfo,
+				signedOperations: make([]*capella.SignedBLSToExecutionChange, 0),
+			},
+			err: "invalid withdrawal address: no withdrawal address provided",
+		},
+		{
+			name: "InvalidWithdrawalAddressLen",
+			command: &command{
+				mnemonic:             "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon art",
+				validator:            "0",
+				chainInfo:            chainInfo,
+				signedOperations:     make([]*capella.SignedBLSToExecutionChange, 0),
+				withdrawalAddressStr: "0x8c1Ff978036F2e9d7CC382Eff7B4c8c53C22ac",
+			},
+			err: "invalid withdrawal address: withdrawal address must be exactly 20 bytes in length",
+		},
+		{
+			name: "InvalidWithdrawalAddressPrefix",
+			command: &command{
+				mnemonic:             "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon art",
+				validator:            "0",
+				chainInfo:            chainInfo,
+				signedOperations:     make([]*capella.SignedBLSToExecutionChange, 0),
+				withdrawalAddressStr: "8c1Ff978036F2e9d7CC382Eff7B4c8c53C22acaa",
+			},
+			err: "invalid withdrawal address: withdrawal address 8c1Ff978036F2e9d7CC382Eff7B4c8c53C22acaa does not contain a 0x prefix",
+		},
+		{
+			name: "InvalidWithdrawalAddressNotHex",
+			command: &command{
+				mnemonic:             "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon art",
+				validator:            "0",
+				chainInfo:            chainInfo,
+				signedOperations:     make([]*capella.SignedBLSToExecutionChange, 0),
+				withdrawalAddressStr: "0xrc1Ff978036F2e9d7CC382Eff7B4c8c53C22acaa",
+			},
+			err: "invalid withdrawal address: failed to obtain execution address: encoding/hex: invalid byte: U+0072 'r'",
+		},
+		{
+			name: "UnknownValidatorPubKey",
+			command: &command{
+				mnemonic:             "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon art",
+				validator:            "0xb384f767d964e100c8a9b21018d08c25ffebae268b3ab6d610353897541971726dbfc3c7463884c68a531515aab94c80",
+				chainInfo:            chainInfo,
+				signedOperations:     make([]*capella.SignedBLSToExecutionChange, 0),
+				withdrawalAddressStr: "0x8c1Ff978036F2e9d7CC382Eff7B4c8c53C22ac15",
+			},
+
+			err: "unknown validator",
+		},
+		{
+			name: "UnknownValidatorIndex",
+			command: &command{
+				mnemonic:             "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon art",
+				validator:            "10",
+				chainInfo:            chainInfo,
+				signedOperations:     make([]*capella.SignedBLSToExecutionChange, 0),
+				withdrawalAddressStr: "0x8c1Ff978036F2e9d7CC382Eff7B4c8c53C22ac15",
+			},
+
+			err: "unknown validator",
+		},
+		{
+			name: "InvalidPubkeyLength",
+			command: &command{
+				mnemonic:             "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon art",
+				validator:            "0xb384f767d964e100c8a9b21018d08c25ffebae268b3ab6d610353897541971726dbfc3c7463884c68a531515aab94c",
+				chainInfo:            chainInfo,
+				signedOperations:     make([]*capella.SignedBLSToExecutionChange, 0),
+				withdrawalAddressStr: "0x8c1Ff978036F2e9d7CC382Eff7B4c8c53C22ac15",
+			},
+
+			err: "invalid public key: incorrect length",
 		},
 		{
 			name: "Good",

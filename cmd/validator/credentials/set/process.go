@@ -552,6 +552,10 @@ func (c *command) createSignedOperation(ctx context.Context,
 }
 
 func (c *command) parseWithdrawalAddress(_ context.Context) error {
+	// check the a withdrawal address has been provided.
+	if c.withdrawalAddressStr == "" {
+		return errors.New("no withdrawal address provided")
+	}
 	// check that the withdrawal address contains a 0x prefix.
 	if !strings.HasPrefix(c.withdrawalAddressStr, "0x") {
 		return fmt.Errorf("withdrawal address %s does not contain a 0x prefix", c.withdrawalAddressStr)

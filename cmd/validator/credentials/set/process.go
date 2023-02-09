@@ -73,6 +73,10 @@ func (c *command) process(ctx context.Context) error {
 		return err
 	}
 
+	if len(c.signedOperations) == 0 {
+		return errors.New("no suitable validators found; no operations generated")
+	}
+
 	if validated, reason := c.validateOperations(ctx); !validated {
 		return fmt.Errorf("operation failed validation: %s", reason)
 	}

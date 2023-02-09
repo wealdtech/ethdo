@@ -1,3 +1,6 @@
+dev:
+  - generate error message if "validator credentials set" process fails to generate any credentials
+
 1.28.0:
   - support additional mnemonic word list languages
   - increase minimum timeout for commands that fetch all validators to 2 minutes

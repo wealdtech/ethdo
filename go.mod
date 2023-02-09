@@ -1,9 +1,9 @@
 module github.com/wealdtech/ethdo
 
-go 1.18
+go 1.20
 
 require (
-	github.com/attestantio/go-eth2-client v0.15.2
+	github.com/attestantio/go-eth2-client v0.15.3
 	github.com/ferranbt/fastssz v0.1.2
 	github.com/gofrs/uuid v4.2.0+incompatible
 	github.com/google/uuid v1.3.0
@@ -21,7 +21,6 @@ require (
 	github.com/spf13/viper v1.13.0
 	github.com/stretchr/testify v1.8.1
 	github.com/tyler-smith/go-bip39 v1.1.0
-	github.com/wealdtech/chaind v0.6.17
 	github.com/wealdtech/go-bytesutil v1.2.0
 	github.com/wealdtech/go-ecodec v1.1.2
 	github.com/wealdtech/go-eth2-types/v2 v2.8.0

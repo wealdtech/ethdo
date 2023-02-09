@@ -270,6 +270,17 @@ func TestGenerateOperationFromMnemonicAndValidator(t *testing.T) {
 			err: "invalid withdrawal address: failed to obtain execution address: encoding/hex: invalid byte: U+0072 'r'",
 		},
 		{
+			name: "InvalidWithdrawalAddressBeyondMaxDistance",
+			command: &command{
+				mnemonic:             "struggle kangaroo horn sniff cradle soft ethics thunder cycle illegal flock unaware dynamic cinnamon play enforce card tennis inform parent surprise bring relax tail",
+				validator:            "1",
+				chainInfo:            chainInfo,
+				signedOperations:     make([]*capella.SignedBLSToExecutionChange, 0),
+				withdrawalAddressStr: "0x8c1Ff978036F2e9d7CC382Eff7B4c8c53C22ac15",
+			},
+			err: "failed to find validator using the provided mnemonic, index=1, pubkey=0xb3d89e2f29c712c6a9f8e5a269b97617c4a94dd6f6662ab3b07ce9e5434573f15b5c988cd14bbd5804f77156a8af1cfa",
+		},
+		{
 			name: "UnknownValidatorPubKey",
 			command: &command{
 				mnemonic:             "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon art",

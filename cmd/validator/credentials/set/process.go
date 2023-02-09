@@ -193,7 +193,7 @@ func (c *command) generateOperationFromMnemonicAndValidator(ctx context.Context)
 			if c.debug {
 				fmt.Fprintf(os.Stderr, "Gone %d indices without finding the validator, not scanning any further\n", maxDistance)
 			}
-			break
+			return fmt.Errorf("failed to find validator using the provided mnemonic, index=%s, pubkey=%#x", c.validator, validatorInfo.Pubkey)
 		}
 		validatorKeyPath := fmt.Sprintf("m/12381/3600/%d/0/0", i)
 		validatorPrivkey, err := ethutil.PrivateKeyFromSeedAndPath(seed, validatorKeyPath)
@@ -220,6 +220,24 @@ func (c *command) generateOperationFromMnemonicAndValidator(ctx context.Context)
 }
 
 func (c *command) generateOperationsFromMnemonicAndPrivateKey(ctx context.Context) error {
+	// TODO: determine if this method is only for a single account. If so we
+	// can add tests to verify that the 0'th account of the seed has the same
+	// private key as the one provided by the user.
+	/*
+		// check that the see from the mnemonic is the same as the one from the private key
+		seed_from_mnemonic, err := util.SeedFromMnemonic(c.mnemonic)
+		if err != nil {
+			return err
+		}
+		seed_from_private_key, err := util.SeedFromPrivateKey(c.privateKey)
+		if err != nil {
+			return err
+		}
+		if !bytes.Equal(seed_from_mnemonic, seed_from_private_key) {
+			return errors.New("the seed from the mnemonic and the seed from the private key are not the same")
+		}
+	*/
+
 	// Functionally identical to a simple scan, so use that.
 	return c.generateOperationsFromMnemonic(ctx)
 }

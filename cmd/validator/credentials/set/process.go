@@ -586,7 +586,7 @@ func (c *command) createSignedOperation(ctx context.Context,
 }
 
 func (c *command) parseWithdrawalAddress(_ context.Context) error {
-	// check the a withdrawal address has been provided.
+	// check that a withdrawal address has been provided.
 	if c.withdrawalAddressStr == "" {
 		return errors.New("no withdrawal address provided")
 	}

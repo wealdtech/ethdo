@@ -366,6 +366,18 @@ func (c *command) generateOperationsFromValidatorAndPrivateKey(ctx context.Conte
 }
 
 func (c *command) generateOperationsFromPrivateKey(ctx context.Context) error {
+	// verify that the user provided a private key
+	if strings.HasPrefix(c.privateKey, "0x") {
+		data, err := hex.DecodeString(strings.TrimPrefix(c.privateKey, "0x"))
+		if err != nil {
+			return errors.Wrap(err, "failed to parse account key")
+		}
+		if len(data) != 32 {
+			return errors.New("account key must be 32 bytes")
+		}
+	} else {
+		return errors.New("account key must be a hex string")
+	}
 	// Extract withdrawal account public key from supplied private key.
 	withdrawalAccount, err := util.ParseAccount(ctx, c.privateKey, nil, true)
 	if err != nil {
@@ -378,6 +390,7 @@ func (c *command) generateOperationsFromPrivateKey(ctx context.Context) error {
 	withdrawalCredentials := ethutil.SHA256(pubkey.Marshal())
 	withdrawalCredentials[0] = byte(0) // BLS_WITHDRAWAL_PREFIX
 
+	found := false
 	for _, validatorInfo := range c.chainInfo.Validators {
 		// Skip validators which withdrawal key don't match with supplied withdrawal account public key.
 		if !bytes.Equal(withdrawalCredentials, validatorInfo.WithdrawalCredentials) {
@@ -387,7 +400,13 @@ func (c *command) generateOperationsFromPrivateKey(ctx context.Context) error {
 		if err := c.generateOperationFromAccount(ctx, validatorInfo, withdrawalAccount); err != nil {
 			return err
 		}
+		found = true
 	}
+
+	if !found {
+		return fmt.Errorf("no validator found with withdrawal credentials %#x", withdrawalCredentials)
+	}
+
 	return nil
 }
 

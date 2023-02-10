@@ -257,10 +257,12 @@ func (c *command) generateOperationsFromMnemonic(ctx context.Context) error {
 	maxDistance := 1024
 	// Start scanning the validator keys.
 	lastFoundIndex := 0
+	found_validator_count := 0
 	for i := 0; ; i++ {
 		if i-lastFoundIndex > maxDistance {
-			if c.debug {
-				fmt.Fprintf(os.Stderr, "Gone %d indices without finding a validator, not scanning any further\n", maxDistance)
+			// if no validators have been found in the last 1024 indices, stop scanning
+			if found_validator_count == 0 {
+				return fmt.Errorf("failed to find validators using the provided mnemonic: searched %d indices without finding a validator", maxDistance)
 			}
 			break
 		}
@@ -272,6 +274,7 @@ func (c *command) generateOperationsFromMnemonic(ctx context.Context) error {
 		}
 		if found {
 			lastFoundIndex = i
+			found_validator_count++
 		}
 	}
 	return nil

@@ -170,8 +170,17 @@ func (c *command) generateOperationFromMnemonicAndPath(ctx context.Context) erro
 		return fmt.Errorf("path %s does not match EIP-2334 format for a validator", c.path)
 	}
 
-	if _, err := c.generateOperationFromSeedAndPath(ctx, validators, seed, validatorKeyPath); err != nil {
+	found, err := c.generateOperationFromSeedAndPath(ctx, validators, seed, validatorKeyPath)
+	if err != nil {
 		return errors.Wrap(err, "failed to generate operation from seed and path")
+	}
+	// `c.generateOperationFromSeedAndPath()` will not return errors in
+	// non-serious cases since it is called in a loop when searching a
+	// mnemonic's key space without a specific path so we need to check if a
+	// validator was not found in our case (it should be found if a path is
+	// provided) and return an error if not.
+	if !found {
+		return errors.New("No validator found with the provided path and mnemonic, please run with --debug to see more information")
 	}
 
 	return nil

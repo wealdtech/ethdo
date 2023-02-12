@@ -71,7 +71,7 @@ func TestGenerateOperationsFromPrivateKey(t *testing.T) {
 		err      string
 	}{
 		{
-			name: "WithdrawalAddressNotHex",
+			name: "WithdrawalAddressNotHexBadChar",
 			command: &command{
 				chainInfo:            chainInfo,
 				signedOperations:     make([]*capella.SignedBLSToExecutionChange, 0),
@@ -81,7 +81,7 @@ func TestGenerateOperationsFromPrivateKey(t *testing.T) {
 			err: "invalid withdrawal address: failed to obtain execution address: encoding/hex: invalid byte: U+0068 'h'",
 		},
 		{
-			name: "WithdrawalAddressNotHex",
+			name: "WithdrawalAddressNo0xPrefix",
 			command: &command{
 				chainInfo:            chainInfo,
 				signedOperations:     make([]*capella.SignedBLSToExecutionChange, 0),
@@ -121,7 +121,7 @@ func TestGenerateOperationsFromPrivateKey(t *testing.T) {
 			err: "failed to parse account key: encoding/hex: invalid byte: U+0068 'h'",
 		},
 		{
-			name: "PrivateKeyAddressNotHex",
+			name: "PrivateKeyAddressNo0xPrefix",
 			command: &command{
 				chainInfo:            chainInfo,
 				signedOperations:     make([]*capella.SignedBLSToExecutionChange, 0),
@@ -351,7 +351,7 @@ func TestGenerateOperationFromMnemonicAndPath(t *testing.T) {
 			err: "failed to generate operation from seed and path: invalid withdrawal address: withdrawal address 8c1Ff978036F2e9d7CC382Eff7B4c8c53C22ac15 does not contain a 0x prefix",
 		},
 		{
-			name: "WithdrawalAddressInvalid",
+			name: "WithdrawalAddressInvalidLength",
 			command: &command{mnemonic: "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon art",
 				path:                 "m/12381/3600/0/0/0",
 				chainInfo:            chainInfo,
@@ -370,7 +370,7 @@ func TestGenerateOperationFromMnemonicAndPath(t *testing.T) {
 			err: "failed to generate operation from seed and path: invalid withdrawal address: no withdrawal address provided",
 		},
 		{
-			name: "InvalidWithdrawalAddressNotHex",
+			name: "InvalidWithdrawalAddressNotHexBarChar",
 			command: &command{
 				mnemonic:             "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon art",
 				path:                 "m/12381/3600/0/0/0",
@@ -489,7 +489,7 @@ func TestGenerateOperationFromMnemonicAndValidator(t *testing.T) {
 			err: "invalid withdrawal address: no withdrawal address provided",
 		},
 		{
-			name: "InvalidWithdrawalAddressLen",
+			name: "InvalidWithdrawalAddressLength",
 			command: &command{
 				mnemonic:             "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon art",
 				validator:            "0",
@@ -500,7 +500,7 @@ func TestGenerateOperationFromMnemonicAndValidator(t *testing.T) {
 			err: "invalid withdrawal address: withdrawal address must be exactly 20 bytes in length",
 		},
 		{
-			name: "InvalidWithdrawalAddressPrefix",
+			name: "InvalidWithdrawalAddressNo0xPrefix",
 			command: &command{
 				mnemonic:             "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon art",
 				validator:            "0",
@@ -511,7 +511,7 @@ func TestGenerateOperationFromMnemonicAndValidator(t *testing.T) {
 			err: "invalid withdrawal address: withdrawal address 8c1Ff978036F2e9d7CC382Eff7B4c8c53C22acaa does not contain a 0x prefix",
 		},
 		{
-			name: "InvalidWithdrawalAddressNotHex",
+			name: "InvalidWithdrawalAddressNotHexBadChar",
 			command: &command{
 				mnemonic:             "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon art",
 				validator:            "0",

@@ -75,7 +75,7 @@ func (c *command) process(ctx context.Context) error {
 
 	switch state.Version {
 	case spec.DataVersionPhase0:
-		c.slot = phase0.Slot(state.Phase0.Slot)
+		c.slot = state.Phase0.Slot
 		c.incumbent = state.Phase0.ETH1Data
 		c.eth1DataVotes = state.Phase0.ETH1DataVotes
 	case spec.DataVersionAltair:

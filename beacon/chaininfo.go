@@ -177,7 +177,7 @@ func (c *ChainInfo) FetchValidatorInfo(ctx context.Context, id string) (*Validat
 		return nil, errors.New("no validator specified")
 	case strings.HasPrefix(id, "0x"):
 		// ID is a public key.
-		// check that the key is the correct length.
+		// Check that the key is the correct length.
 		if len(id) != 98 {
 			return nil, errors.New("invalid public key: incorrect length")
 		}

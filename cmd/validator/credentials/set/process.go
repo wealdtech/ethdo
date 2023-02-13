@@ -160,10 +160,6 @@ func (c *command) generateOperationFromMnemonicAndPath(ctx context.Context) erro
 	}
 
 	validatorKeyPath := c.path
-	// err if no path is provided
-	if validatorKeyPath == "" {
-		return errors.New("no validator path provided")
-	}
 
 	match := validatorPath.Match([]byte(c.path))
 	if !match {
@@ -174,13 +170,13 @@ func (c *command) generateOperationFromMnemonicAndPath(ctx context.Context) erro
 	if err != nil {
 		return errors.Wrap(err, "failed to generate operation from seed and path")
 	}
-	// `c.generateOperationFromSeedAndPath()` will not return errors in
-	// non-serious cases since it is called in a loop when searching a
-	// mnemonic's key space without a specific path so we need to check if a
+	// Function `c.generateOperationFromSeedAndPath()` will not return errors
+	// in non-serious cases since it is called in a loop when searching a
+	// mnemonic's key space without a specific path, so we need to check if a
 	// validator was not found in our case (it should be found if a path is
 	// provided) and return an error if not.
 	if !found {
-		return errors.New("No validator found with the provided path and mnemonic, please run with --debug to see more information")
+		return errors.New("no validator found with the provided path and mnemonic, please run with --debug to see more information")
 	}
 
 	return nil
@@ -206,7 +202,7 @@ func (c *command) generateOperationFromMnemonicAndValidator(ctx context.Context)
 			if c.debug {
 				fmt.Fprintf(os.Stderr, "Gone %d indices without finding the validator, not scanning any further\n", maxDistance)
 			}
-			return fmt.Errorf("failed to find validator using the provided mnemonic, index=%s, pubkey=%#x", c.validator, validatorInfo.Pubkey)
+			return fmt.Errorf("Failed to find validator using the provided mnemonic, validator=%s, pubkey=%#x.", c.validator, validatorInfo.Pubkey)
 		}
 		validatorKeyPath := fmt.Sprintf("m/12381/3600/%d/0/0", i)
 		validatorPrivkey, err := ethutil.PrivateKeyFromSeedAndPath(seed, validatorKeyPath)
@@ -252,13 +248,12 @@ func (c *command) generateOperationsFromMnemonic(ctx context.Context) error {
 	maxDistance := 1024
 	// Start scanning the validator keys.
 	lastFoundIndex := 0
-	found_validator_count := 0
+	foundValidatorCount := 0
 	for i := 0; ; i++ {
-		// if no validators have been found in the last 1024 indices, stop scanning
+		// If no validators have been found in the last maxDistance indices, stop scanning.
 		if i-lastFoundIndex > maxDistance {
-			// if no validators were found at all, return an error
-			if found_validator_count == 0 {
-
+			// If no validators were found at all, return an error.
+			if foundValidatorCount == 0 {
 				return fmt.Errorf("failed to find validators using the provided mnemonic: searched %d indices without finding a validator", maxDistance)
 			}
 			break
@@ -271,7 +266,7 @@ func (c *command) generateOperationsFromMnemonic(ctx context.Context) error {
 		}
 		if found {
 			lastFoundIndex = i
-			found_validator_count++
+			foundValidatorCount++
 		}
 	}
 	return nil
@@ -350,7 +345,7 @@ func (c *command) generateOperationsFromValidatorAndPrivateKey(ctx context.Conte
 }
 
 func (c *command) generateOperationsFromPrivateKey(ctx context.Context) error {
-	// verify that the user provided a private key
+	// Verify that the user provided a private key.
 	if strings.HasPrefix(c.privateKey, "0x") {
 		data, err := hex.DecodeString(strings.TrimPrefix(c.privateKey, "0x"))
 		if err != nil {
@@ -471,7 +466,7 @@ func (c *command) generateOperationFromSeedAndPath(ctx context.Context,
 	validator, exists := validators[validatorPubkey]
 	if !exists {
 		if c.debug {
-			fmt.Fprintf(os.Stderr, "No validator found with public key %s at path %s\n", validatorPubkey, path)
+			fmt.Fprintf(os.Stderr, "no validator found with public key %s at path %s\n", validatorPubkey, path)
 		}
 		return false, nil
 	}
@@ -589,11 +584,11 @@ func (c *command) createSignedOperation(ctx context.Context,
 }
 
 func (c *command) parseWithdrawalAddress(_ context.Context) error {
-	// check that a withdrawal address has been provided.
+	// Check that a withdrawal address has been provided.
 	if c.withdrawalAddressStr == "" {
 		return errors.New("no withdrawal address provided")
 	}
-	// check that the withdrawal address contains a 0x prefix.
+	// Check that the withdrawal address contains a 0x prefix.
 	if !strings.HasPrefix(c.withdrawalAddressStr, "0x") {
 		return fmt.Errorf("withdrawal address %s does not contain a 0x prefix", c.withdrawalAddressStr)
 	}

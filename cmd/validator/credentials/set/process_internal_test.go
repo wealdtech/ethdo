@@ -320,16 +320,6 @@ func TestGenerateOperationFromMnemonicAndPath(t *testing.T) {
 			err: "path m/12381/3600/0/0 does not match EIP-2334 format for a validator",
 		},
 		{
-			name: "NoPathProvided",
-			command: &command{
-				mnemonic:             "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon art",
-				chainInfo:            chainInfo,
-				signedOperations:     make([]*capella.SignedBLSToExecutionChange, 0),
-				withdrawalAddressStr: "0x8c1Ff978036F2e9d7CC382Eff7B4c8c53C22ac15",
-			},
-			err: "no validator path provided",
-		},
-		{
 			name: "PathInvlaidIndexNot2334Format",
 			command: &command{
 				mnemonic:             "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon art",
@@ -389,7 +379,7 @@ func TestGenerateOperationFromMnemonicAndPath(t *testing.T) {
 				signedOperations:     make([]*capella.SignedBLSToExecutionChange, 0),
 				withdrawalAddressStr: "0xrc1Ff978036F2e9d7CC382Eff7B4c8c53C22acaa",
 			},
-			err: "No validator found with the provided path and mnemonic, please run with --debug to see more information",
+			err: "no validator found with the provided path and mnemonic, please run with --debug to see more information",
 		},
 		{
 			name: "Good",

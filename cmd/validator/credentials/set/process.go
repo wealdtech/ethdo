@@ -160,7 +160,6 @@ func (c *command) generateOperationFromMnemonicAndPath(ctx context.Context) erro
 	}
 
 	validatorKeyPath := c.path
-
 	match := validatorPath.Match([]byte(c.path))
 	if !match {
 		return fmt.Errorf("path %s does not match EIP-2334 format for a validator", c.path)
@@ -202,7 +201,7 @@ func (c *command) generateOperationFromMnemonicAndValidator(ctx context.Context)
 			if c.debug {
 				fmt.Fprintf(os.Stderr, "Gone %d indices without finding the validator, not scanning any further\n", maxDistance)
 			}
-			return fmt.Errorf("Failed to find validator using the provided mnemonic, validator=%s, pubkey=%#x.", c.validator, validatorInfo.Pubkey)
+			return fmt.Errorf("failed to find validator using the provided mnemonic, validator=%s, pubkey=%#x.", c.validator, validatorInfo.Pubkey)
 		}
 		validatorKeyPath := fmt.Sprintf("m/12381/3600/%d/0/0", i)
 		validatorPrivkey, err := ethutil.PrivateKeyFromSeedAndPath(seed, validatorKeyPath)
@@ -381,11 +380,9 @@ func (c *command) generateOperationsFromPrivateKey(ctx context.Context) error {
 		}
 		found = true
 	}
-
 	if !found {
 		return fmt.Errorf("no validator found with withdrawal credentials %#x", withdrawalCredentials)
 	}
-
 	return nil
 }
 

@@ -520,7 +520,7 @@ func TestGenerateOperationFromMnemonicAndValidator(t *testing.T) {
 				signedOperations:     make([]*capella.SignedBLSToExecutionChange, 0),
 				withdrawalAddressStr: "0x8c1Ff978036F2e9d7CC382Eff7B4c8c53C22ac15",
 			},
-			err: "failed to find validator using the provided mnemonic, index=1, pubkey=0xb3d89e2f29c712c6a9f8e5a269b97617c4a94dd6f6662ab3b07ce9e5434573f15b5c988cd14bbd5804f77156a8af1cfa",
+			err: "failed to find validator using the provided mnemonic, validator=1, pubkey=0xb3d89e2f29c712c6a9f8e5a269b97617c4a94dd6f6662ab3b07ce9e5434573f15b5c988cd14bbd5804f77156a8af1cfa",
 		},
 		{
 			name: "UnknownValidatorPubKey",

@@ -201,7 +201,7 @@ func (c *command) generateOperationFromMnemonicAndValidator(ctx context.Context)
 			if c.debug {
 				fmt.Fprintf(os.Stderr, "Gone %d indices without finding the validator, not scanning any further\n", maxDistance)
 			}
-			return fmt.Errorf("failed to find validator using the provided mnemonic, validator=%s, pubkey=%#x.", c.validator, validatorInfo.Pubkey)
+			return fmt.Errorf("failed to find validator using the provided mnemonic, validator=%s, pubkey=%#x", c.validator, validatorInfo.Pubkey)
 		}
 		validatorKeyPath := fmt.Sprintf("m/12381/3600/%d/0/0", i)
 		validatorPrivkey, err := ethutil.PrivateKeyFromSeedAndPath(seed, validatorKeyPath)

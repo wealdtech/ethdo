@@ -165,8 +165,17 @@ func (c *command) generateOperationFromMnemonicAndPath(ctx context.Context) erro
 		return fmt.Errorf("path %s does not match EIP-2334 format for a validator", c.path)
 	}
 
-	if _, err := c.generateOperationFromSeedAndPath(ctx, validators, seed, validatorKeyPath); err != nil {
+	found, err := c.generateOperationFromSeedAndPath(ctx, validators, seed, validatorKeyPath)
+	if err != nil {
 		return errors.Wrap(err, "failed to generate operation from seed and path")
+	}
+	// Function `c.generateOperationFromSeedAndPath()` will not return errors
+	// in non-serious cases since it is called in a loop when searching a
+	// mnemonic's key space without a specific path, so we need to check if a
+	// validator was not found in our case (it should be found if a path is
+	// provided) and return an error if not.
+	if !found {
+		return errors.New("no validator found with the provided path and mnemonic, please run with --debug to see more information")
 	}
 
 	return nil
@@ -192,7 +201,7 @@ func (c *command) generateOperationFromMnemonicAndValidator(ctx context.Context)
 			if c.debug {
 				fmt.Fprintf(os.Stderr, "Gone %d indices without finding the validator, not scanning any further\n", maxDistance)
 			}
-			break
+			return fmt.Errorf("failed to find validator using the provided mnemonic, validator=%s, pubkey=%#x", c.validator, validatorInfo.Pubkey)
 		}
 		validatorKeyPath := fmt.Sprintf("m/12381/3600/%d/0/0", i)
 		validatorPrivkey, err := ethutil.PrivateKeyFromSeedAndPath(seed, validatorKeyPath)
@@ -238,10 +247,13 @@ func (c *command) generateOperationsFromMnemonic(ctx context.Context) error {
 	maxDistance := 1024
 	// Start scanning the validator keys.
 	lastFoundIndex := 0
+	foundValidatorCount := 0
 	for i := 0; ; i++ {
+		// If no validators have been found in the last maxDistance indices, stop scanning.
 		if i-lastFoundIndex > maxDistance {
-			if c.debug {
-				fmt.Fprintf(os.Stderr, "Gone %d indices without finding a validator, not scanning any further\n", maxDistance)
+			// If no validators were found at all, return an error.
+			if foundValidatorCount == 0 {
+				return fmt.Errorf("failed to find validators using the provided mnemonic: searched %d indices without finding a validator", maxDistance)
 			}
 			break
 		}
@@ -253,6 +265,7 @@ func (c *command) generateOperationsFromMnemonic(ctx context.Context) error {
 		}
 		if found {
 			lastFoundIndex = i
+			foundValidatorCount++
 		}
 	}
 	return nil
@@ -331,6 +344,18 @@ func (c *command) generateOperationsFromValidatorAndPrivateKey(ctx context.Conte
 }
 
 func (c *command) generateOperationsFromPrivateKey(ctx context.Context) error {
+	// Verify that the user provided a private key.
+	if strings.HasPrefix(c.privateKey, "0x") {
+		data, err := hex.DecodeString(strings.TrimPrefix(c.privateKey, "0x"))
+		if err != nil {
+			return errors.Wrap(err, "failed to parse account key")
+		}
+		if len(data) != 32 {
+			return errors.New("account key must be 32 bytes")
+		}
+	} else {
+		return errors.New("account key must be a hex string")
+	}
 	// Extract withdrawal account public key from supplied private key.
 	withdrawalAccount, err := util.ParseAccount(ctx, c.privateKey, nil, true)
 	if err != nil {
@@ -343,6 +368,7 @@ func (c *command) generateOperationsFromPrivateKey(ctx context.Context) error {
 	withdrawalCredentials := ethutil.SHA256(pubkey.Marshal())
 	withdrawalCredentials[0] = byte(0) // BLS_WITHDRAWAL_PREFIX
 
+	found := false
 	for _, validatorInfo := range c.chainInfo.Validators {
 		// Skip validators which withdrawal key don't match with supplied withdrawal account public key.
 		if !bytes.Equal(withdrawalCredentials, validatorInfo.WithdrawalCredentials) {
@@ -352,6 +378,10 @@ func (c *command) generateOperationsFromPrivateKey(ctx context.Context) error {
 		if err := c.generateOperationFromAccount(ctx, validatorInfo, withdrawalAccount); err != nil {
 			return err
 		}
+		found = true
+	}
+	if !found {
+		return fmt.Errorf("no validator found with withdrawal credentials %#x", withdrawalCredentials)
 	}
 	return nil
 }
@@ -433,7 +463,7 @@ func (c *command) generateOperationFromSeedAndPath(ctx context.Context,
 	validator, exists := validators[validatorPubkey]
 	if !exists {
 		if c.debug {
-			fmt.Fprintf(os.Stderr, "No validator found with public key %s at path %s\n", validatorPubkey, path)
+			fmt.Fprintf(os.Stderr, "no validator found with public key %s at path %s\n", validatorPubkey, path)
 		}
 		return false, nil
 	}
@@ -551,6 +581,14 @@ func (c *command) createSignedOperation(ctx context.Context,
 }
 
 func (c *command) parseWithdrawalAddress(_ context.Context) error {
+	// Check that a withdrawal address has been provided.
+	if c.withdrawalAddressStr == "" {
+		return errors.New("no withdrawal address provided")
+	}
+	// Check that the withdrawal address contains a 0x prefix.
+	if !strings.HasPrefix(c.withdrawalAddressStr, "0x") {
+		return fmt.Errorf("withdrawal address %s does not contain a 0x prefix", c.withdrawalAddressStr)
+	}
 	withdrawalAddressBytes, err := hex.DecodeString(strings.TrimPrefix(c.withdrawalAddressStr, "0x"))
 	if err != nil {
 		return errors.Wrap(err, "failed to obtain execution address")

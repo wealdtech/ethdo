@@ -34,7 +34,6 @@ type command struct {
 	json    bool
 
 	// Input.
-	account               string
 	passphrases           []string
 	mnemonic              string
 	path                  string
@@ -73,7 +72,6 @@ func newCommand(_ context.Context) (*command, error) {
 		connection:               viper.GetString("connection"),
 		allowInsecureConnections: viper.GetBool("allow-insecure-connections"),
 		prepareOffline:           viper.GetBool("prepare-offline"),
-		account:                  viper.GetString("account"),
 		passphrases:              util.GetPassphrases(),
 		mnemonic:                 viper.GetString("mnemonic"),
 		path:                     viper.GetString("path"),
@@ -82,6 +80,11 @@ func newCommand(_ context.Context) (*command, error) {
 		validator:                viper.GetString("validator"),
 		forkVersion:              viper.GetString("fork-version"),
 		genesisValidatorsRoot:    viper.GetString("genesis-validators-root"),
+	}
+
+	// Account and validator are synonymous.
+	if c.validator == "" {
+		c.validator = viper.GetString("account")
 	}
 
 	// Timeout is required.

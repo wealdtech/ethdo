@@ -88,7 +88,7 @@ func (c *command) process(ctx context.Context) error {
 }
 
 func (c *command) obtainOperation(ctx context.Context) error {
-	if (c.mnemonic == "" || c.path == "") && c.privateKey == "" && c.validator == "" {
+	if c.account == "" && (c.mnemonic == "" || c.path == "") && c.privateKey == "" && c.validator == "" {
 		// No input information; fetch the operation from a file.
 		err := c.obtainOperationFromFileOrInput(ctx)
 		if err == nil {
@@ -112,6 +112,10 @@ func (c *command) obtainOperation(ctx context.Context) error {
 		default:
 			return errors.New("mnemonic must be supplied with either a path or validator")
 		}
+	}
+
+	if c.account != "" {
+		return c.generateOperationFromAccountOnly(ctx)
 	}
 
 	if c.privateKey != "" {
@@ -189,6 +193,29 @@ func (c *command) generateOperationFromMnemonicAndValidator(ctx context.Context)
 			}
 			break
 		}
+	}
+
+	return nil
+}
+
+func (c *command) generateOperationFromAccountOnly(ctx context.Context) error {
+	validatorAccount, err := util.ParseAccount(ctx, c.account, c.passphrases, true)
+	if err != nil {
+		return err
+	}
+
+	validatorPubKey, err := util.BestPublicKey(validatorAccount)
+	if err != nil {
+		return err
+	}
+
+	validatorInfo, err := c.chainInfo.FetchValidatorInfo(ctx, fmt.Sprintf("%#x", validatorPubKey.Marshal()))
+	if err != nil {
+		return err
+	}
+
+	if err := c.generateOperationFromAccount(ctx, validatorInfo, validatorAccount, c.chainInfo.Epoch); err != nil {
+		return err
 	}
 
 	return nil

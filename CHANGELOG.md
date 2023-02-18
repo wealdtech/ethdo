@@ -1,5 +1,6 @@
 dev:
   - generate error message if "validator credentials set" process fails to generate any credentials
+  - allow import of accounts with null name field in their keystore
 
 1.28.0:
   - support additional mnemonic word list languages

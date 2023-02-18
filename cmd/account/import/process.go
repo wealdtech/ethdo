@@ -15,6 +15,7 @@ package accountimport
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 
 	"github.com/pkg/errors"
@@ -66,7 +67,7 @@ func processFromKey(ctx context.Context, data *dataIn) (*dataOut, error) {
 	}
 	account, err := importer.ImportAccount(ctx, data.accountName, data.key, []byte(data.passphrase))
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to import account")
+		return nil, errors.Wrap(err, "failed to import wallet")
 	}
 	results.account = account
 
@@ -79,15 +80,25 @@ func processFromKeystore(ctx context.Context, data *dataIn) (*dataOut, error) {
 	encryptor := keystorev4.New()
 
 	// Need to add a couple of fields to the keystore to make it compliant.
-	keystoreData := fmt.Sprintf(`{"name":"Import","encryptor":"keystore",%s`, string(data.keystore[1:]))
-	walletData := fmt.Sprintf(`{"wallet":{"name":"ImportTest","type":"non-deterministic","uuid":"e1526407-1dc7-4f3f-9d05-ab696f40707c","version":1},"accounts":[%s]}`, keystoreData)
+	var keystore map[string]any
+	if err := json.Unmarshal(data.keystore, &keystore); err != nil {
+		return nil, errors.Wrap(err, "failed to unmarshal keystore")
+	}
+	keystore["name"] = data.accountName
+	keystore["encryptor"] = "keystore"
+	keystoreData, err := json.Marshal(keystore)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to marshal keystore")
+	}
+
+	walletData := fmt.Sprintf(`{"wallet":{"name":"Import","type":"non-deterministic","uuid":"e1526407-1dc7-4f3f-9d05-ab696f40707c","version":1},"accounts":[%s]}`, keystoreData)
 	encryptedData, err := ecodec.Encrypt([]byte(walletData), data.keystorePassphrase)
 	if err != nil {
 		return nil, err
 	}
 	wallet, err := nd.Import(ctx, encryptedData, data.keystorePassphrase, store, encryptor)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to import wallet")
+		return nil, errors.Wrap(err, "failed to import account")
 	}
 
 	account := <-wallet.Accounts(ctx)

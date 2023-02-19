@@ -690,7 +690,11 @@ func outputCapellaBlockExecutionPayload(ctx context.Context,
 		res.WriteString("  State root: ")
 		res.WriteString(fmt.Sprintf("%#x\n", payload.StateRoot))
 		res.WriteString("  Extra data: ")
-		res.WriteString(fmt.Sprintf("%#x\n", payload.ExtraData))
+		if utf8.Valid(payload.ExtraData) {
+			res.WriteString(fmt.Sprintf("%s\n", string(payload.ExtraData)))
+		} else {
+			res.WriteString(fmt.Sprintf("%#x\n", payload.ExtraData))
+		}
 		res.WriteString("  Logs bloom: ")
 		res.WriteString(fmt.Sprintf("%#x\n", payload.LogsBloom))
 		res.WriteString("  Transactions: ")

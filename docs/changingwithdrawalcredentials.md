@@ -59,26 +59,32 @@ Here the copy of `ethdo` with access to private keys is on an offline computer, 
 ## Preparation
 Regardless of the method selected, preparation must take place on the online computer to ensure that `ethdo` can access your consensus node.  `ethdo` will attempt to find a local consensus node automatically, but if not then an explicit connection value will be required.  To find out if `ethdo` has access to the consensus node run:
 
-```
-ethdo node info --verbose
+```sh
+ethdo node info
 ```
 
 The result should be something similar to the following:
 
 ```
-Version: teku/v22.9.1/linux-x86_64/-privatebuild-openjdk64bitservervm-java-14
 Syncing: false
 ```
 
-It is important to confirm that the "Syncing" value is "false".  If this is "true" it means that the node is currently syncing, and you will need to wait for the process to finish before proceeding.
+Alternatively, the result may look like this:
 
-If this command instead returns an error you will need to add an explicit connection string.  For example, if your consensus node is serving its REST API on port 12345 then you should add `--connection=http://localhost:12345` to all `ethdo` commands in this process, for example:
+```
+No connection supplied; using mainnet public access endpoint
+Syncing: false
+```
+
+which means that a local consensus node was not accessed and instead a public endpoint specifically assigned to handle these operations was used instead.  If you do have a local consensus node but see this message it means that the local node could not be accessed, usually because it is running on a non-standard port.  If this is the case for your configuration, you need to let `ethdo` know where the consensus node's REST API is.  For example, if your consensus node is serving its REST API on port 12345 then you should add `--connection=http://localhost:12345` to all `ethdo` commands in this process, for example:
 
 ```sh
-ethdo --connection=http://localhost:12345 node info --verbose
+ethdo --connection=http://localhost:12345 node info
 ```
 
 Note that some consensus nodes may require configuration to serve their REST API.  Please refer to the documentation of your specific consensus node to enable this.
+
+Regardless of your method used above, it is important to confirm that the "Syncing" value is "false".  If this is "true" it means that the node is currently syncing, and you will need to wait for the process to finish before proceeding.
 
 Once the preparation is complete you should select either basic or advanced operation, depending on your requirements.
 

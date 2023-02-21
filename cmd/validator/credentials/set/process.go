@@ -725,6 +725,9 @@ func (c *command) setup(ctx context.Context) error {
 		if err != nil {
 			return err
 		}
+		if !c.quiet {
+			fmt.Fprintf(os.Stderr, "No connection supplied; using mainnet public access endpoint\n")
+		}
 	}
 
 	// Set up chaintime.

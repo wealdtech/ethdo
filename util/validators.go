@@ -15,7 +15,6 @@ package util
 
 import (
 	"context"
-	"encoding/hex"
 	"fmt"
 	"strconv"
 	"strings"
@@ -77,28 +76,20 @@ func ParseValidator(ctx context.Context,
 ) {
 	var validators map[phase0.ValidatorIndex]*apiv1.Validator
 
-	switch {
-	case strings.HasPrefix(validatorStr, "0x"):
-		// A public key.
-		data, err := hex.DecodeString(strings.TrimPrefix(validatorStr, "0x"))
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to parse validator public key")
-		}
-		pubKey := phase0.BLSPubKey{}
-		copy(pubKey[:], data)
-		validators, err = validatorsProvider.ValidatorsByPubKey(ctx,
-			stateID,
-			[]phase0.BLSPubKey{pubKey},
-		)
+	// Could be a simple index.
+	index, err := strconv.ParseUint(validatorStr, 10, 64)
+	if err == nil {
+		validators, err = validatorsProvider.Validators(ctx, stateID, []phase0.ValidatorIndex{phase0.ValidatorIndex(index)})
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to obtain validator information")
 		}
-	case strings.Contains(validatorStr, "/"):
-		// An account.
-		_, account, err := WalletAndAccountFromPath(ctx, validatorStr)
+	} else {
+		// Some sort of specifier.
+		account, err := ParseAccount(ctx, validatorStr, nil, false)
 		if err != nil {
-			return nil, errors.Wrap(err, "unable to obtain account")
+			return nil, err
 		}
+
 		accPubKey, err := BestPublicKey(account)
 		if err != nil {
 			return nil, errors.Wrap(err, "unable to obtain public key for account")
@@ -112,18 +103,9 @@ func ParseValidator(ctx context.Context,
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to obtain validator information")
 		}
-	default:
-		// An index.
-		index, err := strconv.ParseUint(validatorStr, 10, 64)
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to parse validator index")
-		}
-		validators, err = validatorsProvider.Validators(ctx, stateID, []phase0.ValidatorIndex{phase0.ValidatorIndex(index)})
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to obtain validator information")
-		}
 	}
-	// Validator is first entry in the map.
+
+	// Validator is first and only entry in the map.
 	for _, validator := range validators {
 		return validator, nil
 	}

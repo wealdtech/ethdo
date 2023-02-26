@@ -83,6 +83,19 @@ func TestParseAccount(t *testing.T) {
 			unlock:           true,
 			expectedUnlocked: true,
 		},
+		{
+			name:           "Keystore",
+			accountStr:     `{"crypto": {"kdf": {"function": "scrypt", "params": {"dklen": 32, "n": 262144, "r": 8, "p": 1, "salt": "d27e392342918fa1912dadb171d90683c81146ba7ad36c0c22936d7fe3528300"}, "message": ""}, "checksum": {"function": "sha256", "params": {}, "message": "6f60216a8eda37426d3103f9fa608fe474944c4e287e09f416aad6bfe3983283"}, "cipher": {"function": "aes-128-ctr", "params": {"iv": "8b542e5a71fbde321407ba3d1ae098f6"}, "message": "a6bb744433adf9b7474b3793a09b71b451be1d595d031dba39adaaf6b9d6a67a"}}, "description": "", "pubkey": "91a4e10c877569f930e8800b745d4cb8fd03fd52dc17e87b49a55b548813275145e77ae01d56423becb5572f2632be5a", "path": "m/12381/3600/0/0/0", "uuid": "7858f402-cb53-4898-9193-b38bbf8fec12", "version": 4}`,
+			expectedPubkey: "0x91a4e10c877569f930e8800b745d4cb8fd03fd52dc17e87b49a55b548813275145e77ae01d56423becb5572f2632be5a",
+		},
+		{
+			name:             "KeystoreUnlocked",
+			accountStr:       `{"crypto": {"kdf": {"function": "scrypt", "params": {"dklen": 32, "n": 262144, "r": 8, "p": 1, "salt": "d27e392342918fa1912dadb171d90683c81146ba7ad36c0c22936d7fe3528300"}, "message": ""}, "checksum": {"function": "sha256", "params": {}, "message": "6f60216a8eda37426d3103f9fa608fe474944c4e287e09f416aad6bfe3983283"}, "cipher": {"function": "aes-128-ctr", "params": {"iv": "8b542e5a71fbde321407ba3d1ae098f6"}, "message": "a6bb744433adf9b7474b3793a09b71b451be1d595d031dba39adaaf6b9d6a67a"}}, "description": "", "pubkey": "91a4e10c877569f930e8800b745d4cb8fd03fd52dc17e87b49a55b548813275145e77ae01d56423becb5572f2632be5a", "path": "m/12381/3600/0/0/0", "uuid": "7858f402-cb53-4898-9193-b38bbf8fec12", "version": 4}`,
+			supplementary:    []string{"testtest"},
+			expectedPubkey:   "0x91a4e10c877569f930e8800b745d4cb8fd03fd52dc17e87b49a55b548813275145e77ae01d56423becb5572f2632be5a",
+			unlock:           true,
+			expectedUnlocked: true,
+		},
 	}
 
 	for _, test := range tests {

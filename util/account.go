@@ -1,4 +1,3 @@
-// Copyright © 2020, 2022 Weald Technology Trading
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -16,11 +15,17 @@ package util
 import (
 	"context"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/pkg/errors"
+	"github.com/wealdtech/go-ecodec"
 	util "github.com/wealdtech/go-eth2-util"
+	keystorev4 "github.com/wealdtech/go-eth2-wallet-encryptor-keystorev4"
+	nd "github.com/wealdtech/go-eth2-wallet-nd/v2"
+	scratch "github.com/wealdtech/go-eth2-wallet-store-scratch"
 	e2wtypes "github.com/wealdtech/go-eth2-wallet-types/v2"
 )
 
@@ -33,79 +38,204 @@ func ParseAccount(ctx context.Context,
 	e2wtypes.Account,
 	error,
 ) {
-	if accountStr == "" {
+	switch {
+	case accountStr == "":
 		return nil, errors.New("no account specified")
+	case strings.HasPrefix(accountStr, "0x"):
+		// A key.
+		return parseAccountFromKey(ctx, accountStr, unlock)
+	case strings.HasPrefix(accountStr, "{"):
+		// This could be a keystore.
+		return parseAccountFromKeystore(ctx, accountStr, supplementary, unlock)
+	case strings.Contains(accountStr, "/"):
+		// An account specifier.
+		account, err := parseAccountFromSpecifier(ctx, accountStr, supplementary, unlock)
+		if err != nil {
+			// It is possible that this is actually a path to a keystore, so try that instead.
+			if _, err = os.Stat(accountStr); err == nil {
+				account, err = parseAccountFromKeystorePath(ctx, accountStr, supplementary, unlock)
+			}
+		}
+		if err != nil {
+			return nil, err
+		}
+		return account, nil
+	case strings.Contains(accountStr, " "):
+		// A mnemonic.
+		return parseAccountFromMnemonic(ctx, accountStr, supplementary, unlock)
+	default:
+		// This could be the path to a keystore.
+		return nil, fmt.Errorf("unknown account specifier %s", accountStr)
 	}
+}
 
+func parseAccountFromKey(ctx context.Context,
+	accountStr string,
+	unlock bool,
+) (
+	e2wtypes.Account,
+	error,
+) {
 	var account e2wtypes.Account
 	var err error
 
-	switch {
-	case strings.HasPrefix(accountStr, "0x"):
-		// A key.  Could be public or private.
-		data, err := hex.DecodeString(strings.TrimPrefix(accountStr, "0x"))
+	// A key.  Could be public or private.
+	data, err := hex.DecodeString(strings.TrimPrefix(accountStr, "0x"))
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to parse account key")
+	}
+	switch len(data) {
+	case 48:
+		// Public key.
+		account, err = newScratchAccountFromPubKey(data)
 		if err != nil {
-			return nil, errors.Wrap(err, "failed to parse account key")
-		}
-		switch len(data) {
-		case 48:
-			// Public key.
-			account, err = newScratchAccountFromPubKey(data)
-			if err != nil {
-				return nil, errors.Wrap(err, "failed to create account from public key")
-			}
-			if unlock {
-				return nil, errors.New("cannot unlock an account specified by its public key")
-			}
-		case 32:
-			// Private key.
-			account, err = newScratchAccountFromPrivKey(data)
-			if err != nil {
-				return nil, errors.Wrap(err, "failed to create account from private key")
-			}
-			if unlock {
-				_, err = UnlockAccount(ctx, account, nil)
-				if err != nil {
-					return nil, err
-				}
-			}
-		default:
-			return nil, fmt.Errorf("key of length %d neither public nor private key", len(data))
-		}
-	case strings.Contains(accountStr, "/"):
-		// An account.
-		_, account, err = WalletAndAccountFromPath(ctx, accountStr)
-		if err != nil {
-			return nil, errors.Wrap(err, "unable to obtain account")
+			return nil, errors.Wrap(err, "failed to create account from public key")
 		}
 		if unlock {
-			// Supplementary will be the unlock passphrase(s).
-			_, err = UnlockAccount(ctx, account, supplementary)
+			return nil, errors.New("cannot unlock an account specified by its public key")
+		}
+	case 32:
+		// Private key.
+		account, err = newScratchAccountFromPrivKey(data)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to create account from private key")
+		}
+		if unlock {
+			_, err = UnlockAccount(ctx, account, nil)
 			if err != nil {
 				return nil, err
 			}
 		}
-	case strings.Contains(accountStr, " "):
-		// A mnemonic.
-		// Supplementary will be the path.
-		if len(supplementary) == 0 {
-			return nil, errors.New("missing derivation path")
-		}
-		account, err = accountFromMnemonicAndPath(accountStr, supplementary[0])
-		if err != nil {
-			return nil, err
-		}
-		if unlock {
-			err = account.(e2wtypes.AccountLocker).Unlock(ctx, nil)
-			if err != nil {
-				return nil, errors.Wrap(err, "failed to unlock account")
-			}
-		}
 	default:
-		return nil, fmt.Errorf("unknown account specifier %s", accountStr)
+		return nil, fmt.Errorf("key of length %d neither public nor private key", len(data))
 	}
 
 	return account, nil
+}
+
+func parseAccountFromSpecifier(ctx context.Context,
+	accountStr string,
+	supplementary []string,
+	unlock bool,
+) (
+	e2wtypes.Account,
+	error,
+) {
+	var account e2wtypes.Account
+	var err error
+
+	_, account, err = WalletAndAccountFromPath(ctx, accountStr)
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to obtain account")
+	}
+	if unlock {
+		// Supplementary will be the unlock passphrase(s).
+		_, err = UnlockAccount(ctx, account, supplementary)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return account, nil
+}
+
+func parseAccountFromMnemonic(ctx context.Context,
+	accountStr string,
+	supplementary []string,
+	unlock bool,
+) (
+	e2wtypes.Account,
+	error,
+) {
+	var account e2wtypes.Account
+	var err error
+
+	if len(supplementary) == 0 {
+		return nil, errors.New("missing derivation path")
+	}
+	account, err = accountFromMnemonicAndPath(accountStr, supplementary[0])
+	if err != nil {
+		return nil, err
+	}
+	if unlock {
+		err = account.(e2wtypes.AccountLocker).Unlock(ctx, nil)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to unlock account")
+		}
+	}
+
+	return account, nil
+}
+
+func parseAccountFromKeystore(ctx context.Context,
+	accountStr string,
+	supplementary []string,
+	unlock bool,
+) (
+	e2wtypes.Account,
+	error,
+) {
+	var account e2wtypes.Account
+	var err error
+
+	// Need to import the keystore in to a temporary wallet to fetch the private key.
+	store := scratch.New()
+	encryptor := keystorev4.New()
+
+	// Need to add a couple of fields to the keystore to make it compliant.
+	var keystore map[string]any
+	if err := json.Unmarshal([]byte(accountStr), &keystore); err != nil {
+		return nil, errors.Wrap(err, "failed to unmarshal keystore")
+	}
+	keystore["name"] = "Import"
+	keystore["encryptor"] = "keystore"
+	keystoreData, err := json.Marshal(keystore)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to marshal keystore")
+	}
+
+	walletData := fmt.Sprintf(`{"wallet":{"name":"Import","type":"non-deterministic","uuid":"e1526407-1dc7-4f3f-9d05-ab696f40707c","version":1},"accounts":[%s]}`, keystoreData)
+	encryptedData, err := ecodec.Encrypt([]byte(walletData), []byte(`password`))
+	if err != nil {
+		return nil, err
+	}
+	wallet, err := nd.Import(ctx, encryptedData, []byte(`password`), store, encryptor)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to import account")
+	}
+
+	account = <-wallet.Accounts(ctx)
+	if unlock {
+		if locker, isLocker := account.(e2wtypes.AccountLocker); isLocker {
+			unlocked := false
+			for _, passphrase := range supplementary {
+				if err = locker.Unlock(ctx, []byte(passphrase)); err == nil {
+					unlocked = true
+					break
+				}
+			}
+			if !unlocked {
+				return nil, errors.New("failed to unlock account")
+			}
+		}
+	}
+
+	return account, nil
+}
+
+func parseAccountFromKeystorePath(ctx context.Context,
+	accountStr string,
+	supplementary []string,
+	unlock bool,
+) (
+	e2wtypes.Account,
+	error,
+) {
+	data, err := os.ReadFile(accountStr)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to read keystore file")
+	}
+	return parseAccountFromKeystore(ctx, string(data), supplementary, unlock)
 }
 
 func accountFromMnemonicAndPath(mnemonic string, path string) (e2wtypes.Account, error) {

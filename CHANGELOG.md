@@ -1,3 +1,6 @@
+dev:
+  - allow validator exit to use a keystore as its validator parameter
+
 1.28.2:
   - fix bix stopping validator exit creation by direct validator specification
 

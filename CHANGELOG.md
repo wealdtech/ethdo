@@ -1,3 +1,6 @@
+1.28.2:
+  - fix bix stopping validator exit creation by direct validator specification
+
 1.28.1:
   - generate error message if "validator credentials set" process fails to generate any credentials
   - allow import of accounts with null name field in their keystore

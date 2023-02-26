@@ -207,7 +207,7 @@ func (c *command) generateOperationFromPrivateKey(ctx context.Context) error {
 }
 
 func (c *command) generateOperationFromValidator(ctx context.Context) error {
-	validatorAccount, err := util.ParseAccount(ctx, c.validator, nil, true)
+	validatorAccount, err := util.ParseAccount(ctx, c.validator, c.passphrases, true)
 	if err != nil {
 		return errors.Wrap(err, "failed to parse validator account")
 	}

@@ -59,6 +59,10 @@ jobs:
 
       - name: Compile
         run: |
+          # Do not attempt to upgrade grub, as it errors on github (24th Feb 2023)
+          sudo apt-mark hold grub-efi-amd64-signed grub-efi-amd64-bin
+          sudo apt-get update
+          sudo apt-get upgrade
           go build -tags osusergo,netgo -v -ldflags="-X github.com/${{ github.repository }}/cmd.ReleaseVersion=${{ needs.env_vars.outputs.release_version }} -extldflags -static"
           tar zcf ${{ needs.env_vars.outputs.binary }}-${{ needs.env_vars.outputs.release_version }}-linux-amd64.tar.gz ${{ needs.env_vars.outputs.binary }}
           sha256sum ${{ needs.env_vars.outputs.binary }}-${{ needs.env_vars.outputs.release_version }}-linux-amd64.tar.gz | sed -e 's/ .*//' >${{ needs.env_vars.outputs.binary }}-${{ needs.env_vars.outputs.release_version }}-linux-amd64.tar.gz.sha256
@@ -84,8 +88,6 @@ jobs:
 
       - name: Cross compile (ARM64)
         run: |
-          sudo apt-get update
-          sudo apt-get upgrade
           sudo apt install -y gcc-aarch64-linux-gnu libstdc++-11-pic-arm64-cross
           CGO_ENABLED=1 CC=aarch64-linux-gnu-gcc GOOS=linux GOARCH=arm64 go build -tags osusergo,netgo -v -ldflags="-X github.com/${{ github.repository }}/cmd.ReleaseVersion=${{ needs.env_vars.outputs.release_version }} -extldflags -static"
           tar zcf ${{ needs.env_vars.outputs.binary }}-${{ needs.env_vars.outputs.release_version }}-linux-arm64.tar.gz ${{ needs.env_vars.outputs.binary }}

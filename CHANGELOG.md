@@ -1,4 +1,4 @@
-dev:
+1.28.4:
   - allow validator exit to use a keystore as its validator parameter
 
 1.28.2:

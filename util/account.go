@@ -65,7 +65,14 @@ func ParseAccount(ctx context.Context,
 		return parseAccountFromMnemonic(ctx, accountStr, supplementary, unlock)
 	default:
 		// This could be the path to a keystore.
-		return nil, fmt.Errorf("unknown account specifier %s", accountStr)
+		if _, err := os.Stat(accountStr); err != nil {
+			return nil, fmt.Errorf("unknown account specifier %s", accountStr)
+		}
+		account, err := parseAccountFromKeystorePath(ctx, accountStr, supplementary, unlock)
+		if err != nil {
+			return nil, err
+		}
+		return account, nil
 	}
 }
 

@@ -329,7 +329,16 @@ func (c *command) generateOperationsFromAccountAndPrivateKey(ctx context.Context
 }
 
 func (c *command) generateOperationsFromValidatorAndPrivateKey(ctx context.Context) error {
-	validatorInfo, err := c.chainInfo.FetchValidatorInfo(ctx, c.validator)
+	validatorAccount, err := util.ParseAccount(ctx, c.validator, nil, false)
+	if err != nil {
+		return err
+	}
+
+	validatorPubkey, err := util.BestPublicKey(validatorAccount)
+	if err != nil {
+		return err
+	}
+	validatorInfo, err := c.chainInfo.FetchValidatorInfo(ctx, fmt.Sprintf("%#x", validatorPubkey.Marshal()))
 	if err != nil {
 		return err
 	}

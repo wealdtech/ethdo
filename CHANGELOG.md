@@ -1,3 +1,6 @@
+dev:
+  - allow use of keystores with validator credentials set
+
 1.28.4:
   - allow validator exit to use a keystore as its validator parameter
 

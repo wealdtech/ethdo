@@ -52,7 +52,7 @@ func ParseAccount(ctx context.Context,
 		account, err := parseAccountFromSpecifier(ctx, accountStr, supplementary, unlock)
 		if err != nil {
 			// It is possible that this is actually a path to a keystore, so try that instead.
-			if _, err = os.Stat(accountStr); err == nil {
+			if _, statErr := os.Stat(accountStr); statErr == nil {
 				account, err = parseAccountFromKeystorePath(ctx, accountStr, supplementary, unlock)
 			}
 		}

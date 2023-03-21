@@ -29,7 +29,7 @@ type dataOut struct {
 	path    string
 }
 
-func output(ctx context.Context, data *dataOut) (string, int, error) {
+func output(_ context.Context, data *dataOut) (string, int, error) {
 	if data == nil {
 		return "", 1, errors.New("no data")
 	}

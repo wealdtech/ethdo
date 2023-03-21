@@ -77,11 +77,7 @@ func (c *command) analyze(ctx context.Context, block *spec.VersionedSignedBeacon
 		return err
 	}
 
-	if err := c.analyzeSyncCommittees(ctx, block); err != nil {
-		return err
-	}
-
-	return nil
+	return c.analyzeSyncCommittees(ctx, block)
 }
 
 func (c *command) analyzeAttestations(ctx context.Context, block *spec.VersionedSignedBeaconBlock) error {
@@ -213,7 +209,7 @@ func (c *command) fetchParents(ctx context.Context, block *spec.VersionedSignedB
 	return c.fetchParents(ctx, parentBlock, minSlot)
 }
 
-func (c *command) processParentBlock(ctx context.Context, block *spec.VersionedSignedBeaconBlock) error {
+func (c *command) processParentBlock(_ context.Context, block *spec.VersionedSignedBeaconBlock) error {
 	attestations, err := block.Attestations()
 	if err != nil {
 		return err
@@ -412,7 +408,7 @@ func (c *command) calcTargetCorrect(ctx context.Context, attestation *phase0.Att
 	return bytes.Equal(root[:], attestation.Data.Target.Root[:]), nil
 }
 
-func (c *command) analyzeSyncCommittees(ctx context.Context, block *spec.VersionedSignedBeaconBlock) error {
+func (c *command) analyzeSyncCommittees(_ context.Context, block *spec.VersionedSignedBeaconBlock) error {
 	c.analysis.SyncCommitee = &syncCommitteeAnalysis{}
 	switch block.Version {
 	case spec.DataVersionPhase0:

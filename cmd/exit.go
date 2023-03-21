@@ -28,5 +28,5 @@ func init() {
 	RootCmd.AddCommand(exitCmd)
 }
 
-func exitFlags(cmd *cobra.Command) {
+func exitFlags(_ *cobra.Command) {
 }

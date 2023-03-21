@@ -28,5 +28,5 @@ func init() {
 	RootCmd.AddCommand(attesterCmd)
 }
 
-func attesterFlags(cmd *cobra.Command) {
+func attesterFlags(_ *cobra.Command) {
 }

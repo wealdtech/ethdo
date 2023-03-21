@@ -52,7 +52,7 @@ func process(ctx context.Context, data *dataIn) (*dataOut, error) {
 	return results, nil
 }
 
-func calculateEpoch(ctx context.Context, data *dataIn) (phase0.Epoch, error) {
+func calculateEpoch(_ context.Context, data *dataIn) (phase0.Epoch, error) {
 	var epoch phase0.Epoch
 	if data.epoch != -1 {
 		epoch = phase0.Epoch(data.epoch)

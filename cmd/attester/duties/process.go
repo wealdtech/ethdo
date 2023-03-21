@@ -77,7 +77,7 @@ func process(ctx context.Context, data *dataIn) (*dataOut, error) {
 		verbose: data.verbose,
 	}
 
-	duty, err := duty(ctx, data.eth2Client, validator, data.epoch, data.slotsPerEpoch)
+	duty, err := duty(ctx, data.eth2Client, validator, data.epoch)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to obtain duty for validator")
 	}
@@ -87,7 +87,7 @@ func process(ctx context.Context, data *dataIn) (*dataOut, error) {
 	return results, nil
 }
 
-func duty(ctx context.Context, eth2Client eth2client.Service, validator *api.Validator, epoch spec.Epoch, slotsPerEpoch uint64) (*api.AttesterDuty, error) {
+func duty(ctx context.Context, eth2Client eth2client.Service, validator *api.Validator, epoch spec.Epoch) (*api.AttesterDuty, error) {
 	// Find the attesting slot for the given epoch.
 	duties, err := eth2Client.(eth2client.AttesterDutiesProvider).AttesterDuties(ctx, epoch, []spec.ValidatorIndex{validator.Index})
 	if err != nil {

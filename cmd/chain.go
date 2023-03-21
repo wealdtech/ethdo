@@ -28,5 +28,5 @@ func init() {
 	RootCmd.AddCommand(chainCmd)
 }
 
-func chainFlags(cmd *cobra.Command) {
+func chainFlags(_ *cobra.Command) {
 }

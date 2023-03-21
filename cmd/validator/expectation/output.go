@@ -20,7 +20,7 @@ import (
 	"github.com/hako/durafmt"
 )
 
-func (c *command) output(ctx context.Context) (string, error) {
+func (c *command) output(_ context.Context) (string, error) {
 	if c.quiet {
 		return "", nil
 	}

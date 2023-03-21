@@ -25,7 +25,7 @@ type dataOut struct {
 	shares [][]byte
 }
 
-func output(ctx context.Context, data *dataOut) (string, error) {
+func output(_ context.Context, data *dataOut) (string, error) {
 	if data == nil {
 		return "", errors.New("no data")
 	}

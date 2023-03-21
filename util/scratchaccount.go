@@ -76,7 +76,7 @@ func (a *ScratchAccount) PublicKey() e2types.PublicKey {
 }
 
 // PrivateKey returns the account private key.
-func (a *ScratchAccount) PrivateKey(ctx context.Context) (e2types.PrivateKey, error) {
+func (a *ScratchAccount) PrivateKey(_ context.Context) (e2types.PrivateKey, error) {
 	if a.privKey == nil {
 		return nil, errors.New("no private key available")
 	}
@@ -89,24 +89,24 @@ func (a *ScratchAccount) Path() string {
 }
 
 // Lock locks the account.
-func (a *ScratchAccount) Lock(ctx context.Context) error {
+func (a *ScratchAccount) Lock(_ context.Context) error {
 	a.unlocked = false
 	return nil
 }
 
 // Unlock unlocks the account.
-func (a *ScratchAccount) Unlock(ctx context.Context, passphrase []byte) error {
+func (a *ScratchAccount) Unlock(_ context.Context, _ []byte) error {
 	a.unlocked = true
 	return nil
 }
 
 // IsUnlocked returns true if the account is unlocked.
-func (a *ScratchAccount) IsUnlocked(ctx context.Context) (bool, error) {
+func (a *ScratchAccount) IsUnlocked(_ context.Context) (bool, error) {
 	return a.unlocked, nil
 }
 
 // Sign signs data with the account's private key.
-func (a *ScratchAccount) Sign(ctx context.Context, data []byte) (e2types.Signature, error) {
+func (a *ScratchAccount) Sign(_ context.Context, data []byte) (e2types.Signature, error) {
 	if !a.unlocked {
 		return nil, errors.New("locked")
 	}

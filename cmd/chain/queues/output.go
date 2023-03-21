@@ -36,7 +36,7 @@ func (c *command) output(ctx context.Context) (string, error) {
 	return c.outputText(ctx)
 }
 
-func (c *command) outputJSON(ctx context.Context) (string, error) {
+func (c *command) outputJSON(_ context.Context) (string, error) {
 	output := &jsonOutput{
 		ActivationQueue: c.activationQueue,
 		ExitQueue:       c.exitQueue,
@@ -49,7 +49,7 @@ func (c *command) outputJSON(ctx context.Context) (string, error) {
 	return string(data), nil
 }
 
-func (c *command) outputText(ctx context.Context) (string, error) {
+func (c *command) outputText(_ context.Context) (string, error) {
 	builder := strings.Builder{}
 
 	if c.activationQueue > 0 {

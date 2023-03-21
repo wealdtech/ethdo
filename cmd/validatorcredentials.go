@@ -28,5 +28,5 @@ func init() {
 	validatorCmd.AddCommand(validatorCredentialsCmd)
 }
 
-func validatorCredentialsFlags(cmd *cobra.Command) {
+func validatorCredentialsFlags(_ *cobra.Command) {
 }

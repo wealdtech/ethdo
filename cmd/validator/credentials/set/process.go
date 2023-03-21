@@ -294,11 +294,7 @@ func (c *command) generateOperationsFromAccountAndWithdrawalAccount(ctx context.
 		return errors.Wrap(err, "failed to obtain validator info")
 	}
 
-	if err := c.generateOperationFromAccount(ctx, validatorInfo, withdrawalAccount); err != nil {
-		return err
-	}
-
-	return nil
+	return c.generateOperationFromAccount(ctx, validatorInfo, withdrawalAccount)
 }
 
 func (c *command) generateOperationsFromAccountAndPrivateKey(ctx context.Context) error {
@@ -321,11 +317,7 @@ func (c *command) generateOperationsFromAccountAndPrivateKey(ctx context.Context
 		return errors.Wrap(err, "failed to obtain validator info")
 	}
 
-	if err := c.generateOperationFromAccount(ctx, validatorInfo, withdrawalAccount); err != nil {
-		return err
-	}
-
-	return nil
+	return c.generateOperationFromAccount(ctx, validatorInfo, withdrawalAccount)
 }
 
 func (c *command) generateOperationsFromValidatorAndPrivateKey(ctx context.Context) error {
@@ -348,11 +340,7 @@ func (c *command) generateOperationsFromValidatorAndPrivateKey(ctx context.Conte
 		return err
 	}
 
-	if err := c.generateOperationFromAccount(ctx, validatorInfo, withdrawalAccount); err != nil {
-		return err
-	}
-
-	return nil
+	return c.generateOperationFromAccount(ctx, validatorInfo, withdrawalAccount)
 }
 
 func (c *command) generateOperationsFromPrivateKey(ctx context.Context) error {
@@ -633,7 +621,7 @@ func (c *command) validateOperations(ctx context.Context) (bool, string) {
 	return true, ""
 }
 
-func (c *command) verifyOperation(ctx context.Context, op *capella.SignedBLSToExecutionChange) error {
+func (c *command) verifyOperation(_ context.Context, op *capella.SignedBLSToExecutionChange) error {
 	root, err := op.Message.HashTreeRoot()
 	if err != nil {
 		return errors.Wrap(err, "failed to generate message root")
@@ -778,7 +766,7 @@ func (c *command) generateDomain(ctx context.Context) error {
 	return nil
 }
 
-func (c *command) obtainGenesisValidatorsRoot(ctx context.Context) (phase0.Root, error) {
+func (c *command) obtainGenesisValidatorsRoot(_ context.Context) (phase0.Root, error) {
 	genesisValidatorsRoot := phase0.Root{}
 
 	if c.genesisValidatorsRoot != "" {
@@ -806,7 +794,7 @@ func (c *command) obtainGenesisValidatorsRoot(ctx context.Context) (phase0.Root,
 	return genesisValidatorsRoot, nil
 }
 
-func (c *command) obtainForkVersion(ctx context.Context) (phase0.Version, error) {
+func (c *command) obtainForkVersion(_ context.Context) (phase0.Version, error) {
 	forkVersion := phase0.Version{}
 
 	if c.forkVersion != "" {

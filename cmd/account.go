@@ -28,5 +28,5 @@ func init() {
 	RootCmd.AddCommand(accountCmd)
 }
 
-func accountFlags(cmd *cobra.Command) {
+func accountFlags(_ *cobra.Command) {
 }

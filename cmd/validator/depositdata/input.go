@@ -121,7 +121,7 @@ func input() (*dataIn, error) {
 	return data, nil
 }
 
-func inputForkVersion(ctx context.Context) (*spec.Version, error) {
+func inputForkVersion(_ context.Context) (*spec.Version, error) {
 	// Default to mainnet.
 	forkVersion := &spec.Version{0x00, 0x00, 0x00, 0x00}
 

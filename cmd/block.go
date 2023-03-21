@@ -28,5 +28,5 @@ func init() {
 	RootCmd.AddCommand(blockCmd)
 }
 
-func blockFlags(cmd *cobra.Command) {
+func blockFlags(_ *cobra.Command) {
 }

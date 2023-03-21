@@ -28,5 +28,5 @@ func init() {
 	RootCmd.AddCommand(depositCmd)
 }
 
-func depositFlags(cmd *cobra.Command) {
+func depositFlags(_ *cobra.Command) {
 }

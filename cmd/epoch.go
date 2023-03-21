@@ -29,7 +29,7 @@ func init() {
 	RootCmd.AddCommand(epochCmd)
 }
 
-func epochFlags(cmd *cobra.Command) {
+func epochFlags(_ *cobra.Command) {
 	epochSummaryCmd.Flags().String("epoch", "", "the epoch for which to obtain information (default current, can be 'current', 'last' or a number)")
 }
 

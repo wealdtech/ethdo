@@ -123,7 +123,7 @@ func (c *command) setup(ctx context.Context) error {
 	return nil
 }
 
-func (c *command) calculateSlots(ctx context.Context) (phase0.Slot, phase0.Slot) {
+func (c *command) calculateSlots(_ context.Context) (phase0.Slot, phase0.Slot) {
 	var firstSlot phase0.Slot
 	var lastSlot phase0.Slot
 	if c.epoch == -1 {

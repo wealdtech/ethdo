@@ -36,7 +36,7 @@ type dataIn struct {
 	index   string
 }
 
-func input(ctx context.Context) (*dataIn, error) {
+func input(_ context.Context) (*dataIn, error) {
 	data := &dataIn{}
 
 	if viper.GetDuration("timeout") == 0 {

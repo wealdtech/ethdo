@@ -28,5 +28,5 @@ func init() {
 	RootCmd.AddCommand(slotCmd)
 }
 
-func slotFlags(cmd *cobra.Command) {
+func slotFlags(_ *cobra.Command) {
 }

@@ -48,11 +48,7 @@ func (c *command) process(ctx context.Context) error {
 	if err := c.processAttesterDuties(ctx); err != nil {
 		return err
 	}
-	if err := c.processSyncCommitteeDuties(ctx); err != nil {
-		return err
-	}
-
-	return nil
+	return c.processSyncCommitteeDuties(ctx)
 }
 
 func (c *command) processProposerDuties(ctx context.Context) error {

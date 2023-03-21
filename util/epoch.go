@@ -23,7 +23,7 @@ import (
 )
 
 // ParseEpoch parses input to calculate the desired epoch.
-func ParseEpoch(ctx context.Context, chainTime chaintime.Service, epochStr string) (phase0.Epoch, error) {
+func ParseEpoch(_ context.Context, chainTime chaintime.Service, epochStr string) (phase0.Epoch, error) {
 	currentEpoch := chainTime.CurrentEpoch()
 	switch epochStr {
 	case "", "current", "-0":

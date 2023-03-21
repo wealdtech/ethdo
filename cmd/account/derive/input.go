@@ -30,7 +30,7 @@ type dataIn struct {
 	showWithdrawalCredentials bool
 }
 
-func input(ctx context.Context) (*dataIn, error) {
+func input(_ context.Context) (*dataIn, error) {
 	data := &dataIn{}
 
 	// Quiet.

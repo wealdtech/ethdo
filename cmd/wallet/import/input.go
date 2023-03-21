@@ -36,7 +36,7 @@ type dataIn struct {
 	verify     bool
 }
 
-func input(ctx context.Context) (*dataIn, error) {
+func input(_ context.Context) (*dataIn, error) {
 	var err error
 	data := &dataIn{}
 

@@ -32,7 +32,7 @@ type dataIn struct {
 	privKey  string
 }
 
-func input(ctx context.Context) (*dataIn, error) {
+func input(_ context.Context) (*dataIn, error) {
 	data := &dataIn{}
 
 	data.quiet = viper.GetBool("quiet")

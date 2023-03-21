@@ -28,5 +28,5 @@ func init() {
 	RootCmd.AddCommand(nodeCmd)
 }
 
-func nodeFlags(cmd *cobra.Command) {
+func nodeFlags(_ *cobra.Command) {
 }

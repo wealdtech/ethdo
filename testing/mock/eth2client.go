@@ -36,7 +36,7 @@ func NewGenesisTimeProvider(genesisTime time.Time) eth2client.GenesisTimeProvide
 }
 
 // GenesisTime is a mock.
-func (m *GenesisTimeProvider) GenesisTime(ctx context.Context) (time.Time, error) {
+func (m *GenesisTimeProvider) GenesisTime(_ context.Context) (time.Time, error) {
 	return m.genesisTime, nil
 }
 
@@ -60,7 +60,7 @@ func NewSpecProvider(slotDuration time.Duration,
 }
 
 // Spec is a mock.
-func (m *SpecProvider) Spec(ctx context.Context) (map[string]interface{}, error) {
+func (m *SpecProvider) Spec(_ context.Context) (map[string]interface{}, error) {
 	return m.spec, nil
 }
 
@@ -77,7 +77,7 @@ func NewForkScheduleProvider(schedule []*phase0.Fork) eth2client.ForkSchedulePro
 }
 
 // ForkSchedule is a mock.
-func (m *ForkScheduleProvider) ForkSchedule(ctx context.Context) ([]*phase0.Fork, error) {
+func (m *ForkScheduleProvider) ForkSchedule(_ context.Context) ([]*phase0.Fork, error) {
 	return m.schedule, nil
 }
 
@@ -94,7 +94,7 @@ func NewSlotsPerEpochProvider(slotsPerEpoch uint64) eth2client.SlotsPerEpochProv
 }
 
 // SlotsPerEpoch is a mock.
-func (m *SlotsPerEpochProvider) SlotsPerEpoch(ctx context.Context) (uint64, error) {
+func (m *SlotsPerEpochProvider) SlotsPerEpoch(_ context.Context) (uint64, error) {
 	return m.slotsPerEpoch, nil
 }
 
@@ -107,7 +107,7 @@ func NewAttestationSubmitter() eth2client.AttestationsSubmitter {
 }
 
 // SubmitAttestations is a mock.
-func (m *AttestationsSubmitter) SubmitAttestations(ctx context.Context, attestations []*phase0.Attestation) error {
+func (m *AttestationsSubmitter) SubmitAttestations(_ context.Context, _ []*phase0.Attestation) error {
 	return nil
 }
 
@@ -120,7 +120,7 @@ func NewBeaconBlockSubmitter() eth2client.BeaconBlockSubmitter {
 }
 
 // SubmitBeaconBlock is a mock.
-func (m *BeaconBlockSubmitter) SubmitBeaconBlock(ctx context.Context, bloc *spec.VersionedSignedBeaconBlock) error {
+func (m *BeaconBlockSubmitter) SubmitBeaconBlock(_ context.Context, _ *spec.VersionedSignedBeaconBlock) error {
 	return nil
 }
 
@@ -133,7 +133,7 @@ func NewAggregateAttestationsSubmitter() eth2client.AggregateAttestationsSubmitt
 }
 
 // SubmitAggregateAttestations is a mock.
-func (m *AggregateAttestationsSubmitter) SubmitAggregateAttestations(ctx context.Context, aggregates []*phase0.SignedAggregateAndProof) error {
+func (m *AggregateAttestationsSubmitter) SubmitAggregateAttestations(_ context.Context, _ []*phase0.SignedAggregateAndProof) error {
 	return nil
 }
 
@@ -146,6 +146,6 @@ func NewBeaconCommitteeSubscriptionsSubmitter() eth2client.BeaconCommitteeSubscr
 }
 
 // SubmitBeaconCommitteeSubscriptions is a mock.
-func (m *BeaconCommitteeSubscriptionsSubmitter) SubmitBeaconCommitteeSubscriptions(ctx context.Context, subscriptions []*api.BeaconCommitteeSubscription) error {
+func (m *BeaconCommitteeSubscriptionsSubmitter) SubmitBeaconCommitteeSubscriptions(_ context.Context, _ []*api.BeaconCommitteeSubscription) error {
 	return nil
 }

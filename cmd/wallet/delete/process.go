@@ -23,7 +23,7 @@ import (
 	e2wtypes "github.com/wealdtech/go-eth2-wallet-types/v2"
 )
 
-func process(ctx context.Context, data *dataIn) (*dataOut, error) {
+func process(_ context.Context, data *dataIn) (*dataOut, error) {
 	if data == nil {
 		return nil, errors.New("no data")
 	}

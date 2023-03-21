@@ -28,5 +28,5 @@ func init() {
 	RootCmd.AddCommand(synccommitteeCmd)
 }
 
-func synccommitteeFlags(cmd *cobra.Command) {
+func synccommitteeFlags(_ *cobra.Command) {
 }

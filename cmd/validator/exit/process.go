@@ -134,19 +134,13 @@ func (c *command) generateOperationFromMnemonicAndPath(ctx context.Context) erro
 		return err
 	}
 
-	// Turn the validators in to a map for easy lookup.
-	validators := make(map[string]*beacon.ValidatorInfo, 0)
-	for _, validator := range c.chainInfo.Validators {
-		validators[fmt.Sprintf("%#x", validator.Pubkey)] = validator
-	}
-
 	validatorKeyPath := c.path
 	match := validatorPath.Match([]byte(c.path))
 	if !match {
 		return fmt.Errorf("path %s does not match EIP-2334 format for a validator", c.path)
 	}
 
-	if err := c.generateOperationFromSeedAndPath(ctx, validators, seed, validatorKeyPath); err != nil {
+	if err := c.generateOperationFromSeedAndPath(ctx, seed, validatorKeyPath); err != nil {
 		return errors.Wrap(err, "failed to generate operation from seed and path")
 	}
 
@@ -202,11 +196,7 @@ func (c *command) generateOperationFromPrivateKey(ctx context.Context) error {
 		return errors.Wrap(err, "failed to parse validator account")
 	}
 
-	if err = c.generateOperationFromAccount(ctx, validatorAccount); err != nil {
-		return err
-	}
-
-	return nil
+	return c.generateOperationFromAccount(ctx, validatorAccount)
 }
 
 func (c *command) generateOperationFromValidator(ctx context.Context) error {
@@ -215,11 +205,7 @@ func (c *command) generateOperationFromValidator(ctx context.Context) error {
 		return errors.Wrap(err, "failed to parse validator account")
 	}
 
-	if err := c.generateOperationFromAccount(ctx, validatorAccount); err != nil {
-		return err
-	}
-
-	return nil
+	return c.generateOperationFromAccount(ctx, validatorAccount)
 }
 
 func (c *command) obtainOperationFromFileOrInput(ctx context.Context) error {
@@ -247,11 +233,7 @@ func (c *command) obtainOperationFromFile(ctx context.Context) error {
 		return errors.Wrap(err, "failed to parse exit operation file")
 	}
 
-	if err := c.verifySignedOperation(ctx, c.signedOperation); err != nil {
-		return err
-	}
-
-	return nil
+	return c.verifySignedOperation(ctx, c.signedOperation)
 }
 
 func (c *command) obtainOperationFromInput(ctx context.Context) error {
@@ -268,15 +250,10 @@ func (c *command) obtainOperationFromInput(ctx context.Context) error {
 		return errors.Wrap(err, "failed to parse exit operation input")
 	}
 
-	if err := c.verifySignedOperation(ctx, c.signedOperation); err != nil {
-		return err
-	}
-
-	return nil
+	return c.verifySignedOperation(ctx, c.signedOperation)
 }
 
 func (c *command) generateOperationFromSeedAndPath(ctx context.Context,
-	validators map[string]*beacon.ValidatorInfo,
 	seed []byte,
 	path string,
 ) error {
@@ -502,7 +479,7 @@ func (c *command) generateDomain(ctx context.Context) error {
 	return nil
 }
 
-func (c *command) obtainGenesisValidatorsRoot(ctx context.Context) (phase0.Root, error) {
+func (c *command) obtainGenesisValidatorsRoot(_ context.Context) (phase0.Root, error) {
 	genesisValidatorsRoot := phase0.Root{}
 
 	if c.genesisValidatorsRoot != "" {
@@ -530,7 +507,7 @@ func (c *command) obtainGenesisValidatorsRoot(ctx context.Context) (phase0.Root,
 	return genesisValidatorsRoot, nil
 }
 
-func (c *command) obtainForkVersion(ctx context.Context) (phase0.Version, error) {
+func (c *command) obtainForkVersion(_ context.Context) (phase0.Version, error) {
 	forkVersion := phase0.Version{}
 
 	if c.forkVersion != "" {

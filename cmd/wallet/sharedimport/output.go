@@ -19,6 +19,6 @@ import (
 
 type dataOut struct{}
 
-func output(ctx context.Context, data *dataOut) (string, error) {
+func output(_ context.Context, _ *dataOut) (string, error) {
 	return "Wallet imported", nil
 }

@@ -58,7 +58,7 @@ type command struct {
 	additionalInfo                           string
 }
 
-func newCommand(ctx context.Context) (*command, error) {
+func newCommand(_ context.Context) (*command, error) {
 	c := &command{
 		quiet:   viper.GetBool("quiet"),
 		verbose: viper.GetBool("verbose"),

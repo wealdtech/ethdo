@@ -106,9 +106,8 @@ func (c *command) outputTxt(_ context.Context) (string, error) {
 			if attestation.NewVotes == 0 {
 				builder.WriteString("\n")
 				continue
-			} else {
-				builder.WriteString(", ")
 			}
+			builder.WriteString(", ")
 			switch {
 			case !attestation.HeadCorrect:
 				builder.WriteString("head vote incorrect, ")

@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/pkg/errors"
 	"github.com/wealdtech/ethdo/beacon"
 )
 
@@ -37,11 +38,7 @@ func (c *command) obtainChainInfo(ctx context.Context) error {
 		return fmt.Errorf("failed to obtain offline preparation file: %w", err)
 	}
 
-	if err := c.obtainChainInfoFromNode(ctx); err != nil {
-		return err
-	}
-
-	return nil
+	return c.obtainChainInfoFromNode(ctx)
 }
 
 // obtainChainInfoFromFile obtains chain information from a pre-generated file.
@@ -95,10 +92,10 @@ func (c *command) obtainChainInfoFromNode(ctx context.Context) error {
 func (c *command) writeChainInfoToFile(_ context.Context) error {
 	data, err := json.Marshal(c.chainInfo)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "failed to generate chain info JSON")
 	}
 	if err := os.WriteFile(offlinePreparationFilename, data, 0o600); err != nil {
-		return err
+		return errors.Wrap(err, "failed write chain info JSON")
 	}
 
 	return nil

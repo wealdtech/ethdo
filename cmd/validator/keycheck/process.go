@@ -50,7 +50,7 @@ func process(ctx context.Context, data *dataIn) (*dataOut, error) {
 			return nil, err
 		}
 
-		match, err = checkPrivKey(ctx, data.debug, validatorWithdrawalCredentials, key)
+		match, err = checkPrivKey(ctx, validatorWithdrawalCredentials, key)
 		if err != nil {
 			return nil, err
 		}
@@ -73,7 +73,7 @@ func process(ctx context.Context, data *dataIn) (*dataOut, error) {
 	return results, nil
 }
 
-func checkPrivKey(ctx context.Context, debug bool, validatorWithdrawalCredentials []byte, key *e2types.BLSPrivateKey) (bool, error) {
+func checkPrivKey(_ context.Context, validatorWithdrawalCredentials []byte, key *e2types.BLSPrivateKey) (bool, error) {
 	pubKey := key.PublicKey()
 
 	withdrawalCredentials := util.SHA256(pubKey.Marshal())
@@ -110,7 +110,7 @@ func checkMnemonic(ctx context.Context, debug bool, validatorWithdrawalCredentia
 		if err != nil {
 			return false, "", errors.Wrap(err, "failed to generate key")
 		}
-		match, err := checkPrivKey(ctx, debug, validatorWithdrawalCredentials, key)
+		match, err := checkPrivKey(ctx, validatorWithdrawalCredentials, key)
 		if err != nil {
 			return false, "", errors.Wrap(err, "failed to match key")
 		}

@@ -53,7 +53,7 @@ type results struct {
 	Duties []*apiv1.ProposerDuty `json:"duties"`
 }
 
-func newCommand(ctx context.Context) (*command, error) {
+func newCommand(_ context.Context) (*command, error) {
 	c := &command{
 		quiet:   viper.GetBool("quiet"),
 		verbose: viper.GetBool("verbose"),

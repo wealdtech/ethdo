@@ -42,7 +42,7 @@ func (c *command) output(ctx context.Context) (string, error) {
 	return c.outputText(ctx)
 }
 
-func (c *command) outputJSON(ctx context.Context) (string, error) {
+func (c *command) outputJSON(_ context.Context) (string, error) {
 	votes := make([]*vote, 0, len(c.votes))
 	totalVotes := 0
 	for _, vote := range c.votes {
@@ -71,7 +71,7 @@ func (c *command) outputJSON(ctx context.Context) (string, error) {
 	return string(data), nil
 }
 
-func (c *command) outputText(ctx context.Context) (string, error) {
+func (c *command) outputText(_ context.Context) (string, error) {
 	builder := strings.Builder{}
 
 	builder.WriteString("Voting period: ")

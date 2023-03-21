@@ -38,7 +38,7 @@ type dataOut struct {
 	targetTimely     bool
 }
 
-func output(ctx context.Context, data *dataOut) (string, error) {
+func output(_ context.Context, data *dataOut) (string, error) {
 	buf := strings.Builder{}
 	if data == nil {
 		return buf.String(), errors.New("no data")

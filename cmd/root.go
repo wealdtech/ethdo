@@ -48,7 +48,7 @@ var RootCmd = &cobra.Command{
 	PersistentPreRunE: persistentPreRunE,
 }
 
-func persistentPreRunE(cmd *cobra.Command, args []string) error {
+func persistentPreRunE(cmd *cobra.Command, _ []string) error {
 	if cmd.Name() == "help" {
 		// User just wants help
 		return nil

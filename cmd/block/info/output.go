@@ -43,7 +43,7 @@ type dataOut struct {
 	slotsPerEpoch uint64
 }
 
-func output(ctx context.Context, data *dataOut) (string, error) {
+func output(_ context.Context, data *dataOut) (string, error) {
 	if data == nil {
 		return "", errors.New("no data")
 	}
@@ -51,7 +51,7 @@ func output(ctx context.Context, data *dataOut) (string, error) {
 	return "", nil
 }
 
-func outputBlockGeneral(ctx context.Context,
+func outputBlockGeneral(_ context.Context,
 	verbose bool,
 	slot phase0.Slot,
 	blockRoot phase0.Root,
@@ -89,7 +89,7 @@ func outputBlockGeneral(ctx context.Context,
 	return res.String(), nil
 }
 
-func outputBlockETH1Data(ctx context.Context, eth1Data *phase0.ETH1Data) (string, error) {
+func outputBlockETH1Data(_ context.Context, eth1Data *phase0.ETH1Data) (string, error) {
 	res := strings.Builder{}
 
 	res.WriteString(fmt.Sprintf("Ethereum 1 deposit count: %d\n", eth1Data.DepositCount))
@@ -194,7 +194,7 @@ func outputBlockAttesterSlashings(ctx context.Context, eth2Client eth2client.Ser
 	return res.String(), nil
 }
 
-func outputBlockDeposits(ctx context.Context, verbose bool, deposits []*phase0.Deposit) (string, error) {
+func outputBlockDeposits(_ context.Context, verbose bool, deposits []*phase0.Deposit) (string, error) {
 	res := strings.Builder{}
 
 	// Deposits.
@@ -638,7 +638,7 @@ func outputPhase0BlockText(ctx context.Context, data *dataOut, signedBlock *phas
 	return res.String(), nil
 }
 
-func outputCapellaBlockExecutionPayload(ctx context.Context,
+func outputCapellaBlockExecutionPayload(_ context.Context,
 	verbose bool,
 	payload *capella.ExecutionPayload,
 ) (
@@ -706,7 +706,7 @@ func outputCapellaBlockExecutionPayload(ctx context.Context,
 	return res.String(), nil
 }
 
-func outputBellatrixBlockExecutionPayload(ctx context.Context,
+func outputBellatrixBlockExecutionPayload(_ context.Context,
 	verbose bool,
 	payload *bellatrix.ExecutionPayload,
 ) (

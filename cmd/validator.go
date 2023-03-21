@@ -28,7 +28,7 @@ func init() {
 	RootCmd.AddCommand(validatorCmd)
 }
 
-func validatorFlags(cmd *cobra.Command) {
+func validatorFlags(_ *cobra.Command) {
 }
 
 func validatorBindings() {

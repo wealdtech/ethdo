@@ -15,7 +15,6 @@ package validatorexit
 
 import (
 	"context"
-	"fmt"
 	"testing"
 
 	"github.com/attestantio/go-eth2-client/spec/phase0"
@@ -227,10 +226,6 @@ func TestGenerateOperationFromSeedAndPath(t *testing.T) {
 		Epoch:                 1,
 		CurrentForkVersion:    phase0.Version{},
 	}
-	validators := make(map[string]*beacon.ValidatorInfo, len(chainInfo.Validators))
-	for i := range chainInfo.Validators {
-		validators[fmt.Sprintf("%#x", chainInfo.Validators[i].Pubkey)] = chainInfo.Validators[i]
-	}
 
 	tests := []struct {
 		name     string
@@ -301,7 +296,7 @@ func TestGenerateOperationFromSeedAndPath(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			err := test.command.generateOperationFromSeedAndPath(ctx, validators, test.seed, test.path)
+			err := test.command.generateOperationFromSeedAndPath(ctx, test.seed, test.path)
 			if test.err != "" {
 				require.EqualError(t, err, test.err)
 			} else {

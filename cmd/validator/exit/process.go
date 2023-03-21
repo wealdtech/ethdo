@@ -41,7 +41,7 @@ import (
 // minTimeout is the minimum timeout for this command.
 // It needs to be set here as we want timeouts to be low in general, but this can be pulling
 // a lot of data for an unsophisticated audience so it's easier to set a higher timeout..
-var minTimeout = 2 * time.Minute
+var minTimeout = 5 * time.Minute
 
 // validatorPath is the regular expression that matches a validator  path.
 var validatorPath = regexp.MustCompile("^m/12381/3600/[0-9]+/0/0$")
@@ -50,6 +50,9 @@ var (
 	offlinePreparationFilename = "offline-preparation.json"
 	exitOperationFilename      = "exit-operation.json"
 )
+
+// defaultBeaconNode is used if no other connection is supplied.
+var defaultBeaconNode = "http://mainnet-consensus.attestant.io/"
 
 func (c *command) process(ctx context.Context) error {
 	if err := c.setup(ctx); err != nil {
@@ -442,7 +445,22 @@ func (c *command) setup(ctx context.Context) error {
 	var err error
 	c.consensusClient, err = util.ConnectToBeaconNode(ctx, c.connection, c.timeout, c.allowInsecureConnections)
 	if err != nil {
-		return errors.Wrap(err, "failed to connect to consensus node")
+		if c.connection != "" {
+			// The user provided a connection, so don't second-guess them by using a different node.
+			return err
+		}
+
+		// The user did not provide a connection, so attempt to use the default node.
+		if c.debug {
+			fmt.Fprintf(os.Stderr, "No node connection, attempting to use %s\n", defaultBeaconNode)
+		}
+		c.consensusClient, err = util.ConnectToBeaconNode(ctx, defaultBeaconNode, c.timeout, true)
+		if err != nil {
+			return err
+		}
+		if !c.quiet {
+			fmt.Fprintf(os.Stderr, "No connection supplied; using mainnet public access endpoint\n")
+		}
 	}
 
 	// Set up chaintime.

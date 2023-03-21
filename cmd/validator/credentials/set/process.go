@@ -42,7 +42,7 @@ import (
 // minTimeout is the minimum timeout for this command.
 // It needs to be set here as we want timeouts to be low in general, but this can be pulling
 // a lot of data for an unsophisticated audience so it's easier to set a higher timeout..
-var minTimeout = 2 * time.Minute
+var minTimeout = 5 * time.Minute
 
 // defaultBeaconNode is used if no other connection is supplied.
 var defaultBeaconNode = "http://mainnet-consensus.attestant.io/"
@@ -730,7 +730,7 @@ func (c *command) setup(ctx context.Context) error {
 		if c.debug {
 			fmt.Fprintf(os.Stderr, "No node connection, attempting to use %s\n", defaultBeaconNode)
 		}
-		c.consensusClient, err = util.ConnectToBeaconNode(ctx, defaultBeaconNode, c.timeout, c.allowInsecureConnections)
+		c.consensusClient, err = util.ConnectToBeaconNode(ctx, defaultBeaconNode, c.timeout, true)
 		if err != nil {
 			return err
 		}

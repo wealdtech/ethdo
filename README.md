@@ -86,6 +86,11 @@ Teku disables the REST API by default.  To enable it, the beacon node must be st
 
 The default port for the REST API is 5051, which can be changed with the `--rest-api-port` parameter.
 
+### Lodestar
+Lodestar enables the REST API by default and should just work locally. If you want to access the REST API from a remote server then you should also look to change the `--rest.address` to `0.0.0.0` as per the Lodestar documentation.
+
+The default port for the REST API is 9596, which can be changed with the `--rest.port` parameter.
+
 ## Usage
 
 `ethdo` contains a large number of features that are useful for day-to-day interactions with the different consensus clients.

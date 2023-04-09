@@ -637,7 +637,7 @@ Effective balance: 3.1 Ether
 Additional information is supplied when using `--verbose`
 
 ```sh
-$ ethdo validator info --account=Validators/1 --verbose
+$ ethdo validator info --validator=Validators/1 --verbose
 Epoch of data:          3398
 Index:                  26913
 Public key:             0xb3bb6b7a8d809e59544472853d219499765bf01d14de1e0549bd6fc2a86627ac9033264c84cd503b6339e3334726562f
@@ -650,7 +650,7 @@ Withdrawal credentials: 0x0033ef3cb10b36d0771ffe8a02bc5bfc7e64ea2f398ce77e25bb78
 If the validator is not an account then `--validator` option can be supplied with a validator index or public key.
 
 ```sh
-$ ethdo validator info --pubkey=0x842dd66cfeaeff4397fc7c94f7350d2131ca0c4ad14ff727963be9a1edb4526604970df6010c3da6474a9820fa81642b
+$ ethdo validator info --validator=0x842dd66cfeaeff4397fc7c94f7350d2131ca0c4ad14ff727963be9a1edb4526604970df6010c3da6474a9820fa81642b
 Status:            Active
 Balance:           3.201850307 Ether
 Effective balance: 3.1 Ether

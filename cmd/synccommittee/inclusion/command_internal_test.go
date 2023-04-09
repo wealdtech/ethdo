@@ -43,14 +43,14 @@ func TestInput(t *testing.T) {
 				"timeout":    "5s",
 				"connection": os.Getenv("ETHDO_TEST_CONNECTION"),
 			},
-			err: "account, pubkey or index required",
+			err: "validator is required",
 		},
 		{
 			name: "Good",
 			vars: map[string]interface{}{
 				"validators": "1",
 				"timeout":    "5s",
-				"index":      "1",
+				"validator":  "1",
 				"connection": os.Getenv("ETHDO_TEST_CONNECTION"),
 			},
 		},

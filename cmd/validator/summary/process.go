@@ -377,7 +377,12 @@ func (c *command) setup(ctx context.Context) error {
 	var err error
 
 	// Connect to the client.
-	c.eth2Client, err = util.ConnectToBeaconNode(ctx, c.connection, c.timeout, c.allowInsecureConnections)
+	c.eth2Client, err = util.ConnectToBeaconNode(ctx, &util.ConnectOpts{
+		Address:       c.connection,
+		Timeout:       c.timeout,
+		AllowInsecure: c.allowInsecureConnections,
+		LogFallback:   !c.quiet,
+	})
 	if err != nil {
 		return errors.Wrap(err, "failed to connect to beacon node")
 	}

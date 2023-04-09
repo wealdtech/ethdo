@@ -21,6 +21,7 @@ import (
 	eth2client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
+	standardchaintime "github.com/wealdtech/ethdo/services/chaintime/standard"
 	"github.com/wealdtech/ethdo/util"
 )
 
@@ -29,22 +30,22 @@ func process(ctx context.Context, data *dataIn) (*dataOut, error) {
 		return nil, errors.New("no data")
 	}
 
-	eth2Client, err := util.ConnectToBeaconNode(ctx, data.connection, data.timeout, data.allowInsecureConnections)
+	eth2Client, err := util.ConnectToBeaconNode(ctx, &util.ConnectOpts{
+		Address:       data.connection,
+		Timeout:       data.timeout,
+		AllowInsecure: data.allowInsecureConnections,
+		LogFallback:   !data.quiet,
+	})
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to connect to Ethereum 2 beacon node")
 	}
 
-	config, err := eth2Client.(eth2client.SpecProvider).Spec(ctx)
+	chainTime, err := standardchaintime.New(ctx,
+		standardchaintime.WithSpecProvider(eth2Client.(eth2client.SpecProvider)),
+		standardchaintime.WithGenesisTimeProvider(eth2Client.(eth2client.GenesisTimeProvider)),
+	)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to obtain beacon chain configuration")
-	}
-
-	slotsPerEpoch := config["SLOTS_PER_EPOCH"].(uint64)
-	slotDuration := config["SECONDS_PER_SLOT"].(time.Duration)
-	epochsPerSyncCommitteePeriod := config["EPOCHS_PER_SYNC_COMMITTEE_PERIOD"].(uint64)
-	genesis, err := eth2Client.(eth2client.GenesisProvider).Genesis(ctx)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to obtain genesis data")
+		return nil, errors.Wrap(err, "failed to set up chaintime service")
 	}
 
 	results := &dataOut{
@@ -62,34 +63,33 @@ func process(ctx context.Context, data *dataIn) (*dataOut, error) {
 		}
 		results.slot = phase0.Slot(slot)
 	case data.epoch != "":
-		epoch, err := strconv.ParseUint(data.epoch, 10, 64)
+		epoch, err := util.ParseEpoch(ctx, chainTime, data.epoch)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to parse epoch")
 		}
-		results.slot = phase0.Slot(epoch * slotsPerEpoch)
+		results.slot = chainTime.FirstSlotOfEpoch(epoch)
 	case data.timestamp != "":
 		timestamp, err := time.Parse("2006-01-02T15:04:05-0700", data.timestamp)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to parse timestamp")
 		}
-		secs := timestamp.Sub(genesis.GenesisTime)
-		if secs < 0 {
-			return nil, errors.New("timestamp prior to genesis")
-		}
-		results.slot = phase0.Slot(secs / slotDuration)
+		results.slot = chainTime.TimestampToSlot(timestamp)
 	}
 
 	// Fill in the info given the slot.
-	results.slotStart = genesis.GenesisTime.Add(time.Duration(results.slot) * slotDuration)
-	results.slotEnd = genesis.GenesisTime.Add(time.Duration(results.slot+1) * slotDuration)
-	results.epoch = phase0.Epoch(uint64(results.slot) / slotsPerEpoch)
-	results.epochStart = genesis.GenesisTime.Add(time.Duration(uint64(results.epoch)*slotsPerEpoch) * slotDuration)
-	results.epochEnd = genesis.GenesisTime.Add(time.Duration(uint64(results.epoch+1)*slotsPerEpoch) * slotDuration)
-	results.syncCommitteePeriod = uint64(results.epoch) / epochsPerSyncCommitteePeriod
-	results.syncCommitteePeriodEpochStart = phase0.Epoch(results.syncCommitteePeriod * epochsPerSyncCommitteePeriod)
-	results.syncCommitteePeriodEpochEnd = phase0.Epoch((results.syncCommitteePeriod+1)*epochsPerSyncCommitteePeriod) - 1
-	results.syncCommitteePeriodStart = genesis.GenesisTime.Add(time.Duration(uint64(results.syncCommitteePeriodEpochStart)*slotsPerEpoch) * slotDuration)
-	results.syncCommitteePeriodEnd = genesis.GenesisTime.Add(time.Duration(uint64(results.syncCommitteePeriodEpochEnd)*slotsPerEpoch) * slotDuration)
+	results.slotStart = chainTime.StartOfSlot(results.slot)
+	results.slotEnd = chainTime.StartOfSlot(results.slot + 1)
+	results.epoch = chainTime.SlotToEpoch(results.slot)
+	results.epochStart = chainTime.StartOfEpoch(results.epoch)
+	results.epochEnd = chainTime.StartOfEpoch(results.epoch + 1)
+	if results.epoch >= chainTime.FirstEpochOfSyncPeriod(chainTime.AltairInitialSyncCommitteePeriod()) {
+		results.hasSyncCommittees = true
+		results.syncCommitteePeriod = chainTime.SlotToSyncCommitteePeriod(results.slot)
+		results.syncCommitteePeriodEpochStart = chainTime.FirstEpochOfSyncPeriod(results.syncCommitteePeriod)
+		results.syncCommitteePeriodEpochEnd = chainTime.FirstEpochOfSyncPeriod(results.syncCommitteePeriod + 1)
+		results.syncCommitteePeriodStart = chainTime.StartOfEpoch(results.syncCommitteePeriodEpochStart)
+		results.syncCommitteePeriodEnd = chainTime.StartOfEpoch(results.syncCommitteePeriodEpochEnd)
+	}
 
 	return results, nil
 }

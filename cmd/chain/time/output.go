@@ -34,6 +34,7 @@ type dataOut struct {
 	slot                          spec.Slot
 	slotStart                     time.Time
 	slotEnd                       time.Time
+	hasSyncCommittees             bool
 	syncCommitteePeriod           uint64
 	syncCommitteePeriodStart      time.Time
 	syncCommitteePeriodEpochStart spec.Epoch
@@ -56,27 +57,59 @@ func output(_ context.Context, data *dataOut) (string, error) {
 	builder.WriteString(fmt.Sprintf("%d", data.epoch))
 	builder.WriteString("\n  Epoch start ")
 	builder.WriteString(data.epochStart.Format("2006-01-02 15:04:05"))
+	if data.verbose {
+		builder.WriteString(" (")
+		builder.WriteString(fmt.Sprintf("%d", data.epochStart.Unix()))
+		builder.WriteString(")")
+	}
 	builder.WriteString("\n  Epoch end ")
 	builder.WriteString(data.epochEnd.Format("2006-01-02 15:04:05"))
+	if data.verbose {
+		builder.WriteString(" (")
+		builder.WriteString(fmt.Sprintf("%d", data.epochEnd.Unix()))
+		builder.WriteString(")")
+	}
 
 	builder.WriteString("\nSlot ")
 	builder.WriteString(fmt.Sprintf("%d", data.slot))
 	builder.WriteString("\n  Slot start ")
 	builder.WriteString(data.slotStart.Format("2006-01-02 15:04:05"))
+	if data.verbose {
+		builder.WriteString(" (")
+		builder.WriteString(fmt.Sprintf("%d", data.slotStart.Unix()))
+		builder.WriteString(")")
+	}
 	builder.WriteString("\n  Slot end ")
 	builder.WriteString(data.slotEnd.Format("2006-01-02 15:04:05"))
+	if data.verbose {
+		builder.WriteString(" (")
+		builder.WriteString(fmt.Sprintf("%d", data.slotEnd.Unix()))
+		builder.WriteString(")")
+	}
 
-	builder.WriteString("\nSync committee period ")
-	builder.WriteString(fmt.Sprintf("%d", data.syncCommitteePeriod))
-	builder.WriteString("\n  Sync committee period start ")
-	builder.WriteString(data.syncCommitteePeriodStart.Format("2006-01-02 15:04:05"))
-	builder.WriteString(" (epoch ")
-	builder.WriteString(fmt.Sprintf("%d", data.syncCommitteePeriodEpochStart))
-	builder.WriteString(")\n  Sync committee period end ")
-	builder.WriteString(data.syncCommitteePeriodEnd.Format("2006-01-02 15:04:05"))
-	builder.WriteString(" (epoch ")
-	builder.WriteString(fmt.Sprintf("%d", data.syncCommitteePeriodEpochEnd))
-	builder.WriteString(")\n")
+	if data.hasSyncCommittees {
+		builder.WriteString("\nSync committee period ")
+		builder.WriteString(fmt.Sprintf("%d", data.syncCommitteePeriod))
+		builder.WriteString("\n  Sync committee period start ")
+		builder.WriteString(data.syncCommitteePeriodStart.Format("2006-01-02 15:04:05"))
+		builder.WriteString(" (epoch ")
+		builder.WriteString(fmt.Sprintf("%d", data.syncCommitteePeriodEpochStart))
+		if data.verbose {
+			builder.WriteString(", ")
+			builder.WriteString(fmt.Sprintf("%d", data.syncCommitteePeriodStart.Unix()))
+		}
+		builder.WriteString(")\n  Sync committee period end ")
+		builder.WriteString(data.syncCommitteePeriodEnd.Format("2006-01-02 15:04:05"))
+		builder.WriteString(" (epoch ")
+		builder.WriteString(fmt.Sprintf("%d", data.syncCommitteePeriodEpochEnd))
+		if data.verbose {
+			builder.WriteString(", ")
+			builder.WriteString(fmt.Sprintf("%d", data.syncCommitteePeriodEnd.Unix()))
+		}
+		builder.WriteString(")")
+	}
+
+	builder.WriteString("\n")
 
 	return builder.String(), nil
 }

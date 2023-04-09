@@ -61,13 +61,6 @@ func TestInput(t *testing.T) {
 			err:  "timeout is required",
 		},
 		{
-			name: "ConnectionMissing",
-			vars: map[string]interface{}{
-				"timeout": "5s",
-			},
-			err: "failed to connect to any beacon node",
-		},
-		{
 			name: "ConnectionInvalid",
 			vars: map[string]interface{}{
 				"timeout":    "5s",

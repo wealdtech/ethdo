@@ -67,14 +67,6 @@ func TestInput(t *testing.T) {
 			},
 			err: "slot is required",
 		},
-		{
-			name: "ConnectionMissing",
-			vars: map[string]interface{}{
-				"timeout": "5s",
-				"slot":    "1",
-			},
-			err: "failed to connect to any beacon node",
-		},
 	}
 
 	for _, test := range tests {

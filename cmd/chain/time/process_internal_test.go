@@ -1,4 +1,4 @@
-// Copyright © 2021 Weald Technology Trading
+// Copyright © 2021 - 2023 Weald Technology Trading.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -15,7 +15,6 @@ package chaintime
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"testing"
 	"time"
@@ -47,16 +46,11 @@ func TestProcess(t *testing.T) {
 				slot:                     "1",
 			},
 			expected: &dataOut{
-				epochStart:                    time.Unix(1606824023, 0),
-				epochEnd:                      time.Unix(1606824407, 0),
-				slot:                          1,
-				slotStart:                     time.Unix(1606824035, 0),
-				slotEnd:                       time.Unix(1606824047, 0),
-				syncCommitteePeriod:           0,
-				syncCommitteePeriodStart:      time.Unix(1606824023, 0),
-				syncCommitteePeriodEnd:        time.Unix(1606921943, 0),
-				syncCommitteePeriodEpochStart: 0,
-				syncCommitteePeriodEpochEnd:   255,
+				epochStart: time.Unix(1606824023, 0),
+				epochEnd:   time.Unix(1606824407, 0),
+				slot:       1,
+				slotStart:  time.Unix(1606824035, 0),
+				slotEnd:    time.Unix(1606824047, 0),
 			},
 		},
 		{
@@ -68,17 +62,12 @@ func TestProcess(t *testing.T) {
 				epoch:                    "2",
 			},
 			expected: &dataOut{
-				epoch:                         2,
-				epochStart:                    time.Unix(1606824791, 0),
-				epochEnd:                      time.Unix(1606825175, 0),
-				slot:                          64,
-				slotStart:                     time.Unix(1606824791, 0),
-				slotEnd:                       time.Unix(1606824803, 0),
-				syncCommitteePeriod:           0,
-				syncCommitteePeriodStart:      time.Unix(1606824023, 0),
-				syncCommitteePeriodEnd:        time.Unix(1606921943, 0),
-				syncCommitteePeriodEpochStart: 0,
-				syncCommitteePeriodEpochEnd:   255,
+				epoch:      2,
+				epochStart: time.Unix(1606824791, 0),
+				epochEnd:   time.Unix(1606825175, 0),
+				slot:       64,
+				slotStart:  time.Unix(1606824791, 0),
+				slotEnd:    time.Unix(1606824803, 0),
 			},
 		},
 		{
@@ -87,20 +76,21 @@ func TestProcess(t *testing.T) {
 				connection:               os.Getenv("ETHDO_TEST_CONNECTION"),
 				timeout:                  10 * time.Second,
 				allowInsecureConnections: true,
-				timestamp:                "2021-01-01T00:00:00+0000",
+				timestamp:                "2023-01-01T00:00:00+0000",
 			},
 			expected: &dataOut{
-				epoch:                         6862,
-				epochStart:                    time.Unix(1609459031, 0),
-				epochEnd:                      time.Unix(1609459415, 0),
-				slot:                          219598,
-				slotStart:                     time.Unix(1609459199, 0),
-				slotEnd:                       time.Unix(1609459211, 0),
-				syncCommitteePeriod:           26,
-				syncCommitteePeriodStart:      time.Unix(1609379927, 0),
-				syncCommitteePeriodEnd:        time.Unix(1609477847, 0),
-				syncCommitteePeriodEpochStart: 6656,
-				syncCommitteePeriodEpochEnd:   6911,
+				epoch:                         171112,
+				epochStart:                    time.Unix(1672531031, 0),
+				epochEnd:                      time.Unix(1672531415, 0),
+				slot:                          5475598,
+				slotStart:                     time.Unix(1672531199, 0),
+				slotEnd:                       time.Unix(1672531211, 0),
+				hasSyncCommittees:             true,
+				syncCommitteePeriod:           668,
+				syncCommitteePeriodStart:      time.Unix(1672491095, 0),
+				syncCommitteePeriodEnd:        time.Unix(1672589399, 0),
+				syncCommitteePeriodEpochStart: 171008,
+				syncCommitteePeriodEpochEnd:   171264,
 			},
 		},
 	}
@@ -112,7 +102,6 @@ func TestProcess(t *testing.T) {
 				require.EqualError(t, err, test.err)
 			} else {
 				require.NoError(t, err)
-				fmt.Printf("****** %d %d\n", res.syncCommitteePeriodStart.Unix(), res.syncCommitteePeriodEnd.Unix())
 				require.Equal(t, test.expected, res)
 			}
 		})

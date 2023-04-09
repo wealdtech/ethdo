@@ -18,6 +18,7 @@ import (
 	"time"
 
 	eth2client "github.com/attestantio/go-eth2-client"
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
 	"github.com/wealdtech/ethdo/services/chaintime"
@@ -34,16 +35,15 @@ type command struct {
 	allowInsecureConnections bool
 
 	// Input.
-	account string
-	pubKey  string
-	index   string
-	epoch   int64
+	validator string
+	epochStr  string
 
 	// Data access.
 	eth2Client eth2client.Service
 	chainTime  chaintime.Service
 
 	// Output.
+	epoch          phase0.Epoch
 	inCommittee    bool
 	committeeIndex uint64
 	inclusions     []int
@@ -67,15 +67,13 @@ func newCommand(_ context.Context) (*command, error) {
 	c.allowInsecureConnections = viper.GetBool("allow-insecure-connections")
 
 	// Validator.
-	c.account = viper.GetString("account")
-	c.pubKey = viper.GetString("pubkey")
-	c.index = viper.GetString("index")
-	if c.account == "" && c.pubKey == "" && c.index == "" {
-		return nil, errors.New("account, pubkey or index required")
+	c.validator = viper.GetString("validator")
+	if c.validator == "" {
+		return nil, errors.New("validator is required")
 	}
 
 	// Epoch.
-	c.epoch = viper.GetInt64("epoch")
+	c.epochStr = viper.GetString("epoch")
 
 	return c, nil
 }

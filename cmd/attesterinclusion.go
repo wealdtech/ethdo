@@ -26,7 +26,7 @@ var attesterInclusionCmd = &cobra.Command{
 	Short: "Obtain information about attester inclusion",
 	Long: `Obtain information about attester inclusion.  For example:
 
-    ethdo attester inclusion --account=Validators/00001 --epoch=12345
+    ethdo attester inclusion --validator=Validators/00001 --epoch=12345
 
 In quiet mode this will return 0 if an attestation from the attester is found on the block of the given epoch, otherwise 1.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -47,8 +47,8 @@ In quiet mode this will return 0 if an attestation from the attester is found on
 func init() {
 	attesterCmd.AddCommand(attesterInclusionCmd)
 	attesterFlags(attesterInclusionCmd)
-	attesterInclusionCmd.Flags().Int64("epoch", -1, "the last complete epoch")
-	attesterInclusionCmd.Flags().String("pubkey", "", "the public key of the attester")
+	attesterInclusionCmd.Flags().String("epoch", "-1", "the epoch for which to obtain the inclusion")
+	attesterInclusionCmd.Flags().String("validator", "", "the index, public key, or account of the validator")
 	attesterInclusionCmd.Flags().String("index", "", "the index of the attester")
 }
 
@@ -56,7 +56,7 @@ func attesterInclusionBindings() {
 	if err := viper.BindPFlag("epoch", attesterInclusionCmd.Flags().Lookup("epoch")); err != nil {
 		panic(err)
 	}
-	if err := viper.BindPFlag("pubkey", attesterInclusionCmd.Flags().Lookup("pubkey")); err != nil {
+	if err := viper.BindPFlag("validator", attesterInclusionCmd.Flags().Lookup("validator")); err != nil {
 		panic(err)
 	}
 	if err := viper.BindPFlag("index", attesterInclusionCmd.Flags().Lookup("index")); err != nil {

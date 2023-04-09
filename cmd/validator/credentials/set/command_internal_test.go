@@ -38,29 +38,11 @@ func TestInput(t *testing.T) {
 			err:  "timeout is required",
 		},
 		{
-			name: "NoValidatorInfo",
-			vars: map[string]interface{}{
-				"timeout":    "5s",
-				"connection": os.Getenv("ETHDO_TEST_CONNECTION"),
-			},
-			err: "one of account, index or pubkey required",
-		},
-		{
-			name: "MultipleValidatorInfo",
-			vars: map[string]interface{}{
-				"timeout":    "5s",
-				"connection": os.Getenv("ETHDO_TEST_CONNECTION"),
-				"index":      "1",
-				"pubkey":     "0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
-			},
-			err: "only one of account, index and pubkey allowed",
-		},
-		{
 			name: "Good",
 			vars: map[string]interface{}{
 				"timeout":    "5s",
 				"connection": os.Getenv("ETHDO_TEST_CONNECTION"),
-				"index":      "1",
+				"validator":  "1",
 			},
 		},
 	}

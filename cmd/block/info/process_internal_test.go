@@ -1,4 +1,4 @@
-// Copyright © 2019, 2020 Weald Technology Trading
+// Copyright © 2019 - 2023 Weald Technology Trading.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -43,11 +43,11 @@ func TestProcess(t *testing.T) {
 			err:  "no data",
 		},
 		{
-			name: "Client",
+			name: "NoBlockID",
 			dataIn: &dataIn{
 				eth2Client: eth2Client,
 			},
-			err: "empty beacon block",
+			err: "no block ID",
 		},
 	}
 

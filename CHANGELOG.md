@@ -1,5 +1,7 @@
-dev:
+1.29.0:
   - allow use of keystores with validator credentials set
+  - tidy up various command options to provide more standard usage
+  - add mainnet fallback beacon node
 
 1.28.4:
   - allow validator exit to use a keystore as its validator parameter

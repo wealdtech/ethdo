@@ -31,7 +31,10 @@ func process(ctx context.Context, data *dataIn) (*dataOut, error) {
 		return nil, errors.New("no data")
 	}
 
-	var err error
+	validator, err := util.ParseValidator(ctx, data.eth2Client.(eth2client.ValidatorsProvider), data.validator, "head")
+	if err != nil {
+		return nil, err
+	}
 
 	data.chainTime, err = standardchaintime.New(ctx,
 		standardchaintime.WithSpecProvider(data.eth2Client.(eth2client.SpecProvider)),
@@ -39,23 +42,6 @@ func process(ctx context.Context, data *dataIn) (*dataOut, error) {
 	)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to set up chaintime service")
-	}
-
-	validatorIndex, err := util.ValidatorIndex(ctx, data.eth2Client, data.account, data.pubKey, data.index)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to obtain validator index")
-	}
-
-	validators, err := data.eth2Client.(eth2client.ValidatorsProvider).Validators(ctx, fmt.Sprintf("%d", uint64(data.epoch)*data.slotsPerEpoch), []phase0.ValidatorIndex{validatorIndex})
-	if err != nil {
-		return nil, errors.New("failed to obtain validator information")
-	}
-	if len(validators) == 0 {
-		return nil, errors.New("validator is not known")
-	}
-	var validator *api.Validator
-	for _, v := range validators {
-		validator = v
 	}
 
 	results := &dataOut{

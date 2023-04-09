@@ -1,4 +1,4 @@
-// Copyright © 2020 Weald Technology Trading
+// Copyright © 2020, 2023 Weald Technology Trading
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -17,6 +17,7 @@ import (
 	"context"
 	"fmt"
 	"net/url"
+	"os"
 	"strings"
 	"time"
 
@@ -33,23 +34,46 @@ var defaultBeaconNodeAddresses = []string{
 	"localhost:3500", // Prysm
 }
 
+// fallbackBeaconNode is used if no other connection is supplied.
+var fallbackBeaconNode = "http://mainnet-consensus.attestant.io/"
+
+type ConnectOpts struct {
+	Address       string
+	Timeout       time.Duration
+	AllowInsecure bool
+	LogFallback   bool
+}
+
 // ConnectToBeaconNode connects to a beacon node at the given address.
-func ConnectToBeaconNode(ctx context.Context, address string, timeout time.Duration, allowInsecure bool) (eth2client.Service, error) {
-	if timeout == 0 {
+func ConnectToBeaconNode(ctx context.Context, opts *ConnectOpts) (eth2client.Service, error) {
+	if opts == nil {
+		return nil, errors.New("no options specified")
+	}
+
+	if opts.Timeout == 0 {
 		return nil, errors.New("no timeout specified")
 	}
 
-	if address != "" {
+	if opts.Address != "" {
 		// We have an explicit address; use it.
-		return connectToBeaconNode(ctx, address, timeout, allowInsecure)
+		return connectToBeaconNode(ctx, opts.Address, opts.Timeout, opts.AllowInsecure)
 	}
 
 	// Try the defaults.
 	for _, address := range defaultBeaconNodeAddresses {
-		client, err := connectToBeaconNode(ctx, address, timeout, allowInsecure)
+		client, err := connectToBeaconNode(ctx, address, opts.Timeout, opts.AllowInsecure)
 		if err == nil {
 			return client, nil
 		}
+	}
+
+	// The user did not provide a connection, so attempt to use the fallback node.
+	if opts.LogFallback {
+		fmt.Fprintf(os.Stderr, "No connection supplied with --connection parameter and no local beacon node found, attempting to use mainnet fallback\n")
+	}
+	client, err := connectToBeaconNode(ctx, fallbackBeaconNode, opts.Timeout, true)
+	if err == nil {
+		return client, nil
 	}
 
 	return nil, errors.New("failed to connect to any beacon node")

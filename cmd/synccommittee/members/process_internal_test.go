@@ -55,7 +55,7 @@ func TestProcess(t *testing.T) {
 			dataIn: &dataIn{
 				eth2Client: eth2Client,
 				chainTime:  chainTime,
-				epoch:      -1,
+				epoch:      "-1",
 			},
 		},
 	}

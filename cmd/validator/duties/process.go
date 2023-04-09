@@ -30,7 +30,12 @@ func process(ctx context.Context, data *dataIn) (*dataOut, error) {
 	}
 
 	// Ethereum 2 client.
-	eth2Client, err := util.ConnectToBeaconNode(ctx, data.eth2Client, data.timeout, data.allowInsecure)
+	eth2Client, err := util.ConnectToBeaconNode(ctx, &util.ConnectOpts{
+		Address:       data.eth2Client,
+		Timeout:       data.timeout,
+		AllowInsecure: data.allowInsecure,
+		LogFallback:   !data.quiet,
+	})
 	if err != nil {
 		return nil, err
 	}

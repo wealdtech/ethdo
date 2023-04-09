@@ -21,6 +21,7 @@ import (
 	eth2client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
+	"github.com/wealdtech/ethdo/util"
 )
 
 func process(ctx context.Context, data *dataIn) (*dataOut, error) {
@@ -52,10 +53,11 @@ func process(ctx context.Context, data *dataIn) (*dataOut, error) {
 	return results, nil
 }
 
-func calculateEpoch(_ context.Context, data *dataIn) (phase0.Epoch, error) {
+func calculateEpoch(ctx context.Context, data *dataIn) (phase0.Epoch, error) {
 	var epoch phase0.Epoch
-	if data.epoch != -1 {
-		epoch = phase0.Epoch(data.epoch)
+	var err error
+	if data.epoch != "" {
+		epoch, err = util.ParseEpoch(ctx, data.chainTime, data.epoch)
 	} else {
 		switch strings.ToLower(data.period) {
 		case "", "current":
@@ -67,6 +69,9 @@ func calculateEpoch(_ context.Context, data *dataIn) (phase0.Epoch, error) {
 		default:
 			return 0, fmt.Errorf("period %s not known", data.period)
 		}
+	}
+	if err != nil {
+		return 0, err
 	}
 
 	if data.debug {

@@ -39,7 +39,7 @@ func TestProcess(t *testing.T) {
 				"connection": os.Getenv("ETHDO_TEST_CONNECTION"),
 				"blockid":    "invalid",
 			},
-			err: "failed to obtain beacon block: failed to request signed beacon block: GET failed with status 400: {\"code\":400,\"message\":\"Invalid block: invalid\"}",
+			err: "failed to obtain beacon block: failed to request signed beacon block: GET failed with status 400: {\"code\":400,\"message\":\"BAD_REQUEST: Unsupported endpoint version: v2\",\"stacktraces\":[]}",
 		},
 	}
 

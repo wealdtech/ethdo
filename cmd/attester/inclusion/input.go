@@ -15,7 +15,6 @@ package attesterinclusion
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	eth2client "github.com/attestantio/go-eth2-client"
@@ -23,6 +22,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
 	"github.com/wealdtech/ethdo/services/chaintime"
+	standardchaintime "github.com/wealdtech/ethdo/services/chaintime/standard"
 	"github.com/wealdtech/ethdo/util"
 )
 
@@ -32,15 +32,11 @@ type dataIn struct {
 	quiet   bool
 	verbose bool
 	debug   bool
-	// Chain information.
-	slotsPerEpoch uint64
 	// Operation.
 	eth2Client eth2client.Service
 	chainTime  chaintime.Service
 	epoch      spec.Epoch
-	account    string
-	pubKey     string
-	index      string
+	validator  string
 }
 
 func input(ctx context.Context) (*dataIn, error) {
@@ -54,48 +50,35 @@ func input(ctx context.Context) (*dataIn, error) {
 	data.verbose = viper.GetBool("verbose")
 	data.debug = viper.GetBool("debug")
 
-	// Account.
-	data.account = viper.GetString("account")
-
-	// PubKey.
-	data.pubKey = viper.GetString("pubkey")
-
-	// ID.
-	data.index = viper.GetString("index")
-
-	if viper.GetString("account") == "" && viper.GetString("index") == "" && viper.GetString("pubkey") == "" {
-		return nil, errors.New("account, index or pubkey is required")
+	data.validator = viper.GetString("validator")
+	if data.validator == "" {
+		return nil, errors.New("validator is required")
 	}
 
 	// Ethereum 2 client.
 	var err error
-	data.eth2Client, err = util.ConnectToBeaconNode(ctx, viper.GetString("connection"), viper.GetDuration("timeout"), viper.GetBool("allow-insecure-connections"))
+	data.eth2Client, err = util.ConnectToBeaconNode(ctx, &util.ConnectOpts{
+		Address:       viper.GetString("connection"),
+		Timeout:       viper.GetDuration("timeout"),
+		AllowInsecure: viper.GetBool("allow-insecure-connections"),
+		LogFallback:   !data.quiet,
+	})
 	if err != nil {
 		return nil, err
 	}
 
-	config, err := data.eth2Client.(eth2client.SpecProvider).Spec(ctx)
+	data.chainTime, err = standardchaintime.New(ctx,
+		standardchaintime.WithSpecProvider(data.eth2Client.(eth2client.SpecProvider)),
+		standardchaintime.WithGenesisTimeProvider(data.eth2Client.(eth2client.GenesisTimeProvider)),
+	)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to obtain beacon chain configuration")
+		return nil, errors.Wrap(err, "failed to set up chaintime service")
 	}
-	data.slotsPerEpoch = config["SLOTS_PER_EPOCH"].(uint64)
 
 	// Epoch.
-	epoch := viper.GetInt64("epoch")
-	if epoch == -1 {
-		slotDuration := config["SECONDS_PER_SLOT"].(time.Duration)
-		genesis, err := data.eth2Client.(eth2client.GenesisProvider).Genesis(ctx)
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to obtain genesis data")
-		}
-		epoch = int64(time.Since(genesis.GenesisTime).Seconds()) / (int64(slotDuration.Seconds()) * int64(data.slotsPerEpoch))
-		if epoch > 0 {
-			epoch--
-		}
-	}
-	data.epoch = spec.Epoch(epoch)
-	if data.debug {
-		fmt.Printf("Epoch is %d\n", data.epoch)
+	data.epoch, err = util.ParseEpoch(ctx, data.chainTime, viper.GetString("epoch"))
+	if err != nil {
+		return nil, err
 	}
 
 	return data, nil

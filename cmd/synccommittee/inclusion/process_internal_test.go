@@ -33,27 +33,19 @@ func TestProcess(t *testing.T) {
 		err  string
 	}{
 		{
-			name: "MissingConnection",
-			vars: map[string]interface{}{
-				"timeout": "5s",
-				"index":   "1",
-			},
-			err: "failed to connect to any beacon node",
-		},
-		{
 			name: "InvalidConnection",
 			vars: map[string]interface{}{
 				"timeout":    "5s",
-				"index":      "1",
+				"validator":  "1",
 				"connection": "invalid",
 			},
-			err: "failed to connect to beacon node: failed to confirm node connection: failed to fetch genesis: failed to request genesis: failed to call GET endpoint: Get \"http://invalid/eth/v1/beacon/genesis\": dial tcp: lookup invalid: no such host",
+			err: "failed to connect to beacon node: failed to confirm node connection: failed to fetch genesis: failed to request genesis: failed to call GET endpoint: Get \"http://invalid/eth/v1/beacon/genesis\": dial tcp: lookup invalid on 127.0.0.53:53: no such host",
 		},
 		{
 			name: "Good",
 			vars: map[string]interface{}{
 				"timeout":    "5s",
-				"index":      "1",
+				"validator":  "1",
 				"epoch":      "-1",
 				"connection": os.Getenv("ETHDO_TEST_CONNECTION"),
 			},

@@ -48,7 +48,12 @@ func (c *command) setup(ctx context.Context) error {
 	var err error
 
 	// Connect to the consensus node.
-	c.consensusClient, err = util.ConnectToBeaconNode(ctx, c.connection, c.timeout, c.allowInsecureConnections)
+	c.consensusClient, err = util.ConnectToBeaconNode(ctx, &util.ConnectOpts{
+		Address:       c.connection,
+		Timeout:       c.timeout,
+		AllowInsecure: c.allowInsecureConnections,
+		LogFallback:   !c.quiet,
+	})
 	if err != nil {
 		return errors.Wrap(err, "failed to connect to consensus node")
 	}
@@ -57,7 +62,7 @@ func (c *command) setup(ctx context.Context) error {
 	var isProvider bool
 	c.validatorsProvider, isProvider = c.consensusClient.(eth2client.ValidatorsProvider)
 	if !isProvider {
-		return errors.New("consensu node does not provide validator information")
+		return errors.New("consensus node does not provide validator information")
 	}
 
 	return nil

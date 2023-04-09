@@ -18,18 +18,26 @@ import (
 	"os"
 	"testing"
 
-	"github.com/attestantio/go-eth2-client/auto"
+	eth2client "github.com/attestantio/go-eth2-client"
+	"github.com/attestantio/go-eth2-client/http"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
+	standardchaintime "github.com/wealdtech/ethdo/services/chaintime/standard"
 )
 
 func TestProcess(t *testing.T) {
 	if os.Getenv("ETHDO_TEST_CONNECTION") == "" {
 		t.Skip("ETHDO_TEST_CONNECTION not configured; cannot run tests")
 	}
-	eth2Client, err := auto.New(context.Background(),
-		auto.WithLogLevel(zerolog.Disabled),
-		auto.WithAddress(os.Getenv("ETHDO_TEST_CONNECTION")),
+	eth2Client, err := http.New(context.Background(),
+		http.WithLogLevel(zerolog.Disabled),
+		http.WithAddress(os.Getenv("ETHDO_TEST_CONNECTION")),
+	)
+	require.NoError(t, err)
+
+	chainTime, err := standardchaintime.New(context.Background(),
+		standardchaintime.WithSpecProvider(eth2Client.(eth2client.SpecProvider)),
+		standardchaintime.WithGenesisTimeProvider(eth2Client.(eth2client.GenesisTimeProvider)),
 	)
 	require.NoError(t, err)
 
@@ -45,10 +53,9 @@ func TestProcess(t *testing.T) {
 		{
 			name: "Client",
 			dataIn: &dataIn{
-				eth2Client:    eth2Client,
-				slotsPerEpoch: 32,
-				pubKey:        "0x933ad9491b62059dd065b560d256d8957a8c402cc6e8d8ee7290ae11e8f7329267a8811c397529dac52ae1342ba58c95",
-				epoch:         100,
+				eth2Client: eth2Client,
+				chainTime:  chainTime,
+				validator:  "0x933ad9491b62059dd065b560d256d8957a8c402cc6e8d8ee7290ae11e8f7329267a8811c397529dac52ae1342ba58c95",
 			},
 		},
 	}

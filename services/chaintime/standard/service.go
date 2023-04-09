@@ -178,6 +178,11 @@ func (s *Service) FirstSlotOfEpoch(epoch phase0.Epoch) phase0.Slot {
 	return phase0.Slot(uint64(epoch) * s.slotsPerEpoch)
 }
 
+// LastSlotOfEpoch provides the last slot of the given epoch.
+func (s *Service) LastSlotOfEpoch(epoch phase0.Epoch) phase0.Slot {
+	return phase0.Slot(uint64(epoch)*s.slotsPerEpoch + s.slotsPerEpoch - 1)
+}
+
 // TimestampToSlot provides the slot of the given timestamp.
 func (s *Service) TimestampToSlot(timestamp time.Time) phase0.Slot {
 	if timestamp.Before(s.genesisTime) {

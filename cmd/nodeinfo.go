@@ -24,9 +24,6 @@ import (
 	"github.com/wealdtech/ethdo/util"
 )
 
-// defaultBeaconNode is used if no other connection is supplied.
-var defaultBeaconNode = "http://mainnet-consensus.attestant.io/"
-
 var nodeInfoCmd = &cobra.Command{
 	Use:   "info",
 	Short: "Obtain information about a node",
@@ -38,27 +35,13 @@ In quiet mode this will return 0 if the node information can be obtained, otherw
 	Run: func(cmd *cobra.Command, args []string) {
 		ctx := context.Background()
 
-		eth2Client, err := util.ConnectToBeaconNode(ctx, viper.GetString("connection"), viper.GetDuration("timeout"), viper.GetBool("allow-insecure-connections"))
-		if err != nil {
-			if viper.GetString("connection") != "" {
-				// The user provided a connection, so don't second-guess them by using a different node.
-				fmt.Fprintln(os.Stderr, err.Error())
-				return
-			}
-
-			// The user did not provide a connection, so attempt to use the default node.
-			if viper.GetBool("debug") {
-				fmt.Fprintf(os.Stderr, "No node connection, attempting to use %s\n", defaultBeaconNode)
-			}
-			eth2Client, err = util.ConnectToBeaconNode(ctx, defaultBeaconNode, viper.GetDuration("timeout"), viper.GetBool("allow-insecure-connections"))
-			if err != nil {
-				fmt.Fprintln(os.Stderr, err.Error())
-				return
-			}
-			if !viper.GetBool("quiet") {
-				fmt.Fprintf(os.Stderr, "No connection supplied; using mainnet public access endpoint\n")
-			}
-		}
+		eth2Client, err := util.ConnectToBeaconNode(ctx, &util.ConnectOpts{
+			Address:       viper.GetString("connection"),
+			Timeout:       viper.GetDuration("timeout"),
+			AllowInsecure: viper.GetBool("allow-insecure-connections"),
+			LogFallback:   !viper.GetBool("quiet"),
+		})
+		errCheck(err, "Failed to connect to Ethereum 2 beacon node")
 
 		if quiet {
 			os.Exit(_exitSuccess)

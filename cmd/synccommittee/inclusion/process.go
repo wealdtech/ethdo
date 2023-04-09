@@ -20,7 +20,6 @@ import (
 	eth2client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/spec"
 	"github.com/attestantio/go-eth2-client/spec/altair"
-	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 	standardchaintime "github.com/wealdtech/ethdo/services/chaintime/standard"
 	"github.com/wealdtech/ethdo/util"
@@ -32,14 +31,17 @@ func (c *command) process(ctx context.Context) error {
 		return err
 	}
 
-	firstSlot, lastSlot := c.calculateSlots(ctx)
-
-	validatorIndex, err := util.ValidatorIndex(ctx, c.eth2Client, c.account, c.pubKey, c.index)
+	validator, err := util.ParseValidator(ctx, c.eth2Client.(eth2client.ValidatorsProvider), c.validator, "head")
 	if err != nil {
 		return err
 	}
 
-	syncCommittee, err := c.eth2Client.(eth2client.SyncCommitteesProvider).SyncCommitteeAtEpoch(ctx, "head", phase0.Epoch(c.epoch))
+	c.epoch, err = util.ParseEpoch(ctx, c.chainTime, c.epochStr)
+	if err != nil {
+		return err
+	}
+
+	syncCommittee, err := c.eth2Client.(eth2client.SyncCommitteesProvider).SyncCommitteeAtEpoch(ctx, "head", c.epoch)
 	if err != nil {
 		return errors.Wrap(err, "failed to obtain sync committee information")
 	}
@@ -49,7 +51,7 @@ func (c *command) process(ctx context.Context) error {
 	}
 
 	for i := range syncCommittee.Validators {
-		if syncCommittee.Validators[i] == validatorIndex {
+		if syncCommittee.Validators[i] == validator.Index {
 			c.inCommittee = true
 			c.committeeIndex = uint64(i)
 			break
@@ -57,6 +59,8 @@ func (c *command) process(ctx context.Context) error {
 	}
 
 	if c.inCommittee {
+		firstSlot := c.chainTime.FirstSlotOfEpoch(c.epoch)
+		lastSlot := c.chainTime.LastSlotOfEpoch(c.epoch)
 		// This validator is in the sync committee.  Check blocks to see where it has been included.
 		c.inclusions = make([]int, 0)
 		if lastSlot > c.chainTime.CurrentSlot() {
@@ -107,7 +111,12 @@ func (c *command) setup(ctx context.Context) error {
 	var err error
 
 	// Connect to the client.
-	c.eth2Client, err = util.ConnectToBeaconNode(ctx, c.connection, c.timeout, c.allowInsecureConnections)
+	c.eth2Client, err = util.ConnectToBeaconNode(ctx, &util.ConnectOpts{
+		Address:       c.connection,
+		Timeout:       c.timeout,
+		AllowInsecure: c.allowInsecureConnections,
+		LogFallback:   !c.quiet,
+	})
 	if err != nil {
 		return err
 	}
@@ -121,16 +130,4 @@ func (c *command) setup(ctx context.Context) error {
 	}
 
 	return nil
-}
-
-func (c *command) calculateSlots(_ context.Context) (phase0.Slot, phase0.Slot) {
-	var firstSlot phase0.Slot
-	var lastSlot phase0.Slot
-	if c.epoch == -1 {
-		c.epoch = int64(c.chainTime.CurrentEpoch()) - 1
-	}
-	firstSlot = c.chainTime.FirstSlotOfEpoch(phase0.Epoch(c.epoch))
-	lastSlot = c.chainTime.FirstSlotOfEpoch(phase0.Epoch(c.epoch) + 1)
-
-	return firstSlot, lastSlot
 }

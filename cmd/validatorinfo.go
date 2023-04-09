@@ -45,11 +45,12 @@ In quiet mode this will return 0 if the validator information can be obtained, o
 	Run: func(cmd *cobra.Command, args []string) {
 		ctx := context.Background()
 
-		eth2Client, err := util.ConnectToBeaconNode(ctx,
-			viper.GetString("connection"),
-			viper.GetDuration("timeout"),
-			viper.GetBool("allow-insecure-connections"),
-		)
+		eth2Client, err := util.ConnectToBeaconNode(ctx, &util.ConnectOpts{
+			Address:       viper.GetString("connection"),
+			Timeout:       viper.GetDuration("timeout"),
+			AllowInsecure: viper.GetBool("allow-insecure-connections"),
+			LogFallback:   !viper.GetBool("quiet"),
+		})
 		errCheck(err, "Failed to connect to Ethereum 2 beacon node")
 
 		if viper.GetString("validator") == "" {

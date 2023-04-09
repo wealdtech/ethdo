@@ -52,7 +52,12 @@ func input(ctx context.Context) (*dataIn, error) {
 
 	// Ethereum 2 client.
 	var err error
-	data.eth2Client, err = util.ConnectToBeaconNode(ctx, viper.GetString("connection"), viper.GetDuration("timeout"), viper.GetBool("allow-insecure-connections"))
+	data.eth2Client, err = util.ConnectToBeaconNode(ctx, &util.ConnectOpts{
+		Address:       viper.GetString("connection"),
+		Timeout:       viper.GetDuration("timeout"),
+		AllowInsecure: viper.GetBool("allow-insecure-connections"),
+		LogFallback:   !data.quiet,
+	})
 	if err != nil {
 		return nil, err
 	}

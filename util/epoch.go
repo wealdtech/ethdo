@@ -26,7 +26,7 @@ import (
 func ParseEpoch(_ context.Context, chainTime chaintime.Service, epochStr string) (phase0.Epoch, error) {
 	currentEpoch := chainTime.CurrentEpoch()
 	switch epochStr {
-	case "", "current", "-0":
+	case "", "current", "head", "-0":
 		return currentEpoch, nil
 	case "last":
 		if currentEpoch > 0 {

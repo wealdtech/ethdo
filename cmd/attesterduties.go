@@ -26,7 +26,7 @@ var attesterDutiesCmd = &cobra.Command{
 	Short: "Obtain information about duties of an attester",
 	Long: `Obtain information about dutes of an attester.  For example:
 
-    ethdo attester duties --account=Validators/00001 --epoch=12345
+    ethdo attester duties --validator=Validators/00001 --epoch=12345
 
 In quiet mode this will return 0 if a duty from the attester is found, otherwise 1.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -47,8 +47,8 @@ In quiet mode this will return 0 if a duty from the attester is found, otherwise
 func init() {
 	attesterCmd.AddCommand(attesterDutiesCmd)
 	attesterFlags(attesterDutiesCmd)
-	attesterDutiesCmd.Flags().Int64("epoch", -1, "the last complete epoch")
-	attesterDutiesCmd.Flags().String("pubkey", "", "the public key of the attester")
+	attesterDutiesCmd.Flags().String("epoch", "head", "the epoch for which to obtain the duties")
+	attesterDutiesCmd.Flags().String("validator", "", "the index, public key, or acount of the validator")
 	attesterDutiesCmd.Flags().Bool("json", false, "Generate JSON data for an exit; do not broadcast to network")
 }
 
@@ -56,7 +56,7 @@ func attesterDutiesBindings() {
 	if err := viper.BindPFlag("epoch", attesterDutiesCmd.Flags().Lookup("epoch")); err != nil {
 		panic(err)
 	}
-	if err := viper.BindPFlag("pubkey", attesterDutiesCmd.Flags().Lookup("pubkey")); err != nil {
+	if err := viper.BindPFlag("validator", attesterDutiesCmd.Flags().Lookup("validator")); err != nil {
 		panic(err)
 	}
 	if err := viper.BindPFlag("json", attesterDutiesCmd.Flags().Lookup("json")); err != nil {

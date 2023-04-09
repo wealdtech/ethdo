@@ -44,9 +44,6 @@ import (
 // a lot of data for an unsophisticated audience so it's easier to set a higher timeout..
 var minTimeout = 5 * time.Minute
 
-// defaultBeaconNode is used if no other connection is supplied.
-var defaultBeaconNode = "http://mainnet-consensus.attestant.io/"
-
 // validatorPath is the regular expression that matches a validator  path.
 var validatorPath = regexp.MustCompile("^m/12381/3600/[0-9]+/0/0$")
 
@@ -707,24 +704,14 @@ func (c *command) setup(ctx context.Context) error {
 
 	// Connect to the consensus node.
 	var err error
-	c.consensusClient, err = util.ConnectToBeaconNode(ctx, c.connection, c.timeout, c.allowInsecureConnections)
+	c.consensusClient, err = util.ConnectToBeaconNode(ctx, &util.ConnectOpts{
+		Address:       c.connection,
+		Timeout:       c.timeout,
+		AllowInsecure: c.allowInsecureConnections,
+		LogFallback:   !c.quiet,
+	})
 	if err != nil {
-		if c.connection != "" {
-			// The user provided a connection, so don't second-guess them by using a different node.
-			return err
-		}
-
-		// The user did not provide a connection, so attempt to use the default node.
-		if c.debug {
-			fmt.Fprintf(os.Stderr, "No node connection, attempting to use %s\n", defaultBeaconNode)
-		}
-		c.consensusClient, err = util.ConnectToBeaconNode(ctx, defaultBeaconNode, c.timeout, true)
-		if err != nil {
-			return err
-		}
-		if !c.quiet {
-			fmt.Fprintf(os.Stderr, "No connection supplied; using mainnet public access endpoint\n")
-		}
+		return err
 	}
 
 	// Set up chaintime.

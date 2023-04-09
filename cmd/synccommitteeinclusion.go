@@ -49,19 +49,15 @@ epoch can be a specific epoch; If not supplied all slots for the current sync co
 func init() {
 	synccommitteeCmd.AddCommand(synccommitteeInclusionCmd)
 	synccommitteeFlags(synccommitteeInclusionCmd)
-	synccommitteeInclusionCmd.Flags().Int64("epoch", -1, "the epoch for which to fetch sync committee inclusion")
-	synccommitteeInclusionCmd.Flags().String("pubkey", "", "validator public key for sync committee")
-	synccommitteeInclusionCmd.Flags().String("index", "", "validator index for sync committee")
+	synccommitteeInclusionCmd.Flags().String("epoch", "", "the epoch for which to fetch sync committee inclusion")
+	synccommitteeInclusionCmd.Flags().String("validator", "", "the index, public key, or acount of the validator")
 }
 
 func synccommitteeInclusionBindings() {
 	if err := viper.BindPFlag("epoch", synccommitteeInclusionCmd.Flags().Lookup("epoch")); err != nil {
 		panic(err)
 	}
-	if err := viper.BindPFlag("pubkey", synccommitteeInclusionCmd.Flags().Lookup("pubkey")); err != nil {
-		panic(err)
-	}
-	if err := viper.BindPFlag("index", synccommitteeInclusionCmd.Flags().Lookup("index")); err != nil {
+	if err := viper.BindPFlag("validator", synccommitteeInclusionCmd.Flags().Lookup("validator")); err != nil {
 		panic(err)
 	}
 }

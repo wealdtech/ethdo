@@ -17,6 +17,7 @@ import (
 	"context"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
@@ -61,19 +62,21 @@ func TestInput(t *testing.T) {
 			err:  "timeout is required",
 		},
 		{
-			name: "AccountMissing",
+			name: "ValidatorMissing",
 			vars: map[string]interface{}{
 				"timeout": "5s",
 			},
-			err: "account or pubkey is required",
+			err: "validator is required",
 		},
 		{
-			name: "ConnectionMissing",
+			name: "Good",
 			vars: map[string]interface{}{
-				"timeout": "5s",
-				"pubkey":  "0xa99a76ed7796f7be22d5b7e85deeb7c5677e88e511e0b337618f8c4eb61349b4bf2d153f649f7b53359fe8b94a38e44c",
+				"timeout":   "5s",
+				"validator": "0xa99a76ed7796f7be22d5b7e85deeb7c5677e88e511e0b337618f8c4eb61349b4bf2d153f649f7b53359fe8b94a38e44c",
 			},
-			err: "failed to connect to any beacon node",
+			res: &dataIn{
+				timeout: 5 * time.Second,
+			},
 		},
 	}
 

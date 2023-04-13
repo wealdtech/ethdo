@@ -47,6 +47,9 @@ var minTimeout = 5 * time.Minute
 // validatorPath is the regular expression that matches a validator  path.
 var validatorPath = regexp.MustCompile("^m/12381/3600/[0-9]+/0/0$")
 
+// numeric is the regular expression that matches a number.
+var numeric = regexp.MustCompile(`^[0-9]+$`)
+
 var (
 	offlinePreparationFilename = "offline-preparation.json"
 	changeOperationsFilename   = "change-operations.json"
@@ -318,16 +321,7 @@ func (c *command) generateOperationsFromAccountAndPrivateKey(ctx context.Context
 }
 
 func (c *command) generateOperationsFromValidatorAndPrivateKey(ctx context.Context) error {
-	validatorAccount, err := util.ParseAccount(ctx, c.validator, nil, false)
-	if err != nil {
-		return err
-	}
-
-	validatorPubkey, err := util.BestPublicKey(validatorAccount)
-	if err != nil {
-		return err
-	}
-	validatorInfo, err := c.chainInfo.FetchValidatorInfo(ctx, fmt.Sprintf("%#x", validatorPubkey.Marshal()))
+	validatorInfo, err := c.obtainValidatorInfoFromValidatorSpecifier(ctx)
 	if err != nil {
 		return err
 	}
@@ -338,6 +332,28 @@ func (c *command) generateOperationsFromValidatorAndPrivateKey(ctx context.Conte
 	}
 
 	return c.generateOperationFromAccount(ctx, validatorInfo, withdrawalAccount)
+}
+
+func (c *command) obtainValidatorInfoFromValidatorSpecifier(ctx context.Context) (*beacon.ValidatorInfo, error) {
+	if numeric.MatchString(c.validator) {
+		// The validator specifier looks like an on-chain index.  Fetch directly from the
+		// chain information.
+		return c.chainInfo.FetchValidatorInfo(ctx, c.validator)
+	}
+
+	// The validator specifier Looks like some sort of account specifier.  Fetch the account first,
+	// and then the validator information from its public key.
+	validatorAccount, err := util.ParseAccount(ctx, c.validator, nil, false)
+	if err != nil {
+		return nil, err
+	}
+
+	validatorPubkey, err := util.BestPublicKey(validatorAccount)
+	if err != nil {
+		return nil, err
+	}
+
+	return c.chainInfo.FetchValidatorInfo(ctx, fmt.Sprintf("%#x", validatorPubkey.Marshal()))
 }
 
 func (c *command) generateOperationsFromPrivateKey(ctx context.Context) error {

@@ -1,3 +1,6 @@
+1.29.1:
+  - fix regression where validator index could not be used as an account specifier
+
 1.29.0:
   - allow use of keystores with validator credentials set
   - tidy up various command options to provide more standard usage

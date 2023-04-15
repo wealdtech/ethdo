@@ -49,7 +49,6 @@ func init() {
 	blockFlags(blockAnalyzeCmd)
 	blockAnalyzeCmd.Flags().String("blockid", "head", "the ID of the block to fetch")
 	blockAnalyzeCmd.Flags().Bool("stream", false, "continually stream blocks as they arrive")
-	blockAnalyzeCmd.Flags().Bool("json", false, "output data in JSON format")
 }
 
 func blockAnalyzeBindings() {
@@ -57,9 +56,6 @@ func blockAnalyzeBindings() {
 		panic(err)
 	}
 	if err := viper.BindPFlag("stream", blockAnalyzeCmd.Flags().Lookup("stream")); err != nil {
-		panic(err)
-	}
-	if err := viper.BindPFlag("json", blockAnalyzeCmd.Flags().Lookup("json")); err != nil {
 		panic(err)
 	}
 }

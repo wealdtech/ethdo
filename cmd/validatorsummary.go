@@ -49,7 +49,6 @@ func init() {
 	validatorFlags(validatorSummaryCmd)
 	validatorSummaryCmd.Flags().String("epoch", "", "the epoch for which to obtain information ()")
 	validatorSummaryCmd.Flags().StringSlice("validators", nil, "the list of validators for which to obtain information")
-	validatorSummaryCmd.Flags().Bool("json", false, "output data in JSON format")
 }
 
 func validatorSummaryBindings() {
@@ -58,9 +57,6 @@ func validatorSummaryBindings() {
 		panic(err)
 	}
 	if err := viper.BindPFlag("validators", validatorSummaryCmd.Flags().Lookup("validators")); err != nil {
-		panic(err)
-	}
-	if err := viper.BindPFlag("json", validatorSummaryCmd.Flags().Lookup("json")); err != nil {
 		panic(err)
 	}
 }

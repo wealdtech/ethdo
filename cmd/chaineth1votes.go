@@ -51,7 +51,6 @@ func init() {
 	chainFlags(chainEth1VotesCmd)
 	chainEth1VotesCmd.Flags().String("epoch", "", "epoch for which to fetch the votes")
 	chainEth1VotesCmd.Flags().String("period", "", "period for which to fetch the votes")
-	chainEth1VotesCmd.Flags().Bool("json", false, "output data in JSON format")
 }
 
 func chainEth1VotesBindings() {
@@ -59,9 +58,6 @@ func chainEth1VotesBindings() {
 		panic(err)
 	}
 	if err := viper.BindPFlag("period", chainEth1VotesCmd.Flags().Lookup("period")); err != nil {
-		panic(err)
-	}
-	if err := viper.BindPFlag("json", chainEth1VotesCmd.Flags().Lookup("json")); err != nil {
 		panic(err)
 	}
 }

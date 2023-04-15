@@ -47,12 +47,8 @@ In quiet mode this will return 0 if information for the epoch is found, otherwis
 func init() {
 	epochCmd.AddCommand(epochSummaryCmd)
 	epochFlags(epochSummaryCmd)
-	epochSummaryCmd.Flags().Bool("json", false, "output data in JSON format")
 }
 
 func epochSummaryBindings() {
 	epochBindings()
-	if err := viper.BindPFlag("json", epochSummaryCmd.Flags().Lookup("json")); err != nil {
-		panic(err)
-	}
 }

@@ -96,12 +96,12 @@ func includeCommandBindings(cmd *cobra.Command) {
 		blockAnalyzeBindings()
 	case "block/info":
 		blockInfoBindings()
-	case "chain/eth1votes":
-		chainEth1VotesBindings()
 	case "chain/info":
 		chainInfoBindings()
 	case "chain/queues":
 		chainQueuesBindings()
+	case "chain/spec":
+		chainSpecBindings()
 	case "chain/time":
 		chainTimeBindings()
 	case "chain/verify/signedcontributionandproof":
@@ -240,6 +240,10 @@ func init() {
 	}
 	RootCmd.PersistentFlags().Bool("verbose", false, "generate additional output where appropriate")
 	if err := viper.BindPFlag("verbose", RootCmd.PersistentFlags().Lookup("verbose")); err != nil {
+		panic(err)
+	}
+	RootCmd.PersistentFlags().Bool("json", false, "generate JSON output where available")
+	if err := viper.BindPFlag("json", RootCmd.PersistentFlags().Lookup("json")); err != nil {
 		panic(err)
 	}
 	RootCmd.PersistentFlags().Bool("debug", false, "generate debug output")

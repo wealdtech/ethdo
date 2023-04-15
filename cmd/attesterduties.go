@@ -49,7 +49,6 @@ func init() {
 	attesterFlags(attesterDutiesCmd)
 	attesterDutiesCmd.Flags().String("epoch", "head", "the epoch for which to obtain the duties")
 	attesterDutiesCmd.Flags().String("validator", "", "the index, public key, or acount of the validator")
-	attesterDutiesCmd.Flags().Bool("json", false, "Generate JSON data for an exit; do not broadcast to network")
 }
 
 func attesterDutiesBindings() {
@@ -57,9 +56,6 @@ func attesterDutiesBindings() {
 		panic(err)
 	}
 	if err := viper.BindPFlag("validator", attesterDutiesCmd.Flags().Lookup("validator")); err != nil {
-		panic(err)
-	}
-	if err := viper.BindPFlag("json", attesterDutiesCmd.Flags().Lookup("json")); err != nil {
 		panic(err)
 	}
 }

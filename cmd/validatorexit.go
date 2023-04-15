@@ -58,7 +58,6 @@ func init() {
 	validatorExitCmd.Flags().Bool("prepare-offline", false, "Create files for offline use")
 	validatorExitCmd.Flags().String("validator", "", "Validator to exit")
 	validatorExitCmd.Flags().String("signed-operation", "", "Use pre-defined JSON signed operation as created by --json to transmit the exit operation (reads from exit-operation.json if not present)")
-	validatorExitCmd.Flags().Bool("json", false, "Generate JSON data containing a signed operation rather than broadcast it to the network (implied when offline)")
 	validatorExitCmd.Flags().Bool("offline", false, "Do not attempt to connect to a beacon node to obtain information for the operation")
 	validatorExitCmd.Flags().String("fork-version", "", "Fork version to use for signing (overrides fetching from beacon node)")
 	validatorExitCmd.Flags().String("genesis-validators-root", "", "Genesis validators root to use for signing (overrides fetching from beacon node)")
@@ -75,9 +74,6 @@ func validatorExitBindings() {
 		panic(err)
 	}
 	if err := viper.BindPFlag("signed-operation", validatorExitCmd.Flags().Lookup("signed-operation")); err != nil {
-		panic(err)
-	}
-	if err := viper.BindPFlag("json", validatorExitCmd.Flags().Lookup("json")); err != nil {
 		panic(err)
 	}
 	if err := viper.BindPFlag("offline", validatorExitCmd.Flags().Lookup("offline")); err != nil {

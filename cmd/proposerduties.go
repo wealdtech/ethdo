@@ -48,14 +48,10 @@ func init() {
 	proposerCmd.AddCommand(proposerDutiesCmd)
 	proposerFlags(proposerDutiesCmd)
 	proposerDutiesCmd.Flags().String("epoch", "", "the epoch for which to fetch duties")
-	proposerDutiesCmd.Flags().Bool("json", false, "output data in JSON format")
 }
 
 func proposerDutiesBindings() {
 	if err := viper.BindPFlag("epoch", proposerDutiesCmd.Flags().Lookup("epoch")); err != nil {
-		panic(err)
-	}
-	if err := viper.BindPFlag("json", proposerDutiesCmd.Flags().Lookup("json")); err != nil {
 		panic(err)
 	}
 }

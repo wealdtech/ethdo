@@ -48,14 +48,10 @@ func init() {
 	chainCmd.AddCommand(chainQueuesCmd)
 	chainFlags(chainQueuesCmd)
 	chainQueuesCmd.Flags().String("epoch", "", "epoch for which to fetch the queues")
-	chainQueuesCmd.Flags().Bool("json", false, "output data in JSON format")
 }
 
 func chainQueuesBindings() {
 	if err := viper.BindPFlag("epoch", chainQueuesCmd.Flags().Lookup("epoch")); err != nil {
-		panic(err)
-	}
-	if err := viper.BindPFlag("json", chainQueuesCmd.Flags().Lookup("json")); err != nil {
 		panic(err)
 	}
 }

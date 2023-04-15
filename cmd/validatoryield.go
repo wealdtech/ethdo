@@ -48,14 +48,10 @@ func init() {
 	validatorCmd.AddCommand(validatorYieldCmd)
 	validatorFlags(validatorYieldCmd)
 	validatorYieldCmd.Flags().String("validators", "", "Number of active validators (default fetches from chain)")
-	validatorYieldCmd.Flags().Bool("json", false, "JSON output")
 }
 
 func validatorYieldBindings() {
 	if err := viper.BindPFlag("validators", validatorYieldCmd.Flags().Lookup("validators")); err != nil {
-		panic(err)
-	}
-	if err := viper.BindPFlag("json", validatorYieldCmd.Flags().Lookup("json")); err != nil {
 		panic(err)
 	}
 }

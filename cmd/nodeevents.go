@@ -45,8 +45,8 @@ func init() {
 	nodeEventsCmd.Flags().StringSlice("topics", nil, "The topics of events for which to listen (attestation,block,chain_reorg,finalized_checkpoint,head,voluntary_exit)")
 }
 
-func nodeEventsBindings() {
-	if err := viper.BindPFlag("topics", nodeEventsCmd.Flags().Lookup("topics")); err != nil {
+func nodeEventsBindings(cmd *cobra.Command) {
+	if err := viper.BindPFlag("topics", cmd.Flags().Lookup("topics")); err != nil {
 		panic(err)
 	}
 }

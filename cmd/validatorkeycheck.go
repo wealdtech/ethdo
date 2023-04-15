@@ -53,11 +53,11 @@ func init() {
 	validatorKeycheckCmd.Flags().String("privkey", "", "Private key from which to generate withdrawal credentials")
 }
 
-func validatorKeycheckBindings() {
-	if err := viper.BindPFlag("withdrawal-credentials", validatorKeycheckCmd.Flags().Lookup("withdrawal-credentials")); err != nil {
+func validatorKeycheckBindings(cmd *cobra.Command) {
+	if err := viper.BindPFlag("withdrawal-credentials", cmd.Flags().Lookup("withdrawal-credentials")); err != nil {
 		panic(err)
 	}
-	if err := viper.BindPFlag("privkey", validatorKeycheckCmd.Flags().Lookup("privkey")); err != nil {
+	if err := viper.BindPFlag("privkey", cmd.Flags().Lookup("privkey")); err != nil {
 		panic(err)
 	}
 }

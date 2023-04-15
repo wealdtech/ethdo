@@ -51,12 +51,12 @@ func init() {
 	validatorSummaryCmd.Flags().StringSlice("validators", nil, "the list of validators for which to obtain information")
 }
 
-func validatorSummaryBindings() {
+func validatorSummaryBindings(cmd *cobra.Command) {
 	validatorBindings()
-	if err := viper.BindPFlag("epoch", validatorSummaryCmd.Flags().Lookup("epoch")); err != nil {
+	if err := viper.BindPFlag("epoch", cmd.Flags().Lookup("epoch")); err != nil {
 		panic(err)
 	}
-	if err := viper.BindPFlag("validators", validatorSummaryCmd.Flags().Lookup("validators")); err != nil {
+	if err := viper.BindPFlag("validators", cmd.Flags().Lookup("validators")); err != nil {
 		panic(err)
 	}
 }

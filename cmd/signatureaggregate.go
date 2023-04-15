@@ -23,6 +23,7 @@ import (
 	"github.com/herumi/bls-eth-go-binary/bls"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 	"github.com/wealdtech/ethdo/util"
 )
 
@@ -50,7 +51,7 @@ In quiet mode this will return 0 if the signatures can be aggregated, otherwise 
 		}
 		errCheck(err, "Failed to aggregate signature")
 
-		outputIf(!quiet, fmt.Sprintf("%#x", signature.Serialize()))
+		outputIf(!viper.GetBool("quiet"), fmt.Sprintf("%#x", signature.Serialize()))
 		os.Exit(_exitSuccess)
 	},
 }

@@ -49,6 +49,6 @@ func init() {
 	epochFlags(epochSummaryCmd)
 }
 
-func epochSummaryBindings() {
-	epochBindings()
+func epochSummaryBindings(cmd *cobra.Command) {
+	epochBindings(cmd)
 }

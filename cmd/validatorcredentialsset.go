@@ -66,29 +66,29 @@ func init() {
 	validatorCredentialsSetCmd.Flags().String("genesis-validators-root", "", "Genesis validators root to use for signing (overrides fetching from beacon node)")
 }
 
-func validatorCredentialsSetBindings() {
-	if err := viper.BindPFlag("prepare-offline", validatorCredentialsSetCmd.Flags().Lookup("prepare-offline")); err != nil {
+func validatorCredentialsSetBindings(cmd *cobra.Command) {
+	if err := viper.BindPFlag("prepare-offline", cmd.Flags().Lookup("prepare-offline")); err != nil {
 		panic(err)
 	}
-	if err := viper.BindPFlag("validator", validatorCredentialsSetCmd.Flags().Lookup("validator")); err != nil {
+	if err := viper.BindPFlag("validator", cmd.Flags().Lookup("validator")); err != nil {
 		panic(err)
 	}
-	if err := viper.BindPFlag("signed-operations", validatorCredentialsSetCmd.Flags().Lookup("signed-operations")); err != nil {
+	if err := viper.BindPFlag("signed-operations", cmd.Flags().Lookup("signed-operations")); err != nil {
 		panic(err)
 	}
-	if err := viper.BindPFlag("withdrawal-account", validatorCredentialsSetCmd.Flags().Lookup("withdrawal-account")); err != nil {
+	if err := viper.BindPFlag("withdrawal-account", cmd.Flags().Lookup("withdrawal-account")); err != nil {
 		panic(err)
 	}
-	if err := viper.BindPFlag("withdrawal-address", validatorCredentialsSetCmd.Flags().Lookup("withdrawal-address")); err != nil {
+	if err := viper.BindPFlag("withdrawal-address", cmd.Flags().Lookup("withdrawal-address")); err != nil {
 		panic(err)
 	}
-	if err := viper.BindPFlag("offline", validatorCredentialsSetCmd.Flags().Lookup("offline")); err != nil {
+	if err := viper.BindPFlag("offline", cmd.Flags().Lookup("offline")); err != nil {
 		panic(err)
 	}
-	if err := viper.BindPFlag("fork-version", validatorCredentialsSetCmd.Flags().Lookup("fork-version")); err != nil {
+	if err := viper.BindPFlag("fork-version", cmd.Flags().Lookup("fork-version")); err != nil {
 		panic(err)
 	}
-	if err := viper.BindPFlag("genesis-validators-root", validatorCredentialsSetCmd.Flags().Lookup("genesis-validators-root")); err != nil {
+	if err := viper.BindPFlag("genesis-validators-root", cmd.Flags().Lookup("genesis-validators-root")); err != nil {
 		panic(err)
 	}
 }

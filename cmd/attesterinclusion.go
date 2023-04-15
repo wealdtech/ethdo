@@ -52,14 +52,14 @@ func init() {
 	attesterInclusionCmd.Flags().String("index", "", "the index of the attester")
 }
 
-func attesterInclusionBindings() {
-	if err := viper.BindPFlag("epoch", attesterInclusionCmd.Flags().Lookup("epoch")); err != nil {
+func attesterInclusionBindings(cmd *cobra.Command) {
+	if err := viper.BindPFlag("epoch", cmd.Flags().Lookup("epoch")); err != nil {
 		panic(err)
 	}
-	if err := viper.BindPFlag("validator", attesterInclusionCmd.Flags().Lookup("validator")); err != nil {
+	if err := viper.BindPFlag("validator", cmd.Flags().Lookup("validator")); err != nil {
 		panic(err)
 	}
-	if err := viper.BindPFlag("index", attesterInclusionCmd.Flags().Lookup("index")); err != nil {
+	if err := viper.BindPFlag("index", cmd.Flags().Lookup("index")); err != nil {
 		panic(err)
 	}
 }

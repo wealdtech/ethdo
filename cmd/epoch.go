@@ -33,8 +33,8 @@ func epochFlags(_ *cobra.Command) {
 	epochSummaryCmd.Flags().String("epoch", "", "the epoch for which to obtain information (default current, can be 'current', 'last' or a number)")
 }
 
-func epochBindings() {
-	if err := viper.BindPFlag("epoch", epochSummaryCmd.Flags().Lookup("epoch")); err != nil {
+func epochBindings(cmd *cobra.Command) {
+	if err := viper.BindPFlag("epoch", cmd.Flags().Lookup("epoch")); err != nil {
 		panic(err)
 	}
 }

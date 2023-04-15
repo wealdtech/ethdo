@@ -42,13 +42,13 @@ In quiet mode this will return 0 if the wallet exists, otherwise 1.`,
 		wallet, err := walletFromPath(ctx, viper.GetString("wallet"))
 		errCheck(err, "unknown wallet")
 
-		if quiet {
+		if viper.GetBool("quiet") {
 			os.Exit(0)
 		}
 
-		outputIf(verbose, fmt.Sprintf("UUID: %v", wallet.ID()))
+		outputIf(viper.GetBool("verbose"), fmt.Sprintf("UUID: %v", wallet.ID()))
 		fmt.Printf("Type: %s\n", wallet.Type())
-		if verbose {
+		if viper.GetBool("verbose") {
 			if storeProvider, ok := wallet.(wtypes.StoreProvider); ok {
 				store := storeProvider.Store()
 				fmt.Printf("Store: %s\n", store.Name())

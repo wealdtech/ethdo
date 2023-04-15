@@ -43,11 +43,11 @@ In quiet mode this will return 0 if the node information can be obtained, otherw
 		})
 		errCheck(err, "Failed to connect to Ethereum 2 beacon node")
 
-		if quiet {
+		if viper.GetBool("quiet") {
 			os.Exit(_exitSuccess)
 		}
 
-		if verbose {
+		if viper.GetBool("verbose") {
 			version, err := eth2Client.(eth2client.NodeVersionProvider).NodeVersion(ctx)
 			errCheck(err, "Failed to obtain node version")
 			fmt.Printf("Version: %s\n", version)

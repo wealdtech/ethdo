@@ -48,11 +48,11 @@ func init() {
 	walletImportCmd.Flags().Bool("verify", false, "Verify the wallet can be imported, but do not import it")
 }
 
-func walletImportBindings() {
-	if err := viper.BindPFlag("data", walletImportCmd.Flags().Lookup("data")); err != nil {
+func walletImportBindings(cmd *cobra.Command) {
+	if err := viper.BindPFlag("data", cmd.Flags().Lookup("data")); err != nil {
 		panic(err)
 	}
-	if err := viper.BindPFlag("verify", walletImportCmd.Flags().Lookup("verify")); err != nil {
+	if err := viper.BindPFlag("verify", cmd.Flags().Lookup("verify")); err != nil {
 		panic(err)
 	}
 }

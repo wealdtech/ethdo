@@ -44,11 +44,11 @@ In quiet mode this will return 0 if the account exists, otherwise 1.`,
 		// Disallow wildcards (for now)
 		assert(fmt.Sprintf("%s/%s", wallet.Name(), account.Name()) == viper.GetString("account"), "Mismatched account name")
 
-		if quiet {
+		if viper.GetBool("quiet") {
 			os.Exit(_exitSuccess)
 		}
 
-		outputIf(verbose, fmt.Sprintf("UUID: %v", account.ID()))
+		outputIf(viper.GetBool("verbose"), fmt.Sprintf("UUID: %v", account.ID()))
 		var withdrawalPubKey e2types.PublicKey
 		if pubKeyProvider, ok := account.(e2wtypes.AccountPublicKeyProvider); ok {
 			fmt.Printf("Public key: %#x\n", pubKeyProvider.PublicKey().Marshal())
@@ -58,7 +58,7 @@ In quiet mode this will return 0 if the account exists, otherwise 1.`,
 		if distributedAccount, ok := account.(e2wtypes.DistributedAccount); ok {
 			fmt.Printf("Composite public key: %#x\n", distributedAccount.CompositePublicKey().Marshal())
 			fmt.Printf("Signing threshold: %d/%d\n", distributedAccount.SigningThreshold(), len(distributedAccount.Participants()))
-			if verbose {
+			if viper.GetBool("verbose") {
 				fmt.Printf("Participants:\n")
 				for k, v := range distributedAccount.Participants() {
 					fmt.Printf(" %d: %s\n", k, v)
@@ -67,7 +67,7 @@ In quiet mode this will return 0 if the account exists, otherwise 1.`,
 
 			withdrawalPubKey = distributedAccount.CompositePublicKey()
 		}
-		if verbose {
+		if viper.GetBool("verbose") {
 			withdrawalCredentials := util.SHA256(withdrawalPubKey.Marshal())
 			withdrawalCredentials[0] = byte(0) // BLS_WITHDRAWAL_PREFIX
 			fmt.Printf("Withdrawal credentials: %#x\n", withdrawalCredentials)

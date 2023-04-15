@@ -1,3 +1,7 @@
+dev:
+  - add "chain spec" command
+  - add "validator withdrawal" command
+
 1.29.2:
   - fix regression where validator index could not be used as an account specifier
 

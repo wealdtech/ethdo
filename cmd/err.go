@@ -16,12 +16,14 @@ package cmd
 import (
 	"fmt"
 	"os"
+
+	"github.com/spf13/viper"
 )
 
 // errCheck checks for an error and quits if it is present.
 func errCheck(err error, msg string) {
 	if err != nil {
-		if !quiet {
+		if !viper.GetBool("quiet") {
 			if msg == "" {
 				fmt.Fprintf(os.Stderr, "%s\n", err.Error())
 			} else {
@@ -57,7 +59,7 @@ func assert(condition bool, msg string) {
 
 // die prints an error and quits.
 func die(msg string) {
-	if msg != "" && !quiet {
+	if msg != "" && !viper.GetBool("quiet") {
 		fmt.Fprintf(os.Stderr, "%s\n", msg)
 	}
 	os.Exit(_exitFailure)

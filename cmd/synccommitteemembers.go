@@ -53,11 +53,11 @@ func init() {
 	synccommitteeMembersCmd.Flags().String("period", "", "the sync committee period for which to fetch sync committees ('current', 'next')")
 }
 
-func synccommitteeMembersBindings() {
-	if err := viper.BindPFlag("epoch", synccommitteeMembersCmd.Flags().Lookup("epoch")); err != nil {
+func synccommitteeMembersBindings(cmd *cobra.Command) {
+	if err := viper.BindPFlag("epoch", cmd.Flags().Lookup("epoch")); err != nil {
 		panic(err)
 	}
-	if err := viper.BindPFlag("period", synccommitteeMembersCmd.Flags().Lookup("period")); err != nil {
+	if err := viper.BindPFlag("period", cmd.Flags().Lookup("period")); err != nil {
 		panic(err)
 	}
 }

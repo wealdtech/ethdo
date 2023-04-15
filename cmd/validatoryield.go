@@ -50,8 +50,8 @@ func init() {
 	validatorYieldCmd.Flags().String("validators", "", "Number of active validators (default fetches from chain)")
 }
 
-func validatorYieldBindings() {
-	if err := viper.BindPFlag("validators", validatorYieldCmd.Flags().Lookup("validators")); err != nil {
+func validatorYieldBindings(cmd *cobra.Command) {
+	if err := viper.BindPFlag("validators", cmd.Flags().Lookup("validators")); err != nil {
 		panic(err)
 	}
 }

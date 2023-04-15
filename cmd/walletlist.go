@@ -37,8 +37,8 @@ In quiet mode this will return 0 if any wallets are found, otherwise 1.`,
 		walletsFound := false
 		for w := range e2wallet.Wallets() {
 			walletsFound = true
-			outputIf(!quiet && !verbose, w.Name())
-			outputIf(verbose, fmt.Sprintf("%s\n UUID: %s", w.Name(), w.ID().String()))
+			outputIf(!viper.GetBool("quiet") && !viper.GetBool("verbose"), w.Name())
+			outputIf(viper.GetBool("verbose"), fmt.Sprintf("%s\n UUID: %s", w.Name(), w.ID().String()))
 		}
 
 		if !walletsFound {

@@ -50,8 +50,8 @@ func init() {
 	slotTimeCmd.Flags().String("slot", "", "the ID of the slot to fetch")
 }
 
-func slotTimeBindings() {
-	if err := viper.BindPFlag("slot", slotTimeCmd.Flags().Lookup("slot")); err != nil {
+func slotTimeBindings(cmd *cobra.Command) {
+	if err := viper.BindPFlag("slot", cmd.Flags().Lookup("slot")); err != nil {
 		panic(err)
 	}
 }

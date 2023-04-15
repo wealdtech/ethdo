@@ -51,11 +51,11 @@ func init() {
 	attesterDutiesCmd.Flags().String("validator", "", "the index, public key, or acount of the validator")
 }
 
-func attesterDutiesBindings() {
-	if err := viper.BindPFlag("epoch", attesterDutiesCmd.Flags().Lookup("epoch")); err != nil {
+func attesterDutiesBindings(cmd *cobra.Command) {
+	if err := viper.BindPFlag("epoch", cmd.Flags().Lookup("epoch")); err != nil {
 		panic(err)
 	}
-	if err := viper.BindPFlag("validator", attesterDutiesCmd.Flags().Lookup("validator")); err != nil {
+	if err := viper.BindPFlag("validator", cmd.Flags().Lookup("validator")); err != nil {
 		panic(err)
 	}
 }

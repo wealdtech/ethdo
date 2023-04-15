@@ -83,7 +83,7 @@ In quiet mode this will return 0 if the chain status can be obtained, otherwise 
 		res.WriteString(fmt.Sprintf("%d", epoch))
 		res.WriteString("\n")
 
-		if verbose {
+		if viper.GetBool("verbose") {
 			res.WriteString("Epoch slots: ")
 			res.WriteString(fmt.Sprintf("%d", epochStartSlot))
 			res.WriteString("-")
@@ -106,7 +106,7 @@ In quiet mode this will return 0 if the chain status can be obtained, otherwise 
 		res.WriteString("Justified epoch: ")
 		res.WriteString(fmt.Sprintf("%d", finality.Justified.Epoch))
 		res.WriteString("\n")
-		if verbose {
+		if viper.GetBool("verbose") {
 			distance := epoch - finality.Justified.Epoch
 			res.WriteString("Justified epoch distance: ")
 			res.WriteString(fmt.Sprintf("%d", distance))
@@ -116,14 +116,14 @@ In quiet mode this will return 0 if the chain status can be obtained, otherwise 
 		res.WriteString("Finalized epoch: ")
 		res.WriteString(fmt.Sprintf("%d", finality.Finalized.Epoch))
 		res.WriteString("\n")
-		if verbose {
+		if viper.GetBool("verbose") {
 			distance := epoch - finality.Finalized.Epoch
 			res.WriteString("Finalized epoch distance: ")
 			res.WriteString(fmt.Sprintf("%d", distance))
 			res.WriteString("\n")
 		}
 
-		if verbose {
+		if viper.GetBool("verbose") {
 			validatorsProvider, isProvider := eth2Client.(eth2client.ValidatorsProvider)
 			if isProvider {
 				validators, err := validatorsProvider.Validators(ctx, "head", nil)
@@ -165,7 +165,7 @@ In quiet mode this will return 0 if the chain status can be obtained, otherwise 
 			res.WriteString(fmt.Sprintf("%d", period))
 			res.WriteString("\n")
 
-			if verbose {
+			if viper.GetBool("verbose") {
 				res.WriteString("Sync committee epochs: ")
 				res.WriteString(fmt.Sprintf("%d", periodStartEpoch))
 				res.WriteString("-")

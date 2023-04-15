@@ -61,10 +61,10 @@ In quiet mode this will return 0 if the validator information can be obtained, o
 		validator, err := util.ParseValidator(ctx, eth2Client.(eth2client.ValidatorsProvider), viper.GetString("validator"), "head")
 		errCheck(err, "Failed to obtain validator")
 
-		if verbose {
+		if viper.GetBool("verbose") {
 			network, err := util.Network(ctx, eth2Client)
 			errCheck(err, "Failed to obtain network")
-			outputIf(debug, fmt.Sprintf("Network is %s", network))
+			outputIf(viper.GetBool("debug"), fmt.Sprintf("Network is %s", network))
 			pubKey, err := validator.PubKey(ctx)
 			if err == nil {
 				deposits, totalDeposited, err := graphData(network, pubKey[:])
@@ -75,14 +75,14 @@ In quiet mode this will return 0 if the validator information can be obtained, o
 			}
 		}
 
-		if quiet {
+		if viper.GetBool("quiet") {
 			os.Exit(_exitSuccess)
 		}
 
 		if validator.Status.IsPending() || validator.Status.HasActivated() {
 			fmt.Printf("Index: %d\n", validator.Index)
 		}
-		if verbose {
+		if viper.GetBool("verbose") {
 			if validator.Status.IsPending() {
 				fmt.Printf("Activation eligibility epoch: %d\n", validator.Validator.ActivationEligibilityEpoch)
 			}
@@ -102,7 +102,7 @@ In quiet mode this will return 0 if the validator information can be obtained, o
 		if validator.Status.IsActive() {
 			fmt.Printf("Effective balance: %s\n", string2eth.GWeiToString(uint64(validator.Validator.EffectiveBalance), true))
 		}
-		if verbose {
+		if viper.GetBool("verbose") {
 			fmt.Printf("Withdrawal credentials: %#x\n", validator.Validator.WithdrawalCredentials)
 		}
 
@@ -174,8 +174,8 @@ func init() {
 	validatorFlags(validatorInfoCmd)
 }
 
-func validatorInfoBindings() {
-	if err := viper.BindPFlag("validator", validatorInfoCmd.Flags().Lookup("validator")); err != nil {
+func validatorInfoBindings(cmd *cobra.Command) {
+	if err := viper.BindPFlag("validator", cmd.Flags().Lookup("validator")); err != nil {
 		panic(err)
 	}
 }

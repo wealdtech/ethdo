@@ -54,7 +54,7 @@ In quiet mode this will return 0 if the chain information can be obtained, other
 		fork, err := eth2Client.(eth2client.ForkProvider).Fork(ctx, "head")
 		errCheck(err, "Failed to obtain current fork")
 
-		if quiet {
+		if viper.GetBool("quiet") {
 			os.Exit(_exitSuccess)
 		}
 
@@ -62,12 +62,12 @@ In quiet mode this will return 0 if the chain information can be obtained, other
 			fmt.Println("Genesis time: undefined")
 		} else {
 			fmt.Printf("Genesis time: %s\n", genesis.GenesisTime.Format(time.UnixDate))
-			outputIf(verbose, fmt.Sprintf("Genesis timestamp: %v", genesis.GenesisTime.Unix()))
+			outputIf(viper.GetBool("verbose"), fmt.Sprintf("Genesis timestamp: %v", genesis.GenesisTime.Unix()))
 		}
 		fmt.Printf("Genesis validators root: %#x\n", genesis.GenesisValidatorsRoot)
 		fmt.Printf("Genesis fork version: %#x\n", config["GENESIS_FORK_VERSION"].(spec.Version))
 		fmt.Printf("Current fork version: %#x\n", fork.CurrentVersion)
-		if verbose {
+		if viper.GetBool("verbose") {
 			forkData := &spec.ForkData{
 				CurrentVersion:        fork.CurrentVersion,
 				GenesisValidatorsRoot: genesis.GenesisValidatorsRoot,
@@ -91,5 +91,5 @@ func init() {
 	chainFlags(chainInfoCmd)
 }
 
-func chainInfoBindings() {
+func chainInfoBindings(_ *cobra.Command) {
 }

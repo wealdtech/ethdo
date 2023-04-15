@@ -86,8 +86,8 @@ In quiet mode this will return 0 if the wallet holds any addresses, otherwise 1.
 		}
 
 		for _, account := range accounts {
-			outputIf(!quiet, account.Name())
-			if verbose {
+			outputIf(!viper.GetBool("quiet"), account.Name())
+			if viper.GetBool("verbose") {
 				fmt.Printf(" UUID: %v\n", account.ID())
 				if pathProvider, isProvider := account.(e2wtypes.AccountPathProvider); isProvider {
 					if pathProvider.Path() != "" {

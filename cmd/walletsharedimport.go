@@ -48,11 +48,11 @@ func init() {
 	walletSharedImportCmd.Flags().String("shares", "", "Shares required to decrypt the export, separated with spaces")
 }
 
-func walletSharedImportBindings() {
-	if err := viper.BindPFlag("file", walletSharedImportCmd.Flags().Lookup("file")); err != nil {
+func walletSharedImportBindings(cmd *cobra.Command) {
+	if err := viper.BindPFlag("file", cmd.Flags().Lookup("file")); err != nil {
 		panic(err)
 	}
-	if err := viper.BindPFlag("shares", walletSharedImportCmd.Flags().Lookup("shares")); err != nil {
+	if err := viper.BindPFlag("shares", cmd.Flags().Lookup("shares")); err != nil {
 		panic(err)
 	}
 }

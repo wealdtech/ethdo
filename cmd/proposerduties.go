@@ -50,8 +50,8 @@ func init() {
 	proposerDutiesCmd.Flags().String("epoch", "", "the epoch for which to fetch duties")
 }
 
-func proposerDutiesBindings() {
-	if err := viper.BindPFlag("epoch", proposerDutiesCmd.Flags().Lookup("epoch")); err != nil {
+func proposerDutiesBindings(cmd *cobra.Command) {
+	if err := viper.BindPFlag("epoch", cmd.Flags().Lookup("epoch")); err != nil {
 		panic(err)
 	}
 }

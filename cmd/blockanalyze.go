@@ -51,11 +51,11 @@ func init() {
 	blockAnalyzeCmd.Flags().Bool("stream", false, "continually stream blocks as they arrive")
 }
 
-func blockAnalyzeBindings() {
-	if err := viper.BindPFlag("blockid", blockAnalyzeCmd.Flags().Lookup("blockid")); err != nil {
+func blockAnalyzeBindings(cmd *cobra.Command) {
+	if err := viper.BindPFlag("blockid", cmd.Flags().Lookup("blockid")); err != nil {
 		panic(err)
 	}
-	if err := viper.BindPFlag("stream", blockAnalyzeCmd.Flags().Lookup("stream")); err != nil {
+	if err := viper.BindPFlag("stream", cmd.Flags().Lookup("stream")); err != nil {
 		panic(err)
 	}
 }

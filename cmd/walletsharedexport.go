@@ -47,14 +47,14 @@ func init() {
 	walletSharedExportCmd.Flags().String("file", "", "Name of the file that stores the export")
 }
 
-func walletSharedExportBindings() {
-	if err := viper.BindPFlag("participants", walletSharedExportCmd.Flags().Lookup("participants")); err != nil {
+func walletSharedExportBindings(cmd *cobra.Command) {
+	if err := viper.BindPFlag("participants", cmd.Flags().Lookup("participants")); err != nil {
 		panic(err)
 	}
-	if err := viper.BindPFlag("threshold", walletSharedExportCmd.Flags().Lookup("threshold")); err != nil {
+	if err := viper.BindPFlag("threshold", cmd.Flags().Lookup("threshold")); err != nil {
 		panic(err)
 	}
-	if err := viper.BindPFlag("file", walletSharedExportCmd.Flags().Lookup("file")); err != nil {
+	if err := viper.BindPFlag("file", cmd.Flags().Lookup("file")); err != nil {
 		panic(err)
 	}
 }

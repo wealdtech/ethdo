@@ -47,14 +47,14 @@ func init() {
 	chainTimeCmd.Flags().String("timestamp", "", "The timestamp for which to obtain information (format YYYY-MM-DDTHH:MM:SS+ZZZZ)")
 }
 
-func chainTimeBindings() {
-	if err := viper.BindPFlag("slot", chainTimeCmd.Flags().Lookup("slot")); err != nil {
+func chainTimeBindings(cmd *cobra.Command) {
+	if err := viper.BindPFlag("slot", cmd.Flags().Lookup("slot")); err != nil {
 		panic(err)
 	}
-	if err := viper.BindPFlag("epoch", chainTimeCmd.Flags().Lookup("epoch")); err != nil {
+	if err := viper.BindPFlag("epoch", cmd.Flags().Lookup("epoch")); err != nil {
 		panic(err)
 	}
-	if err := viper.BindPFlag("timestamp", chainTimeCmd.Flags().Lookup("timestamp")); err != nil {
+	if err := viper.BindPFlag("timestamp", cmd.Flags().Lookup("timestamp")); err != nil {
 		panic(err)
 	}
 }

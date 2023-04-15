@@ -63,26 +63,26 @@ func init() {
 	validatorExitCmd.Flags().String("genesis-validators-root", "", "Genesis validators root to use for signing (overrides fetching from beacon node)")
 }
 
-func validatorExitBindings() {
-	if err := viper.BindPFlag("epoch", validatorExitCmd.Flags().Lookup("epoch")); err != nil {
+func validatorExitBindings(cmd *cobra.Command) {
+	if err := viper.BindPFlag("epoch", cmd.Flags().Lookup("epoch")); err != nil {
 		panic(err)
 	}
-	if err := viper.BindPFlag("prepare-offline", validatorExitCmd.Flags().Lookup("prepare-offline")); err != nil {
+	if err := viper.BindPFlag("prepare-offline", cmd.Flags().Lookup("prepare-offline")); err != nil {
 		panic(err)
 	}
-	if err := viper.BindPFlag("validator", validatorExitCmd.Flags().Lookup("validator")); err != nil {
+	if err := viper.BindPFlag("validator", cmd.Flags().Lookup("validator")); err != nil {
 		panic(err)
 	}
-	if err := viper.BindPFlag("signed-operation", validatorExitCmd.Flags().Lookup("signed-operation")); err != nil {
+	if err := viper.BindPFlag("signed-operation", cmd.Flags().Lookup("signed-operation")); err != nil {
 		panic(err)
 	}
-	if err := viper.BindPFlag("offline", validatorExitCmd.Flags().Lookup("offline")); err != nil {
+	if err := viper.BindPFlag("offline", cmd.Flags().Lookup("offline")); err != nil {
 		panic(err)
 	}
-	if err := viper.BindPFlag("fork-version", validatorExitCmd.Flags().Lookup("fork-version")); err != nil {
+	if err := viper.BindPFlag("fork-version", cmd.Flags().Lookup("fork-version")); err != nil {
 		panic(err)
 	}
-	if err := viper.BindPFlag("genesis-validators-root", validatorExitCmd.Flags().Lookup("genesis-validators-root")); err != nil {
+	if err := viper.BindPFlag("genesis-validators-root", cmd.Flags().Lookup("genesis-validators-root")); err != nil {
 		panic(err)
 	}
 }

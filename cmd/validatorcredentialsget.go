@@ -50,8 +50,8 @@ func init() {
 	validatorCredentialsGetCmd.Flags().String("validator", "", "Validator for which to get validator credentials")
 }
 
-func validatorCredentialsGetBindings() {
-	if err := viper.BindPFlag("validator", validatorCredentialsGetCmd.Flags().Lookup("validator")); err != nil {
+func validatorCredentialsGetBindings(cmd *cobra.Command) {
+	if err := viper.BindPFlag("validator", cmd.Flags().Lookup("validator")); err != nil {
 		panic(err)
 	}
 }

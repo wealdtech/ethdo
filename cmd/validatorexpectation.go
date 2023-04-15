@@ -48,8 +48,8 @@ func init() {
 	validatorExpectationCmd.Flags().Int64("validators", 1, "Number of validators")
 }
 
-func validatorExpectationBindings() {
-	if err := viper.BindPFlag("validators", validatorExpectationCmd.Flags().Lookup("validators")); err != nil {
+func validatorExpectationBindings(cmd *cobra.Command) {
+	if err := viper.BindPFlag("validators", cmd.Flags().Lookup("validators")); err != nil {
 		panic(err)
 	}
 }

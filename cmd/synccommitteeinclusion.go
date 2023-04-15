@@ -53,11 +53,11 @@ func init() {
 	synccommitteeInclusionCmd.Flags().String("validator", "", "the index, public key, or acount of the validator")
 }
 
-func synccommitteeInclusionBindings() {
-	if err := viper.BindPFlag("epoch", synccommitteeInclusionCmd.Flags().Lookup("epoch")); err != nil {
+func synccommitteeInclusionBindings(cmd *cobra.Command) {
+	if err := viper.BindPFlag("epoch", cmd.Flags().Lookup("epoch")); err != nil {
 		panic(err)
 	}
-	if err := viper.BindPFlag("validator", synccommitteeInclusionCmd.Flags().Lookup("validator")); err != nil {
+	if err := viper.BindPFlag("validator", cmd.Flags().Lookup("validator")); err != nil {
 		panic(err)
 	}
 }

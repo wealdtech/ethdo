@@ -53,11 +53,11 @@ func init() {
 	chainEth1VotesCmd.Flags().String("period", "", "period for which to fetch the votes")
 }
 
-func chainEth1VotesBindings() {
-	if err := viper.BindPFlag("epoch", chainEth1VotesCmd.Flags().Lookup("epoch")); err != nil {
+func chainEth1VotesBindings(cmd *cobra.Command) {
+	if err := viper.BindPFlag("epoch", cmd.Flags().Lookup("epoch")); err != nil {
 		panic(err)
 	}
-	if err := viper.BindPFlag("period", chainEth1VotesCmd.Flags().Lookup("period")); err != nil {
+	if err := viper.BindPFlag("period", cmd.Flags().Lookup("period")); err != nil {
 		panic(err)
 	}
 }

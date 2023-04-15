@@ -51,7 +51,7 @@ In quiet mode this will return 0 if the data can be signed, otherwise 1.`,
 			errCheck(err, "Failed to parse domain")
 			assert(len(domain) == 32, "Domain data invalid")
 		}
-		outputIf(debug, fmt.Sprintf("Domain is %#x", domain))
+		outputIf(viper.GetBool("debug"), fmt.Sprintf("Domain is %#x", domain))
 
 		var account e2wtypes.Account
 		switch {
@@ -70,7 +70,7 @@ In quiet mode this will return 0 if the data can be signed, otherwise 1.`,
 		signature, err := util.SignRoot(account, fixedSizeData, specDomain)
 		errCheck(err, "Failed to sign")
 
-		outputIf(!quiet, fmt.Sprintf("%#x", signature.Marshal()))
+		outputIf(!viper.GetBool("quiet"), fmt.Sprintf("%#x", signature.Marshal()))
 		os.Exit(_exitSuccess)
 	},
 }

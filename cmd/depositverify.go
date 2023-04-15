@@ -23,6 +23,7 @@ import (
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 	"github.com/wealdtech/ethdo/util"
 	e2types "github.com/wealdtech/go-eth2-types/v2"
 	eth2util "github.com/wealdtech/go-eth2-util"
@@ -92,7 +93,7 @@ In quiet mode this will return 0 if the data is verified correctly, otherwise 1.
 			withdrawalCredentials[0] = 0x01 // ETH1_ADDRESS_WITHDRAWAL_PREFIX
 			copy(withdrawalCredentials[12:], withdrawalAddressBytes)
 		}
-		outputIf(debug, fmt.Sprintf("Withdrawal credentials are %#x", withdrawalCredentials))
+		outputIf(viper.GetBool("debug"), fmt.Sprintf("Withdrawal credentials are %#x", withdrawalCredentials))
 
 		depositAmount := uint64(0)
 		if depositVerifyDepositAmount != "" {
@@ -120,9 +121,9 @@ In quiet mode this will return 0 if the data is verified correctly, otherwise 1.
 			}
 			if !verified {
 				failures = true
-				outputIf(!quiet, fmt.Sprintf("%s failed verification", depositName))
+				outputIf(!viper.GetBool("quiet"), fmt.Sprintf("%s failed verification", depositName))
 			} else {
-				outputIf(!quiet, fmt.Sprintf("%s verified", depositName))
+				outputIf(!viper.GetBool("quiet"), fmt.Sprintf("%s verified", depositName))
 			}
 		}
 
@@ -190,34 +191,34 @@ func validatorPubKeysFromInput(input string) (map[[48]byte]bool, error) {
 
 func verifyDeposit(deposit *util.DepositInfo, withdrawalCredentials []byte, validatorPubKeys map[[48]byte]bool, amount uint64) (bool, error) {
 	if withdrawalCredentials == nil {
-		outputIf(!quiet, "Withdrawal public key or address not supplied; withdrawal credentials NOT checked")
+		outputIf(!viper.GetBool("quiet"), "Withdrawal public key or address not supplied; withdrawal credentials NOT checked")
 	} else {
 		if !bytes.Equal(deposit.WithdrawalCredentials, withdrawalCredentials) {
-			outputIf(!quiet, "Withdrawal credentials incorrect")
+			outputIf(!viper.GetBool("quiet"), "Withdrawal credentials incorrect")
 			return false, nil
 		}
-		outputIf(!quiet, "Withdrawal credentials verified")
+		outputIf(!viper.GetBool("quiet"), "Withdrawal credentials verified")
 	}
 	if amount == 0 {
-		outputIf(!quiet, "Amount not supplied; NOT checked")
+		outputIf(!viper.GetBool("quiet"), "Amount not supplied; NOT checked")
 	} else {
 		if deposit.Amount != amount {
-			outputIf(!quiet, "Amount incorrect")
+			outputIf(!viper.GetBool("quiet"), "Amount incorrect")
 			return false, nil
 		}
-		outputIf(!quiet, "Amount verified")
+		outputIf(!viper.GetBool("quiet"), "Amount verified")
 	}
 
 	if len(validatorPubKeys) == 0 {
-		outputIf(!quiet, "Validator public key not suppled; NOT checked")
+		outputIf(!viper.GetBool("quiet"), "Validator public key not suppled; NOT checked")
 	} else {
 		var key [48]byte
 		copy(key[:], deposit.PublicKey)
 		if _, exists := validatorPubKeys[key]; !exists {
-			outputIf(!quiet, "Validator public key incorrect")
+			outputIf(!viper.GetBool("quiet"), "Validator public key incorrect")
 			return false, nil
 		}
-		outputIf(!quiet, "Validator public key verified")
+		outputIf(!viper.GetBool("quiet"), "Validator public key verified")
 	}
 
 	var pubKey phase0.BLSPubKey
@@ -237,33 +238,33 @@ func verifyDeposit(deposit *util.DepositInfo, withdrawalCredentials []byte, vali
 	}
 
 	if bytes.Equal(deposit.DepositDataRoot, depositDataRoot[:]) {
-		outputIf(!quiet, "Deposit data root verified")
+		outputIf(!viper.GetBool("quiet"), "Deposit data root verified")
 	} else {
-		outputIf(!quiet, "Deposit data root incorrect")
+		outputIf(!viper.GetBool("quiet"), "Deposit data root incorrect")
 		return false, nil
 	}
 
 	if len(deposit.ForkVersion) == 0 {
 		if depositVerifyForkVersion != "" {
-			outputIf(!quiet, "Data format does not contain fork version for verification; NOT verified")
+			outputIf(!viper.GetBool("quiet"), "Data format does not contain fork version for verification; NOT verified")
 		}
 	} else {
 		if depositVerifyForkVersion == "" {
-			outputIf(!quiet, "fork version not supplied; not checked")
+			outputIf(!viper.GetBool("quiet"), "fork version not supplied; not checked")
 		} else {
 			forkVersion, err := hex.DecodeString(strings.TrimPrefix(depositVerifyForkVersion, "0x"))
 			if err != nil {
 				return false, errors.Wrap(err, "failed to decode fork version")
 			}
 			if bytes.Equal(deposit.ForkVersion, forkVersion) {
-				outputIf(!quiet, "Fork version verified")
+				outputIf(!viper.GetBool("quiet"), "Fork version verified")
 			} else {
-				outputIf(!quiet, "Fork version incorrect")
+				outputIf(!viper.GetBool("quiet"), "Fork version incorrect")
 				return false, nil
 			}
 
 			if len(deposit.DepositMessageRoot) != 32 {
-				outputIf(!quiet, "Deposit message root not supplied; not checked")
+				outputIf(!viper.GetBool("quiet"), "Deposit message root not supplied; not checked")
 			} else {
 				// We can also verify the deposit message signature.
 				depositMessage := &phase0.DepositMessage{
@@ -277,9 +278,9 @@ func verifyDeposit(deposit *util.DepositInfo, withdrawalCredentials []byte, vali
 				}
 
 				if bytes.Equal(deposit.DepositMessageRoot, depositMessageRoot[:]) {
-					outputIf(!quiet, "Deposit message root verified")
+					outputIf(!viper.GetBool("quiet"), "Deposit message root verified")
 				} else {
-					outputIf(!quiet, "Deposit message root incorrect")
+					outputIf(!viper.GetBool("quiet"), "Deposit message root incorrect")
 					return false, nil
 				}
 
@@ -305,9 +306,9 @@ func verifyDeposit(deposit *util.DepositInfo, withdrawalCredentials []byte, vali
 				}
 				signatureVerified := blsSig.Verify(containerRoot[:], validatorPubKey)
 				if signatureVerified {
-					outputIf(!quiet, "Deposit message signature verified")
+					outputIf(!viper.GetBool("quiet"), "Deposit message signature verified")
 				} else {
-					outputIf(!quiet, "Deposit message signature NOT verified")
+					outputIf(!viper.GetBool("quiet"), "Deposit message signature NOT verified")
 					return false, nil
 				}
 			}

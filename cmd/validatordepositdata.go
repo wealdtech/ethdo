@@ -59,29 +59,29 @@ func init() {
 	validatorDepositDataCmd.Flags().Bool("launchpad", false, "Print launchpad-compatible JSON")
 }
 
-func validatorDepositdataBindings() {
-	if err := viper.BindPFlag("validatoraccount", validatorDepositDataCmd.Flags().Lookup("validatoraccount")); err != nil {
+func validatorDepositdataBindings(cmd *cobra.Command) {
+	if err := viper.BindPFlag("validatoraccount", cmd.Flags().Lookup("validatoraccount")); err != nil {
 		panic(err)
 	}
-	if err := viper.BindPFlag("withdrawalaccount", validatorDepositDataCmd.Flags().Lookup("withdrawalaccount")); err != nil {
+	if err := viper.BindPFlag("withdrawalaccount", cmd.Flags().Lookup("withdrawalaccount")); err != nil {
 		panic(err)
 	}
-	if err := viper.BindPFlag("withdrawalpubkey", validatorDepositDataCmd.Flags().Lookup("withdrawalpubkey")); err != nil {
+	if err := viper.BindPFlag("withdrawalpubkey", cmd.Flags().Lookup("withdrawalpubkey")); err != nil {
 		panic(err)
 	}
-	if err := viper.BindPFlag("withdrawaladdress", validatorDepositDataCmd.Flags().Lookup("withdrawaladdress")); err != nil {
+	if err := viper.BindPFlag("withdrawaladdress", cmd.Flags().Lookup("withdrawaladdress")); err != nil {
 		panic(err)
 	}
-	if err := viper.BindPFlag("depositvalue", validatorDepositDataCmd.Flags().Lookup("depositvalue")); err != nil {
+	if err := viper.BindPFlag("depositvalue", cmd.Flags().Lookup("depositvalue")); err != nil {
 		panic(err)
 	}
-	if err := viper.BindPFlag("raw", validatorDepositDataCmd.Flags().Lookup("raw")); err != nil {
+	if err := viper.BindPFlag("raw", cmd.Flags().Lookup("raw")); err != nil {
 		panic(err)
 	}
-	if err := viper.BindPFlag("forkversion", validatorDepositDataCmd.Flags().Lookup("forkversion")); err != nil {
+	if err := viper.BindPFlag("forkversion", cmd.Flags().Lookup("forkversion")); err != nil {
 		panic(err)
 	}
-	if err := viper.BindPFlag("launchpad", validatorDepositDataCmd.Flags().Lookup("launchpad")); err != nil {
+	if err := viper.BindPFlag("launchpad", cmd.Flags().Lookup("launchpad")); err != nil {
 		panic(err)
 	}
 }

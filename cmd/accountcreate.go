@@ -51,11 +51,11 @@ func init() {
 	accountCreateCmd.Flags().Uint32("signing-threshold", 1, "Signing threshold (1 for non-distributed accounts)")
 }
 
-func accountCreateBindings() {
-	if err := viper.BindPFlag("participants", accountCreateCmd.Flags().Lookup("participants")); err != nil {
+func accountCreateBindings(cmd *cobra.Command) {
+	if err := viper.BindPFlag("participants", cmd.Flags().Lookup("participants")); err != nil {
 		panic(err)
 	}
-	if err := viper.BindPFlag("signing-threshold", accountCreateCmd.Flags().Lookup("signing-threshold")); err != nil {
+	if err := viper.BindPFlag("signing-threshold", cmd.Flags().Lookup("signing-threshold")); err != nil {
 		panic(err)
 	}
 }

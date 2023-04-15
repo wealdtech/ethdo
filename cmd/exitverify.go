@@ -98,7 +98,7 @@ In quiet mode this will return 0 if the exit is verified correctly, otherwise 1.
 		}
 		assert(verified, "Voluntary exit failed to verify against current and previous fork versions")
 
-		outputIf(verbose, "Verified")
+		outputIf(viper.GetBool("verbose"), "Verified")
 		os.Exit(_exitSuccess)
 	},
 }
@@ -133,8 +133,8 @@ func init() {
 	exitVerifyCmd.Flags().String("signed-operation", "", "JSON data, or path to JSON data")
 }
 
-func exitVerifyBindings() {
-	if err := viper.BindPFlag("signed-operation", exitVerifyCmd.Flags().Lookup("signed-operation")); err != nil {
+func exitVerifyBindings(cmd *cobra.Command) {
+	if err := viper.BindPFlag("signed-operation", cmd.Flags().Lookup("signed-operation")); err != nil {
 		panic(err)
 	}
 }

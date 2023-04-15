@@ -51,11 +51,11 @@ func init() {
 	accountDeriveCmd.Flags().Bool("show-withdrawal-credentials", false, "show withdrawal credentials for derived account")
 }
 
-func accountDeriveBindings() {
-	if err := viper.BindPFlag("show-private-key", accountDeriveCmd.Flags().Lookup("show-private-key")); err != nil {
+func accountDeriveBindings(cmd *cobra.Command) {
+	if err := viper.BindPFlag("show-private-key", cmd.Flags().Lookup("show-private-key")); err != nil {
 		panic(err)
 	}
-	if err := viper.BindPFlag("show-withdrawal-credentials", accountDeriveCmd.Flags().Lookup("show-withdrawal-credentials")); err != nil {
+	if err := viper.BindPFlag("show-withdrawal-credentials", cmd.Flags().Lookup("show-withdrawal-credentials")); err != nil {
 		panic(err)
 	}
 }

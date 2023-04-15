@@ -52,14 +52,14 @@ func init() {
 	accountImportCmd.Flags().String("keystore-passphrase", "", "Passphrase of keystore")
 }
 
-func accountImportBindings() {
-	if err := viper.BindPFlag("key", accountImportCmd.Flags().Lookup("key")); err != nil {
+func accountImportBindings(cmd *cobra.Command) {
+	if err := viper.BindPFlag("key", cmd.Flags().Lookup("key")); err != nil {
 		panic(err)
 	}
-	if err := viper.BindPFlag("keystore", accountImportCmd.Flags().Lookup("keystore")); err != nil {
+	if err := viper.BindPFlag("keystore", cmd.Flags().Lookup("keystore")); err != nil {
 		panic(err)
 	}
-	if err := viper.BindPFlag("keystore-passphrase", accountImportCmd.Flags().Lookup("keystore-passphrase")); err != nil {
+	if err := viper.BindPFlag("keystore-passphrase", cmd.Flags().Lookup("keystore-passphrase")); err != nil {
 		panic(err)
 	}
 }

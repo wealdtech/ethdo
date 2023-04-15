@@ -1,6 +1,6 @@
 # ethdo commands
 
-ethdo provides features to manage wallets and accounts, as well as interacting with Ethereum 2 nodes and remote signers.  Below are a list of all available commands.
+ethdo provides features to manage wallets and accounts, as well as interacting with Ethereum consensus nodes and remote signers.  Below are a list of all available commands.
 
 Note that the below provides a list of commands rather than a howto guide.  Please follow the
 
@@ -272,9 +272,9 @@ $ ethdo version
 
 ### `block` commands
 
-Block commands focus on providing information about Ethereum 2 blocks.
+Block commands focus on providing information about Ethereum consensus blocks.
 #### `analyze`
-`ethdo block info` obtains information about a block in Ethereum 2.  Options include:
+`ethdo block info` obtains information about a block in the Ethereum consensus chain.  Options include:
   - `blockid`: the ID (slot, root, 'head') of the block to obtain
 
 ```sh
@@ -297,7 +297,7 @@ Value for block 80: 488.531
 
 #### `info`
 
-`ethdo block info` obtains information about a block in Ethereum 2.  Options include:
+`ethdo block info` obtains information about a block in the Ethereum consensus chain.  Options include:
   - `blockid`: the ID (slot, root, 'head') of the block to obtain
 
 ```sh
@@ -335,7 +335,7 @@ Voluntary exits: 0
 
 ### `chain` commands
 
-Chain commands focus on providing information about Ethereum 2 chains.
+Chain commands focus on providing information about Ethereum consensus chains.
 
 #### `eth1votes`
 
@@ -355,7 +355,7 @@ Additional information is supplied when using `--verbose`
 
 #### `info`
 
-`ethdo chain info` obtains information about an Ethereum 2 chain.
+`ethdo chain info` obtains information about an Ethereum consensus chain.
 
 ```sh
 $ ethdo chain info
@@ -383,9 +383,21 @@ $ ethdo chain queues
 Activation queue: 14798
 ```
 
+#### `spec`
+
+`ethdo chain spec` obtains the specification of an Ethereum consensus chain from the nod.
+
+```sh
+$ ethdo chain spec
+ALTAIR_FORK_EPOCH: 74240
+ALTAIR_FORK_VERSION: 0x01000000
+BASE_REWARD_FACTOR: 64
+...
+```
+
 #### `status`
 
-`ethdo chain status` obtains the status of an Ethereum 2 chain from the node's point of view.  Options include:
+`ethdo chain status` obtains the status of an Ethereum consensus chain from the node's point of view.  Options include:
   - `slot` show output in terms of slots rather than epochs
 
 ```sh
@@ -410,7 +422,7 @@ Prior justified epoch distance: 4
 
 #### `time`
 
-`ethdo chain time` calculates the time period of Ethereum 2 epochs and slots.  Options include:
+`ethdo chain time` calculates the time period of Ethereum consensus epochs and slots.  Options include:
   - `epoch` show epoch and slot times for the given epoch
   - `slot` show epoch and slot times for the given slot
   - `timestamp` show epoch and slot times for the given timestamp
@@ -489,11 +501,11 @@ $ ethdo exit verify --signed-operation=${HOME}/exit.json
 
 ### `node` commands
 
-Node commands focus on information from an Ethereum 2 node.
+Node commands focus on information from an Ethereum consensus node.
 
 #### `events`
 
-`ethdo node events` displays events emitted by an Ethereum 2 node.
+`ethdo node events` displays events emitted by an Ethereum consensus node.
 
 ```sh
 $ ethdo node events --topics=head,chain_reorg
@@ -504,7 +516,7 @@ $ ethdo node events --topics=head,chain_reorg
 
 #### `info`
 
-`ethdo node info` obtains the information about an Ethereum 2 node.
+`ethdo node info` obtains the information about an Ethereum consensus node.
 
 ```sh
 $ ethdo node info
@@ -526,7 +538,7 @@ Genesis timestamp: 1587020563
 
 ### `slot` commands
 
-Slot commands focus on information about Ethereum 2 slots.
+Slot commands focus on information about Ethereum consensus slots.
 
 #### `slottime`
 
@@ -572,7 +584,7 @@ $ ethdo synccommittee members
 
 ### `validator` commands
 
-Validator commands focus on interaction with Ethereum 2 validators.
+Validator commands focus on interaction with Ethereum consensus validators.
 
 #### `credentials get`
 
@@ -593,7 +605,7 @@ $ ethdo validator credentials set --validator=Validators/1 --withdrawal-address=
 
 #### `depositdata`
 
-`ethdo validator depositdata` generates the data required to deposit one or more Ethereum 2 validators.  Options include:
+`ethdo validator depositdata` generates the data required to deposit one or more Ethereum consensus validators.  Options include:
   - `withdrawalaccount` specify the account to be used for the withdrawal credentials (if withdrawalpubkey is not supplied)
   - `withdrawaladdress` specify the Ethereum execution address to be used for the withdrawal credentials (if withdrawalpubkey is not supplied)
   - `withdrawalpubkey` specify the public key to be used for the withdrawal credentials (if withdrawalaccount is not supplied)
@@ -676,7 +688,7 @@ Expected time between sync committees: 1 year 27 weeks
 
 ### `attester` commands
 
-Attester commands focus on Ethereum 2 validators' actions as attesters.
+Attester commands focus on Ethereum consensus validators' actions as attesters.
 
 #### `duties`
 
@@ -700,6 +712,16 @@ $ ethdo attester inclusion --validator=Validators/1 --epoch=6484
 Attestation included in block 207492 (inclusion delay 1)
 ```
 
+#### `withdrawal`
+`ethdo validator withdrawal` provides information about the next withdrawal for the given validator.  Options include:
+  - `validator`: the list of validators for which to provide a summary
+  - `json`: provide JSON output
+
+```sh
+$ ethdo validator withdrawal --validator=12345
+Withdrawal expected at 2023-04-17T15:08:35 in block 6243041
+```
+
 #### `yield`
 
 `ethdo validator yield` calculates the expected yield given the number of validators.  Options include:
@@ -719,7 +741,7 @@ Yield: 4.64%
 
 ### `proposer` commands
 
-Proposer commands focus on Ethereum 2 validators' actions as proposers.
+Proposer commands focus on Ethereum consensus validators' actions as proposers.
 
 #### `duties`
 

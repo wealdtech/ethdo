@@ -51,11 +51,11 @@ func init() {
 	validatorDutiesCmd.Flags().String("index", "", "validator index for duties")
 }
 
-func validatorDutiesBindings() {
-	if err := viper.BindPFlag("pubkey", validatorDutiesCmd.Flags().Lookup("pubkey")); err != nil {
+func validatorDutiesBindings(cmd *cobra.Command) {
+	if err := viper.BindPFlag("pubkey", cmd.Flags().Lookup("pubkey")); err != nil {
 		panic(err)
 	}
-	if err := viper.BindPFlag("index", validatorDutiesCmd.Flags().Lookup("index")); err != nil {
+	if err := viper.BindPFlag("index", cmd.Flags().Lookup("index")); err != nil {
 		panic(err)
 	}
 }

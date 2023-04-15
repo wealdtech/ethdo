@@ -73,7 +73,7 @@ In quiet mode this will return 0 if the data can be signed, otherwise 1.`,
 			account, err = util.ParseAccount(ctx, viper.GetString("public-key"), nil, false)
 		}
 		errCheck(err, "Failed to obtain account")
-		outputIf(debug, fmt.Sprintf("Public key is %#x", account.PublicKey().Marshal()))
+		outputIf(viper.GetBool("debug"), fmt.Sprintf("Public key is %#x", account.PublicKey().Marshal()))
 
 		var specDomain spec.Domain
 		copy(specDomain[:], domain)
@@ -83,7 +83,7 @@ In quiet mode this will return 0 if the data can be signed, otherwise 1.`,
 		errCheck(err, "Failed to verify data")
 		assert(verified, "Failed to verify")
 
-		outputIf(verbose, "Verified")
+		outputIf(viper.GetBool("verbose"), "Verified")
 		os.Exit(_exitSuccess)
 	},
 }

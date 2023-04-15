@@ -1,4 +1,4 @@
-// Copyright © 2019 - 2021 Weald Technology Trading.
+// Copyright © 2019 - 2023 Weald Technology Trading.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -33,19 +33,53 @@ import (
 	e2wtypes "github.com/wealdtech/go-eth2-wallet-types/v2"
 )
 
-var (
-	cfgFile string
-	quiet   bool
-	verbose bool
-	debug   bool
-)
+var cfgFile string
 
 // RootCmd represents the base command when called without any subcommands.
 var RootCmd = &cobra.Command{
 	Use:               "ethdo",
-	Short:             "Ethereum 2 CLI",
-	Long:              `Manage common Ethereum 2 tasks from the command line.`,
+	Short:             "Ethereum consensus layer CLI",
+	Long:              `Manage common Ethereum consensus layer tasks from the command line.`,
 	PersistentPreRunE: persistentPreRunE,
+}
+
+// bindings are the command-specific bindings.
+var bindings = map[string]func(cmd *cobra.Command){
+	"account/create":     accountCreateBindings,
+	"account/derive":     accountDeriveBindings,
+	"account/import":     accountImportBindings,
+	"attester/duties":    attesterDutiesBindings,
+	"attester/inclusion": attesterInclusionBindings,
+	"block/analyze":      blockAnalyzeBindings,
+	"block/info":         blockInfoBindings,
+	"chain/eth1votes":    chainEth1VotesBindings,
+	"chain/info":         chainInfoBindings,
+	"chain/queues":       chainQueuesBindings,
+	"chain/spec":         chainSpecBindings,
+	"chain/time":         chainTimeBindings,
+	"chain/verify/signedcontributionandproof": chainVerifySignedContributionAndProofBindings,
+	"epoch/summary":             epochSummaryBindings,
+	"exit/verify":               exitVerifyBindings,
+	"node/events":               nodeEventsBindings,
+	"proposer/duties":           proposerDutiesBindings,
+	"slot/time":                 slotTimeBindings,
+	"synccommittee/inclusion":   synccommitteeInclusionBindings,
+	"synccommittee/members":     synccommitteeMembersBindings,
+	"validator/credentials/get": validatorCredentialsGetBindings,
+	"validator/credentials/set": validatorCredentialsSetBindings,
+	"validator/depositdata":     validatorDepositdataBindings,
+	"validator/duties":          validatorDutiesBindings,
+	"validator/exit":            validatorExitBindings,
+	"validator/info":            validatorInfoBindings,
+	"validator/keycheck":        validatorKeycheckBindings,
+	"validator/summary":         validatorSummaryBindings,
+	"validator/yield":           validatorYieldBindings,
+	"validator/expectation":     validatorExpectationBindings,
+	"validator/withdrawal":      validatorWithdrawalBindings,
+	"wallet/create":             walletCreateBindings,
+	"wallet/import":             walletImportBindings,
+	"wallet/sharedexport":       walletSharedExportBindings,
+	"wallet/sharedimport":       walletSharedImportBindings,
 }
 
 func persistentPreRunE(cmd *cobra.Command, _ []string) error {
@@ -63,11 +97,14 @@ func persistentPreRunE(cmd *cobra.Command, _ []string) error {
 	zerolog.SetGlobalLevel(zerolog.Disabled)
 
 	// We bind viper here so that we bind to the correct command.
-	quiet = viper.GetBool("quiet")
-	verbose = viper.GetBool("verbose")
-	debug = viper.GetBool("debug")
+	quiet := viper.GetBool("quiet")
+	verbose := viper.GetBool("verbose")
+	debug := viper.GetBool("debug")
 
-	includeCommandBindings(cmd)
+	// Command-specific bindings.
+	if bindingsFunc, exists := bindings[commandPath(cmd)]; exists {
+		bindingsFunc(cmd)
+	}
 
 	if quiet && verbose {
 		fmt.Println("Cannot supply both quiet and verbose flags")
@@ -77,78 +114,6 @@ func persistentPreRunE(cmd *cobra.Command, _ []string) error {
 	}
 
 	return util.SetupStore()
-}
-
-// nolint:gocyclo
-func includeCommandBindings(cmd *cobra.Command) {
-	switch commandPath(cmd) {
-	case "account/create":
-		accountCreateBindings()
-	case "account/derive":
-		accountDeriveBindings()
-	case "account/import":
-		accountImportBindings()
-	case "attester/duties":
-		attesterDutiesBindings()
-	case "attester/inclusion":
-		attesterInclusionBindings()
-	case "block/analyze":
-		blockAnalyzeBindings()
-	case "block/info":
-		blockInfoBindings()
-	case "chain/info":
-		chainInfoBindings()
-	case "chain/queues":
-		chainQueuesBindings()
-	case "chain/spec":
-		chainSpecBindings()
-	case "chain/time":
-		chainTimeBindings()
-	case "chain/verify/signedcontributionandproof":
-		chainVerifySignedContributionAndProofBindings(cmd)
-	case "epoch/summary":
-		epochSummaryBindings()
-	case "exit/verify":
-		exitVerifyBindings()
-	case "node/events":
-		nodeEventsBindings()
-	case "proposer/duties":
-		proposerDutiesBindings()
-	case "slot/time":
-		slotTimeBindings()
-	case "synccommittee/inclusion":
-		synccommitteeInclusionBindings()
-	case "synccommittee/members":
-		synccommitteeMembersBindings()
-	case "validator/credentials/get":
-		validatorCredentialsGetBindings()
-	case "validator/credentials/set":
-		validatorCredentialsSetBindings()
-	case "validator/depositdata":
-		validatorDepositdataBindings()
-	case "validator/duties":
-		validatorDutiesBindings()
-	case "validator/exit":
-		validatorExitBindings()
-	case "validator/info":
-		validatorInfoBindings()
-	case "validator/keycheck":
-		validatorKeycheckBindings()
-	case "validator/summary":
-		validatorSummaryBindings()
-	case "validator/yield":
-		validatorYieldBindings()
-	case "validator/expectation":
-		validatorExpectationBindings()
-	case "wallet/create":
-		walletCreateBindings()
-	case "wallet/import":
-		walletImportBindings()
-	case "wallet/sharedexport":
-		walletSharedExportBindings()
-	case "wallet/sharedimport":
-		walletSharedImportBindings()
-	}
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -167,8 +132,12 @@ func init() {
 	}
 
 	cobra.OnInitialize(initConfig)
+	addPersistentFlags()
+}
 
+func addPersistentFlags() {
 	RootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.ethdo.yaml)")
+
 	RootCmd.PersistentFlags().String("log", "", "log activity to the named file (default $HOME/ethdo.log).  Logs are written for every action that generates a transaction")
 	if err := viper.BindPFlag("log", RootCmd.PersistentFlags().Lookup("log")); err != nil {
 		panic(err)

@@ -47,8 +47,8 @@ func init() {
 	walletCreateCmd.Flags().String("type", "non-deterministic", "Type of wallet to create (non-deterministic or hierarchical deterministic)")
 }
 
-func walletCreateBindings() {
-	if err := viper.BindPFlag("type", walletCreateCmd.Flags().Lookup("type")); err != nil {
+func walletCreateBindings(cmd *cobra.Command) {
+	if err := viper.BindPFlag("type", cmd.Flags().Lookup("type")); err != nil {
 		panic(err)
 	}
 }

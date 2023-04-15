@@ -1,4 +1,4 @@
-// Copyright © 2022 Weald Technology Trading
+// Copyright © 2023 Weald Technology Trading
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -18,19 +18,19 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	chainqueues "github.com/wealdtech/ethdo/cmd/chain/queues"
+	validatorwithdrawal "github.com/wealdtech/ethdo/cmd/validator/withdrawal"
 )
 
-var chainQueuesCmd = &cobra.Command{
-	Use:   "queues",
-	Short: "Show chain queues",
-	Long: `Show beacon chain activation and exit queues.  For example:
+var validatorWithdrawalCmd = &cobra.Command{
+	Use:   "withdrawal",
+	Short: "Obtain next withdrawal for a validator",
+	Long: `Obtain next withdrawal for a validator.  For example:
 
-    ethdo chain queues
+    ethdo validator withdrawal --validator=primary/validator
 
-In quiet mode this will return 0 if the entry and exit queues are 0, otherwise 1.`,
+In quiet mode this will return 0 if the validator exists, otherwise 1.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		res, err := chainqueues.Run(cmd)
+		res, err := validatorwithdrawal.Run(cmd)
 		if err != nil {
 			return err
 		}
@@ -45,13 +45,13 @@ In quiet mode this will return 0 if the entry and exit queues are 0, otherwise 1
 }
 
 func init() {
-	chainCmd.AddCommand(chainQueuesCmd)
-	chainFlags(chainQueuesCmd)
-	chainQueuesCmd.Flags().String("epoch", "", "epoch for which to fetch the queues")
+	validatorCmd.AddCommand(validatorWithdrawalCmd)
+	validatorFlags(validatorWithdrawalCmd)
+	validatorWithdrawalCmd.Flags().String("validator", "", "Validator for which to get withdrawal")
 }
 
-func chainQueuesBindings(cmd *cobra.Command) {
-	if err := viper.BindPFlag("epoch", cmd.Flags().Lookup("epoch")); err != nil {
+func validatorWithdrawalBindings(cmd *cobra.Command) {
+	if err := viper.BindPFlag("validator", cmd.Flags().Lookup("validator")); err != nil {
 		panic(err)
 	}
 }

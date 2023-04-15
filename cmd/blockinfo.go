@@ -52,14 +52,14 @@ func init() {
 	blockInfoCmd.Flags().Bool("ssz", false, "output data in SSZ format")
 }
 
-func blockInfoBindings() {
-	if err := viper.BindPFlag("blockid", blockInfoCmd.Flags().Lookup("blockid")); err != nil {
+func blockInfoBindings(cmd *cobra.Command) {
+	if err := viper.BindPFlag("blockid", cmd.Flags().Lookup("blockid")); err != nil {
 		panic(err)
 	}
-	if err := viper.BindPFlag("stream", blockInfoCmd.Flags().Lookup("stream")); err != nil {
+	if err := viper.BindPFlag("stream", cmd.Flags().Lookup("stream")); err != nil {
 		panic(err)
 	}
-	if err := viper.BindPFlag("ssz", blockInfoCmd.Flags().Lookup("ssz")); err != nil {
+	if err := viper.BindPFlag("ssz", cmd.Flags().Lookup("ssz")); err != nil {
 		panic(err)
 	}
 }

@@ -158,7 +158,7 @@ func addPersistentFlags() {
 	if err := viper.BindPFlag("path", RootCmd.PersistentFlags().Lookup("path")); err != nil {
 		panic(err)
 	}
-	RootCmd.PersistentFlags().String("private-key", "", "Private key to provide access to an account")
+	RootCmd.PersistentFlags().String("private-key", "", "Private key to provide access to an account or validaotr")
 	if err := viper.BindPFlag("private-key", RootCmd.PersistentFlags().Lookup("private-key")); err != nil {
 		panic(err)
 	}

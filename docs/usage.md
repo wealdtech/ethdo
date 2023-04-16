@@ -2,7 +2,11 @@
 
 ethdo provides features to manage wallets and accounts, as well as interacting with Ethereum consensus nodes and remote signers.  Below are a list of all available commands.
 
-Note that the below provides a list of commands rather than a howto guide.  Please follow the
+Note that the below provides a list of commands rather than a guide for specific situations.  Other guides available are:
+
+- [How to change withdrawal credentials for a validator](./changingwithdrawalcredentials.md)
+- [How to convert from mnemonics to keys and accounts](./conversions.md)
+- [How to achieve common tasks with ethdo](./howto.md)
 
 ### `wallet` commands
 
@@ -28,10 +32,11 @@ Spending: 0x85dfc6dcee4c9da36f6473ec02fda283d6c920c641fc8e3a76113c5c227d4aeeb100
 #### `create`
 
 `ethdo wallet create` creates a new wallet with the given parameters.  Options for creating a wallet include:
-  - `wallet`: the name of the wallet to create
-  - `type`: the type of wallet to create.  This can be either "nd" for a non-deterministic wallet, where private keys are generated randomly, or "hd" for a hierarchical deterministic wallet, where private keys are generated from a seed and path as per [ERC-2333](https://github.com/CarlBeek/EIPs/blob/bls_path/EIPS/eip-2334.md) (defaults to "nd")
-  - `wallet-passphrase`: the passphrase for of the wallet.  This is required for hierarchical deterministic wallets, to protect the seed
-  - `mnemonic`: for hierarchical deterministic wallets only, use a pre-defined 24-word [BIP-39 seed phrase](https://en.bitcoin.it/wiki/Seed_phrase) to create the wallet, along with an additional "seed extension" phrase if required.  **Warning** The same mnemonic can be used to create multiple wallets, in which case they will generate the same keys.
+
+- `wallet`: the name of the wallet to create
+- `type`: the type of wallet to create.  This can be either "nd" for a non-deterministic wallet, where private keys are generated randomly, or "hd" for a hierarchical deterministic wallet, where private keys are generated from a seed and path as per [ERC-2333](https://github.com/CarlBeek/EIPs/blob/bls_path/EIPS/eip-2334.md) (defaults to "nd")
+- `wallet-passphrase`: the passphrase for of the wallet.  This is required for hierarchical deterministic wallets, to protect the seed
+- `mnemonic`: for hierarchical deterministic wallets only, use a pre-defined 24-word [BIP-39 seed phrase](https://en.bitcoin.it/wiki/Seed_phrase) to create the wallet, along with an additional "seed extension" phrase if required.  **Warning** The same mnemonic can be used to create multiple wallets, in which case they will generate the same keys.
 
 ```sh
 $ ethdo wallet create --wallet="Personal wallet" --type="hd" --wallet-passphrase="my wallet secret"
@@ -39,7 +44,8 @@ $ ethdo wallet create --wallet="Personal wallet" --type="hd" --wallet-passphrase
 
 #### `delete`
 `ethdo wallet delete` deletes a wallet.  Options for deleting a wallet include:
-  - `wallet`: the name of the wallet to delete
+
+- `wallet`: the name of the wallet to delete
 
 ```sh
 $ ethdo wallet delete --wallet="Old wallet"
@@ -50,8 +56,9 @@ $ ethdo wallet delete --wallet="Old wallet"
 #### `export`
 
 `ethdo wallet export` exports the wallet and all of its accounts.  Options for exporting a wallet include:
-  - `wallet`: the name of the wallet to export (defaults to "primary")
-  - `passphrase`: the passphrase with which to encrypt the wallet backup
+
+- `wallet`: the name of the wallet to export (defaults to "primary")
+- `passphrase`: the passphrase with which to encrypt the wallet backup
 
 ```sh
 $ ethdo wallet export --wallet="Personal wallet" --passphrase="my export secret"
@@ -67,9 +74,10 @@ $ ethdo wallet export --wallet="Personal wallet" --passphrase="my export secret"
 #### `import`
 
 `ethdo wallet import` imports a wallet and all of its accounts exported by `ethdo wallet export`.  Options for importing a wallet include:
-  - `data`: the data exported by `ethdo wallet export`
-  - `passphrase`: the passphrase that was provided to `ethdo wallet export` to encrypt the data
-  - `verify`: confirm information about the wallet import without importing it
+
+- `data`: the data exported by `ethdo wallet export`
+- `passphrase`: the passphrase that was provided to `ethdo wallet export` to encrypt the data
+- `verify`: confirm information about the wallet import without importing it
 
 ```sh
 $ ethdo wallet import --data="0x01c7a27ad40d45b4ae5be5f..." --passphrase="my export secret"
@@ -84,7 +92,8 @@ $ ethdo wallet import --data=`cat export.dat` --passphrase="my export secret"
 #### `info`
 
 `ethdo wallet info` provides information about a given wallet.  Options include:
-  - `wallet`: the name of the wallet
+
+- `wallet`: the name of the wallet
 
 ```sh
 $ ethdo wallet info --wallet="Personal wallet"
@@ -106,10 +115,11 @@ Personal wallet
 #### `sharedexport`
 
 `ethdo wallet sharedexport` exports the wallet and all of its accounts with shared keys.  Options for exporting a wallet include:
-  - `wallet`: the name of the wallet to export (defaults to "primary")
-  - `participants`: the total number of participants that each hold a share
-  - `threshold`: the number of participants necessary to provide their share to restore the wallet
-  - `file`: the name of the file that stores the backup
+
+- `wallet`: the name of the wallet to export (defaults to "primary")
+- `participants`: the total number of participants that each hold a share
+- `threshold`: the number of participants necessary to provide their share to restore the wallet
+- `file`: the name of the file that stores the backup
 
 ```sh
 $ ethdo wallet sharedexport --wallet="Personal wallet" --participants=3 --threshold=2 --file=backup.dat
@@ -123,8 +133,9 @@ Each line of the output is a share and should be provided to one of the particip
 #### `sharedimport`
 
 `ethdo wallet sharedimport` imports a wallet and all of its accounts exported by `ethdo wallet sharedexport`.  Options for importing a wallet include:
-  - `file`: the name of the file that stores the backup
-  - `shares`: a number of shares, defined by _threshold_ during the export, separated by spaces
+
+- `file`: the name of the file that stores the backup
+- `shares`: a number of shares, defined by _threshold_ during the export, separated by spaces
 
 ```sh
 $ ethdo wallet sharedimport --file=backup.dat --shares="298a…9189 10ea…5063"
@@ -137,9 +148,10 @@ Account commands focus on information about local accounts, generally those used
 #### `create`
 
 `ethdo account create` creates a new account with the given parameters.  Options for creating an account include:
-  - `account`: the name of the account to create (in format "wallet/account")
-  - `passphrase`: the passphrase for the account
-  - `path`: the HD path for the account (only for hierarchical deterministic accounts)
+
+- `account`: the name of the account to create (in format "wallet/account")
+- `passphrase`: the passphrase for the account
+- `path`: the HD path for the account (only for hierarchical deterministic accounts)
 
 Note that for hierarchical deterministic wallets you will also need to supply `--wallet-passphrase` to unlock the wallet seed.
 
@@ -153,10 +165,10 @@ $ ethdo account create --account="Personal wallet/Operations" --wallet-passphras
 
 `ethdo account derive` provides the ability to derive an account's keys without creating either the wallet or the account.  This allows users to quickly obtain or confirm keys without going through a relatively long process, and has the added security benefit of not writing any information to disk.  Options for deriving the account include:
 
-  - `mnemonic`: a pre-defined 24-word [BIP-39 seed phrase](https://en.bitcoin.it/wiki/Seed_phrase) to derive the account, along with an additional "seed extension" phrase if required supplied as the 25th word
-  - `path`: the HD path used to derive the account
-  - `show-private-key`: show the private of the derived account.  **Warning** displaying private keys, especially those derived from seeds held on hardware wallets, can expose your Ether to risk of being stolen.  Only use this option if you are sure you understand the risks involved
-  - `show-withdrawal-credentials`: show the withdrawal credentials of the derived account
+- `mnemonic`: a pre-defined 24-word [BIP-39 seed phrase](https://en.bitcoin.it/wiki/Seed_phrase) to derive the account, along with an additional "seed extension" phrase if required supplied as the 25th word
+- `path`: the HD path used to derive the account
+- `show-private-key`: show the private of the derived account.  **Warning** displaying private keys, especially those derived from seeds held on hardware wallets, can expose your Ether to risk of being stolen.  Only use this option if you are sure you understand the risks involved
+- `show-withdrawal-credentials`: show the withdrawal credentials of the derived account
 
 ```sh
 $ ethdo account derive --mnemonic="abandon ... abandon art" --path="m/12381/3600/0/0"
@@ -166,9 +178,10 @@ Public key: 0x99b1f1d84d76185466d86c34bde1101316afddae76217aa86cd066979b19858c2c
 #### `import`
 
 `ethdo account import` creates a new account by importing its private key.  Options for creating the account include:
-  - `account`: the name of the account to create (in format "wallet/account")
-  - `passphrase`: the passphrase for the account
-  - `key`: the private key to import
+
+- `account`: the name of the account to create (in format "wallet/account")
+- `passphrase`: the passphrase for the account
+- `key`: the private key to import
 
 ```sh
 $ ethdo account import --account=Validators/123 --key=6dd12d588d1c05ba40e80880ac7e894aa20babdbf16da52eae26b3f267d68032 --passphrase="my account secret"
@@ -179,12 +192,14 @@ You can also import from an existing keystore such as those generated by the dep
 ```sh
 $ ethdo account import --account=Validators/123 --keystore=/path/to/keystore.json --keystore-passphrase="the keystore secret" --passphrase="my account secret"
 ```
+
 `--keystore` can either be the path to the keystore file, or the contents of the keystore file.
 
 #### `info`
 
 `ethdo account info` provides information about the given account.  Options include:
-  - `account`: the name of the account on which to obtain information (in format "wallet/account")
+
+- `account`: the name of the account on which to obtain information (in format "wallet/account")
 
 ```sh
 $ ethdo account info --account="Personal wallet/Operations"
@@ -194,8 +209,9 @@ Public key: 0x8e2f9e8cc29658ff37ecc30e95a0807579b224586c185d128cb7a7490784c1ad9b
 #### `key`
 
 `ethdo account key` provides the private key for an account.  Options include:
-  - `account`: the name of the account on which to obtain information (in format "wallet/account")
-  - `passphrase`: the passphrase for the account
+
+- `account`: the name of the account on which to obtain information (in format "wallet/account")
+- `passphrase`: the passphrase for the account
 
 ```sh
 $ ethdo account key --account=interop/00001 --passphrase=secret
@@ -205,7 +221,8 @@ $ ethdo account key --account=interop/00001 --passphrase=secret
 #### `lock`
 
 `ethdo account lock` manually locks an account on a remote signer.  Locked accounts cannot carry out signing requests.  Options include:
-  - `account`: the name of the account to lock (in format "wallet/account")
+
+- `account`: the name of the account to lock (in format "wallet/account")
 
 Note that this command only works with remote signers; it has no effect on local accounts.
 
@@ -216,8 +233,9 @@ $ ethdo account lock --account=Validators/123
 #### `unlock`
 
 `ethdo account unlock` manually unlocks an account on a remote signer.  Unlocked accounts cannot carry out signing requests.  Options include:
-  - `account`: the name of the account to unlock (in format "wallet/account")
-  - `passphrase`: the passphrase for the account
+
+- `account`: the name of the account to unlock (in format "wallet/account")
+- `passphrase`: the passphrase for the account
 
 Note that this command only works with remote signers; it has no effect on local accounts.
 
@@ -232,10 +250,11 @@ Signature commands focus on generation and verification of data signatures.
 #### `signature sign`
 
 `ethdo signature sign` signs provided data.  Options include:
-  - `data`: the data to sign, as a hex string
-  - `domain`: the domain in which to sign the data.  This is a 32-byte hex string
-  - `account`: the account to sign the data (in format "wallet/account")
-  - `passphrase`: the passphrase for the account
+
+- `data`: the data to sign, as a hex string
+- `domain`: the domain in which to sign the data.  This is a 32-byte hex string
+- `account`: the account to sign the data (in format "wallet/account")
+- `passphrase`: the passphrase for the account
 
 ```sh
 $ ethdo signature sign --data="0x08140077a94642919041503caf5cc1c89c7744a2a08d43cec91df1795b23ecf2" --account="Personal wallet/Operations" --passphrase="my account secret"
@@ -245,10 +264,11 @@ $ ethdo signature sign --data="0x08140077a94642919041503caf5cc1c89c7744a2a08d43c
 #### `signature verify`
 
 `ethdo signature verify` verifies signed data.  Options include:
-  - `data`: the data whose signature to verify, as a hex string
-  - `signature`: the signature to verify, as a hex string
-  - `account`: the account which signed the data (if available as an account, in format "wallet/account")
-  - `signer`: the public key of the account which signed the data (if not available as an account)
+
+- `data`: the data whose signature to verify, as a hex string
+- `signature`: the signature to verify, as a hex string
+- `account`: the account which signed the data (if available as an account, in format "wallet/account")
+- `signer`: the public key of the account which signed the data (if not available as an account)
 
 ```sh
 $ ethdo signature verify --data="0x08140077a94642919041503caf5cc1c89c7744a2a08d43cec91df1795b23ecf2" --signature="0x87c83b31081744667406a11170c5585a11195621d0d3f796bd9006ac4cb5f61c10bf8c5b3014cd4f792b143a644cae100cb3155e8b00a961287bd9e7a5e18cb3b80930708bc9074d11ff47f1e8b9dd0b633e71bcea725fc3e550fdc259c3d130" --account="Personal wallet/Operations"
@@ -275,7 +295,8 @@ $ ethdo version
 Block commands focus on providing information about Ethereum consensus blocks.
 #### `analyze`
 `ethdo block info` obtains information about a block in the Ethereum consensus chain.  Options include:
-  - `blockid`: the ID (slot, root, 'head') of the block to obtain
+
+- `blockid`: the ID (slot, root, 'head') of the block to obtain
 
 ```sh
 $ ethdo block analyze --blockid=80
@@ -298,7 +319,8 @@ Value for block 80: 488.531
 #### `info`
 
 `ethdo block info` obtains information about a block in the Ethereum consensus chain.  Options include:
-  - `blockid`: the ID (slot, root, 'head') of the block to obtain
+
+- `blockid`: the ID (slot, root, 'head') of the block to obtain
 
 ```sh
 $ ethdo block info --blockid=80
@@ -340,8 +362,9 @@ Chain commands focus on providing information about Ethereum consensus chains.
 #### `eth1votes`
 
 `ethdo chain eth1votes` obtains information about the votes for the next Ethereum 1 block to be incorporated in to the chain for deposits.  Options include:
-  - `epoch` show the votes at the end of the given epoch
-  - `json` provide JSON output
+
+- `epoch` show the votes at the end of the given epoch
+- `json` provide JSON output
 
 ```sh
 $ ethdo chain eth1votes
@@ -375,8 +398,9 @@ Slots per epoch:	32
 #### `queues`
 
 `ethdo chain queues` obtains the activation and exit queue lengths of an Ethereum chain from the node's point of view.  Options include:
-  - `epoch` show the queue length at a given epoch
-  - `json` provide JSON output
+
+- `epoch` show the queue length at a given epoch
+- `json` provide JSON output
 
 ```sh
 $ ethdo chain queues
@@ -398,7 +422,8 @@ BASE_REWARD_FACTOR: 64
 #### `status`
 
 `ethdo chain status` obtains the status of an Ethereum consensus chain from the node's point of view.  Options include:
-  - `slot` show output in terms of slots rather than epochs
+
+- `slot` show output in terms of slots rather than epochs
 
 ```sh
 $ ethdo chain status
@@ -423,9 +448,10 @@ Prior justified epoch distance: 4
 #### `time`
 
 `ethdo chain time` calculates the time period of Ethereum consensus epochs and slots.  Options include:
-  - `epoch` show epoch and slot times for the given epoch
-  - `slot` show epoch and slot times for the given slot
-  - `timestamp` show epoch and slot times for the given timestamp
+
+- `epoch` show epoch and slot times for the given epoch
+- `slot` show epoch and slot times for the given slot
+- `timestamp` show epoch and slot times for the given timestamp
 
 ```sh
 $ ethdo chain time --epoch=1234
@@ -444,10 +470,11 @@ Deposit commands focus on information about deposit data information in a JSON f
 #### `verify`
 
 `ethdo deposit verify` verifies one or more deposit data information in a JSON file generated by the `ethdo validator depositdata` command.  Options include:
-  - `data`: either a path to the JSON file, the JSON itself, or a hex string representing a deposit transaction
-  - `withdrawalpubkey`: the public key of the withdrawal for the deposit.  If no value is supplied then withdrawal credentials for deposits will not be checked
-  - `validatorpubkey`: the public key of the validator for the deposit.  If no value is supplied then validator public keys will not be checked
-  - `depositvalue`: the value of the Ether being deposited.  If no value is supplied then deposit values will not be checked.
+
+- `data`: either a path to the JSON file, the JSON itself, or a hex string representing a deposit transaction
+- `withdrawalpubkey`: the public key of the withdrawal for the deposit.  If no value is supplied then withdrawal credentials for deposits will not be checked
+- `validatorpubkey`: the public key of the validator for the deposit.  If no value is supplied then validator public keys will not be checked
+- `depositvalue`: the value of the Ether being deposited.  If no value is supplied then deposit values will not be checked.
 
 ```sh
 $ ethdo deposit verify --data=${HOME}/depositdata.json --withdrawalpubkey=0xad1868210a0cff7aff22633c003c503d4c199c8dcca13bba5b3232fc784d39d3855936e94ce184c3ce27bf15d4347695 --validatorpubkey=0xa951530887ae2494a8cc4f11cf186963b0051ac4f7942375585b9cf98324db1e532a67e521d0fcaab510edad1352394c --depositvalue=32Ether
@@ -460,8 +487,9 @@ Epoch commands focus on information about a beacon chain epoch.
 #### `summary`
 
 `ethdo epoch summary` provides a summary of the given epoch.  Options include:
-  - `epoch`: the epoch for which to provide a summary; defaults to last complete epoch
-  - `json`: provide JSON output
+
+- `epoch`: the epoch for which to provide a summary; defaults to last complete epoch
+- `json`: provide JSON output
 
 ```sh
 $ ethdo epoch summary
@@ -493,7 +521,8 @@ Exit commands focus on information about validator exits generated by the `ethdo
 #### `verify`
 
 `ethdo exit verify` verifies the validator exit information in a JSON file generated by the `ethdo validator exit` command.  Options include:
-  - `signed-operation`: either a path to the JSON file or the JSON itself
+
+- `signed-operation`: either a path to the JSON file or the JSON itself
 
 ```sh
 $ ethdo exit verify --signed-operation=${HOME}/exit.json
@@ -543,7 +572,8 @@ Slot commands focus on information about Ethereum consensus slots.
 #### `slottime`
 
 `ethdo slot time` provides information about the time of a slot.  options include:
-  - `slot` the slot for which to provide the time
+
+- `slot` the slot for which to provide the time
 
 ```sh
 $ ethdo slot time --slot=5
@@ -557,9 +587,9 @@ Sync committee commands focus on information about sync committees.
 #### `inclusion`
 
 `ethdo synccommittee inclusion` provides information about the inclusion, or not, of a validator's sync committee messages.  Options include:
-  - `validator`: the index, public key or account of the validator in format "wallet/account"
-  - `epoch` the specific epoch for which to print sync committee contributions.  Defaults to the last complete epoch
 
+- `validator`: a [validator specifier](https://github.com/wealdtech/ethdo#validator-specifier)
+- `epoch` the specific epoch for which to print sync committee contributions.  Defaults to the last complete epoch
 
 ```sh
 $ ethdo synccommittee inclusion --index=274946 --epoch=91592
@@ -574,8 +604,9 @@ Per-slot result: ✓✓✓✓✓✓✓✓ ✓✓✕✓✓✓✓✓ ✓✓✓✓-
 #### `members`
 
 `ethdo synccommittee members` provides information about the members of a sync committee.  Options include:
-  - `epoch` the specific epoch for which to provide sync committee members.
-  - `period` the period for which to provide sync committee members.  Can be 'current' or 'next'; dfeaults to 'current'
+
+- `epoch` the specific epoch for which to provide sync committee members.
+- `period` the period for which to provide sync committee members.  Can be 'current' or 'next'; dfeaults to 'current'
 
 ```sh
 $ ethdo synccommittee members
@@ -589,7 +620,8 @@ Validator commands focus on interaction with Ethereum consensus validators.
 #### `credentials get`
 
 `ethdo validator credentials get` provides information about the withdrawal credentials for the provided validator.  Options include:
-  - `validator` the account, public key or index for which to obtain the withdrawal credentials
+
+- `validator`: a [validator specifier](https://github.com/wealdtech/ethdo#validator-specifier)
 
 ```sh
 $ ethdo validator credentials get --validator=Validators/1
@@ -606,34 +638,39 @@ $ ethdo validator credentials set --validator=Validators/1 --withdrawal-address=
 #### `depositdata`
 
 `ethdo validator depositdata` generates the data required to deposit one or more Ethereum consensus validators.  Options include:
-  - `withdrawalaccount` specify the account to be used for the withdrawal credentials (if withdrawalpubkey is not supplied)
-  - `withdrawaladdress` specify the Ethereum execution address to be used for the withdrawal credentials (if withdrawalpubkey is not supplied)
-  - `withdrawalpubkey` specify the public key to be used for the withdrawal credentials (if withdrawalaccount is not supplied)
-  - `validatoraccount` specify the account to be used for the validator
-  - `depositvalue` specify the amount of the deposit
-  - `forkversion` specify the fork version for the deposit signature; this defaults to mainnet.  Note that supplying an incorrect value could result in the loss of your deposit, so only supply this value if you are sure you know what you are doing.  You can find the value for other chains by fetching the value supplied in "Genesis fork version" of the `ethdo chain info` command
-  - `raw` generate raw hex output that can be supplied as the data to an Ethereum 1 deposit transaction
+
+- `withdrawalaccount` specify the account to be used for the withdrawal credentials (if withdrawalpubkey is not supplied)
+- `withdrawaladdress` specify the Ethereum execution address to be used for the withdrawal credentials (if withdrawalpubkey is not supplied)
+- `withdrawalpubkey` specify the public key to be used for the withdrawal credentials (if withdrawalaccount is not supplied)
+- `validatoraccount` specify the account to be used for the validator
+- `depositvalue` specify the amount of the deposit
+- `forkversion` specify the fork version for the deposit signature; this defaults to mainnet.  Note that supplying an incorrect value could result in the loss of your deposit, so only supply this value if you are sure you know what you are doing.  You can find the value for other chains by fetching the value supplied in "Genesis fork version" of the `ethdo chain info` command
+- `raw` generate raw hex output that can be supplied as the data to an Ethereum 1 deposit transaction
 
 #### `exit`
 
 `ethdo validator exit` sends a transaction to the chain to tell an active validator to exit the validation queue.  Options include:
-  - `epoch` specify an epoch before which this exit is not valid
-  - `json` generate JSON output rather than sending a transaction immediately
-  - `exit` use JSON exit input created by the `--json` option rather than generate data from scratch
+
+- `epoch` specify an epoch before which this exit is not valid
+- `validator`: the validator for which to exit, as a [validator specifier](https://github.com/wealdtech/ethdo#validator-specifier)
+- `json` generate JSON output rather than sending a transaction immediately
+- `exit` use JSON exit input created by the `--json` option rather than generate data from scratch
 
 ```sh
-$ ethdo validator exit --account=Validators/1 --passphrase="my validator secret"
+$ ethdo validator exit --validator=Validators/1 --passphrase="my validator secret"
 ```
 
 To send a transaction when the account is not accessible to ethdo accout you can use the validator's private key instead:
 
 ```sh
-$ ethdo validator exit --key=0x01e748d098d3bcb477d636f19d510399ae18205fadf9814ee67052f88c1f88c0
+$ ethdo validator exit --private-key=0x01e748d098d3bcb477d636f19d510399ae18205fadf9814ee67052f88c1f88c0
 ```
 
 #### `info`
 
-`ethdo validator info` provides information for a given validator.
+`ethdo validator info` provides information for a given validator.  Options include:
+
+- `validator`: the validator for which to obtain information, as a [validator specifier](https://github.com/wealdtech/ethdo#validator-specifier)
 
 ```sh
 $ ethdo validator info --validator=Validators/1
@@ -645,7 +682,7 @@ Effective balance: 3.1 Ether
 Additional information is supplied when using `--verbose`
 
 ```sh
-$ ethdo validator info --validator=Validators/1 --verbose
+$ ethdo validator info --validator=0xb3bb6b7a8d809e59544472853d219499765bf01d14de1e0549bd6fc2a86627ac9033264c84cd503b6339e3334726562f --verbose
 Epoch of data:          3398
 Index:                  26913
 Public key:             0xb3bb6b7a8d809e59544472853d219499765bf01d14de1e0549bd6fc2a86627ac9033264c84cd503b6339e3334726562f
@@ -655,21 +692,13 @@ Effective balance:      3.1 Ether
 Withdrawal credentials: 0x0033ef3cb10b36d0771ffe8a02bc5bfc7e64ea2f398ce77e25bb78989edbee36
 ```
 
-If the validator is not an account then `--validator` option can be supplied with a validator index or public key.
-
-```sh
-$ ethdo validator info --validator=0x842dd66cfeaeff4397fc7c94f7350d2131ca0c4ad14ff727963be9a1edb4526604970df6010c3da6474a9820fa81642b
-Status:            Active
-Balance:           3.201850307 Ether
-Effective balance: 3.1 Ether
-```
-
 #### `keycheck`
 
 `ethdo validator keycheck` checks if a given key matches a validator's withdrawal credentials.  Options include:
-  - `withdrawal-credentials` the withdrawal credentials against which to match
-  - `privkey` the private key used to generat matching withdrawal credentials
-  - `mnemonic` the mnemonic used to generate matching withdrawal credentials
+
+- `withdrawal-credentials` the withdrawal credentials against which to match
+- `private-key` the private key used to generat matching withdrawal credentials
+- `mnemonic` the mnemonic used to generate matching withdrawal credentials
 
 ```sh
 $ ethdo validator keycheck --withdrawal-credentials=0x007e28dcf9029e8d92ca4b5d01c66c934e7f3110606f34ae3052cbf67bd3fc02 --mnemonic='abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon art'
@@ -678,7 +707,9 @@ Withdrawal credentials confirmed at path m/12381/3600/10/0
 
 #### `expectation`
 
-`ethdo validator expectation` calculates the times between expected actions.
+`ethdo validator expectation` calculates the times between expected actions.  Options include:
+
+- `validators` the number of active validators to use as the basis for calculations
 
 ```sh
 $ ethdo validator expectation
@@ -693,8 +724,9 @@ Attester commands focus on Ethereum consensus validators' actions as attesters.
 #### `duties`
 
 `ethdo attester duties` provides information on the duties that a given validator has in a given epoch.  Options include:
-  - `epoch` the epoch in which to obtain the duties (defaults to current epoch)
-  - `validator` the validator for which to fetch the duties, as an index, publi key or account in the format "wallet/account"
+
+- `epoch` the epoch in which to obtain the duties (defaults to current epoch)
+- `validator`: the validator for which to fetch the duties, as a [validator specifier](https://github.com/wealdtech/ethdo#validator-specifier)
 
 ```sh
 $ ethdo attester duties --validator=Validators/0 --epoch=5
@@ -704,8 +736,9 @@ Validator attesting in slot 186 committee 3
 #### `inclusion`
 
 `ethdo attester inclusion` finds the block with wihch an attestation is included on the chain.  Options include:
-  - `epoch` the epoch in which to obtain the inclusion information (defaults to previous epoch)
-  - `validator` the validator for which to fetch the duties, as an index, publi key or account in the format "wallet/account"
+
+- `epoch` the epoch in which to obtain the inclusion information (defaults to previous epoch)
+- `validator`: the validator for which to fetch the duties, as a [validator specifier](https://github.com/wealdtech/ethdo#validator-specifier)
 
 ```sh
 $ ethdo attester inclusion --validator=Validators/1 --epoch=6484
@@ -714,8 +747,9 @@ Attestation included in block 207492 (inclusion delay 1)
 
 #### `withdrawal`
 `ethdo validator withdrawal` provides information about the next withdrawal for the given validator.  Options include:
-  - `validator`: the list of validators for which to provide a summary
-  - `json`: provide JSON output
+
+- `validator`: the validator for which to fetch the withdrawal, as a [validator specifier](https://github.com/wealdtech/ethdo#validator-specifier)
+- `json`: provide JSON output
 
 ```sh
 $ ethdo validator withdrawal --validator=12345
@@ -725,8 +759,9 @@ Withdrawal expected at 2023-04-17T15:08:35 in block 6243041
 #### `yield`
 
 `ethdo validator yield` calculates the expected yield given the number of validators.  Options include:
-  - `validators` use a specified number of validators rather than the current number of active validators
-  - `json` obtain detailed information in JSON format
+
+- `validators` use a specified number of validators rather than the current number of active validators
+- `json` obtain detailed information in JSON format
 
 ```sh
 $ ethdo validator yield
@@ -735,9 +770,10 @@ Yield: 4.64%
 
 #### `summary`
 `ethdo validator summary` provides a summary of the given epoch for the given validators.  Options include:
-  - `epoch`: the epoch for which to provide a summary; defaults to last complete epoch
-  - `validators`: the list of validators for which to provide a summary
-  - `json`: provide JSON output
+
+- `epoch`: the epoch for which to provide a summary; defaults to last complete epoch
+- `validators`: the list of validators for which to provide a summary, as [validator specifiers](https://github.com/wealdtech/ethdo#validator-specifier)
+- `json`: provide JSON output
 
 ### `proposer` commands
 
@@ -746,8 +782,9 @@ Proposer commands focus on Ethereum consensus validators' actions as proposers.
 #### `duties`
 
 `ethdo proposer duties` provides information on the proposal duties for a given epoch.  Options include:
-  - `epoch` the epoch in which to obtain the duties (defaults to current epoch)
-  - `json` obtain detailed information in JSON format
+
+- `epoch` the epoch in which to obtain the duties (defaults to current epoch)
+- `json` obtain detailed information in JSON format
 
 ```sh
 $ ethdo proposer duties --epoch=5

@@ -46,9 +46,9 @@ func input(_ context.Context) (*dataIn, error) {
 	}
 
 	data.mnemonic = viper.GetString("mnemonic")
-	data.privKey = viper.GetString("privkey")
+	data.privKey = viper.GetString("private-key")
 	if data.mnemonic == "" && data.privKey == "" {
-		return nil, errors.New("mnemonic or privkey is required")
+		return nil, errors.New("mnemonic or private key is required")
 	}
 
 	return data, nil

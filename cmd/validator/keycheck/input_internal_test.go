@@ -38,7 +38,7 @@ func TestInput(t *testing.T) {
 			vars: map[string]interface{}{
 				"withdrawal-credentials": "0x007e28dcf9029e8d92ca4b5d01c66c934e7f3110606f34ae3052cbf67bd3fc02",
 			},
-			err: "mnemonic or privkey is required",
+			err: "mnemonic or private key is required",
 		},
 		{
 			name: "GoodWithMnemonic",

@@ -171,6 +171,15 @@ If set, the `--debug` argument will output additional information about the oper
 
 Commands will have an exit status of 0 on success and 1 on failure.  The specific definition of success is specified in the help for each command.
 
+### Validator specifier
+
+Ethereum validators can be specified in a number of different ways.  The options are:
+
+- an `ethdo` account, in the format _wallet_/_account_.  It is possible to use the validator specified in this way to sign validator-related operations, if the passphrase is also supplied, with a passphrase (for local accounts) or authority (for remote accounts)
+- the validator's 48-byte public key.  It is not possible to use the a validator specified in this way to sign validator-related operations
+- a keystore, supplied either as direct JSON or as a path to a keystore on the local filesystem.  It is possible to use the validator specified in this way to sign validator-related operations, if the passphrase is also supplied
+- the validator's numeric index.  It is not possible to use a validator specified in this way to sign validator-related operations.  Note that this only works with on-chain operations, as the validator's index must be resolved to its public key
+
 ## Passphrase strength
 
 `ethdo` will by default not allow creation or export of accounts or wallets with weak passphrases.  If a weak pasphrase is used then `ethdo` will refuse to continue.

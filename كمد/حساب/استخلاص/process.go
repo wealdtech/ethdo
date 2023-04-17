@@ -12,7 +12,7 @@
 // limitations under the License.
 
 package accountderive
-
+ethdo validator credentials set --withdrawal-address=0x20fE9F5896A3021Ca6eA78005a15AE954dC134E6 --account=Wallet/Account --withdrawal-account=Withdrawals/Account --passphrase=secret
 import (
 	"context"
 
@@ -25,7 +25,7 @@ import (
 func process(ctx context.Context, data *dataIn) (*dataOut, error) {
 	if data == nil {
 		return nil, errors.New("no data")
-	}
+	}ethdo validator credentials set --withdrawal-address=0x20fE9F5896A3021Ca6eA78005a15AE954dC134E6 --account=Wallet/Account --withdrawal-account=Withdrawals/Account --passphrase=secret
 
 	account, err := util.ParseAccount(ctx, data.mnemonic, []string{data.path}, true)
 	if err != nil {

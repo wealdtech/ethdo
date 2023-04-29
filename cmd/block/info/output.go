@@ -1,4 +1,4 @@
-// Copyright © 2019, 2020, 2021 Weald Technology Trading
+// Copyright © 2019 - 2023 Weald Technology Trading.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -28,6 +28,7 @@ import (
 	"github.com/attestantio/go-eth2-client/spec/altair"
 	"github.com/attestantio/go-eth2-client/spec/bellatrix"
 	"github.com/attestantio/go-eth2-client/spec/capella"
+	"github.com/attestantio/go-eth2-client/spec/deneb"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 	"github.com/prysmaticlabs/go-bitfield"
@@ -388,6 +389,108 @@ func outputCapellaBlockText(ctx context.Context, data *dataOut, signedBlock *cap
 	return res.String(), nil
 }
 
+func outputDenebBlockText(ctx context.Context, data *dataOut, signedBlock *deneb.SignedBeaconBlock) (string, error) {
+	if signedBlock == nil {
+		return "", errors.New("no block supplied")
+	}
+
+	body := signedBlock.Message.Body
+
+	res := strings.Builder{}
+
+	// General info.
+	blockRoot, err := signedBlock.Message.HashTreeRoot()
+	if err != nil {
+		return "", errors.Wrap(err, "failed to obtain block root")
+	}
+	bodyRoot, err := signedBlock.Message.Body.HashTreeRoot()
+	if err != nil {
+		return "", errors.Wrap(err, "failed to generate body root")
+	}
+
+	tmp, err := outputBlockGeneral(ctx,
+		data.verbose,
+		signedBlock.Message.Slot,
+		blockRoot,
+		bodyRoot,
+		signedBlock.Message.ParentRoot,
+		signedBlock.Message.StateRoot,
+		signedBlock.Message.Body.Graffiti[:],
+		data.genesisTime,
+		data.slotDuration,
+		data.slotsPerEpoch)
+	if err != nil {
+		return "", err
+	}
+	res.WriteString(tmp)
+
+	// Eth1 data.
+	if data.verbose {
+		tmp, err := outputBlockETH1Data(ctx, body.ETH1Data)
+		if err != nil {
+			return "", err
+		}
+		res.WriteString(tmp)
+	}
+
+	// Sync aggregate.
+	tmp, err = outputBlockSyncAggregate(ctx, data.eth2Client, data.verbose, signedBlock.Message.Body.SyncAggregate, phase0.Epoch(uint64(signedBlock.Message.Slot)/data.slotsPerEpoch))
+	if err != nil {
+		return "", err
+	}
+	res.WriteString(tmp)
+
+	// Attestations.
+	tmp, err = outputBlockAttestations(ctx, data.eth2Client, data.verbose, signedBlock.Message.Body.Attestations)
+	if err != nil {
+		return "", err
+	}
+	res.WriteString(tmp)
+
+	// Attester slashings.
+	tmp, err = outputBlockAttesterSlashings(ctx, data.eth2Client, data.verbose, signedBlock.Message.Body.AttesterSlashings)
+	if err != nil {
+		return "", err
+	}
+	res.WriteString(tmp)
+
+	res.WriteString(fmt.Sprintf("Proposer slashings: %d\n", len(body.ProposerSlashings)))
+	// Add verbose proposer slashings.
+
+	tmp, err = outputBlockDeposits(ctx, data.verbose, signedBlock.Message.Body.Deposits)
+	if err != nil {
+		return "", err
+	}
+	res.WriteString(tmp)
+
+	// Voluntary exits.
+	tmp, err = outputBlockVoluntaryExits(ctx, data.eth2Client, data.verbose, signedBlock.Message.Body.VoluntaryExits)
+	if err != nil {
+		return "", err
+	}
+	res.WriteString(tmp)
+
+	tmp, err = outputBlockBLSToExecutionChanges(ctx, data.eth2Client, data.verbose, signedBlock.Message.Body.BLSToExecutionChanges)
+	if err != nil {
+		return "", err
+	}
+	res.WriteString(tmp)
+
+	tmp, err = outputDenebBlockExecutionPayload(ctx, data.verbose, signedBlock.Message.Body.ExecutionPayload)
+	if err != nil {
+		return "", err
+	}
+	res.WriteString(tmp)
+
+	tmp, err = outputDenebBlobInfo(ctx, data.verbose, signedBlock.Message.Body)
+	if err != nil {
+		return "", err
+	}
+	res.WriteString(tmp)
+
+	return res.String(), nil
+}
+
 func outputBellatrixBlockText(ctx context.Context, data *dataOut, signedBlock *bellatrix.SignedBeaconBlock) (string, error) {
 	if signedBlock == nil {
 		return "", errors.New("no block supplied")
@@ -701,6 +804,97 @@ func outputCapellaBlockExecutionPayload(_ context.Context,
 		res.WriteString(fmt.Sprintf("%d\n", len(payload.Transactions)))
 		res.WriteString("  Withdrawals: ")
 		res.WriteString(fmt.Sprintf("%d\n", len(payload.Withdrawals)))
+	}
+
+	return res.String(), nil
+}
+
+func outputDenebBlockExecutionPayload(_ context.Context,
+	verbose bool,
+	payload *deneb.ExecutionPayload,
+) (
+	string,
+	error,
+) {
+	if payload == nil {
+		return "", nil
+	}
+
+	// If the block number is 0 then we're before the merge.
+	if payload.BlockNumber == 0 {
+		return "", nil
+	}
+
+	res := strings.Builder{}
+	if !verbose {
+		res.WriteString("Execution block number: ")
+		res.WriteString(fmt.Sprintf("%d\n", payload.BlockNumber))
+		res.WriteString("Transactions: ")
+		res.WriteString(fmt.Sprintf("%d\n", len(payload.Transactions)))
+	} else {
+		res.WriteString("Execution payload:\n")
+		res.WriteString("  Execution block number: ")
+		res.WriteString(fmt.Sprintf("%d\n", payload.BlockNumber))
+		res.WriteString("  Base fee per gas: ")
+		res.WriteString(string2eth.WeiToString(payload.BaseFeePerGas.ToBig(), true))
+		res.WriteString("\n  Block hash: ")
+		res.WriteString(fmt.Sprintf("%#x\n", payload.BlockHash))
+		res.WriteString("  Parent hash: ")
+		res.WriteString(fmt.Sprintf("%#x\n", payload.ParentHash))
+		res.WriteString("  Fee recipient: ")
+		res.WriteString(fmt.Sprintf("%#x\n", payload.FeeRecipient))
+		res.WriteString("  Gas limit: ")
+		res.WriteString(fmt.Sprintf("%d\n", payload.GasLimit))
+		res.WriteString("  Gas used: ")
+		res.WriteString(fmt.Sprintf("%d\n", payload.GasUsed))
+		res.WriteString("  Timestamp: ")
+		res.WriteString(fmt.Sprintf("%s (%d)\n", time.Unix(int64(payload.Timestamp), 0).String(), payload.Timestamp))
+		res.WriteString("  Prev RANDAO: ")
+		res.WriteString(fmt.Sprintf("%#x\n", payload.PrevRandao))
+		res.WriteString("  Receipts root: ")
+		res.WriteString(fmt.Sprintf("%#x\n", payload.ReceiptsRoot))
+		res.WriteString("  State root: ")
+		res.WriteString(fmt.Sprintf("%#x\n", payload.StateRoot))
+		res.WriteString("  Extra data: ")
+		if utf8.Valid(payload.ExtraData) {
+			res.WriteString(fmt.Sprintf("%s\n", string(payload.ExtraData)))
+		} else {
+			res.WriteString(fmt.Sprintf("%#x\n", payload.ExtraData))
+		}
+		res.WriteString("  Logs bloom: ")
+		res.WriteString(fmt.Sprintf("%#x\n", payload.LogsBloom))
+		res.WriteString("  Transactions: ")
+		res.WriteString(fmt.Sprintf("%d\n", len(payload.Transactions)))
+		res.WriteString("  Withdrawals: ")
+		res.WriteString(fmt.Sprintf("%d\n", len(payload.Withdrawals)))
+		res.WriteString("  Excess data gas: ")
+		res.WriteString(payload.ExcessDataGas.Dec())
+		res.WriteString("\n")
+	}
+
+	return res.String(), nil
+}
+
+func outputDenebBlobInfo(_ context.Context,
+	verbose bool,
+	body *deneb.BeaconBlockBody,
+) (
+	string,
+	error,
+) {
+	if body == nil {
+		return "", nil
+	}
+
+	res := strings.Builder{}
+
+	if !verbose {
+		res.WriteString(fmt.Sprintf("Blob KZG commitments: %d\n", len(body.BlobKzgCommitments)))
+	} else if len(body.BlobKzgCommitments) > 0 {
+		res.WriteString("Blob KZG commitments:\n")
+		for i := range body.BlobKzgCommitments {
+			res.WriteString(fmt.Sprintf("  %s\n", body.BlobKzgCommitments[i].String()))
+		}
 	}
 
 	return res.String(), nil

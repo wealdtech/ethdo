@@ -1,4 +1,4 @@
-// Copyright © 2021 Weald Technology Trading.
+// Copyright © 2021 - 2023 Weald Technology Trading.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -33,6 +33,7 @@ type Service struct {
 	altairForkEpoch              phase0.Epoch
 	bellatrixForkEpoch           phase0.Epoch
 	capellaForkEpoch             phase0.Epoch
+	denebForkEpoch               phase0.Epoch
 }
 
 // module-wide log.
@@ -107,6 +108,13 @@ func New(ctx context.Context, params ...Parameter) (*Service, error) {
 	}
 	log.Trace().Uint64("epoch", uint64(capellaForkEpoch)).Msg("Obtained Capella fork epoch")
 
+	denebForkEpoch, err := fetchDenebForkEpoch(ctx, parameters.specProvider)
+	if err != nil {
+		// Set to far future epoch.
+		denebForkEpoch = 0xffffffffffffffff
+	}
+	log.Trace().Uint64("epoch", uint64(denebForkEpoch)).Msg("Obtained Deneb fork epoch")
+
 	s := &Service{
 		genesisTime:                  genesisTime,
 		slotDuration:                 slotDuration,
@@ -115,6 +123,7 @@ func New(ctx context.Context, params ...Parameter) (*Service, error) {
 		altairForkEpoch:              altairForkEpoch,
 		bellatrixForkEpoch:           bellatrixForkEpoch,
 		capellaForkEpoch:             capellaForkEpoch,
+		denebForkEpoch:               denebForkEpoch,
 	}
 
 	return s, nil
@@ -298,6 +307,35 @@ func fetchCapellaForkEpoch(ctx context.Context,
 	if !isEpoch {
 		//nolint:revive
 		return 0, errors.New("CAPELLA_FORK_EPOCH is not a uint64!")
+	}
+
+	return phase0.Epoch(epoch), nil
+}
+
+// DenebInitialEpoch provides the epoch at which the Deneb hard fork takes place.
+func (s *Service) DenebInitialEpoch() phase0.Epoch {
+	return s.denebForkEpoch
+}
+
+func fetchDenebForkEpoch(ctx context.Context,
+	specProvider eth2client.SpecProvider,
+) (
+	phase0.Epoch,
+	error,
+) {
+	// Fetch the fork version.
+	spec, err := specProvider.Spec(ctx)
+	if err != nil {
+		return 0, errors.Wrap(err, "failed to obtain spec")
+	}
+	tmp, exists := spec["DENEB_FORK_EPOCH"]
+	if !exists {
+		return 0, errors.New("deneb fork version not known by chain")
+	}
+	epoch, isEpoch := tmp.(uint64)
+	if !isEpoch {
+		//nolint:revive
+		return 0, errors.New("DENEB_FORK_EPOCH is not a uint64!")
 	}
 
 	return phase0.Epoch(epoch), nil

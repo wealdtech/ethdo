@@ -54,7 +54,7 @@ In quiet mode this will return 0 if the exit operation has been generated (and s
 func init() {
 	validatorCmd.AddCommand(validatorExitCmd)
 	validatorFlags(validatorExitCmd)
-	validatorExitCmd.Flags().Int64("epoch", -1, "Epoch at which to exit (defaults to current epoch)")
+	validatorExitCmd.Flags().String("epoch", "", "Epoch at which to exit (defaults to current epoch)")
 	validatorExitCmd.Flags().Bool("prepare-offline", false, "Create files for offline use")
 	validatorExitCmd.Flags().String("validator", "", "Validator to exit")
 	validatorExitCmd.Flags().String("signed-operation", "", "Use pre-defined JSON signed operation as created by --json to transmit the exit operation (reads from exit-operation.json if not present)")

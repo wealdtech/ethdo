@@ -1,4 +1,4 @@
-// Copyright © 2022 Weald Technology Trading.
+// Copyright © 2022, 2023 Weald Technology Trading.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -435,6 +435,13 @@ func (c *command) analyzeSyncCommittees(_ context.Context, block *spec.Versioned
 	case spec.DataVersionCapella:
 		c.analysis.SyncCommitee.Contributions = int(block.Capella.Message.Body.SyncAggregate.SyncCommitteeBits.Count())
 		c.analysis.SyncCommitee.PossibleContributions = int(block.Capella.Message.Body.SyncAggregate.SyncCommitteeBits.Len())
+		c.analysis.SyncCommitee.Score = float64(c.syncRewardWeight) / float64(c.weightDenominator)
+		c.analysis.SyncCommitee.Value = c.analysis.SyncCommitee.Score * float64(c.analysis.SyncCommitee.Contributions)
+		c.analysis.Value += c.analysis.SyncCommitee.Value
+		return nil
+	case spec.DataVersionDeneb:
+		c.analysis.SyncCommitee.Contributions = int(block.Deneb.Message.Body.SyncAggregate.SyncCommitteeBits.Count())
+		c.analysis.SyncCommitee.PossibleContributions = int(block.Deneb.Message.Body.SyncAggregate.SyncCommitteeBits.Len())
 		c.analysis.SyncCommitee.Score = float64(c.syncRewardWeight) / float64(c.weightDenominator)
 		c.analysis.SyncCommitee.Value = c.analysis.SyncCommitee.Score * float64(c.analysis.SyncCommitee.Contributions)
 		c.analysis.Value += c.analysis.SyncCommitee.Value

@@ -25,6 +25,7 @@ import (
 	"github.com/attestantio/go-eth2-client/spec/altair"
 	"github.com/attestantio/go-eth2-client/spec/bellatrix"
 	"github.com/attestantio/go-eth2-client/spec/capella"
+	"github.com/attestantio/go-eth2-client/spec/deneb"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 )
@@ -85,6 +86,10 @@ func process(ctx context.Context, data *dataIn) (*dataOut, error) {
 		if err := outputCapellaBlock(ctx, data.jsonOutput, data.sszOutput, signedBlock.Capella); err != nil {
 			return nil, errors.Wrap(err, "failed to output block")
 		}
+	case spec.DataVersionDeneb:
+		if err := outputDenebBlock(ctx, data.jsonOutput, data.sszOutput, signedBlock.Deneb); err != nil {
+			return nil, errors.Wrap(err, "failed to output block")
+		}
 	default:
 		return nil, errors.New("unknown block version")
 	}
@@ -125,41 +130,26 @@ func headEventHandler(event *api.Event) {
 		}
 		return
 	}
+
 	switch signedBlock.Version {
 	case spec.DataVersionPhase0:
-		if err := outputPhase0Block(context.Background(), jsonOutput, signedBlock.Phase0); err != nil {
-			if !jsonOutput && !sszOutput {
-				fmt.Printf("Failed to output block: %v\n", err)
-			}
-			return
-		}
+		err = outputPhase0Block(context.Background(), jsonOutput, signedBlock.Phase0)
 	case spec.DataVersionAltair:
-		if err := outputAltairBlock(context.Background(), jsonOutput, sszOutput, signedBlock.Altair); err != nil {
-			if !jsonOutput && !sszOutput {
-				fmt.Printf("Failed to output block: %v\n", err)
-			}
-			return
-		}
+		err = outputAltairBlock(context.Background(), jsonOutput, sszOutput, signedBlock.Altair)
 	case spec.DataVersionBellatrix:
-		if err := outputBellatrixBlock(context.Background(), jsonOutput, sszOutput, signedBlock.Bellatrix); err != nil {
-			if !jsonOutput && !sszOutput {
-				fmt.Printf("Failed to output block: %v\n", err)
-			}
-			return
-		}
+		err = outputBellatrixBlock(context.Background(), jsonOutput, sszOutput, signedBlock.Bellatrix)
 	case spec.DataVersionCapella:
-		if err := outputCapellaBlock(context.Background(), jsonOutput, sszOutput, signedBlock.Capella); err != nil {
-			if !jsonOutput && !sszOutput {
-				fmt.Printf("Failed to output block: %v\n", err)
-			}
-			return
-		}
+		err = outputCapellaBlock(context.Background(), jsonOutput, sszOutput, signedBlock.Capella)
+	case spec.DataVersionDeneb:
+		err = outputDenebBlock(context.Background(), jsonOutput, sszOutput, signedBlock.Deneb)
 	default:
-		if !jsonOutput && !sszOutput {
-			fmt.Printf("Unknown block version: %v\n", signedBlock.Version)
-		}
+		err = errors.New("unknown block version")
+	}
+	if err != nil && !jsonOutput && !sszOutput {
+		fmt.Printf("Failed to output block: %v\n", err)
 		return
 	}
+
 	if !jsonOutput && !sszOutput {
 		fmt.Println("")
 	}
@@ -247,6 +237,30 @@ func outputCapellaBlock(ctx context.Context, jsonOutput bool, sszOutput bool, si
 		fmt.Printf("%x\n", data)
 	default:
 		data, err := outputCapellaBlockText(ctx, results, signedBlock)
+		if err != nil {
+			return errors.Wrap(err, "failed to generate text")
+		}
+		fmt.Print(data)
+	}
+	return nil
+}
+
+func outputDenebBlock(ctx context.Context, jsonOutput bool, sszOutput bool, signedBlock *deneb.SignedBeaconBlock) error {
+	switch {
+	case jsonOutput:
+		data, err := json.Marshal(signedBlock)
+		if err != nil {
+			return errors.Wrap(err, "failed to generate JSON")
+		}
+		fmt.Printf("%s\n", string(data))
+	case sszOutput:
+		data, err := signedBlock.MarshalSSZ()
+		if err != nil {
+			return errors.Wrap(err, "failed to generate SSZ")
+		}
+		fmt.Printf("%x\n", data)
+	default:
+		data, err := outputDenebBlockText(ctx, results, signedBlock)
 		if err != nil {
 			return errors.Wrap(err, "failed to generate text")
 		}

@@ -1,4 +1,4 @@
-// Copyright © 2022 Weald Technology Trading.
+// Copyright © 2022, 2023 Weald Technology Trading.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -93,6 +93,13 @@ func (c *command) process(ctx context.Context) error {
 				}
 			case spec.DataVersionCapella:
 				aggregate = block.Capella.Message.Body.SyncAggregate
+				if aggregate.SyncCommitteeBits.BitAt(c.committeeIndex) {
+					c.inclusions = append(c.inclusions, 1)
+				} else {
+					c.inclusions = append(c.inclusions, 2)
+				}
+			case spec.DataVersionDeneb:
+				aggregate = block.Deneb.Message.Body.SyncAggregate
 				if aggregate.SyncCommitteeBits.BitAt(c.committeeIndex) {
 					c.inclusions = append(c.inclusions, 1)
 				} else {

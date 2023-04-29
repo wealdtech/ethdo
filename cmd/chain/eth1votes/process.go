@@ -1,4 +1,4 @@
-// Copyright © 2022 Weald Technology Trading.
+// Copyright © 2022, 2023 Weald Technology Trading.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -90,6 +90,10 @@ func (c *command) process(ctx context.Context) error {
 		c.slot = state.Capella.Slot
 		c.incumbent = state.Capella.ETH1Data
 		c.eth1DataVotes = state.Capella.ETH1DataVotes
+	case spec.DataVersionDeneb:
+		c.slot = state.Deneb.Slot
+		c.incumbent = state.Deneb.ETH1Data
+		c.eth1DataVotes = state.Deneb.ETH1DataVotes
 	default:
 		return fmt.Errorf("unhandled beacon state version %v", state.Version)
 	}

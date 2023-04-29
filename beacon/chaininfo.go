@@ -269,7 +269,7 @@ func ObtainChainInfoFromNode(ctx context.Context,
 	}
 	tmp, exists := spec["GENESIS_FORK_VERSION"]
 	if !exists {
-		return nil, errors.New("capella fork version not known by chain")
+		return nil, errors.New("genesis fork version not known by chain")
 	}
 	var isForkVersion bool
 	res.GenesisForkVersion, isForkVersion = tmp.(phase0.Version)

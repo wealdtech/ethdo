@@ -1,4 +1,4 @@
-// Copyright © 2021 Weald Technology Trading.
+// Copyright © 2021 - 2023 Weald Technology Trading.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -60,4 +60,6 @@ type Service interface {
 	AltairInitialSyncCommitteePeriod() uint64
 	// CapellaInitialEpoch provides the epoch at which the Capella hard fork takes place.
 	CapellaInitialEpoch() phase0.Epoch
+	// DenebInitialEpoch provides the epoch at which the Deneb hard fork takes place.
+	DenebInitialEpoch() phase0.Epoch
 }

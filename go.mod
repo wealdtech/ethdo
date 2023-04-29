@@ -3,7 +3,7 @@ module github.com/wealdtech/ethdo
 go 1.20
 
 require (
-	github.com/attestantio/go-eth2-client v0.15.8
+	github.com/attestantio/go-eth2-client v0.16.0
 	github.com/ferranbt/fastssz v0.1.3
 	github.com/gofrs/uuid v4.4.0+incompatible
 	github.com/google/uuid v1.3.0
@@ -54,6 +54,7 @@ require (
 	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
+	github.com/holiman/uint256 v1.2.2 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/jackc/puddle v1.3.0 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect

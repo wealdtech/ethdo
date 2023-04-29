@@ -78,6 +78,12 @@ func (c *command) process(ctx context.Context) error {
 			return errors.New("block without withdrawals; cannot obtain next withdrawal validator index")
 		}
 		nextWithdrawalValidatorIndex = phase0.ValidatorIndex((int(withdrawals[len(withdrawals)-1].ValidatorIndex) + 1) % len(validators))
+	case spec.DataVersionDeneb:
+		withdrawals := block.Deneb.Message.Body.ExecutionPayload.Withdrawals
+		if len(withdrawals) == 0 {
+			return errors.New("block without withdrawals; cannot obtain next withdrawal validator index")
+		}
+		nextWithdrawalValidatorIndex = phase0.ValidatorIndex((int(withdrawals[len(withdrawals)-1].ValidatorIndex) + 1) % len(validators))
 	default:
 		return fmt.Errorf("unhandled block version %v", block.Version)
 	}

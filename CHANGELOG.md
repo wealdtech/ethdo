@@ -1,3 +1,6 @@
+dev:
+  - initial support for deneb
+
 1.30.0:
   - add "chain spec" command
   - add "validator withdrawal" command

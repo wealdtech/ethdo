@@ -247,7 +247,7 @@ func outputBlockBLSToExecutionChanges(ctx context.Context, eth2Client eth2client
 			} else {
 				res.WriteString(fmt.Sprintf("    Validator: %#x (%d)\n", validators[op.Message.ValidatorIndex].Validator.PublicKey, op.Message.ValidatorIndex))
 				res.WriteString(fmt.Sprintf("    BLS public key: %#x\n", op.Message.FromBLSPubkey))
-				res.WriteString(fmt.Sprintf("    Execution address: %#x\n", op.Message.ToExecutionAddress))
+				res.WriteString(fmt.Sprintf("    Execution address: %s\n", op.Message.ToExecutionAddress.String()))
 			}
 		}
 	}
@@ -779,7 +779,7 @@ func outputCapellaBlockExecutionPayload(_ context.Context,
 		res.WriteString("  Parent hash: ")
 		res.WriteString(fmt.Sprintf("%#x\n", payload.ParentHash))
 		res.WriteString("  Fee recipient: ")
-		res.WriteString(fmt.Sprintf("%#x\n", payload.FeeRecipient))
+		res.WriteString(payload.FeeRecipient.String())
 		res.WriteString("  Gas limit: ")
 		res.WriteString(fmt.Sprintf("%d\n", payload.GasLimit))
 		res.WriteString("  Gas used: ")
@@ -842,7 +842,7 @@ func outputDenebBlockExecutionPayload(_ context.Context,
 		res.WriteString("  Parent hash: ")
 		res.WriteString(fmt.Sprintf("%#x\n", payload.ParentHash))
 		res.WriteString("  Fee recipient: ")
-		res.WriteString(fmt.Sprintf("%#x\n", payload.FeeRecipient))
+		res.WriteString(payload.FeeRecipient.String())
 		res.WriteString("  Gas limit: ")
 		res.WriteString(fmt.Sprintf("%d\n", payload.GasLimit))
 		res.WriteString("  Gas used: ")
@@ -938,7 +938,7 @@ func outputBellatrixBlockExecutionPayload(_ context.Context,
 		res.WriteString("  Parent hash: ")
 		res.WriteString(fmt.Sprintf("%#x\n", payload.ParentHash))
 		res.WriteString("  Fee recipient: ")
-		res.WriteString(fmt.Sprintf("%#x\n", payload.FeeRecipient))
+		res.WriteString(payload.FeeRecipient.String())
 		res.WriteString("  Gas limit: ")
 		res.WriteString(fmt.Sprintf("%d\n", payload.GasLimit))
 		res.WriteString("  Gas used: ")

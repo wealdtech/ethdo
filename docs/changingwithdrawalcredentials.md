@@ -1,3 +1,4 @@
+changingwithdrawalcredentials.md
 # Changing withdrawal credentials
 When creating a validator it is possible to set its withdrawal credentials to those based upon a BLS private key (known as BLS withdrawal credentials, or "type 0" withdrawal credentials) or based upon an Ethereum execution address (known as execution withdrawal credentials, or "type 1" withdrawal credentials).  With the advent of the Capella hard fork, it is possible for rewards accrued on the consensus chain (also known as the beacon chain) to be sent to the execution chain.  However, for this to occur the validator's withdrawal credentials must be type 1.  Capella also brings a mechanism to change existing type 0 withdrawal credentials to type 1 withdrawal credentials, and this document outlines the process to change withdrawal credentials from type 0 to type 1 so that consensus rewards can be accessed.
 

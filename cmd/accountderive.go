@@ -49,6 +49,7 @@ func init() {
 	accountFlags(accountDeriveCmd)
 	accountDeriveCmd.Flags().Bool("show-private-key", false, "show private key for derived account")
 	accountDeriveCmd.Flags().Bool("show-withdrawal-credentials", false, "show withdrawal credentials for derived account")
+	accountDeriveCmd.Flags().Bool("generate-keystore", false, "generate a keystore for the derived account")
 }
 
 func accountDeriveBindings(cmd *cobra.Command) {
@@ -56,6 +57,9 @@ func accountDeriveBindings(cmd *cobra.Command) {
 		panic(err)
 	}
 	if err := viper.BindPFlag("show-withdrawal-credentials", cmd.Flags().Lookup("show-withdrawal-credentials")); err != nil {
+		panic(err)
+	}
+	if err := viper.BindPFlag("generate-keystore", cmd.Flags().Lookup("generate-keystore")); err != nil {
 		panic(err)
 	}
 }

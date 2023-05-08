@@ -169,6 +169,7 @@ $ ethdo account create --account="Personal wallet/Operations" --wallet-passphras
 - `path`: the HD path used to derive the account
 - `show-private-key`: show the private of the derived account.  **Warning** displaying private keys, especially those derived from seeds held on hardware wallets, can expose your Ether to risk of being stolen.  Only use this option if you are sure you understand the risks involved
 - `show-withdrawal-credentials`: show the withdrawal credentials of the derived account
+- `generate-keystore`: generate a keystore for the account
 
 ```sh
 $ ethdo account derive --mnemonic="abandon ... abandon art" --path="m/12381/3600/0/0"

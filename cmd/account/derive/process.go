@@ -1,4 +1,4 @@
-// Copyright © 2020 Weald Technology Trading
+// Copyright © 2020, 2023 Weald Technology Trading
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -40,7 +40,9 @@ func process(ctx context.Context, data *dataIn) (*dataOut, error) {
 	results := &dataOut{
 		showPrivateKey:            data.showPrivateKey,
 		showWithdrawalCredentials: data.showWithdrawalCredentials,
+		generateKeystore:          data.generateKeystore,
 		key:                       key.(*e2types.BLSPrivateKey),
+		path:                      data.path,
 	}
 
 	return results, nil

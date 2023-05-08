@@ -1,5 +1,6 @@
 dev:
   - initial support for deneb
+  - add "--generate-keystore" option for "account derive"
 
 1.30.0:
   - add "chain spec" command

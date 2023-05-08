@@ -1,4 +1,4 @@
-// Copyright © 2020 Weald Technology Trading
+// Copyright © 2020, 2023 Weald Technology Trading
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -28,6 +28,7 @@ type dataIn struct {
 	// Output options.
 	showPrivateKey            bool
 	showWithdrawalCredentials bool
+	generateKeystore          bool
 }
 
 func input(_ context.Context) (*dataIn, error) {
@@ -53,6 +54,9 @@ func input(_ context.Context) (*dataIn, error) {
 
 	// Show withdrawal credentials.
 	data.showWithdrawalCredentials = viper.GetBool("show-withdrawal-credentials")
+
+	// Generate keystore.
+	data.generateKeystore = viper.GetBool("generate-keystore")
 
 	return data, nil
 }

@@ -1,4 +1,4 @@
-// Copyright © 2021 Weald Technology Trading.
+// Copyright © 2021, 2023 Weald Technology Trading.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -31,7 +31,7 @@ func (c *command) process(ctx context.Context) error {
 	}
 
 	if c.debug {
-		fmt.Printf("Active validators: %d\n", c.activeValidators)
+		fmt.Printf("Active validators: %d\n", c.res.activeValidators)
 	}
 
 	if err := c.calculateProposalChance(ctx); err != nil {
@@ -59,7 +59,7 @@ func (c *command) calculateProposalChance(ctx context.Context) error {
 		return errors.New("SECONDS_PER_SLOT of incorrect type")
 	}
 
-	c.timeBetweenProposals = slotDuration * time.Duration(c.activeValidators) / time.Duration(c.validators)
+	c.res.timeBetweenProposals = slotDuration * time.Duration(c.res.activeValidators) / time.Duration(c.validators)
 
 	return nil
 }
@@ -109,12 +109,12 @@ func (c *command) calculateSyncCommitteeChance(ctx context.Context) error {
 		return errors.New("EPOCHS_PER_SYNC_COMMITTEE_PERIOD of incorrect type")
 	}
 
-	periodsBetweenSyncCommittees := uint64(c.activeValidators) / syncCommitteeSize
+	periodsBetweenSyncCommittees := c.res.activeValidators / syncCommitteeSize
 	if c.debug {
 		fmt.Printf("Sync committee periods between inclusion: %d\n", periodsBetweenSyncCommittees)
 	}
 
-	c.timeBetweenSyncCommittees = slotDuration * time.Duration(slotsPerEpoch*epochsPerPeriod) * time.Duration(periodsBetweenSyncCommittees) / time.Duration(c.validators)
+	c.res.timeBetweenSyncCommittees = slotDuration * time.Duration(slotsPerEpoch*epochsPerPeriod) * time.Duration(periodsBetweenSyncCommittees) / time.Duration(c.validators)
 
 	return nil
 }
@@ -157,7 +157,7 @@ func (c *command) setup(ctx context.Context) error {
 	for _, validator := range validators {
 		if validator.Validator.ActivationEpoch <= currentEpoch &&
 			validator.Validator.ExitEpoch > currentEpoch {
-			c.activeValidators++
+			c.res.activeValidators++
 		}
 	}
 

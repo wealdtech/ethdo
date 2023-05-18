@@ -15,9 +15,12 @@ package validatorexpectation
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 	"time"
 
 	eth2client "github.com/attestantio/go-eth2-client"
+	"github.com/hako/durafmt"
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
 )
@@ -26,6 +29,7 @@ type command struct {
 	quiet   bool
 	verbose bool
 	debug   bool
+	json    bool
 
 	// Beacon node connection.
 	timeout                  time.Duration
@@ -38,11 +42,34 @@ type command struct {
 	// Data access.
 	eth2Client         eth2client.Service
 	validatorsProvider eth2client.ValidatorsProvider
-	activeValidators   int
 
-	// Output.
+	// Results.
+	res *results
+}
+
+type results struct {
+	activeValidators          uint64
 	timeBetweenProposals      time.Duration
 	timeBetweenSyncCommittees time.Duration
+}
+
+type resultsJSON struct {
+	ActiveValidators          string `json:"active_validators"`
+	TimeBetweenProposals      string `json:"time_between_proposals"`
+	SecsBetweenProposals      string `json:"secs_between_proposals"`
+	TimeBetweenSyncCommittees string `json:"time_between_sync_committees"`
+	SecsBetweenSyncCommittees string `json:"secs_between_sync_committees"`
+}
+
+func (r *results) MarshalJSON() ([]byte, error) {
+	data := &resultsJSON{
+		ActiveValidators:          fmt.Sprintf("%d", r.activeValidators),
+		TimeBetweenProposals:      durafmt.Parse(r.timeBetweenProposals).LimitFirstN(2).String(),
+		SecsBetweenProposals:      fmt.Sprintf("%d", int64(r.timeBetweenProposals.Seconds())),
+		TimeBetweenSyncCommittees: durafmt.Parse(r.timeBetweenSyncCommittees).LimitFirstN(2).String(),
+		SecsBetweenSyncCommittees: fmt.Sprintf("%d", int64(r.timeBetweenSyncCommittees.Seconds())),
+	}
+	return json.Marshal(data)
 }
 
 func newCommand(_ context.Context) (*command, error) {
@@ -50,6 +77,8 @@ func newCommand(_ context.Context) (*command, error) {
 		quiet:   viper.GetBool("quiet"),
 		verbose: viper.GetBool("verbose"),
 		debug:   viper.GetBool("debug"),
+		json:    viper.GetBool("json"),
+		res:     &results{},
 	}
 
 	// Timeout.

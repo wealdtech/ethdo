@@ -33,15 +33,21 @@ func (c *command) output(_ context.Context) (string, error) {
 	}
 
 	if c.json || c.offline {
-		data, err := json.Marshal(c.signedOperation)
+		var data []byte
+		var err error
+		if len(c.signedOperations) == 1 {
+			data, err = json.Marshal(c.signedOperations[0])
+		} else {
+			data, err = json.Marshal(c.signedOperations)
+		}
 		if err != nil {
-			return "", errors.Wrap(err, "failed to marshal signed operation")
+			return "", errors.Wrap(err, "failed to marshal signed operations")
 		}
 		if c.json {
 			return string(data), nil
 		}
-		if err := os.WriteFile(exitOperationFilename, data, 0o600); err != nil {
-			return "", errors.Wrap(err, fmt.Sprintf("failed to write %s", exitOperationFilename))
+		if err := os.WriteFile(exitOperationsFilename, data, 0o600); err != nil {
+			return "", errors.Wrap(err, fmt.Sprintf("failed to write %s", exitOperationsFilename))
 		}
 		return "", nil
 	}

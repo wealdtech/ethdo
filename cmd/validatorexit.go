@@ -1,4 +1,4 @@
-// Copyright © 2020 Weald Technology Trading
+// Copyright © 2020, 2023 Weald Technology Trading
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -23,13 +23,16 @@ import (
 
 var validatorExitCmd = &cobra.Command{
 	Use:   "exit",
-	Short: "Send an exit request for a validator",
-	Long: `Send an exit request for a validator.  For example:
+	Short: "Send an exit request for one or more validators",
+	Long: `Send an exit request for one or more validators.  For example:
 
     ethdo validator exit --validator=12345
 
 The validator and key can be specified in one of a number of ways:
 
+  - mnemonic using --mnemonic; this will scan the mnemonic and generate all applicable operations
+  - mnemonic and path to the validator key using --mnemonic and --path; this will generate a single operation
+  - mnemonic and validator index or public key --mnemonic and --validator; this will generate a single operation
   - mnemonic and path to the validator using --mnemonic and --path
   - mnemonic and validator index or public key using --mnemonic and --validator
   - validator private key using --private-key
@@ -57,7 +60,7 @@ func init() {
 	validatorExitCmd.Flags().String("epoch", "", "Epoch at which to exit (defaults to current epoch)")
 	validatorExitCmd.Flags().Bool("prepare-offline", false, "Create files for offline use")
 	validatorExitCmd.Flags().String("validator", "", "Validator to exit")
-	validatorExitCmd.Flags().String("signed-operation", "", "Use pre-defined JSON signed operation as created by --json to transmit the exit operation (reads from exit-operation.json if not present)")
+	validatorExitCmd.Flags().String("signed-operations", "", "Use pre-defined JSON signed operation as created by --json to transmit the exit operations (reads from exit-operations.json if not present)")
 	validatorExitCmd.Flags().Bool("offline", false, "Do not attempt to connect to a beacon node to obtain information for the operation")
 	validatorExitCmd.Flags().String("fork-version", "", "Fork version to use for signing (overrides fetching from beacon node)")
 	validatorExitCmd.Flags().String("genesis-validators-root", "", "Genesis validators root to use for signing (overrides fetching from beacon node)")
@@ -73,7 +76,7 @@ func validatorExitBindings(cmd *cobra.Command) {
 	if err := viper.BindPFlag("validator", cmd.Flags().Lookup("validator")); err != nil {
 		panic(err)
 	}
-	if err := viper.BindPFlag("signed-operation", cmd.Flags().Lookup("signed-operation")); err != nil {
+	if err := viper.BindPFlag("signed-operations", cmd.Flags().Lookup("signed-operations")); err != nil {
 		panic(err)
 	}
 	if err := viper.BindPFlag("offline", cmd.Flags().Lookup("offline")); err != nil {

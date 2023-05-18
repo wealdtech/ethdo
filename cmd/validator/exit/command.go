@@ -42,7 +42,8 @@ type command struct {
 	forkVersion           string
 	genesisValidatorsRoot string
 	prepareOffline        bool
-	signedOperationInput  string
+	signedOperationsInput string
+	epoch                 string
 
 	// Beacon node connection.
 	timeout                  time.Duration
@@ -58,7 +59,7 @@ type command struct {
 	chainTime       chaintime.Service
 
 	// Output.
-	signedOperation *phase0.SignedVoluntaryExit
+	signedOperations []*phase0.SignedVoluntaryExit
 }
 
 func newCommand(_ context.Context) (*command, error) {
@@ -76,10 +77,12 @@ func newCommand(_ context.Context) (*command, error) {
 		mnemonic:                 viper.GetString("mnemonic"),
 		path:                     viper.GetString("path"),
 		privateKey:               viper.GetString("private-key"),
-		signedOperationInput:     viper.GetString("signed-operation"),
+		signedOperationsInput:    viper.GetString("signed-operations"),
 		validator:                viper.GetString("validator"),
 		forkVersion:              viper.GetString("fork-version"),
 		genesisValidatorsRoot:    viper.GetString("genesis-validators-root"),
+		epoch:                    viper.GetString("epoch"),
+		signedOperations:         make([]*phase0.SignedVoluntaryExit, 0),
 	}
 
 	// Account and validator are synonymous.

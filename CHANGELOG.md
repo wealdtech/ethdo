@@ -1,6 +1,7 @@
 dev:
   - initial support for deneb
   - add "--generate-keystore" option for "account derive"
+  - update "validator exit" command to be able to generate multiple exits
 
 1.30.0:
   - add "chain spec" command

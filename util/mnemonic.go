@@ -40,13 +40,23 @@ var mnemonicWordLists = [][]string{
 
 // SeedFromMnemonic creates a seed from a mnemonic.
 func SeedFromMnemonic(mnemonic string) ([]byte, error) {
-	// If there are more than 24 words we treat the additional characters as the passphrase.
+	// Handle situations where there may be a passphrase with the mnemonic.
 	mnemonicParts := strings.Split(mnemonic, " ")
 	mnemonicPassphrase := ""
-	if len(mnemonicParts) > 24 {
+	switch {
+	case len(mnemonicParts) == 13:
+		// Assume that passphrase is a single word here.
+		mnemonic = strings.Join(mnemonicParts[:12], " ")
+		mnemonicPassphrase = mnemonicParts[12]
+	case len(mnemonicParts) == 19:
+		// Assume that passphrase is a single word here.
+		mnemonic = strings.Join(mnemonicParts[:18], " ")
+		mnemonicPassphrase = mnemonicParts[18]
+	case len(mnemonicParts) > 24:
 		mnemonic = strings.Join(mnemonicParts[:24], " ")
 		mnemonicPassphrase = strings.Join(mnemonicParts[24:], " ")
 	}
+
 	// Normalise the input.
 	mnemonic = string(norm.NFKD.Bytes([]byte(mnemonic)))
 	mnemonicPassphrase = string(norm.NFKD.Bytes([]byte(mnemonicPassphrase)))

@@ -2,6 +2,7 @@ dev:
   - initial support for deneb
   - add "--generate-keystore" option for "account derive"
   - update "validator exit" command to be able to generate multiple exits
+  - support for 12-word and 18-word mnemonics with single-word (no whitespace) passphrases
 
 1.30.0:
   - add "chain spec" command

@@ -650,12 +650,7 @@ $ ethdo validator credentials set --validator=Validators/1 --withdrawal-address=
 
 #### `exit`
 
-`ethdo validator exit` sends a transaction to the chain to tell an active validator to exit the validation queue.  Options include:
-
-- `epoch` specify an epoch before which this exit is not valid
-- `validator`: the validator for which to exit, as a [validator specifier](https://github.com/wealdtech/ethdo#validator-specifier)
-- `json` generate JSON output rather than sending a transaction immediately
-- `exit` use JSON exit input created by the `--json` option rather than generate data from scratch
+`ethdo validator exit` sends a transaction to the chain to tell an active validator to exit the validation queue.  Full information about using this command can be found in the [specific documentation](./exitingvalidators.md).
 
 ```sh
 $ ethdo validator exit --validator=Validators/1 --passphrase="my validator secret"

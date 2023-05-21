@@ -44,7 +44,7 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           context: .
-          platforms: linux/amd64,linux/arm64/v8,linux/arm/v7
+          platforms: linux/amd64,linux/arm64/v8
           push: true
           tags: wealdtech/ethdo:latest
 
@@ -53,6 +53,6 @@ jobs:
         if: ${{ github.event.release.tag_name != '' }}
         with:
           context: .
-          platforms: linux/amd64,linux/arm64/v8,linux/arm/v7
+          platforms: linux/amd64,linux/arm64/v8
           push: true
           tags: wealdtech/ethdo:${{ github.event.release.tag_name }}

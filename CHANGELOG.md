@@ -1,3 +1,6 @@
+dev:
+  - fix incorrect error when "deposit veirfy" is not given a withdrawal address
+
 1.31.0:
   - initial support for deneb
   - add "--generate-keystore" option for "account derive"

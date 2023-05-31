@@ -16,6 +16,7 @@ package cmd
 import (
 	"bytes"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"os"
 	"strings"
@@ -75,6 +76,12 @@ In quiet mode this will return 0 if the data is verified correctly, otherwise 1.
 
 		deposits, err := util.DepositInfoFromJSON(data)
 		errCheck(err, "Failed to fetch deposit data")
+		if viper.GetBool("debug") {
+			data, err := json.Marshal(deposits)
+			if err == nil {
+				fmt.Fprintf(os.Stderr, "Deposit data is %s\n", string(data))
+			}
+		}
 
 		var withdrawalCredentials []byte
 		if depositVerifyWithdrawalPubKey != "" {
@@ -263,9 +270,12 @@ func verifyDeposit(deposit *util.DepositInfo, withdrawalCredentials []byte, vali
 				return false, nil
 			}
 
-			if len(deposit.DepositMessageRoot) != 32 {
+			switch {
+			case len(deposit.DepositMessageRoot) != 32:
 				outputIf(!viper.GetBool("quiet"), "Deposit message root not supplied; not checked")
-			} else {
+			case len(withdrawalCredentials) != 32:
+				outputIf(!viper.GetBool("quiet"), "Withdrawal credentials not available; cannot recreate deposit message")
+			default:
 				// We can also verify the deposit message signature.
 				depositMessage := &phase0.DepositMessage{
 					PublicKey:             pubKey,

@@ -14,6 +14,7 @@
 package util
 
 import (
+	"fmt"
 	"regexp"
 	"strings"
 
@@ -64,11 +65,41 @@ func SeedFromMnemonic(mnemonic string) ([]byte, error) {
 	// Try with the various word lists.
 	for _, wl := range mnemonicWordLists {
 		bip39.SetWordList(wl)
-		seed, err := bip39.NewSeedWithErrorChecking(mnemonic, mnemonicPassphrase)
+		seed, err := bip39.NewSeedWithErrorChecking(expandMnemonic(mnemonic), mnemonicPassphrase)
 		if err == nil {
+			fmt.Printf("Seed is %#x\n", seed)
 			return seed, nil
 		}
 	}
 
 	return nil, errors.New("mnemonic is invalid")
+}
+
+// expandMnmenonic expands mnemonics from their 4-letter versions.
+func expandMnemonic(input string) string {
+	wordList := bip39.GetWordList()
+	truncatedWords := make(map[string]string, len(wordList))
+	for _, word := range wordList {
+		if len(word) > 4 {
+			truncatedWords[firstFour(word)] = word
+		}
+	}
+	mnemonicWords := strings.Split(input, " ")
+	for i := range mnemonicWords {
+		if fullWord, exists := truncatedWords[norm.NFKC.String(mnemonicWords[i])]; exists {
+			mnemonicWords[i] = fullWord
+		}
+	}
+	return strings.Join(mnemonicWords, " ")
+}
+
+// firstFour provides the first four letters for a potentially longer word.
+func firstFour(s string) string {
+	// Use NFKC here for composition, to avoid accents counting as their own characters.
+	s = norm.NFKC.String(s)
+	r := []rune(s)
+	if len(r) > 4 {
+		return string(r[:4])
+	}
+	return s
 }

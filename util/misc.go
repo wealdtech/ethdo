@@ -196,7 +196,7 @@ func WalletAndAccountsFromPath(ctx context.Context, path string) (e2wtypes.Walle
 
 	accounts := make([]e2wtypes.Account, 0)
 	for account := range wallet.Accounts(ctx) {
-		if re.Match([]byte(account.Name())) {
+		if re.MatchString(account.Name()) {
 			accounts = append(accounts, account)
 		}
 	}

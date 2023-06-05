@@ -86,7 +86,7 @@ func processPathed(ctx context.Context, data *dataIn) (*dataOut, error) {
 	if data.passphrase == "" {
 		return nil, errors.New("passphrase is required")
 	}
-	match, err := regexp.Match("^m/[0-9]+/[0-9]+(/[0-9+])+", []byte(data.path))
+	match, err := regexp.MatchString("^m/[0-9]+/[0-9]+(/[0-9+])+", data.path)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to match path to regular expression")
 	}

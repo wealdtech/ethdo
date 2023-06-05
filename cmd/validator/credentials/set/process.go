@@ -163,7 +163,7 @@ func (c *command) generateOperationFromMnemonicAndPath(ctx context.Context) erro
 	}
 
 	validatorKeyPath := c.path
-	match := validatorPath.Match([]byte(c.path))
+	match := validatorPath.MatchString(c.path)
 	if !match {
 		return fmt.Errorf("path %s does not match EIP-2334 format for a validator", c.path)
 	}

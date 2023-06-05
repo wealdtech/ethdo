@@ -252,7 +252,7 @@ func accountFromMnemonicAndPath(mnemonic string, path string) (e2wtypes.Account,
 	}
 
 	// Ensure the path is valid.
-	match := hdPathRegex.Match([]byte(path))
+	match := hdPathRegex.MatchString(path)
 	if !match {
 		return nil, errors.New("path does not match expected format m/…")
 	}

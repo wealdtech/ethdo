@@ -98,5 +98,5 @@ func outputKeystore(_ context.Context, data *dataOut) (string, error) {
 	if err := os.WriteFile(keystoreFilename, out, 0o600); err != nil {
 		return "", errors.Wrap(err, fmt.Sprintf("failed to write %s", keystoreFilename))
 	}
-	return "", errors.New("not implemented")
+	return "", nil
 }

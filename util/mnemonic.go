@@ -14,7 +14,6 @@
 package util
 
 import (
-	"fmt"
 	"regexp"
 	"strings"
 
@@ -67,7 +66,6 @@ func SeedFromMnemonic(mnemonic string) ([]byte, error) {
 		bip39.SetWordList(wl)
 		seed, err := bip39.NewSeedWithErrorChecking(expandMnemonic(mnemonic), mnemonicPassphrase)
 		if err == nil {
-			fmt.Printf("Seed is %#x\n", seed)
 			return seed, nil
 		}
 	}

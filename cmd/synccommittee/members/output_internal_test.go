@@ -50,7 +50,7 @@ func TestOutput(t *testing.T) {
 				json:       true,
 				validators: []phase0.ValidatorIndex{1, 2, 3},
 			},
-			res: "[1,2,3]",
+			res: `["1","2","3"]`,
 		},
 	}
 

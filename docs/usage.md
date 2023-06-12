@@ -757,6 +757,7 @@ Withdrawal expected at 2023-04-17T15:08:35 in block 6243041
 `ethdo validator yield` calculates the expected yield given the number of validators.  Options include:
 
 - `validators` use a specified number of validators rather than the current number of active validators
+- `epoch` the epoch for which to calculate yield; defaults to the current epoch
 - `json` obtain detailed information in JSON format
 
 ```sh

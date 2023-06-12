@@ -1,4 +1,4 @@
-// Copyright © 2022 Weald Technology Trading.
+// Copyright © 2022, 2023 Weald Technology Trading.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -36,6 +36,7 @@ type command struct {
 
 	// Input.
 	validators string
+	epoch      string
 
 	// Data access.
 	eth2Client eth2client.Service
@@ -63,6 +64,7 @@ func newCommand(_ context.Context) (*command, error) {
 		verbose: viper.GetBool("verbose"),
 		debug:   viper.GetBool("debug"),
 		json:    viper.GetBool("json"),
+		epoch:   viper.GetString("epoch"),
 		results: &output{},
 	}
 

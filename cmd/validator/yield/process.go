@@ -1,4 +1,4 @@
-// Copyright © 2022 Weald Technology Trading.
+// Copyright © 2022, 2023 Weald Technology Trading.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -138,17 +138,21 @@ func (c *command) setup(ctx context.Context) error {
 			return errors.New("connection does not provide validator information")
 		}
 
-		validators, err := validatorsProvider.Validators(ctx, "head", nil)
+		epoch, err := util.ParseEpoch(ctx, chainTime, c.epoch)
 		if err != nil {
-			return errors.Wrap(err, "failed to obtain validators")
+			return errors.Wrap(err, "failed to parse epoch")
 		}
 
-		currentEpoch := chainTime.CurrentEpoch()
+		validators, err := validatorsProvider.Validators(ctx, fmt.Sprintf("%d", chainTime.FirstSlotOfEpoch(epoch)), nil)
+		if err != nil {
+			return err
+		}
+
 		activeValidators := decimal.Zero
 		activeValidatorBalance := decimal.Zero
 		for _, validator := range validators {
-			if validator.Validator.ActivationEpoch <= currentEpoch &&
-				validator.Validator.ExitEpoch > currentEpoch {
+			if validator.Validator.ActivationEpoch <= epoch &&
+				validator.Validator.ExitEpoch > epoch {
 				activeValidators = activeValidators.Add(one)
 				activeValidatorBalance = activeValidatorBalance.Add(decimal.NewFromInt(int64(validator.Validator.EffectiveBalance)))
 			}

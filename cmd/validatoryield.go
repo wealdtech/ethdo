@@ -48,10 +48,14 @@ func init() {
 	validatorCmd.AddCommand(validatorYieldCmd)
 	validatorFlags(validatorYieldCmd)
 	validatorYieldCmd.Flags().String("validators", "", "Number of active validators (default fetches from chain)")
+	validatorYieldCmd.Flags().String("epoch", "", "Epoch at which to calculate yield")
 }
 
 func validatorYieldBindings(cmd *cobra.Command) {
 	if err := viper.BindPFlag("validators", cmd.Flags().Lookup("validators")); err != nil {
+		panic(err)
+	}
+	if err := viper.BindPFlag("epoch", cmd.Flags().Lookup("epoch")); err != nil {
 		panic(err)
 	}
 }

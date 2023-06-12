@@ -389,7 +389,14 @@ func outputCapellaBlockText(ctx context.Context, data *dataOut, signedBlock *cap
 	return res.String(), nil
 }
 
-func outputDenebBlockText(ctx context.Context, data *dataOut, signedBlock *deneb.SignedBeaconBlock) (string, error) {
+func outputDenebBlockText(ctx context.Context,
+	data *dataOut,
+	signedBlock *deneb.SignedBeaconBlock,
+	blobs []*deneb.BlobSidecar,
+) (
+	string,
+	error,
+) {
 	if signedBlock == nil {
 		return "", errors.New("no block supplied")
 	}
@@ -482,7 +489,7 @@ func outputDenebBlockText(ctx context.Context, data *dataOut, signedBlock *deneb
 	}
 	res.WriteString(tmp)
 
-	tmp, err = outputDenebBlobInfo(ctx, data.verbose, signedBlock.Message.Body)
+	tmp, err = outputDenebBlobInfo(ctx, data.verbose, signedBlock.Message.Body, blobs)
 	if err != nil {
 		return "", err
 	}
@@ -868,8 +875,7 @@ func outputDenebBlockExecutionPayload(_ context.Context,
 		res.WriteString("  Withdrawals: ")
 		res.WriteString(fmt.Sprintf("%d\n", len(payload.Withdrawals)))
 		res.WriteString("  Excess data gas: ")
-		res.WriteString(payload.ExcessDataGas.Dec())
-		res.WriteString("\n")
+		res.WriteString(fmt.Sprintf("%d\n", payload.ExcessDataGas))
 	}
 
 	return res.String(), nil
@@ -878,6 +884,7 @@ func outputDenebBlockExecutionPayload(_ context.Context,
 func outputDenebBlobInfo(_ context.Context,
 	verbose bool,
 	body *deneb.BeaconBlockBody,
+	blobs []*deneb.BlobSidecar,
 ) (
 	string,
 	error,
@@ -886,15 +893,19 @@ func outputDenebBlobInfo(_ context.Context,
 		return "", nil
 	}
 
+	if !verbose {
+		return fmt.Sprintf("Blobs: %d\n", len(body.BlobKzgCommitments)), nil
+	}
+
 	res := strings.Builder{}
 
-	if !verbose {
-		res.WriteString(fmt.Sprintf("Blob KZG commitments: %d\n", len(body.BlobKzgCommitments)))
-	} else if len(body.BlobKzgCommitments) > 0 {
-		res.WriteString("Blob KZG commitments:\n")
-		for i := range body.BlobKzgCommitments {
-			res.WriteString(fmt.Sprintf("  %s\n", body.BlobKzgCommitments[i].String()))
+	for i, blob := range blobs {
+		if i == 0 {
+			res.WriteString("Blobs\n")
 		}
+		res.WriteString(fmt.Sprintf("  Index: %d\n", blob.Index))
+		res.WriteString(fmt.Sprintf("  KZG commitment: %s\n", blob.KzgCommitment.String()))
+		res.WriteString(fmt.Sprintf("  KZG proof: %s\n", blob.KzgProof.String()))
 	}
 
 	return res.String(), nil

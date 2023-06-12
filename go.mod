@@ -3,7 +3,7 @@ module github.com/wealdtech/ethdo
 go 1.20
 
 require (
-	github.com/attestantio/go-eth2-client v0.16.0
+	github.com/attestantio/go-eth2-client v0.17.0
 	github.com/ferranbt/fastssz v0.1.3
 	github.com/gofrs/uuid v4.4.0+incompatible
 	github.com/google/uuid v1.3.0

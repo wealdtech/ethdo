@@ -69,6 +69,7 @@ func process(ctx context.Context, data *dataIn) (*dataOut, error) {
 	if signedBlock == nil {
 		return nil, errors.New("empty beacon block")
 	}
+
 	switch signedBlock.Version {
 	case spec.DataVersionPhase0:
 		if err := outputPhase0Block(ctx, data.jsonOutput, signedBlock.Phase0); err != nil {
@@ -87,7 +88,11 @@ func process(ctx context.Context, data *dataIn) (*dataOut, error) {
 			return nil, errors.Wrap(err, "failed to output block")
 		}
 	case spec.DataVersionDeneb:
-		if err := outputDenebBlock(ctx, data.jsonOutput, data.sszOutput, signedBlock.Deneb); err != nil {
+		blobs, err := results.eth2Client.(eth2client.BeaconBlockBlobsProvider).BeaconBlockBlobs(ctx, data.blockID)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to obtain blobs")
+		}
+		if err := outputDenebBlock(ctx, data.jsonOutput, data.sszOutput, signedBlock.Deneb, blobs); err != nil {
 			return nil, errors.Wrap(err, "failed to output block")
 		}
 	default:
@@ -111,13 +116,15 @@ func process(ctx context.Context, data *dataIn) (*dataOut, error) {
 }
 
 func headEventHandler(event *api.Event) {
+	ctx := context.Background()
+
 	// Only interested in head events.
 	if event.Topic != "head" {
 		return
 	}
 
 	blockID := fmt.Sprintf("%#x", event.Data.(*api.HeadEvent).Block[:])
-	signedBlock, err := results.eth2Client.(eth2client.SignedBeaconBlockProvider).SignedBeaconBlock(context.Background(), blockID)
+	signedBlock, err := results.eth2Client.(eth2client.SignedBeaconBlockProvider).SignedBeaconBlock(ctx, blockID)
 	if err != nil {
 		if !jsonOutput && !sszOutput {
 			fmt.Printf("Failed to obtain block: %v\n", err)
@@ -133,15 +140,19 @@ func headEventHandler(event *api.Event) {
 
 	switch signedBlock.Version {
 	case spec.DataVersionPhase0:
-		err = outputPhase0Block(context.Background(), jsonOutput, signedBlock.Phase0)
+		err = outputPhase0Block(ctx, jsonOutput, signedBlock.Phase0)
 	case spec.DataVersionAltair:
-		err = outputAltairBlock(context.Background(), jsonOutput, sszOutput, signedBlock.Altair)
+		err = outputAltairBlock(ctx, jsonOutput, sszOutput, signedBlock.Altair)
 	case spec.DataVersionBellatrix:
-		err = outputBellatrixBlock(context.Background(), jsonOutput, sszOutput, signedBlock.Bellatrix)
+		err = outputBellatrixBlock(ctx, jsonOutput, sszOutput, signedBlock.Bellatrix)
 	case spec.DataVersionCapella:
-		err = outputCapellaBlock(context.Background(), jsonOutput, sszOutput, signedBlock.Capella)
+		err = outputCapellaBlock(ctx, jsonOutput, sszOutput, signedBlock.Capella)
 	case spec.DataVersionDeneb:
-		err = outputDenebBlock(context.Background(), jsonOutput, sszOutput, signedBlock.Deneb)
+		var blobs []*deneb.BlobSidecar
+		blobs, err = results.eth2Client.(eth2client.BeaconBlockBlobsProvider).BeaconBlockBlobs(ctx, blockID)
+		if err == nil {
+			err = outputDenebBlock(context.Background(), jsonOutput, sszOutput, signedBlock.Deneb, blobs)
+		}
 	default:
 		err = errors.New("unknown block version")
 	}
@@ -245,7 +256,12 @@ func outputCapellaBlock(ctx context.Context, jsonOutput bool, sszOutput bool, si
 	return nil
 }
 
-func outputDenebBlock(ctx context.Context, jsonOutput bool, sszOutput bool, signedBlock *deneb.SignedBeaconBlock) error {
+func outputDenebBlock(ctx context.Context,
+	jsonOutput bool,
+	sszOutput bool,
+	signedBlock *deneb.SignedBeaconBlock,
+	blobs []*deneb.BlobSidecar,
+) error {
 	switch {
 	case jsonOutput:
 		data, err := json.Marshal(signedBlock)
@@ -260,7 +276,7 @@ func outputDenebBlock(ctx context.Context, jsonOutput bool, sszOutput bool, sign
 		}
 		fmt.Printf("%x\n", data)
 	default:
-		data, err := outputDenebBlockText(ctx, results, signedBlock)
+		data, err := outputDenebBlockText(ctx, results, signedBlock, blobs)
 		if err != nil {
 			return errors.Wrap(err, "failed to generate text")
 		}

@@ -1,6 +1,7 @@
 dev:
   - fix incorrect error when "deposit veirfy" is not given a withdrawal address
   - allow truncated mnemonics (first four characters of each word)
+  - add deneb informatoin to "block info"
 
 1.31.0:
   - initial support for deneb

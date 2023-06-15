@@ -55,6 +55,7 @@ func output(_ context.Context, data *dataOut) (string, error) {
 func outputBlockGeneral(_ context.Context,
 	verbose bool,
 	slot phase0.Slot,
+	proposerIndex phase0.ValidatorIndex,
 	blockRoot phase0.Root,
 	bodyRoot phase0.Root,
 	parentRoot phase0.Root,
@@ -70,6 +71,7 @@ func outputBlockGeneral(_ context.Context,
 	res := strings.Builder{}
 
 	res.WriteString(fmt.Sprintf("Slot: %d\n", slot))
+	res.WriteString(fmt.Sprintf("Proposing validator index: %d\n", proposerIndex))
 	res.WriteString(fmt.Sprintf("Epoch: %d\n", phase0.Epoch(uint64(slot)/slotsPerEpoch)))
 	res.WriteString(fmt.Sprintf("Timestamp: %v\n", time.Unix(genesisTime.Unix()+int64(slot)*int64(slotDuration.Seconds()), 0)))
 	res.WriteString(fmt.Sprintf("Block root: %#x\n", blockRoot))
@@ -315,6 +317,7 @@ func outputCapellaBlockText(ctx context.Context, data *dataOut, signedBlock *cap
 	tmp, err := outputBlockGeneral(ctx,
 		data.verbose,
 		signedBlock.Message.Slot,
+		signedBlock.Message.ProposerIndex,
 		blockRoot,
 		bodyRoot,
 		signedBlock.Message.ParentRoot,
@@ -418,6 +421,7 @@ func outputDenebBlockText(ctx context.Context,
 	tmp, err := outputBlockGeneral(ctx,
 		data.verbose,
 		signedBlock.Message.Slot,
+		signedBlock.Message.ProposerIndex,
 		blockRoot,
 		bodyRoot,
 		signedBlock.Message.ParentRoot,
@@ -520,6 +524,7 @@ func outputBellatrixBlockText(ctx context.Context, data *dataOut, signedBlock *b
 	tmp, err := outputBlockGeneral(ctx,
 		data.verbose,
 		signedBlock.Message.Slot,
+		signedBlock.Message.ProposerIndex,
 		blockRoot,
 		bodyRoot,
 		signedBlock.Message.ParentRoot,
@@ -610,6 +615,7 @@ func outputAltairBlockText(ctx context.Context, data *dataOut, signedBlock *alta
 	tmp, err := outputBlockGeneral(ctx,
 		data.verbose,
 		signedBlock.Message.Slot,
+		signedBlock.Message.ProposerIndex,
 		blockRoot,
 		bodyRoot,
 		signedBlock.Message.ParentRoot,
@@ -693,6 +699,7 @@ func outputPhase0BlockText(ctx context.Context, data *dataOut, signedBlock *phas
 	tmp, err := outputBlockGeneral(ctx,
 		data.verbose,
 		signedBlock.Message.Slot,
+		signedBlock.Message.ProposerIndex,
 		blockRoot,
 		bodyRoot,
 		signedBlock.Message.ParentRoot,

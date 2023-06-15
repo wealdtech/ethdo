@@ -3,6 +3,7 @@ dev:
   - allow truncated mnemonics (first four characters of each word)
   - add deneb information to "block info"
   - add epoch parameter to "validator yield"
+  - add proposer index to "block info"
 
 1.31.0:
   - initial support for deneb

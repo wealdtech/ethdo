@@ -17,6 +17,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
 	"time"
 
 	eth2client "github.com/attestantio/go-eth2-client"
@@ -67,7 +68,13 @@ func process(ctx context.Context, data *dataIn) (*dataOut, error) {
 		return nil, errors.Wrap(err, "failed to obtain beacon block")
 	}
 	if signedBlock == nil {
+		if data.quiet {
+			os.Exit(1)
+		}
 		return nil, errors.New("empty beacon block")
+	}
+	if data.quiet {
+		os.Exit(0)
 	}
 
 	switch signedBlock.Version {

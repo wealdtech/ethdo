@@ -171,6 +171,10 @@ func (c *command) generateOperationFromMnemonicAndValidator(ctx context.Context)
 		return err
 	}
 
+	if c.debug {
+		fmt.Fprintf(os.Stderr, "Searching for validator with index %d and public key %s\n", validatorInfo.Index, validatorInfo.Pubkey.String())
+	}
+
 	// Scan the keys from the seed to find the path.
 	maxDistance := 1024
 	// Start scanning the validator keys.

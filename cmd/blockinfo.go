@@ -48,12 +48,16 @@ func init() {
 	blockCmd.AddCommand(blockInfoCmd)
 	blockFlags(blockInfoCmd)
 	blockInfoCmd.Flags().String("blockid", "head", "the ID of the block to fetch")
+	blockInfoCmd.Flags().String("block-time", "", "the time of the block to fetch (format YYYY-MM-DDTHH:MM:SS, or a hex or decimal timestamp")
 	blockInfoCmd.Flags().Bool("stream", false, "continually stream blocks as they arrive")
 	blockInfoCmd.Flags().Bool("ssz", false, "output data in SSZ format")
 }
 
 func blockInfoBindings(cmd *cobra.Command) {
 	if err := viper.BindPFlag("blockid", cmd.Flags().Lookup("blockid")); err != nil {
+		panic(err)
+	}
+	if err := viper.BindPFlag("block-time", cmd.Flags().Lookup("block-time")); err != nil {
 		panic(err)
 	}
 	if err := viper.BindPFlag("stream", cmd.Flags().Lookup("stream")); err != nil {

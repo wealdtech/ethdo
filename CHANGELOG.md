@@ -5,6 +5,7 @@ dev:
   - add epoch parameter to "validator yield"
   - add proposer index to "block info"
   - "block info" honours "--quiet" flag
+  - "block info" accepts "--block-time" option
 
 1.31.0:
   - initial support for deneb

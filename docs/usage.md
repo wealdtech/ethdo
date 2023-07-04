@@ -295,7 +295,7 @@ $ ethdo version
 
 Block commands focus on providing information about Ethereum consensus blocks.
 #### `analyze`
-`ethdo block info` obtains information about a block in the Ethereum consensus chain.  Options include:
+`ethdo block analyze` obtains information about a block in the Ethereum consensus chain.  Options include:
 
 - `blockid`: the ID (slot, root, 'head') of the block to obtain
 
@@ -322,6 +322,7 @@ Value for block 80: 488.531
 `ethdo block info` obtains information about a block in the Ethereum consensus chain.  Options include:
 
 - `blockid`: the ID (slot, root, 'head') of the block to obtain
+- `block-time`: the time (unix timestamp in decimal or hex, or a time in format YYYY-MM-DDTHH:MM:SS) of the block to obtain
 
 ```sh
 $ ethdo block info --blockid=80

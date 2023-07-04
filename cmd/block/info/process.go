@@ -18,6 +18,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strconv"
+	"strings"
 	"time"
 
 	eth2client "github.com/attestantio/go-eth2-client"
@@ -29,6 +31,7 @@ import (
 	"github.com/attestantio/go-eth2-client/spec/deneb"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
+	standardchaintime "github.com/wealdtech/ethdo/services/chaintime/standard"
 )
 
 var (
@@ -41,8 +44,8 @@ func process(ctx context.Context, data *dataIn) (*dataOut, error) {
 	if data == nil {
 		return nil, errors.New("no data")
 	}
-	if data.blockID == "" {
-		return nil, errors.New("no block ID")
+	if data.blockID == "" && data.blockTime == "" {
+		return nil, errors.New("no block ID or block time")
 	}
 
 	results = &dataOut{
@@ -62,6 +65,13 @@ func process(ctx context.Context, data *dataIn) (*dataOut, error) {
 	results.genesisTime = genesis.GenesisTime
 	results.slotDuration = config["SECONDS_PER_SLOT"].(time.Duration)
 	results.slotsPerEpoch = config["SLOTS_PER_EPOCH"].(uint64)
+
+	if data.blockTime != "" {
+		data.blockID, err = timeToBlockID(ctx, data.eth2Client, data.blockTime)
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	signedBlock, err := results.eth2Client.(eth2client.SignedBeaconBlockProvider).SignedBeaconBlock(ctx, data.blockID)
 	if err != nil {
@@ -290,4 +300,42 @@ func outputDenebBlock(ctx context.Context,
 		fmt.Print(data)
 	}
 	return nil
+}
+
+func timeToBlockID(ctx context.Context, eth2Client eth2client.Service, input string) (string, error) {
+	var timestamp time.Time
+
+	switch {
+	case strings.HasPrefix(input, "0x"):
+		// Hex string.
+		hexTime, err := strconv.ParseInt(strings.TrimPrefix(input, "0x"), 16, 64)
+		if err != nil {
+			return "", errors.Wrap(err, "failed to parse block time as hex string")
+		}
+		timestamp = time.Unix(hexTime, 0)
+	case !strings.Contains(input, ":"):
+		// No colon, assume decimal string.
+		decTime, err := strconv.ParseInt(input, 10, 64)
+		if err != nil {
+			return "", errors.Wrap(err, "failed to parse block time as decimal string")
+		}
+		timestamp = time.Unix(decTime, 0)
+	default:
+		dateTime, err := time.Parse("2006-01-02T15:04:05", input)
+		if err != nil {
+			return "", errors.Wrap(err, "failed to parse block time as datetime")
+		}
+		timestamp = dateTime
+	}
+
+	// Assume timestamp.
+	chainTime, err := standardchaintime.New(ctx,
+		standardchaintime.WithSpecProvider(eth2Client.(eth2client.SpecProvider)),
+		standardchaintime.WithGenesisTimeProvider(eth2Client.(eth2client.GenesisTimeProvider)),
+	)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to set up chaintime service")
+	}
+
+	return fmt.Sprintf("%d", chainTime.TimestampToSlot(timestamp)), nil
 }

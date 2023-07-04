@@ -1,4 +1,4 @@
-// Copyright © 2019, 2020 Weald Technology Trading
+// Copyright © 2019 - 2023 Weald Technology Trading.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -34,8 +34,9 @@ type dataIn struct {
 	jsonOutput bool
 	sszOutput  bool
 	// Chain information.
-	blockID string
-	stream  bool
+	blockID   string
+	blockTime string
+	stream    bool
 }
 
 func input(ctx context.Context) (*dataIn, error) {
@@ -50,7 +51,8 @@ func input(ctx context.Context) (*dataIn, error) {
 	data.debug = viper.GetBool("debug")
 	data.jsonOutput = viper.GetBool("json")
 	data.sszOutput = viper.GetBool("ssz")
-
+	data.blockID = viper.GetString("blockid")
+	data.blockTime = viper.GetString("block-time")
 	data.stream = viper.GetBool("stream")
 
 	var err error
@@ -62,13 +64,6 @@ func input(ctx context.Context) (*dataIn, error) {
 	})
 	if err != nil {
 		return nil, err
-	}
-
-	if viper.GetString("blockid") == "" {
-		data.blockID = "head"
-	} else {
-		// Specific slot.
-		data.blockID = viper.GetString("blockid")
 	}
 
 	return data, nil

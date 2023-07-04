@@ -27,6 +27,10 @@ import (
 )
 
 func (c *command) process(ctx context.Context) error {
+	if len(c.validators) == 0 {
+		return errors.New("no validators supplied")
+	}
+
 	// Obtain information we need to process.
 	err := c.setup(ctx)
 	if err != nil {

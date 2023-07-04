@@ -1,5 +1,5 @@
 dev:
-  - fix incorrect error when "deposit veirfy" is not given a withdrawal address
+  - fix incorrect error when "deposit verify" is not given a withdrawal address
   - allow truncated mnemonics (first four characters of each word)
   - add deneb information to "block info"
   - add epoch parameter to "validator yield"

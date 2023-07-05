@@ -335,7 +335,7 @@ Voluntary exits: 0
 Additional information is supplied when using `--verbose`
 
 ```sh
-$ ethdo block info --slot=80 --verbose
+$ ethdo block info --blockid=80 --verbose
 Parent root: 0x9a08aab7d5bbc816a9d2c20c79895519da2045e99ac6782ab3d05323a395fe51
 State root: 0xc6a2626ba5cb37f984bdc4da4dc93a5012be5b69fdcebc50be70a1181a290265
 Ethereum 1 deposit count: 512

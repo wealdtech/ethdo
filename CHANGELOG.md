@@ -1,4 +1,4 @@
-dev:
+1.32.0:
   - fix incorrect error when "deposit verify" is not given a withdrawal address
   - allow truncated mnemonics (first four characters of each word)
   - add deneb information to "block info"
@@ -6,6 +6,7 @@ dev:
   - add proposer index to "block info"
   - "block info" honours "--quiet" flag
   - "block info" accepts "--block-time" option
+  - increase default operation timeout from 10s to 30s
 
 1.31.0:
   - initial support for deneb

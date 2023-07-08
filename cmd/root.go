@@ -223,7 +223,7 @@ func addPersistentFlags() {
 	if err := viper.BindPFlag("connection", RootCmd.PersistentFlags().Lookup("connection")); err != nil {
 		panic(err)
 	}
-	RootCmd.PersistentFlags().Duration("timeout", 10*time.Second, "the time after which a network request will be considered failed.  Increase this if you are running on an error-prone, high-latency or low-bandwidth connection")
+	RootCmd.PersistentFlags().Duration("timeout", 30*time.Second, "the time after which a network request will be considered failed.  Increase this if you are running on an error-prone, high-latency or low-bandwidth connection")
 	if err := viper.BindPFlag("timeout", RootCmd.PersistentFlags().Lookup("timeout")); err != nil {
 		panic(err)
 	}

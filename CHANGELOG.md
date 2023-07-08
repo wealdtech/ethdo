@@ -7,6 +7,7 @@
   - "block info" honours "--quiet" flag
   - "block info" accepts "--block-time" option
   - increase default operation timeout from 10s to 30s
+  - "epoch summary" JSON lists number of blobs
 
 1.31.0:
   - initial support for deneb

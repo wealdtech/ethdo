@@ -48,7 +48,10 @@ func (c *command) process(ctx context.Context) error {
 	if err := c.processAttesterDuties(ctx); err != nil {
 		return err
 	}
-	return c.processSyncCommitteeDuties(ctx)
+	if err := c.processSyncCommitteeDuties(ctx); err != nil {
+		return err
+	}
+	return c.processBlobs(ctx)
 }
 
 func (c *command) processProposerDuties(ctx context.Context) error {
@@ -60,7 +63,7 @@ func (c *command) processProposerDuties(ctx context.Context) error {
 		return errors.New("empty proposer duties")
 	}
 	for _, duty := range duties {
-		block, err := c.blocksProvider.SignedBeaconBlock(ctx, fmt.Sprintf("%d", duty.Slot))
+		block, err := c.fetchBlock(ctx, fmt.Sprintf("%d", duty.Slot))
 		if err != nil {
 			return errors.Wrap(err, fmt.Sprintf("failed to obtain block for slot %d", duty.Slot))
 		}
@@ -161,7 +164,7 @@ func (c *command) processSlots(ctx context.Context,
 	headersCache := util.NewBeaconBlockHeaderCache(c.beaconBlockHeadersProvider)
 
 	for slot := firstSlot; slot <= lastSlot; slot++ {
-		block, err := c.blocksProvider.SignedBeaconBlock(ctx, fmt.Sprintf("%d", slot))
+		block, err := c.fetchBlock(ctx, fmt.Sprintf("%d", slot))
 		if err != nil {
 			return 0, 0, 0, 0, 0, 0, nil, nil, errors.Wrap(err, fmt.Sprintf("failed to obtain block for slot %d", slot))
 		}
@@ -268,7 +271,7 @@ func (c *command) processSyncCommitteeDuties(ctx context.Context) error {
 	}
 
 	for slot := c.summary.FirstSlot; slot <= c.summary.LastSlot; slot++ {
-		block, err := c.blocksProvider.SignedBeaconBlock(ctx, fmt.Sprintf("%d", slot))
+		block, err := c.fetchBlock(ctx, fmt.Sprintf("%d", slot))
 		if err != nil {
 			return errors.Wrap(err, fmt.Sprintf("failed to obtain block for slot %d", slot))
 		}
@@ -371,4 +374,44 @@ func (c *command) setup(ctx context.Context) error {
 	}
 
 	return nil
+}
+
+func (c *command) processBlobs(ctx context.Context) error {
+	for slot := c.summary.FirstSlot; slot <= c.summary.LastSlot; slot++ {
+		block, err := c.fetchBlock(ctx, fmt.Sprintf("%d", slot))
+		if err != nil {
+			return errors.Wrap(err, fmt.Sprintf("failed to obtain block for slot %d", slot))
+		}
+		if block == nil {
+			continue
+		}
+		switch block.Version {
+		case spec.DataVersionPhase0, spec.DataVersionAltair, spec.DataVersionBellatrix, spec.DataVersionCapella:
+			// No blobs in these forks.
+		case spec.DataVersionDeneb:
+			c.summary.Blobs += len(block.Deneb.Message.Body.BlobKzgCommitments)
+		default:
+			return fmt.Errorf("unhandled block version %v", block.Version)
+		}
+	}
+
+	return nil
+}
+
+func (c *command) fetchBlock(ctx context.Context,
+	blockID string,
+) (
+	*spec.VersionedSignedBeaconBlock,
+	error,
+) {
+	block, exists := c.blocksCache[blockID]
+	if !exists {
+		var err error
+		block, err = c.blocksProvider.SignedBeaconBlock(ctx, blockID)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to fetch block")
+		}
+		c.blocksCache[blockID] = block
+	}
+	return block, nil
 }

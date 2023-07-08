@@ -18,6 +18,7 @@ import (
 	"time"
 
 	eth2client "github.com/attestantio/go-eth2-client"
+	"github.com/attestantio/go-eth2-client/spec"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
@@ -49,6 +50,9 @@ type command struct {
 	beaconCommitteesProvider   eth2client.BeaconCommitteesProvider
 	beaconBlockHeadersProvider eth2client.BeaconBlockHeadersProvider
 
+	// Caches.
+	blocksCache map[string]*spec.VersionedSignedBeaconBlock
+
 	// Results.
 	summary *epochSummary
 }
@@ -67,6 +71,7 @@ type epochSummary struct {
 	TargetCorrectValidators    int                          `json:"target_correct_validators"`
 	TargetTimelyValidators     int                          `json:"target_timely_validators"`
 	NonParticipatingValidators []*nonParticipatingValidator `json:"nonparticipating_validators"`
+	Blobs                      int                          `json:"blobs"`
 }
 
 type epochProposal struct {
@@ -88,10 +93,11 @@ type nonParticipatingValidator struct {
 
 func newCommand(_ context.Context) (*command, error) {
 	c := &command{
-		quiet:   viper.GetBool("quiet"),
-		verbose: viper.GetBool("verbose"),
-		debug:   viper.GetBool("debug"),
-		summary: &epochSummary{},
+		quiet:       viper.GetBool("quiet"),
+		verbose:     viper.GetBool("verbose"),
+		debug:       viper.GetBool("debug"),
+		summary:     &epochSummary{},
+		blocksCache: make(map[string]*spec.VersionedSignedBeaconBlock),
 	}
 
 	// Timeout.

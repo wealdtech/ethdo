@@ -66,7 +66,7 @@ func (c *command) process(ctx context.Context) error {
 		if lastSlot > c.chainTime.CurrentSlot() {
 			lastSlot = c.chainTime.CurrentSlot()
 		}
-		for slot := firstSlot; slot < lastSlot; slot++ {
+		for slot := firstSlot; slot <= lastSlot; slot++ {
 			block, err := c.eth2Client.(eth2client.SignedBeaconBlockProvider).SignedBeaconBlock(ctx, fmt.Sprintf("%d", slot))
 			if err != nil {
 				return err

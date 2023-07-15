@@ -1,3 +1,6 @@
+dev:
+  - show all slots with 'synccommittee inclusion'
+
 1.32.0:
   - fix incorrect error when "deposit verify" is not given a withdrawal address
   - allow truncated mnemonics (first four characters of each word)

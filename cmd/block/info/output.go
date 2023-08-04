@@ -881,8 +881,8 @@ func outputDenebBlockExecutionPayload(_ context.Context,
 		res.WriteString(fmt.Sprintf("%d\n", len(payload.Transactions)))
 		res.WriteString("  Withdrawals: ")
 		res.WriteString(fmt.Sprintf("%d\n", len(payload.Withdrawals)))
-		res.WriteString("  Excess data gas: ")
-		res.WriteString(fmt.Sprintf("%d\n", payload.ExcessDataGas))
+		res.WriteString("  Excess blob gas: ")
+		res.WriteString(fmt.Sprintf("%d\n", payload.ExcessBlobGas))
 	}
 
 	return res.String(), nil

@@ -66,7 +66,7 @@ In quiet mode this will return 0 if the data can be signed, otherwise 1.`,
 		copy(specDomain[:], domain)
 		var fixedSizeData [32]byte
 		copy(fixedSizeData[:], data)
-		fmt.Printf("Signing %#x with domain %#x by public key %#x\n", fixedSizeData, specDomain, account.PublicKey().Marshal())
+		outputIf(viper.GetBool("debug"), fmt.Sprintf("Signing %#x with domain %#x by public key %#x", fixedSizeData, specDomain, account.PublicKey().Marshal()))
 		signature, err := util.SignRoot(account, fixedSizeData, specDomain)
 		errCheck(err, "Failed to sign")
 

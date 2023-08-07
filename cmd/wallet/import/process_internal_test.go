@@ -62,7 +62,7 @@ func TestProcess(t *testing.T) {
 				data:       append([]byte{0x00}, data...),
 				passphrase: "ce%NohGhah4ye5ra",
 			},
-			err: "failed to import wallet: unhandled version 0x00",
+			err: "failed to import wallet: failed to decrypt wallet: unhandled version 0x00",
 		},
 		{
 			name: "PassphraseMissing",
@@ -70,7 +70,7 @@ func TestProcess(t *testing.T) {
 				timeout: 5 * time.Second,
 				data:    data,
 			},
-			err: "failed to import wallet: invalid key",
+			err: "failed to import wallet: failed to decrypt wallet: invalid key",
 		},
 		{
 			name: "PassphraseIncorrect",
@@ -79,7 +79,7 @@ func TestProcess(t *testing.T) {
 				data:       data,
 				passphrase: "weak",
 			},
-			err: "failed to import wallet: invalid key",
+			err: "failed to import wallet: failed to decrypt wallet: invalid key",
 		},
 		{
 			name: "Good",

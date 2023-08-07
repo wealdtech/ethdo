@@ -25,22 +25,22 @@ require (
 	github.com/wealdtech/go-ecodec v1.1.4
 	github.com/wealdtech/go-eth2-types/v2 v2.8.2
 	github.com/wealdtech/go-eth2-util v1.8.2
-	github.com/wealdtech/go-eth2-wallet v1.15.1
+	github.com/wealdtech/go-eth2-wallet v1.16.0
 	github.com/wealdtech/go-eth2-wallet-dirk v1.4.4
-	github.com/wealdtech/go-eth2-wallet-distributed v1.1.5
+	github.com/wealdtech/go-eth2-wallet-distributed v1.2.1
 	github.com/wealdtech/go-eth2-wallet-encryptor-keystorev4 v1.4.1
-	github.com/wealdtech/go-eth2-wallet-hd/v2 v2.6.1
-	github.com/wealdtech/go-eth2-wallet-nd/v2 v2.4.1
+	github.com/wealdtech/go-eth2-wallet-hd/v2 v2.7.0
+	github.com/wealdtech/go-eth2-wallet-nd/v2 v2.5.0
 	github.com/wealdtech/go-eth2-wallet-store-filesystem v1.18.1
 	github.com/wealdtech/go-eth2-wallet-store-s3 v1.12.0
 	github.com/wealdtech/go-eth2-wallet-store-scratch v1.7.2
 	github.com/wealdtech/go-eth2-wallet-types/v2 v2.11.0
 	github.com/wealdtech/go-string2eth v1.2.1
-	golang.org/x/text v0.11.0
+	golang.org/x/text v0.12.0
 )
 
 require (
-	github.com/aws/aws-sdk-go v1.44.316 // indirect
+	github.com/aws/aws-sdk-go v1.44.317 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
@@ -85,10 +85,10 @@ require (
 	go.opentelemetry.io/otel v1.16.0 // indirect
 	go.opentelemetry.io/otel/metric v1.16.0 // indirect
 	go.opentelemetry.io/otel/trace v1.16.0 // indirect
-	golang.org/x/crypto v0.11.0 // indirect
+	golang.org/x/crypto v0.12.0 // indirect
 	golang.org/x/net v0.13.0 // indirect
 	golang.org/x/sync v0.3.0 // indirect
-	golang.org/x/sys v0.10.0 // indirect
+	golang.org/x/sys v0.11.0 // indirect
 	golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2 // indirect
 	google.golang.org/genproto v0.0.0-20230803162519-f966b187b2e5 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20230803162519-f966b187b2e5 // indirect
@@ -100,3 +100,11 @@ require (
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
+
+replace github.com/wealdtech/go-eth2-wallet-distributed => ../go-eth2-wallet-distributed
+
+replace github.com/wealdtech/go-eth2-wallet-hd/v2 => ../go-eth2-wallet-hd
+
+replace github.com/wealdtech/go-eth2-wallet-nd/v2 => ../go-eth2-wallet-nd
+
+replace github.com/wealdtech/go-eth2-wallet => ../go-eth2-wallet

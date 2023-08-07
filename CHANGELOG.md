@@ -1,5 +1,6 @@
 dev:
   - show all slots with 'synccommittee inclusion'
+  - add "wallet batch" command
 
 1.32.0:
   - fix incorrect error when "deposit verify" is not given a withdrawal address

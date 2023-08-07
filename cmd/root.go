@@ -76,6 +76,7 @@ var bindings = map[string]func(cmd *cobra.Command){
 	"validator/yield":           validatorYieldBindings,
 	"validator/expectation":     validatorExpectationBindings,
 	"validator/withdrawal":      validatorWithdrawalBindings,
+	"wallet/batch":              walletBatchBindings,
 	"wallet/create":             walletCreateBindings,
 	"wallet/import":             walletImportBindings,
 	"wallet/sharedexport":       walletSharedExportBindings,

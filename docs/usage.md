@@ -29,12 +29,25 @@ Auctions: 0x812f340269c315c1d882ae7c13cdaddf862dbdbd482b1836798b2070160dd1e19408
 Operations: 0x8e2f9e8cc29658ff37ecc30e95a0807579b224586c185d128cb7a7490784c1ad9b0ab93dbe604ab075b40079931e6670
 Spending: 0x85dfc6dcee4c9da36f6473ec02fda283d6c920c641fc8e3a76113c5c227d4aeeb100efcfec977b12d20d571907d05650
 ```
+
+#### `batch`
+
+`ethdo wallet batch` batches the accounts in a wallet into a single file to allow faster decryption. Options for batching a wallet include:
+
+- `wallet`: the name of the wallet to batch
+- `passphrase`: the passphrase for of the accounts in the wallet
+- `batch-passphrase`: the passphrase for the batch.   Note that this can be the same as the passphrase for the accounts
+
+```sh
+$ ethdo wallet batch --wallet="Validators" ---passphrase="my account secret" --batch-passphrase="my batch secret"
+```
+
 #### `create`
 
 `ethdo wallet create` creates a new wallet with the given parameters.  Options for creating a wallet include:
 
 - `wallet`: the name of the wallet to create
-- `type`: the type of wallet to create.  This can be either "nd" for a non-deterministic wallet, where private keys are generated randomly, or "hd" for a hierarchical deterministic wallet, where private keys are generated from a seed and path as per [ERC-2333](https://github.com/CarlBeek/EIPs/blob/bls_path/EIPS/eip-2334.md) (defaults to "nd")
+- `type`: the type of wallet to create.  This can be either "nd" for a non-deterministic wallet, where private keys are generated randomly, or "hd" for a hierarchical deterministic wallet, where private keys are generated from a seed and path as per [EIP-2333](https://eips.ethereum.org/EIPS/eip-2333) (defaults to "nd")
 - `wallet-passphrase`: the passphrase for of the wallet.  This is required for hierarchical deterministic wallets, to protect the seed
 - `mnemonic`: for hierarchical deterministic wallets only, use a pre-defined 24-word [BIP-39 seed phrase](https://en.bitcoin.it/wiki/Seed_phrase) to create the wallet, along with an additional "seed extension" phrase if required.  **Warning** The same mnemonic can be used to create multiple wallets, in which case they will generate the same keys.
 

@@ -100,11 +100,3 @@ require (
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
-
-replace github.com/wealdtech/go-eth2-wallet-distributed => ../go-eth2-wallet-distributed
-
-replace github.com/wealdtech/go-eth2-wallet-hd/v2 => ../go-eth2-wallet-hd
-
-replace github.com/wealdtech/go-eth2-wallet-nd/v2 => ../go-eth2-wallet-nd
-
-replace github.com/wealdtech/go-eth2-wallet => ../go-eth2-wallet

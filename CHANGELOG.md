@@ -1,4 +1,4 @@
-dev:
+1.33.0:
   - show all slots with 'synccommittee inclusion'
   - add "wallet batch" command
 

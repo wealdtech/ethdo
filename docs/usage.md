@@ -795,6 +795,7 @@ Proposer commands focus on Ethereum consensus validators' actions as proposers.
 `ethdo proposer duties` provides information on the proposal duties for a given epoch.  Options include:
 
 - `epoch` the epoch in which to obtain the duties (defaults to current epoch)
+- `slot` the slot in which to obtain the duties (overrides epoch if present)
 - `json` obtain detailed information in JSON format
 
 ```sh

@@ -48,10 +48,14 @@ func init() {
 	proposerCmd.AddCommand(proposerDutiesCmd)
 	proposerFlags(proposerDutiesCmd)
 	proposerDutiesCmd.Flags().String("epoch", "", "the epoch for which to fetch duties")
+	proposerDutiesCmd.Flags().String("slot", "", "the slot for which to fetch duties")
 }
 
 func proposerDutiesBindings(cmd *cobra.Command) {
 	if err := viper.BindPFlag("epoch", cmd.Flags().Lookup("epoch")); err != nil {
+		panic(err)
+	}
+	if err := viper.BindPFlag("slot", cmd.Flags().Lookup("slot")); err != nil {
 		panic(err)
 	}
 }

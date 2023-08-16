@@ -1,4 +1,4 @@
-// Copyright © 2022 Weald Technology Trading.
+// Copyright © 2022, 2023 Weald Technology Trading.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -37,6 +37,7 @@ type command struct {
 
 	// Operation.
 	epoch      string
+	slot       string
 	jsonOutput bool
 
 	// Data access.
@@ -55,23 +56,22 @@ type results struct {
 
 func newCommand(_ context.Context) (*command, error) {
 	c := &command{
-		quiet:   viper.GetBool("quiet"),
-		verbose: viper.GetBool("verbose"),
-		debug:   viper.GetBool("debug"),
-		results: &results{},
+		quiet:                    viper.GetBool("quiet"),
+		verbose:                  viper.GetBool("verbose"),
+		debug:                    viper.GetBool("debug"),
+		timeout:                  viper.GetDuration("timeout"),
+		connection:               viper.GetString("connection"),
+		allowInsecureConnections: viper.GetBool("allow-insecure-connections"),
+		epoch:                    viper.GetString("epoch"),
+		slot:                     viper.GetString("slot"),
+		jsonOutput:               viper.GetBool("json"),
+		results:                  &results{},
 	}
 
 	// Timeout.
-	if viper.GetDuration("timeout") == 0 {
+	if c.timeout == 0 {
 		return nil, errors.New("timeout is required")
 	}
-	c.timeout = viper.GetDuration("timeout")
-
-	c.connection = viper.GetString("connection")
-	c.allowInsecureConnections = viper.GetBool("allow-insecure-connections")
-
-	c.epoch = viper.GetString("epoch")
-	c.jsonOutput = viper.GetBool("json")
 
 	return c, nil
 }

@@ -1,4 +1,4 @@
-// Copyright © 2022 Weald Technology Trading.
+// Copyright © 2022, 2023 Weald Technology Trading.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -17,6 +17,7 @@ import (
 	"context"
 
 	eth2client "github.com/attestantio/go-eth2-client"
+	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
 	"github.com/pkg/errors"
 	standardchaintime "github.com/wealdtech/ethdo/services/chaintime/standard"
 	"github.com/wealdtech/ethdo/util"
@@ -24,11 +25,45 @@ import (
 
 func (c *command) process(ctx context.Context) error {
 	// Obtain information we need to process.
-	err := c.setup(ctx)
-	if err != nil {
+	if err := c.setup(ctx); err != nil {
 		return err
 	}
 
+	if c.slot != "" {
+		return c.processSlot(ctx)
+	}
+
+	return c.processEpoch(ctx)
+}
+
+func (c *command) processSlot(ctx context.Context) error {
+	var err error
+	slot, err := util.ParseSlot(ctx, c.chainTime, c.slot)
+	if err != nil {
+		return errors.Wrap(err, "failed to parse slot")
+	}
+
+	c.results.Epoch = c.chainTime.SlotToEpoch(slot)
+
+	duties, err := c.proposerDutiesProvider.ProposerDuties(ctx, c.results.Epoch, nil)
+	if err != nil {
+		return errors.Wrap(err, "failed to obtain proposer duties")
+	}
+
+	c.results.Duties = make([]*apiv1.ProposerDuty, 0, 1)
+
+	for _, duty := range duties {
+		if duty.Slot == slot {
+			c.results.Duties = append(c.results.Duties, duty)
+			break
+		}
+	}
+
+	return nil
+}
+
+func (c *command) processEpoch(ctx context.Context) error {
+	var err error
 	c.results.Epoch, err = util.ParseEpoch(ctx, c.chainTime, c.epoch)
 	if err != nil {
 		return errors.Wrap(err, "failed to parse epoch")

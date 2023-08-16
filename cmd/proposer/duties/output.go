@@ -1,4 +1,4 @@
-// Copyright © 2022 Weald Technology Trading.
+// Copyright © 2022, 2023 Weald Technology Trading.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -43,19 +43,32 @@ func (c *command) outputJSON(_ context.Context) (string, error) {
 func (c *command) outputTxt(_ context.Context) (string, error) {
 	builder := strings.Builder{}
 
-	builder.WriteString("Epoch ")
-	builder.WriteString(fmt.Sprintf("%d:\n", c.results.Epoch))
-
-	for _, duty := range c.results.Duties {
-		builder.WriteString("  Slot ")
-		builder.WriteString(fmt.Sprintf("%d: ", duty.Slot))
-		builder.WriteString("validator ")
+	if len(c.results.Duties) == 1 {
+		// Only have a single slot, just print the validator.
+		duty := c.results.Duties[0]
+		builder.WriteString("Validator ")
 		builder.WriteString(fmt.Sprintf("%d", duty.ValidatorIndex))
 		if c.verbose {
 			builder.WriteString(" (pubkey ")
 			builder.WriteString(fmt.Sprintf("%#x)", duty.PubKey))
 		}
 		builder.WriteString("\n")
+	} else {
+		// Have multiple slots, print per-slot information.
+		builder.WriteString("Epoch ")
+		builder.WriteString(fmt.Sprintf("%d:\n", c.results.Epoch))
+
+		for _, duty := range c.results.Duties {
+			builder.WriteString("  Slot ")
+			builder.WriteString(fmt.Sprintf("%d: ", duty.Slot))
+			builder.WriteString("validator ")
+			builder.WriteString(fmt.Sprintf("%d", duty.ValidatorIndex))
+			if c.verbose {
+				builder.WriteString(" (pubkey ")
+				builder.WriteString(fmt.Sprintf("%#x)", duty.PubKey))
+			}
+			builder.WriteString("\n")
+		}
 	}
 
 	return strings.TrimSuffix(builder.String(), "\n"), nil

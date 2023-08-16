@@ -1,3 +1,6 @@
+dev:
+  - add "slot" to "proposer duties" command
+
 1.33.0:
   - show all slots with 'synccommittee inclusion'
   - add "wallet batch" command

@@ -113,9 +113,9 @@ jobs:
           asset_name: ${{ needs.env_vars.outputs.binary }}-${{ needs.env_vars.outputs.release_version }}-linux-arm64.tar.gz.sha256
           asset_content_type: text/plain
 
-  # Build and pack the binaries for OSX.
+  # Build and pack the X64 binaries for OSX.
   build_macos:
-    runs-on: macos-latest
+    runs-on: [ macos-latest, x64]
     needs: [create_release, env_vars]
     steps:
       - name: Set up Go
@@ -156,6 +156,51 @@ jobs:
           upload_url: ${{ needs.create_release.outputs.upload_url }}
           asset_path: ./${{ needs.env_vars.outputs.binary }}-${{ needs.env_vars.outputs.release_version }}-darwin-amd64.tar.gz.sha256
           asset_name: ${{ needs.env_vars.outputs.binary }}-${{ needs.env_vars.outputs.release_version }}-darwin-amd64.tar.gz.sha256
+          asset_content_type: text/plain
+
+  # Build and pack the ARM64 binaries for OSX.
+  build_macos:
+    runs-on: [ macos-latest, ARM64]
+    needs: [create_release, env_vars]
+    steps:
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: '^1.20'
+
+      - name: Check out repository into the Go module directory
+        uses: actions/checkout@v3
+
+      - name: Select correct tag
+        run: git checkout ${{ github.ref_name }}
+
+      - name: Fetch repository dependencies
+        run: go get -v -t ./...
+
+      - name: Compile
+        run: |
+          go build -tags osusergo,netgo -v -ldflags="-X github.com/${{ github.repository }}/cmd.ReleaseVersion=${{ needs.env_vars.outputs.release_version }}"
+          tar zcf ${{ needs.env_vars.outputs.binary }}-${{ needs.env_vars.outputs.release_version }}-darwin-arm64.tar.gz ${{ needs.env_vars.outputs.binary }}
+          brew install coreutils
+          sha256sum ${{ needs.env_vars.outputs.binary }}-${{ needs.env_vars.outputs.release_version }}-darwin-arm64.tar.gz | sed -e 's/ .*//' >${{ needs.env_vars.outputs.binary }}-${{ needs.env_vars.outputs.release_version }}-darwin-arm64.tar.gz.sha256
+      - name: Upload binary
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          upload_url: ${{ needs.create_release.outputs.upload_url }}
+          asset_path: ./${{ needs.env_vars.outputs.binary }}-${{ needs.env_vars.outputs.release_version }}-darwin-arm64.tar.gz
+          asset_name: ${{ needs.env_vars.outputs.binary }}-${{ needs.env_vars.outputs.release_version }}-darwin-arm64.tar.gz
+          asset_content_type: application/octet-stream
+
+      - name: Upload hash
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          upload_url: ${{ needs.create_release.outputs.upload_url }}
+          asset_path: ./${{ needs.env_vars.outputs.binary }}-${{ needs.env_vars.outputs.release_version }}-darwin-arm64.tar.gz.sha256
+          asset_name: ${{ needs.env_vars.outputs.binary }}-${{ needs.env_vars.outputs.release_version }}-darwin-arm64.tar.gz.sha256
           asset_content_type: text/plain
 
   # Build and pack the binaries for Windows.

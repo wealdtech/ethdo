@@ -1,6 +1,7 @@
 dev:
   - add "slot" to "proposer duties" command
   - add activation epoch and time to "validator info" command where applicable
+  - add "holesky" to the list of supported networks
 
 1.33.0:
   - show all slots with 'synccommittee inclusion'

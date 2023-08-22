@@ -1,4 +1,4 @@
-// Copyright © 2020 Weald Technology Trading
+// Copyright © 2020 - 2023 Weald Technology Trading.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -28,6 +28,8 @@ var networks = map[string]string{
 	"8c5fecdc472e27bc447696f431e425d02dd46a8c": "Pyrmont",
 	"ff50ed3d0ec03ac01d4c79aad74928bff48a7b2b": "Prater",
 	"6f22ffbc56eff051aecf839396dd1ed9ad6bba9d": "Ropsten",
+	"7f02c3e3c98b133055b8b348b2ac625669ed295d": "Sepolia",
+	"4242424242424242424242424242424242424242": "Holesky",
 }
 
 // Network returns the name of the network., calculated from the deposit contract information.

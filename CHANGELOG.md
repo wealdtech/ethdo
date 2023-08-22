@@ -1,5 +1,6 @@
 dev:
   - add "slot" to "proposer duties" command
+  - add activation epoch and time to "validator info" command where applicable
 
 1.33.0:
   - show all slots with 'synccommittee inclusion'

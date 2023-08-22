@@ -30,6 +30,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	standardchaintime "github.com/wealdtech/ethdo/services/chaintime/standard"
 	"github.com/wealdtech/ethdo/util"
 	string2eth "github.com/wealdtech/go-string2eth"
 )
@@ -52,6 +53,14 @@ In quiet mode this will return 0 if the validator information can be obtained, o
 			LogFallback:   !viper.GetBool("quiet"),
 		})
 		errCheck(err, "Failed to connect to Ethereum 2 beacon node")
+
+		chainTime, err := standardchaintime.New(ctx,
+			standardchaintime.WithSpecProvider(eth2Client.(eth2client.SpecProvider)),
+			standardchaintime.WithGenesisTimeProvider(eth2Client.(eth2client.GenesisTimeProvider)),
+		)
+		if err != nil {
+			errCheck(err, "failed to set up chaintime service")
+		}
 
 		if viper.GetString("validator") == "" {
 			fmt.Println("validator is required")
@@ -84,7 +93,13 @@ In quiet mode this will return 0 if the validator information can be obtained, o
 		}
 		if viper.GetBool("verbose") {
 			if validator.Status.IsPending() {
-				fmt.Printf("Activation eligibility epoch: %d\n", validator.Validator.ActivationEligibilityEpoch)
+				if validator.Validator.ActivationEpoch == 0xffffffffffffffff {
+					fmt.Printf("Activation eligibility epoch: %d\n", validator.Validator.ActivationEligibilityEpoch)
+					fmt.Printf("Activation eligibility timestamp: %v\n", chainTime.StartOfEpoch(validator.Validator.ActivationEligibilityEpoch))
+				} else {
+					fmt.Printf("Activation epoch: %d\n", validator.Validator.ActivationEpoch)
+					fmt.Printf("Activation timestamp: %v\n", chainTime.StartOfEpoch(validator.Validator.ActivationEpoch))
+				}
 			}
 			if validator.Status.HasActivated() {
 				fmt.Printf("Activation epoch: %d\n", validator.Validator.ActivationEpoch)

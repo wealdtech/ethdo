@@ -43,8 +43,8 @@ github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03
 github.com/BurntSushi/xgb v0.0.0-20160522181843-27f122750802/go.mod h1:IVnqGOEym/WlBOVXweHU+Q+/VP0lqqI8lqeDx9IjBqo=
 github.com/OneOfOne/xxhash v1.2.2/go.mod h1:HSdplMjZKSmBqAxg5vPj2TmRDmfkzw+cTzAElWljhcU=
 github.com/antihax/optional v1.0.0/go.mod h1:uupD/76wgC+ih3iEmQUL+0Ugr19nfwCT1kdvxnR2qWY=
-github.com/attestantio/go-eth2-client v0.18.2 h1:oZk+NEGqTVl5hIxtVQwwLYXzD+tIcDEuS9MjYtMS/js=
-github.com/attestantio/go-eth2-client v0.18.2/go.mod h1:KSVlZSW1A3jUg5H8O89DLtqxgJprRfTtI7k89fLdhu0=
+github.com/attestantio/go-eth2-client v0.18.3 h1:hUSYh+uMLyw4mJcXWcvrPLd8ozJl61aWMdx5Cpq9hxk=
+github.com/attestantio/go-eth2-client v0.18.3/go.mod h1:KSVlZSW1A3jUg5H8O89DLtqxgJprRfTtI7k89fLdhu0=
 github.com/aws/aws-sdk-go v1.44.317 h1:+8XWrLmGMwPPXSRSLPzhgcGnzJ2mYkgkrcB9C/GnSOU=
 github.com/aws/aws-sdk-go v1.44.317/go.mod h1:aVsgQcEevwlmQ7qHE9I3h+dtQgpqhFB+i8Phjh7fkwI=
 github.com/beorn7/perks v1.0.1 h1:VlbKKnNfV8bJzeqoa4cOKqO6bYr3WgKZxO8Z16+hsOM=

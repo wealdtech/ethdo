@@ -1,3 +1,6 @@
+1.33.2:
+  - fix windows build
+
 1.33.1:
   - add "slot" to "proposer duties" command
   - add activation epoch and time to "validator info" command where applicable

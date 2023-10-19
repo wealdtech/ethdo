@@ -8,7 +8,7 @@ require (
 	github.com/gofrs/uuid v4.4.0+incompatible
 	github.com/google/uuid v1.3.0
 	github.com/hako/durafmt v0.0.0-20210608085754-5c1018a4e16b
-	github.com/herumi/bls-eth-go-binary v1.31.0
+	github.com/herumi/bls-eth-go-binary v1.32.1
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/nbutton23/zxcvbn-go v0.0.0-20210217022336-fa2cb2858354
 	github.com/pkg/errors v0.9.1

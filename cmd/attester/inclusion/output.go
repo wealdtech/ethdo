@@ -16,6 +16,7 @@ package attesterinclusion
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/attestantio/go-eth2-client/spec/phase0"
@@ -49,7 +50,7 @@ func output(_ context.Context, data *dataOut) (string, error) {
 			buf.WriteString("Attestation included in block ")
 			buf.WriteString(fmt.Sprintf("%d", data.slot))
 			buf.WriteString(", index ")
-			buf.WriteString(fmt.Sprintf("%d", data.attestationIndex))
+			buf.WriteString(strconv.FormatUint(data.attestationIndex, 10))
 			if data.verbose {
 				buf.WriteString("\nInclusion delay: ")
 				buf.WriteString(fmt.Sprintf("%d", data.inclusionDelay))

@@ -16,6 +16,7 @@ package inclusion
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"strings"
 )
 
@@ -53,13 +54,13 @@ func (c *command) output(_ context.Context) (string, error) {
 			}
 		}
 		builder.WriteString("Expected: ")
-		builder.WriteString(fmt.Sprintf("%d", len(c.inclusions)))
+		builder.WriteString(strconv.Itoa(len(c.inclusions)))
 		builder.WriteString("\nIncluded: ")
-		builder.WriteString(fmt.Sprintf("%d", included))
+		builder.WriteString(strconv.Itoa(included))
 		builder.WriteString("\nMissed: ")
-		builder.WriteString(fmt.Sprintf("%d", missed))
+		builder.WriteString(strconv.Itoa(missed))
 		builder.WriteString("\nNo block: ")
-		builder.WriteString(fmt.Sprintf("%d", noBlock))
+		builder.WriteString(strconv.Itoa(noBlock))
 
 		builder.WriteString("\nPer-slot result: ")
 		for i, inclusion := range c.inclusions {

@@ -19,6 +19,7 @@ import (
 	"strings"
 
 	eth2client "github.com/attestantio/go-eth2-client"
+	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 	"github.com/wealdtech/ethdo/util"
@@ -34,10 +35,14 @@ func process(ctx context.Context, data *dataIn) (*dataOut, error) {
 		return nil, err
 	}
 
-	syncCommittee, err := data.eth2Client.(eth2client.SyncCommitteesProvider).SyncCommitteeAtEpoch(ctx, "head", epoch)
+	syncCommitteeResponse, err := data.eth2Client.(eth2client.SyncCommitteesProvider).SyncCommittee(ctx, &api.SyncCommitteeOpts{
+		State: "head",
+		Epoch: &epoch,
+	})
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to obtain sync committee information")
 	}
+	syncCommittee := syncCommitteeResponse.Data
 
 	if syncCommittee == nil {
 		return nil, errors.New("no sync committee returned")

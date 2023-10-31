@@ -20,6 +20,7 @@ import (
 	"strconv"
 
 	eth2client "github.com/attestantio/go-eth2-client"
+	"github.com/attestantio/go-eth2-client/api"
 	"github.com/pkg/errors"
 	"github.com/shopspring/decimal"
 	standardchaintime "github.com/wealdtech/ethdo/services/chaintime/standard"
@@ -48,12 +49,12 @@ var (
 
 // calculateYield calculates yield from the number of active validators.
 func (c *command) calculateYield(ctx context.Context) error {
-	spec, err := c.eth2Client.(eth2client.SpecProvider).Spec(ctx)
+	specResponse, err := c.eth2Client.(eth2client.SpecProvider).Spec(ctx)
 	if err != nil {
 		return err
 	}
 
-	tmp, exists := spec["BASE_REWARD_FACTOR"]
+	tmp, exists := specResponse.Data["BASE_REWARD_FACTOR"]
 	if !exists {
 		return errors.New("spec missing BASE_REWARD_FACTOR")
 	}
@@ -143,14 +144,16 @@ func (c *command) setup(ctx context.Context) error {
 			return errors.Wrap(err, "failed to parse epoch")
 		}
 
-		validators, err := validatorsProvider.Validators(ctx, fmt.Sprintf("%d", chainTime.FirstSlotOfEpoch(epoch)), nil)
+		response, err := validatorsProvider.Validators(ctx, &api.ValidatorsOpts{
+			State: fmt.Sprintf("%d", chainTime.FirstSlotOfEpoch(epoch)),
+		})
 		if err != nil {
 			return err
 		}
 
 		activeValidators := decimal.Zero
 		activeValidatorBalance := decimal.Zero
-		for _, validator := range validators {
+		for _, validator := range response.Data {
 			if validator.Validator.ActivationEpoch <= epoch &&
 				validator.Validator.ExitEpoch > epoch {
 				activeValidators = activeValidators.Add(one)

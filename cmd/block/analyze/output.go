@@ -17,6 +17,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"strings"
 )
 
@@ -82,26 +83,26 @@ func (c *command) outputTxt(_ context.Context) (string, error) {
 	for i, attestation := range c.analysis.Attestations {
 		if c.verbose {
 			builder.WriteString("Attestation ")
-			builder.WriteString(fmt.Sprintf("%d", i))
+			builder.WriteString(strconv.Itoa(i))
 			builder.WriteString(": ")
 			builder.WriteString("distance ")
-			builder.WriteString(fmt.Sprintf("%d", attestation.Distance))
+			builder.WriteString(strconv.Itoa(attestation.Distance))
 			builder.WriteString(", ")
 
 			if attestation.Duplicate != nil {
 				builder.WriteString("duplicate of attestation ")
-				builder.WriteString(fmt.Sprintf("%d", attestation.Duplicate.Index))
+				builder.WriteString(strconv.Itoa(attestation.Duplicate.Index))
 				builder.WriteString(" in block ")
 				builder.WriteString(fmt.Sprintf("%d", attestation.Duplicate.Block))
 				builder.WriteString("\n")
 				continue
 			}
 
-			builder.WriteString(fmt.Sprintf("%d", attestation.NewVotes))
+			builder.WriteString(strconv.Itoa(attestation.NewVotes))
 			builder.WriteString("/")
-			builder.WriteString(fmt.Sprintf("%d", attestation.Votes))
+			builder.WriteString(strconv.Itoa(attestation.Votes))
 			builder.WriteString("/")
-			builder.WriteString(fmt.Sprintf("%d", attestation.PossibleVotes))
+			builder.WriteString(strconv.Itoa(attestation.PossibleVotes))
 			builder.WriteString(" new/total/possible votes")
 			if attestation.NewVotes == 0 {
 				builder.WriteString("\n")
@@ -137,7 +138,7 @@ func (c *command) outputTxt(_ context.Context) (string, error) {
 	if c.analysis.SyncCommitee.Contributions > 0 {
 		if c.verbose {
 			builder.WriteString("Sync committee contributions: ")
-			builder.WriteString(fmt.Sprintf("%d", c.analysis.SyncCommitee.Contributions))
+			builder.WriteString(strconv.Itoa(c.analysis.SyncCommitee.Contributions))
 			builder.WriteString(" contributions, score ")
 			builder.WriteString(fmt.Sprintf("%0.3f", c.analysis.SyncCommitee.Score))
 			builder.WriteString(", value ")

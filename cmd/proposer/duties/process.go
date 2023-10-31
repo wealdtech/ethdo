@@ -17,6 +17,7 @@ import (
 	"context"
 
 	eth2client "github.com/attestantio/go-eth2-client"
+	"github.com/attestantio/go-eth2-client/api"
 	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
 	"github.com/pkg/errors"
 	standardchaintime "github.com/wealdtech/ethdo/services/chaintime/standard"
@@ -45,14 +46,16 @@ func (c *command) processSlot(ctx context.Context) error {
 
 	c.results.Epoch = c.chainTime.SlotToEpoch(slot)
 
-	duties, err := c.proposerDutiesProvider.ProposerDuties(ctx, c.results.Epoch, nil)
+	response, err := c.proposerDutiesProvider.ProposerDuties(ctx, &api.ProposerDutiesOpts{
+		Epoch: c.results.Epoch,
+	})
 	if err != nil {
 		return errors.Wrap(err, "failed to obtain proposer duties")
 	}
 
 	c.results.Duties = make([]*apiv1.ProposerDuty, 0, 1)
 
-	for _, duty := range duties {
+	for _, duty := range response.Data {
 		if duty.Slot == slot {
 			c.results.Duties = append(c.results.Duties, duty)
 			break
@@ -69,10 +72,13 @@ func (c *command) processEpoch(ctx context.Context) error {
 		return errors.Wrap(err, "failed to parse epoch")
 	}
 
-	c.results.Duties, err = c.proposerDutiesProvider.ProposerDuties(ctx, c.results.Epoch, nil)
+	dutiesResponse, err := c.proposerDutiesProvider.ProposerDuties(ctx, &api.ProposerDutiesOpts{
+		Epoch: c.results.Epoch,
+	})
 	if err != nil {
 		return errors.Wrap(err, "failed to obtain proposer duties")
 	}
+	c.results.Duties = dutiesResponse.Data
 
 	return nil
 }

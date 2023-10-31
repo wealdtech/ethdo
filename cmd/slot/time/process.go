@@ -41,17 +41,18 @@ func process(ctx context.Context, data *dataIn) (*dataOut, error) {
 		return nil, errors.New("slot must be a positive integer")
 	}
 
-	genesis, err := data.eth2Client.(eth2client.GenesisProvider).Genesis(ctx)
+	genesisResponse, err := data.eth2Client.(eth2client.GenesisProvider).Genesis(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to obtain genesis information")
 	}
+	genesis := genesisResponse.Data
 
-	config, err := data.eth2Client.(eth2client.SpecProvider).Spec(ctx)
+	specResponse, err := data.eth2Client.(eth2client.SpecProvider).Spec(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to obtain chain specifications")
 	}
 
-	slotDuration := config["SECONDS_PER_SLOT"].(time.Duration)
+	slotDuration := specResponse.Data["SECONDS_PER_SLOT"].(time.Duration)
 
 	results.startTime = genesis.GenesisTime.Add((time.Duration(slot*int64(slotDuration.Seconds())) * time.Second))
 	results.endTime = results.startTime.Add(slotDuration)

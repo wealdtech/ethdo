@@ -18,7 +18,8 @@ import (
 	"time"
 
 	eth2client "github.com/attestantio/go-eth2-client"
-	api "github.com/attestantio/go-eth2-client/api/v1"
+	"github.com/attestantio/go-eth2-client/api"
+	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
 	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 	"github.com/wealdtech/ethdo/util"
@@ -75,28 +76,32 @@ func process(ctx context.Context, data *dataIn) (*dataOut, error) {
 	}
 	results.nextEpochAttesterDuty = nextEpochAttesterDuty
 
-	genesis, err := eth2Client.(eth2client.GenesisProvider).Genesis(ctx)
+	genesisResponse, err := eth2Client.(eth2client.GenesisProvider).Genesis(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to obtain genesis data")
 	}
-	results.genesisTime = genesis.GenesisTime
+	results.genesisTime = genesisResponse.Data.GenesisTime
 
-	config, err := eth2Client.(eth2client.SpecProvider).Spec(ctx)
+	specResponse, err := eth2Client.(eth2client.SpecProvider).Spec(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to obtain beacon chain configuration")
 	}
-	results.slotsPerEpoch = config["SLOTS_PER_EPOCH"].(uint64)
-	results.slotDuration = config["SECONDS_PER_SLOT"].(time.Duration)
+	results.slotsPerEpoch = specResponse.Data["SLOTS_PER_EPOCH"].(uint64)
+	results.slotDuration = specResponse.Data["SECONDS_PER_SLOT"].(time.Duration)
 
 	return results, nil
 }
 
-func attesterDuty(ctx context.Context, eth2Client eth2client.Service, validatorIndex spec.ValidatorIndex, epoch spec.Epoch) (*api.AttesterDuty, error) {
+func attesterDuty(ctx context.Context, eth2Client eth2client.Service, validatorIndex spec.ValidatorIndex, epoch spec.Epoch) (*apiv1.AttesterDuty, error) {
 	// Find the attesting slot for the given epoch.
-	duties, err := eth2Client.(eth2client.AttesterDutiesProvider).AttesterDuties(ctx, epoch, []spec.ValidatorIndex{validatorIndex})
+	dutiesResponse, err := eth2Client.(eth2client.AttesterDutiesProvider).AttesterDuties(ctx, &api.AttesterDutiesOpts{
+		Epoch:   epoch,
+		Indices: []spec.ValidatorIndex{validatorIndex},
+	})
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to obtain attester duties")
 	}
+	duties := dutiesResponse.Data
 
 	if len(duties) == 0 {
 		return nil, errors.New("validator does not have duty for that epoch")
@@ -105,30 +110,33 @@ func attesterDuty(ctx context.Context, eth2Client eth2client.Service, validatorI
 	return duties[0], nil
 }
 
-func proposerDuties(ctx context.Context, eth2Client eth2client.Service, validatorIndex spec.ValidatorIndex, epoch spec.Epoch) ([]*api.ProposerDuty, error) {
+func proposerDuties(ctx context.Context, eth2Client eth2client.Service, validatorIndex spec.ValidatorIndex, epoch spec.Epoch) ([]*apiv1.ProposerDuty, error) {
 	// Fetch the proposer duties for this epoch.
-	proposerDuties, err := eth2Client.(eth2client.ProposerDutiesProvider).ProposerDuties(ctx, epoch, []spec.ValidatorIndex{validatorIndex})
+	proposerDuties, err := eth2Client.(eth2client.ProposerDutiesProvider).ProposerDuties(ctx, &api.ProposerDutiesOpts{
+		Epoch:   epoch,
+		Indices: []spec.ValidatorIndex{validatorIndex},
+	})
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to obtain proposer duties")
 	}
 
-	return proposerDuties, nil
+	return proposerDuties.Data, nil
 }
 
 func currentEpoch(ctx context.Context, eth2Client eth2client.Service) (spec.Epoch, error) {
-	config, err := eth2Client.(eth2client.SpecProvider).Spec(ctx)
+	specResponse, err := eth2Client.(eth2client.SpecProvider).Spec(ctx)
 	if err != nil {
 		return 0, errors.Wrap(err, "failed to obtain beacon chain configuration")
 	}
-	slotsPerEpoch := config["SLOTS_PER_EPOCH"].(uint64)
-	slotDuration := config["SECONDS_PER_SLOT"].(time.Duration)
-	genesis, err := eth2Client.(eth2client.GenesisProvider).Genesis(ctx)
+	slotsPerEpoch := specResponse.Data["SLOTS_PER_EPOCH"].(uint64)
+	slotDuration := specResponse.Data["SECONDS_PER_SLOT"].(time.Duration)
+
+	genesisResponse, err := eth2Client.(eth2client.GenesisProvider).Genesis(ctx)
 	if err != nil {
 		return 0, errors.Wrap(err, "failed to obtain genesis data")
 	}
-
-	if genesis.GenesisTime.After(time.Now()) {
+	if genesisResponse.Data.GenesisTime.After(time.Now()) {
 		return spec.Epoch(0), nil
 	}
-	return spec.Epoch(uint64(time.Since(genesis.GenesisTime).Seconds()) / (uint64(slotDuration.Seconds()) * slotsPerEpoch)), nil
+	return spec.Epoch(uint64(time.Since(genesisResponse.Data.GenesisTime).Seconds()) / (uint64(slotDuration.Seconds()) * slotsPerEpoch)), nil
 }

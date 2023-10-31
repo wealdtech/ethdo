@@ -48,14 +48,14 @@ In quiet mode this will return 0 if the node information can be obtained, otherw
 		}
 
 		if viper.GetBool("verbose") {
-			version, err := eth2Client.(eth2client.NodeVersionProvider).NodeVersion(ctx)
+			versionResponse, err := eth2Client.(eth2client.NodeVersionProvider).NodeVersion(ctx)
 			errCheck(err, "Failed to obtain node version")
-			fmt.Printf("Version: %s\n", version)
+			fmt.Printf("Version: %s\n", versionResponse.Data)
 		}
 
-		syncState, err := eth2Client.(eth2client.NodeSyncingProvider).NodeSyncing(ctx)
+		syncStateResponse, err := eth2Client.(eth2client.NodeSyncingProvider).NodeSyncing(ctx)
 		errCheck(err, "failed to obtain node sync state")
-		fmt.Printf("Syncing: %t\n", syncState.SyncDistance != 0)
+		fmt.Printf("Syncing: %t\n", syncStateResponse.Data.SyncDistance != 0)
 
 		os.Exit(_exitSuccess)
 	},

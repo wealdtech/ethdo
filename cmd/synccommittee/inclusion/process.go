@@ -18,6 +18,7 @@ import (
 	"fmt"
 
 	eth2client "github.com/attestantio/go-eth2-client"
+	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/spec"
 	"github.com/attestantio/go-eth2-client/spec/altair"
 	"github.com/pkg/errors"
@@ -41,10 +42,14 @@ func (c *command) process(ctx context.Context) error {
 		return err
 	}
 
-	syncCommittee, err := c.eth2Client.(eth2client.SyncCommitteesProvider).SyncCommitteeAtEpoch(ctx, "head", c.epoch)
+	syncCommitteeResponse, err := c.eth2Client.(eth2client.SyncCommitteesProvider).SyncCommittee(ctx, &api.SyncCommitteeOpts{
+		State: "head",
+		Epoch: &c.epoch,
+	})
 	if err != nil {
 		return errors.Wrap(err, "failed to obtain sync committee information")
 	}
+	syncCommittee := syncCommitteeResponse.Data
 
 	if syncCommittee == nil {
 		return errors.New("no sync committee returned")
@@ -67,10 +72,13 @@ func (c *command) process(ctx context.Context) error {
 			lastSlot = c.chainTime.CurrentSlot()
 		}
 		for slot := firstSlot; slot <= lastSlot; slot++ {
-			block, err := c.eth2Client.(eth2client.SignedBeaconBlockProvider).SignedBeaconBlock(ctx, fmt.Sprintf("%d", slot))
+			blockResponse, err := c.eth2Client.(eth2client.SignedBeaconBlockProvider).SignedBeaconBlock(ctx, &api.SignedBeaconBlockOpts{
+				Block: fmt.Sprintf("%d", slot),
+			})
 			if err != nil {
 				return err
 			}
+			block := blockResponse.Data
 			if block == nil {
 				c.inclusions = append(c.inclusions, 0)
 				continue

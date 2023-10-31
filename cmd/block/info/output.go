@@ -20,11 +20,13 @@ import (
 	"fmt"
 	"math/big"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 	"unicode/utf8"
 
 	eth2client "github.com/attestantio/go-eth2-client"
+	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/spec/altair"
 	"github.com/attestantio/go-eth2-client/spec/bellatrix"
 	"github.com/attestantio/go-eth2-client/spec/capella"
@@ -116,12 +118,14 @@ func outputBlockAttestations(ctx context.Context, eth2Client eth2client.Service,
 				// Fetch committees for this epoch if not already obtained.
 				committees, exists := validatorCommittees[att.Data.Slot]
 				if !exists {
-					beaconCommittees, err := beaconCommitteesProvider.BeaconCommittees(ctx, fmt.Sprintf("%d", att.Data.Slot))
+					response, err := beaconCommitteesProvider.BeaconCommittees(ctx, &api.BeaconCommitteesOpts{
+						State: fmt.Sprintf("%d", att.Data.Slot),
+					})
 					if err != nil {
 						// Failed to get it; create an empty committee to stop us continually attempting to re-fetch.
 						validatorCommittees[att.Data.Slot] = make(map[phase0.CommitteeIndex][]phase0.ValidatorIndex)
 					} else {
-						for _, beaconCommittee := range beaconCommittees {
+						for _, beaconCommittee := range response.Data {
 							if _, exists := validatorCommittees[beaconCommittee.Slot]; !exists {
 								validatorCommittees[beaconCommittee.Slot] = make(map[phase0.CommitteeIndex][]phase0.ValidatorIndex)
 							}
@@ -166,11 +170,14 @@ func outputBlockAttesterSlashings(ctx context.Context, eth2Client eth2client.Ser
 
 			res.WriteString(fmt.Sprintf("  %d:\n", i))
 			res.WriteString(fmt.Sprintln("    Slashed validators:"))
-			validators, err := eth2Client.(eth2client.ValidatorsProvider).Validators(ctx, "head", slashedIndices)
+			response, err := eth2Client.(eth2client.ValidatorsProvider).Validators(ctx, &api.ValidatorsOpts{
+				State:   "head",
+				Indices: slashedIndices,
+			})
 			if err != nil {
 				return "", errors.Wrap(err, "failed to obtain beacon committees")
 			}
-			for k, v := range validators {
+			for k, v := range response.Data {
 				res.WriteString(fmt.Sprintf("      %#x (%d)\n", v.Validator.PublicKey[:], k))
 			}
 
@@ -223,11 +230,14 @@ func outputBlockVoluntaryExits(ctx context.Context, eth2Client eth2client.Servic
 	if verbose {
 		for i, voluntaryExit := range voluntaryExits {
 			res.WriteString(fmt.Sprintf("  %d:\n", i))
-			validators, err := eth2Client.(eth2client.ValidatorsProvider).Validators(ctx, "head", []phase0.ValidatorIndex{voluntaryExit.Message.ValidatorIndex})
+			response, err := eth2Client.(eth2client.ValidatorsProvider).Validators(ctx, &api.ValidatorsOpts{
+				State:   "head",
+				Indices: []phase0.ValidatorIndex{voluntaryExit.Message.ValidatorIndex},
+			})
 			if err != nil {
 				res.WriteString(fmt.Sprintf("  Error: failed to obtain validators: %v\n", err))
 			} else {
-				res.WriteString(fmt.Sprintf("    Validator: %#x (%d)\n", validators[voluntaryExit.Message.ValidatorIndex].Validator.PublicKey, voluntaryExit.Message.ValidatorIndex))
+				res.WriteString(fmt.Sprintf("    Validator: %#x (%d)\n", response.Data[voluntaryExit.Message.ValidatorIndex].Validator.PublicKey, voluntaryExit.Message.ValidatorIndex))
 				res.WriteString(fmt.Sprintf("    Epoch: %d\n", voluntaryExit.Message.Epoch))
 			}
 		}
@@ -243,11 +253,14 @@ func outputBlockBLSToExecutionChanges(ctx context.Context, eth2Client eth2client
 	if verbose {
 		for i, op := range ops {
 			res.WriteString(fmt.Sprintf("  %d:\n", i))
-			validators, err := eth2Client.(eth2client.ValidatorsProvider).Validators(ctx, "head", []phase0.ValidatorIndex{op.Message.ValidatorIndex})
+			response, err := eth2Client.(eth2client.ValidatorsProvider).Validators(ctx, &api.ValidatorsOpts{
+				State:   "head",
+				Indices: []phase0.ValidatorIndex{op.Message.ValidatorIndex},
+			})
 			if err != nil {
 				res.WriteString(fmt.Sprintf("  Error: failed to obtain validators: %v\n", err))
 			} else {
-				res.WriteString(fmt.Sprintf("    Validator: %#x (%d)\n", validators[op.Message.ValidatorIndex].Validator.PublicKey, op.Message.ValidatorIndex))
+				res.WriteString(fmt.Sprintf("    Validator: %#x (%d)\n", response.Data[op.Message.ValidatorIndex].Validator.PublicKey, op.Message.ValidatorIndex))
 				res.WriteString(fmt.Sprintf("    BLS public key: %#x\n", op.Message.FromBLSPubkey))
 				res.WriteString(fmt.Sprintf("    Execution address: %s\n", op.Message.ToExecutionAddress.String()))
 			}
@@ -265,9 +278,9 @@ func outputBlockSyncAggregate(ctx context.Context, eth2Client eth2client.Service
 	if verbose {
 		specProvider, isProvider := eth2Client.(eth2client.SpecProvider)
 		if isProvider {
-			config, err := specProvider.Spec(ctx)
+			specResponse, err := specProvider.Spec(ctx)
 			if err == nil {
-				slotsPerEpoch := config["SLOTS_PER_EPOCH"].(uint64)
+				slotsPerEpoch := specResponse.Data["SLOTS_PER_EPOCH"].(uint64)
 
 				res.WriteString("  Contributions: ")
 				res.WriteString(bitvectorToString(syncAggregate.SyncCommitteeBits))
@@ -275,14 +288,16 @@ func outputBlockSyncAggregate(ctx context.Context, eth2Client eth2client.Service
 
 				syncCommitteesProvider, isProvider := eth2Client.(eth2client.SyncCommitteesProvider)
 				if isProvider {
-					syncCommittee, err := syncCommitteesProvider.SyncCommittee(ctx, fmt.Sprintf("%d", uint64(epoch)*slotsPerEpoch))
+					syncCommitteeResponse, err := syncCommitteesProvider.SyncCommittee(ctx, &api.SyncCommitteeOpts{
+						State: strconv.FormatUint(uint64(epoch)*slotsPerEpoch, 10),
+					})
 					if err != nil {
 						res.WriteString(fmt.Sprintf("  Error: failed to obtain sync committee: %v\n", err))
 					} else {
 						res.WriteString("  Contributing validators:")
 						for i := uint64(0); i < syncAggregate.SyncCommitteeBits.Len(); i++ {
 							if syncAggregate.SyncCommitteeBits.BitAt(i) {
-								res.WriteString(fmt.Sprintf(" %d", syncCommittee.Validators[i]))
+								res.WriteString(fmt.Sprintf(" %d", syncCommitteeResponse.Data.Validators[i]))
 							}
 						}
 						res.WriteString("\n")

@@ -17,7 +17,8 @@ import (
 	"context"
 
 	eth2client "github.com/attestantio/go-eth2-client"
-	api "github.com/attestantio/go-eth2-client/api/v1"
+	"github.com/attestantio/go-eth2-client/api"
+	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
 	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 	"github.com/wealdtech/ethdo/util"
@@ -49,12 +50,16 @@ func process(ctx context.Context, data *dataIn) (*dataOut, error) {
 	return results, nil
 }
 
-func duty(ctx context.Context, eth2Client eth2client.Service, validator *api.Validator, epoch spec.Epoch) (*api.AttesterDuty, error) {
+func duty(ctx context.Context, eth2Client eth2client.Service, validator *apiv1.Validator, epoch spec.Epoch) (*apiv1.AttesterDuty, error) {
 	// Find the attesting slot for the given epoch.
-	duties, err := eth2Client.(eth2client.AttesterDutiesProvider).AttesterDuties(ctx, epoch, []spec.ValidatorIndex{validator.Index})
+	dutiesResponse, err := eth2Client.(eth2client.AttesterDutiesProvider).AttesterDuties(ctx, &api.AttesterDutiesOpts{
+		Epoch:   epoch,
+		Indices: []spec.ValidatorIndex{validator.Index},
+	})
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to obtain attester duties")
 	}
+	duties := dutiesResponse.Data
 
 	if len(duties) == 0 {
 		return nil, errors.New("validator does not have duty for that epoch")

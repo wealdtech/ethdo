@@ -16,6 +16,7 @@ package chaintime
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -59,14 +60,14 @@ func output(_ context.Context, data *dataOut) (string, error) {
 	builder.WriteString(data.epochStart.Format("2006-01-02 15:04:05"))
 	if data.verbose {
 		builder.WriteString(" (")
-		builder.WriteString(fmt.Sprintf("%d", data.epochStart.Unix()))
+		builder.WriteString(strconv.FormatInt(data.epochStart.Unix(), 10))
 		builder.WriteString(")")
 	}
 	builder.WriteString("\n  Epoch end ")
 	builder.WriteString(data.epochEnd.Format("2006-01-02 15:04:05"))
 	if data.verbose {
 		builder.WriteString(" (")
-		builder.WriteString(fmt.Sprintf("%d", data.epochEnd.Unix()))
+		builder.WriteString(strconv.FormatInt(data.epochEnd.Unix(), 10))
 		builder.WriteString(")")
 	}
 
@@ -76,27 +77,27 @@ func output(_ context.Context, data *dataOut) (string, error) {
 	builder.WriteString(data.slotStart.Format("2006-01-02 15:04:05"))
 	if data.verbose {
 		builder.WriteString(" (")
-		builder.WriteString(fmt.Sprintf("%d", data.slotStart.Unix()))
+		builder.WriteString(strconv.FormatInt(data.slotStart.Unix(), 10))
 		builder.WriteString(")")
 	}
 	builder.WriteString("\n  Slot end ")
 	builder.WriteString(data.slotEnd.Format("2006-01-02 15:04:05"))
 	if data.verbose {
 		builder.WriteString(" (")
-		builder.WriteString(fmt.Sprintf("%d", data.slotEnd.Unix()))
+		builder.WriteString(strconv.FormatInt(data.slotEnd.Unix(), 10))
 		builder.WriteString(")")
 	}
 
 	if data.hasSyncCommittees {
 		builder.WriteString("\nSync committee period ")
-		builder.WriteString(fmt.Sprintf("%d", data.syncCommitteePeriod))
+		builder.WriteString(strconv.FormatUint(data.syncCommitteePeriod, 10))
 		builder.WriteString("\n  Sync committee period start ")
 		builder.WriteString(data.syncCommitteePeriodStart.Format("2006-01-02 15:04:05"))
 		builder.WriteString(" (epoch ")
 		builder.WriteString(fmt.Sprintf("%d", data.syncCommitteePeriodEpochStart))
 		if data.verbose {
 			builder.WriteString(", ")
-			builder.WriteString(fmt.Sprintf("%d", data.syncCommitteePeriodStart.Unix()))
+			builder.WriteString(strconv.FormatInt(data.syncCommitteePeriodStart.Unix(), 10))
 		}
 		builder.WriteString(")\n  Sync committee period end ")
 		builder.WriteString(data.syncCommitteePeriodEnd.Format("2006-01-02 15:04:05"))
@@ -104,7 +105,7 @@ func output(_ context.Context, data *dataOut) (string, error) {
 		builder.WriteString(fmt.Sprintf("%d", data.syncCommitteePeriodEpochEnd))
 		if data.verbose {
 			builder.WriteString(", ")
-			builder.WriteString(fmt.Sprintf("%d", data.syncCommitteePeriodEnd.Unix()))
+			builder.WriteString(strconv.FormatInt(data.syncCommitteePeriodEnd.Unix(), 10))
 		}
 		builder.WriteString(")")
 	}

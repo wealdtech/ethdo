@@ -20,6 +20,7 @@ import (
 	"strconv"
 
 	eth2client "github.com/attestantio/go-eth2-client"
+	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/spec"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
@@ -58,10 +59,13 @@ func (c *command) process(ctx context.Context) error {
 	if fetchSlot > c.chainTime.CurrentSlot() {
 		fetchSlot = c.chainTime.CurrentSlot()
 	}
-	state, err := c.beaconStateProvider.BeaconState(ctx, fmt.Sprintf("%d", fetchSlot))
+	stateResponse, err := c.beaconStateProvider.BeaconState(ctx, &api.BeaconStateOpts{
+		State: fmt.Sprintf("%d", fetchSlot),
+	})
 	if err != nil {
 		return errors.Wrap(err, "failed to obtain state")
 	}
+	state := stateResponse.Data
 	if state == nil {
 		return errors.New("state not returned by beacon node")
 	}
@@ -146,12 +150,12 @@ func (c *command) setup(ctx context.Context) error {
 		return errors.New("connection does not provide spec information")
 	}
 
-	spec, err := specProvider.Spec(ctx)
+	specResponse, err := specProvider.Spec(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to obtain spec")
 	}
 
-	tmp, exists := spec["SLOTS_PER_EPOCH"]
+	tmp, exists := specResponse.Data["SLOTS_PER_EPOCH"]
 	if !exists {
 		return errors.New("spec did not contain SLOTS_PER_EPOCH")
 	}
@@ -160,7 +164,7 @@ func (c *command) setup(ctx context.Context) error {
 	if !good {
 		return errors.New("SLOTS_PER_EPOCH value invalid")
 	}
-	tmp, exists = spec["EPOCHS_PER_ETH1_VOTING_PERIOD"]
+	tmp, exists = specResponse.Data["EPOCHS_PER_ETH1_VOTING_PERIOD"]
 	if !exists {
 		return errors.New("spec did not contain EPOCHS_PER_ETH1_VOTING_PERIOD")
 	}

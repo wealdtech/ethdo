@@ -22,6 +22,7 @@ import (
 	"strings"
 
 	consensusclient "github.com/attestantio/go-eth2-client"
+	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 	"github.com/wealdtech/ethdo/services/chaintime"
@@ -57,7 +58,7 @@ type chainInfoVersionJSON struct {
 // MarshalJSON implements json.Marshaler.
 func (c *ChainInfo) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&chainInfoJSON{
-		Version:                        fmt.Sprintf("%d", c.Version),
+		Version:                        strconv.FormatUint(c.Version, 10),
 		Validators:                     c.Validators,
 		GenesisValidatorsRoot:          fmt.Sprintf("%#x", c.GenesisValidatorsRoot),
 		Epoch:                          fmt.Sprintf("%d", c.Epoch),
@@ -241,12 +242,12 @@ func ObtainChainInfoFromNode(ctx context.Context,
 	}
 
 	// Obtain validators.
-	validators, err := consensusClient.(consensusclient.ValidatorsProvider).Validators(ctx, "head", nil)
+	validatorsResponse, err := consensusClient.(consensusclient.ValidatorsProvider).Validators(ctx, &api.ValidatorsOpts{State: "head"})
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to obtain validators")
 	}
 
-	for _, validator := range validators {
+	for _, validator := range validatorsResponse.Data {
 		res.Validators = append(res.Validators, &ValidatorInfo{
 			Index:                 validator.Index,
 			Pubkey:                validator.Validator.PublicKey,
@@ -256,18 +257,18 @@ func ObtainChainInfoFromNode(ctx context.Context,
 	}
 
 	// Genesis validators root obtained from beacon node.
-	genesis, err := consensusClient.(consensusclient.GenesisProvider).Genesis(ctx)
+	genesisResponse, err := consensusClient.(consensusclient.GenesisProvider).Genesis(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to obtain genesis information")
 	}
-	res.GenesisValidatorsRoot = genesis.GenesisValidatorsRoot
+	res.GenesisValidatorsRoot = genesisResponse.Data.GenesisValidatorsRoot
 
 	// Fetch the genesis fork version from the specification.
-	spec, err := consensusClient.(consensusclient.SpecProvider).Spec(ctx)
+	specResponse, err := consensusClient.(consensusclient.SpecProvider).Spec(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to obtain spec")
 	}
-	tmp, exists := spec["GENESIS_FORK_VERSION"]
+	tmp, exists := specResponse.Data["GENESIS_FORK_VERSION"]
 	if !exists {
 		return nil, errors.New("genesis fork version not known by chain")
 	}
@@ -278,23 +279,23 @@ func ObtainChainInfoFromNode(ctx context.Context,
 	}
 
 	// Fetch the current fork version from the fork schedule.
-	forkSchedule, err := consensusClient.(consensusclient.ForkScheduleProvider).ForkSchedule(ctx)
+	forkScheduleResponse, err := consensusClient.(consensusclient.ForkScheduleProvider).ForkSchedule(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to obtain fork schedule")
 	}
-	for i := range forkSchedule {
-		if forkSchedule[i].Epoch <= res.Epoch {
-			res.CurrentForkVersion = forkSchedule[i].CurrentVersion
+	for i := range forkScheduleResponse.Data {
+		if forkScheduleResponse.Data[i].Epoch <= res.Epoch {
+			res.CurrentForkVersion = forkScheduleResponse.Data[i].CurrentVersion
 		}
 	}
 
-	blsToExecutionChangeDomainType, exists := spec["DOMAIN_BLS_TO_EXECUTION_CHANGE"].(phase0.DomainType)
+	blsToExecutionChangeDomainType, exists := specResponse.Data["DOMAIN_BLS_TO_EXECUTION_CHANGE"].(phase0.DomainType)
 	if !exists {
 		return nil, errors.New("failed to obtain DOMAIN_BLS_TO_EXECUTION_CHANGE")
 	}
 	copy(res.BLSToExecutionChangeDomainType[:], blsToExecutionChangeDomainType[:])
 
-	voluntaryExitDomainType, exists := spec["DOMAIN_VOLUNTARY_EXIT"].(phase0.DomainType)
+	voluntaryExitDomainType, exists := specResponse.Data["DOMAIN_VOLUNTARY_EXIT"].(phase0.DomainType)
 	if !exists {
 		return nil, errors.New("failed to obtain DOMAIN_VOLUNTARY_EXIT")
 	}

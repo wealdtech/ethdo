@@ -19,6 +19,7 @@ import (
 	"sort"
 
 	eth2client "github.com/attestantio/go-eth2-client"
+	"github.com/attestantio/go-eth2-client/api"
 	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
@@ -81,21 +82,23 @@ func (c *command) process(ctx context.Context) error {
 }
 
 func (c *command) processProposerDuties(ctx context.Context) error {
-	duties, err := c.proposerDutiesProvider.ProposerDuties(ctx, c.summary.Epoch, nil)
+	response, err := c.proposerDutiesProvider.ProposerDuties(ctx, &api.ProposerDutiesOpts{
+		Epoch: c.summary.Epoch,
+	})
 	if err != nil {
 		return errors.Wrap(err, "failed to obtain proposer duties")
 	}
-	if duties == nil {
-		return errors.New("empty proposer duties")
-	}
-	for _, duty := range duties {
+	for _, duty := range response.Data {
 		if _, exists := c.validatorsByIndex[duty.ValidatorIndex]; !exists {
 			continue
 		}
-		block, err := c.blocksProvider.SignedBeaconBlock(ctx, fmt.Sprintf("%d", duty.Slot))
+		blockResponse, err := c.blocksProvider.SignedBeaconBlock(ctx, &api.SignedBeaconBlockOpts{
+			Block: fmt.Sprintf("%d", duty.Slot),
+		})
 		if err != nil {
 			return errors.Wrap(err, fmt.Sprintf("failed to obtain block for slot %d", duty.Slot))
 		}
+		block := blockResponse.Data
 		present := block != nil
 		c.summary.Proposals = append(c.summary.Proposals, &epochProposal{
 			Slot:     duty.Slot,
@@ -133,10 +136,14 @@ func (c *command) processAttesterDuties(ctx context.Context) error {
 	}
 
 	// Obtain the duties for the validators to know where they should be attesting.
-	duties, err := c.attesterDutiesProvider.AttesterDuties(ctx, c.summary.Epoch, activeValidatorIndices)
+	dutiesResponse, err := c.attesterDutiesProvider.AttesterDuties(ctx, &api.AttesterDutiesOpts{
+		Epoch:   c.summary.Epoch,
+		Indices: activeValidatorIndices,
+	})
 	if err != nil {
 		return errors.Wrap(err, "failed to obtain attester duties")
 	}
+	duties := dutiesResponse.Data
 	for slot := c.chainTime.FirstSlotOfEpoch(c.summary.Epoch); slot < c.chainTime.FirstSlotOfEpoch(c.summary.Epoch+1); slot++ {
 		index := int(slot - c.chainTime.FirstSlotOfEpoch(c.summary.Epoch))
 		c.summary.Slots[index].Attestations = &slotAttestations{}
@@ -213,14 +220,13 @@ func (c *command) processAttesterDutiesSlot(ctx context.Context,
 	headersCache *util.BeaconBlockHeaderCache,
 	activeValidatorIndices []phase0.ValidatorIndex,
 ) error {
-	block, err := c.blocksProvider.SignedBeaconBlock(ctx, fmt.Sprintf("%d", slot))
+	blockResponse, err := c.blocksProvider.SignedBeaconBlock(ctx, &api.SignedBeaconBlockOpts{
+		Block: fmt.Sprintf("%d", slot),
+	})
 	if err != nil {
 		return errors.Wrap(err, fmt.Sprintf("failed to obtain block for slot %d", slot))
 	}
-	if block == nil {
-		// No block at this slot; that's fine.
-		return nil
-	}
+	block := blockResponse.Data
 	attestations, err := block.Attestations()
 	if err != nil {
 		return err

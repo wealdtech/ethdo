@@ -22,6 +22,7 @@ import (
 	"time"
 
 	consensusclient "github.com/attestantio/go-eth2-client"
+	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 	e2wtypes "github.com/wealdtech/go-eth2-wallet-types/v2"
@@ -67,12 +68,15 @@ func accountToIndex(ctx context.Context, account e2wtypes.Account, client consen
 
 	pubKeys := make([]phase0.BLSPubKey, 1)
 	copy(pubKeys[0][:], pubKey.Marshal())
-	validators, err := client.(consensusclient.ValidatorsProvider).ValidatorsByPubKey(ctx, "head", pubKeys)
+	validatorsResponse, err := client.(consensusclient.ValidatorsProvider).Validators(ctx, &api.ValidatorsOpts{
+		State:   "head",
+		PubKeys: pubKeys,
+	})
 	if err != nil {
 		return 0, err
 	}
 
-	for index := range validators {
+	for index := range validatorsResponse.Data {
 		return index, nil
 	}
 	return 0, errors.New("validator not found")

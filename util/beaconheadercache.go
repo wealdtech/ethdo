@@ -18,6 +18,7 @@ import (
 	"fmt"
 
 	eth2client "github.com/attestantio/go-eth2-client"
+	"github.com/attestantio/go-eth2-client/api"
 	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
@@ -50,18 +51,18 @@ func (b *BeaconBlockHeaderCache) Fetch(ctx context.Context,
 ) {
 	entry, exists := b.entries[slot]
 	if !exists {
-		header, err := b.beaconBlockHeadersProvider.BeaconBlockHeader(ctx, fmt.Sprintf("%d", slot))
+		response, err := b.beaconBlockHeadersProvider.BeaconBlockHeader(ctx, &api.BeaconBlockHeaderOpts{Block: fmt.Sprintf("%d", slot)})
 		if err != nil {
 			return nil, err
 		}
-		if header == nil {
+		if response.Data == nil {
 			entry = &beaconBlockHeaderEntry{
 				present: false,
 			}
 		} else {
 			entry = &beaconBlockHeaderEntry{
 				present: true,
-				value:   header,
+				value:   response.Data,
 			}
 		}
 		b.entries[slot] = entry

@@ -19,6 +19,7 @@ import (
 	"fmt"
 
 	eth2client "github.com/attestantio/go-eth2-client"
+	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/spec"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
@@ -33,13 +34,17 @@ func (c *command) process(ctx context.Context) error {
 		return err
 	}
 
-	block, err := c.blocksProvider.SignedBeaconBlock(ctx, c.blockID)
+	blockResponse, err := c.blocksProvider.SignedBeaconBlock(ctx, &api.SignedBeaconBlockOpts{
+		Block: c.blockID,
+	})
 	if err != nil {
+		var apiError *api.Error
+		if errors.As(err, &apiError) && apiError.StatusCode == 404 {
+			return errors.New("empty beacon block")
+		}
 		return errors.Wrap(err, "failed to obtain beacon block")
 	}
-	if block == nil {
-		return errors.New("empty beacon block")
-	}
+	block := blockResponse.Data
 
 	slot, err := block.Slot()
 	if err != nil {
@@ -145,7 +150,7 @@ func (c *command) analyzeAttestations(ctx context.Context, block *spec.Versioned
 			}
 
 			// Calculate head timely.
-			analysis.HeadTimely = attestation.Data.Slot == slot-1
+			analysis.HeadTimely = analysis.HeadCorrect && attestation.Data.Slot == slot-1
 
 			// Calculate source timely.
 			analysis.SourceTimely = attestation.Data.Slot >= slot-5
@@ -157,7 +162,11 @@ func (c *command) analyzeAttestations(ctx context.Context, block *spec.Versioned
 			}
 
 			// Calculate target timely.
-			analysis.TargetTimely = attestation.Data.Slot >= slot-32
+			if block.Version < spec.DataVersionDeneb {
+				analysis.TargetTimely = attestation.Data.Slot >= slot-32
+			} else {
+				analysis.TargetTimely = true
+			}
 		}
 
 		// Calculate score and value.
@@ -184,12 +193,30 @@ func (c *command) fetchParents(ctx context.Context, block *spec.VersionedSignedB
 	if err != nil {
 		return err
 	}
+	root, err := block.Deneb.HashTreeRoot()
+	if err != nil {
+		panic(err)
+	}
+	slot, err := block.Slot()
+	if err != nil {
+		panic(err)
+	}
+	if c.debug {
+		fmt.Printf("Parent root of %#x@%d is %#x\n", root, slot, parentRoot)
+	}
 
 	// Obtain the parent block.
-	parentBlock, err := c.blocksProvider.SignedBeaconBlock(ctx, fmt.Sprintf("%#x", parentRoot))
+	parentBlockResponse, err := c.blocksProvider.SignedBeaconBlock(ctx, &api.SignedBeaconBlockOpts{
+		Block: fmt.Sprintf("%#x", parentRoot),
+	})
 	if err != nil {
+		var apiError *api.Error
+		if errors.As(err, &apiError) && apiError.StatusCode == 404 {
+			return errors.New("empty beacon block")
+		}
 		return err
 	}
+	parentBlock := parentBlockResponse.Data
 	if parentBlock == nil {
 		return fmt.Errorf("unable to obtain parent block %s", parentBlock)
 	}
@@ -289,12 +316,12 @@ func (c *command) setup(ctx context.Context) error {
 		return errors.New("connection does not provide spec information")
 	}
 
-	spec, err := specProvider.Spec(ctx)
+	specResponse, err := specProvider.Spec(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to obtain spec")
 	}
 
-	tmp, exists := spec["TIMELY_SOURCE_WEIGHT"]
+	tmp, exists := specResponse.Data["TIMELY_SOURCE_WEIGHT"]
 	if !exists {
 		// Set a default value based on the Altair spec.
 		tmp = uint64(14)
@@ -305,7 +332,7 @@ func (c *command) setup(ctx context.Context) error {
 		return errors.New("TIMELY_SOURCE_WEIGHT of unexpected type")
 	}
 
-	tmp, exists = spec["TIMELY_TARGET_WEIGHT"]
+	tmp, exists = specResponse.Data["TIMELY_TARGET_WEIGHT"]
 	if !exists {
 		// Set a default value based on the Altair spec.
 		tmp = uint64(26)
@@ -315,7 +342,7 @@ func (c *command) setup(ctx context.Context) error {
 		return errors.New("TIMELY_TARGET_WEIGHT of unexpected type")
 	}
 
-	tmp, exists = spec["TIMELY_HEAD_WEIGHT"]
+	tmp, exists = specResponse.Data["TIMELY_HEAD_WEIGHT"]
 	if !exists {
 		// Set a default value based on the Altair spec.
 		tmp = uint64(14)
@@ -325,7 +352,7 @@ func (c *command) setup(ctx context.Context) error {
 		return errors.New("TIMELY_HEAD_WEIGHT of unexpected type")
 	}
 
-	tmp, exists = spec["SYNC_REWARD_WEIGHT"]
+	tmp, exists = specResponse.Data["SYNC_REWARD_WEIGHT"]
 	if !exists {
 		// Set a default value based on the Altair spec.
 		tmp = uint64(2)
@@ -335,7 +362,7 @@ func (c *command) setup(ctx context.Context) error {
 		return errors.New("SYNC_REWARD_WEIGHT of unexpected type")
 	}
 
-	tmp, exists = spec["PROPOSER_WEIGHT"]
+	tmp, exists = specResponse.Data["PROPOSER_WEIGHT"]
 	if !exists {
 		// Set a default value based on the Altair spec.
 		tmp = uint64(8)
@@ -345,7 +372,7 @@ func (c *command) setup(ctx context.Context) error {
 		return errors.New("PROPOSER_WEIGHT of unexpected type")
 	}
 
-	tmp, exists = spec["WEIGHT_DENOMINATOR"]
+	tmp, exists = specResponse.Data["WEIGHT_DENOMINATOR"]
 	if !exists {
 		// Set a default value based on the Altair spec.
 		tmp = uint64(64)
@@ -362,22 +389,31 @@ func (c *command) calcHeadCorrect(ctx context.Context, attestation *phase0.Attes
 	root, exists := c.headRoots[slot]
 	if !exists {
 		for {
-			header, err := c.blockHeadersProvider.BeaconBlockHeader(ctx, fmt.Sprintf("%d", slot))
+			response, err := c.blockHeadersProvider.BeaconBlockHeader(ctx, &api.BeaconBlockHeaderOpts{
+				Block: fmt.Sprintf("%d", slot),
+			})
 			if err != nil {
+				var apiError *api.Error
+				if errors.As(err, &apiError) && apiError.StatusCode == 404 {
+					if c.debug {
+						fmt.Printf("No block available for slot %d, assuming not in canonical chain", slot)
+					}
+					return false, nil
+				}
 				return false, err
 			}
-			if header == nil {
+			if response.Data == nil {
 				// No block.
 				slot--
 				continue
 			}
-			if !header.Canonical {
+			if !response.Data.Canonical {
 				// Not canonical.
 				slot--
 				continue
 			}
-			c.headRoots[attestation.Data.Slot] = header.Root
-			root = header.Root
+			c.headRoots[attestation.Data.Slot] = response.Data.Root
+			root = response.Data.Root
 			break
 		}
 	}
@@ -391,22 +427,30 @@ func (c *command) calcTargetCorrect(ctx context.Context, attestation *phase0.Att
 		// Start with first slot of the target epoch.
 		slot := c.chainTime.FirstSlotOfEpoch(attestation.Data.Target.Epoch)
 		for {
-			header, err := c.blockHeadersProvider.BeaconBlockHeader(ctx, fmt.Sprintf("%d", slot))
+			response, err := c.blockHeadersProvider.BeaconBlockHeader(ctx, &api.BeaconBlockHeaderOpts{
+				Block: fmt.Sprintf("%d", slot),
+			})
 			if err != nil {
-				return false, err
+				var apiError *api.Error
+				if errors.As(err, &apiError) && apiError.StatusCode == 404 {
+					if c.debug {
+						fmt.Printf("No block available for slot %d, assuming not in canonical chain", slot)
+					}
+					return false, nil
+				}
 			}
-			if header == nil {
+			if response.Data == nil {
 				// No block.
 				slot--
 				continue
 			}
-			if !header.Canonical {
+			if !response.Data.Canonical {
 				// Not canonical.
 				slot--
 				continue
 			}
-			c.targetRoots[attestation.Data.Slot] = header.Root
-			root = header.Root
+			c.targetRoots[attestation.Data.Slot] = response.Data.Root
+			root = response.Data.Root
 			break
 		}
 	}

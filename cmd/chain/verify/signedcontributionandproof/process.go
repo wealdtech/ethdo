@@ -22,6 +22,7 @@ import (
 	"os"
 
 	eth2client "github.com/attestantio/go-eth2-client"
+	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/spec/altair"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
@@ -103,29 +104,32 @@ func (c *command) setup(ctx context.Context) error {
 	}
 
 	stateID := fmt.Sprintf("%d", c.item.Message.Contribution.Slot)
-	validators, err := c.validatorsProvider.Validators(ctx,
-		stateID,
-		[]phase0.ValidatorIndex{c.item.Message.AggregatorIndex},
-	)
+	response, err := c.validatorsProvider.Validators(ctx, &api.ValidatorsOpts{
+		State:   stateID,
+		Indices: []phase0.ValidatorIndex{c.item.Message.AggregatorIndex},
+	})
 	if err != nil {
 		return errors.Wrap(err, "failed to obtain validator information")
 	}
 
-	if len(validators) == 0 || validators[c.item.Message.AggregatorIndex] == nil {
+	if len(response.Data) == 0 || response.Data[c.item.Message.AggregatorIndex] == nil {
 		return nil
 	}
 	c.validatorKnown = true
-	c.validator = validators[c.item.Message.AggregatorIndex]
+	c.validator = response.Data[c.item.Message.AggregatorIndex]
 
 	// Obtain the sync committee
 	syncCommitteesProvider, isProvider := c.eth2Client.(eth2client.SyncCommitteesProvider)
 	if !isProvider {
 		return errors.New("connection does not provide sync committee information")
 	}
-	c.syncCommittee, err = syncCommitteesProvider.SyncCommittee(ctx, stateID)
+	syncCommitteeResponse, err := syncCommitteesProvider.SyncCommittee(ctx, &api.SyncCommitteeOpts{
+		State: stateID,
+	})
 	if err != nil {
 		return errors.Wrap(err, "failed to obtain sync committee information")
 	}
+	c.syncCommittee = syncCommitteeResponse.Data
 
 	return nil
 }
@@ -137,11 +141,11 @@ func (c *command) isAggregator(ctx context.Context) (bool, error) {
 	if !isProvider {
 		return false, errors.New("connection does not provide spec information")
 	}
-	var err error
-	c.spec, err = specProvider.Spec(ctx)
+	specResponse, err := specProvider.Spec(ctx)
 	if err != nil {
 		return false, errors.Wrap(err, "failed to obtain spec information")
 	}
+	c.spec = specResponse.Data
 
 	tmp, exists := c.spec["SYNC_COMMITTEE_SIZE"]
 	if !exists {
@@ -226,16 +230,19 @@ func (c *command) confirmContributionSignature(ctx context.Context) error {
 		fmt.Fprintf(os.Stderr, "Contribution validator indices: %v (%d)\n", includedIndices, len(includedIndices))
 	}
 
-	includedValidators, err := c.validatorsProvider.Validators(ctx, "head", includedIndices)
+	response, err := c.validatorsProvider.Validators(ctx, &api.ValidatorsOpts{
+		State:   "head",
+		Indices: includedIndices,
+	})
 	if err != nil {
 		return errors.Wrap(err, "failed to obtain subcommittee validators")
 	}
-	if len(includedValidators) == 0 {
+	if len(response.Data) == 0 {
 		return errors.New("obtained empty subcommittee validator list")
 	}
 
 	var aggregatePubKey *e2types.BLSPublicKey
-	for _, v := range includedValidators {
+	for _, v := range response.Data {
 		pubKeyBytes := make([]byte, 48)
 		copy(pubKeyBytes, v.Validator.PublicKey[:])
 		pubKey, err := e2types.BLSPublicKeyFromBytes(pubKeyBytes)

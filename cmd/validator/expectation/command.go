@@ -16,7 +16,7 @@ package validatorexpectation
 import (
 	"context"
 	"encoding/json"
-	"fmt"
+	"strconv"
 	"time"
 
 	eth2client "github.com/attestantio/go-eth2-client"
@@ -63,11 +63,11 @@ type resultsJSON struct {
 
 func (r *results) MarshalJSON() ([]byte, error) {
 	data := &resultsJSON{
-		ActiveValidators:          fmt.Sprintf("%d", r.activeValidators),
+		ActiveValidators:          strconv.FormatUint(r.activeValidators, 10),
 		TimeBetweenProposals:      durafmt.Parse(r.timeBetweenProposals).LimitFirstN(2).String(),
-		SecsBetweenProposals:      fmt.Sprintf("%d", int64(r.timeBetweenProposals.Seconds())),
+		SecsBetweenProposals:      strconv.FormatInt(int64(r.timeBetweenProposals.Seconds()), 10),
 		TimeBetweenSyncCommittees: durafmt.Parse(r.timeBetweenSyncCommittees).LimitFirstN(2).String(),
-		SecsBetweenSyncCommittees: fmt.Sprintf("%d", int64(r.timeBetweenSyncCommittees.Seconds())),
+		SecsBetweenSyncCommittees: strconv.FormatInt(int64(r.timeBetweenSyncCommittees.Seconds()), 10),
 	}
 	return json.Marshal(data)
 }

@@ -828,7 +828,7 @@ func (c *command) obtainForkVersion(_ context.Context) (phase0.Version, error) {
 
 // addressBytesToEIP55 converts a byte array in to an EIP-55 string format.
 func addressBytesToEIP55(address []byte) string {
-	bytes := []byte(fmt.Sprintf("%x", address))
+	bytes := []byte(hex.EncodeToString(address))
 	hash := ethutil.Keccak256(bytes)
 	for i := 0; i < len(bytes); i++ {
 		hashByte := hash[i/2]

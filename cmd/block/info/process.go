@@ -23,7 +23,8 @@ import (
 	"time"
 
 	eth2client "github.com/attestantio/go-eth2-client"
-	api "github.com/attestantio/go-eth2-client/api/v1"
+	"github.com/attestantio/go-eth2-client/api"
+	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
 	"github.com/attestantio/go-eth2-client/spec"
 	"github.com/attestantio/go-eth2-client/spec/altair"
 	"github.com/attestantio/go-eth2-client/spec/bellatrix"
@@ -54,17 +55,18 @@ func process(ctx context.Context, data *dataIn) (*dataOut, error) {
 		eth2Client: data.eth2Client,
 	}
 
-	config, err := results.eth2Client.(eth2client.SpecProvider).Spec(ctx)
+	specResponse, err := results.eth2Client.(eth2client.SpecProvider).Spec(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to connect to obtain configuration information")
 	}
-	genesis, err := results.eth2Client.(eth2client.GenesisProvider).Genesis(ctx)
+	genesisResponse, err := results.eth2Client.(eth2client.GenesisProvider).Genesis(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to connect to obtain genesis information")
 	}
+	genesis := genesisResponse.Data
 	results.genesisTime = genesis.GenesisTime
-	results.slotDuration = config["SECONDS_PER_SLOT"].(time.Duration)
-	results.slotsPerEpoch = config["SLOTS_PER_EPOCH"].(uint64)
+	results.slotDuration = specResponse.Data["SECONDS_PER_SLOT"].(time.Duration)
+	results.slotsPerEpoch = specResponse.Data["SLOTS_PER_EPOCH"].(uint64)
 
 	if data.blockTime != "" {
 		data.blockID, err = timeToBlockID(ctx, data.eth2Client, data.blockTime)
@@ -73,43 +75,50 @@ func process(ctx context.Context, data *dataIn) (*dataOut, error) {
 		}
 	}
 
-	signedBlock, err := results.eth2Client.(eth2client.SignedBeaconBlockProvider).SignedBeaconBlock(ctx, data.blockID)
+	blockResponse, err := results.eth2Client.(eth2client.SignedBeaconBlockProvider).SignedBeaconBlock(ctx, &api.SignedBeaconBlockOpts{
+		Block: data.blockID,
+	})
 	if err != nil {
+		var apiErr *api.Error
+		if errors.As(err, &apiErr) && apiErr.StatusCode == 404 {
+			if data.quiet {
+				os.Exit(1)
+			}
+			return nil, errors.New("empty beacon block")
+		}
 		return nil, errors.Wrap(err, "failed to obtain beacon block")
 	}
-	if signedBlock == nil {
-		if data.quiet {
-			os.Exit(1)
-		}
-		return nil, errors.New("empty beacon block")
-	}
+	block := blockResponse.Data
 	if data.quiet {
 		os.Exit(0)
 	}
 
-	switch signedBlock.Version {
+	switch block.Version {
 	case spec.DataVersionPhase0:
-		if err := outputPhase0Block(ctx, data.jsonOutput, signedBlock.Phase0); err != nil {
+		if err := outputPhase0Block(ctx, data.jsonOutput, block.Phase0); err != nil {
 			return nil, errors.Wrap(err, "failed to output block")
 		}
 	case spec.DataVersionAltair:
-		if err := outputAltairBlock(ctx, data.jsonOutput, data.sszOutput, signedBlock.Altair); err != nil {
+		if err := outputAltairBlock(ctx, data.jsonOutput, data.sszOutput, block.Altair); err != nil {
 			return nil, errors.Wrap(err, "failed to output block")
 		}
 	case spec.DataVersionBellatrix:
-		if err := outputBellatrixBlock(ctx, data.jsonOutput, data.sszOutput, signedBlock.Bellatrix); err != nil {
+		if err := outputBellatrixBlock(ctx, data.jsonOutput, data.sszOutput, block.Bellatrix); err != nil {
 			return nil, errors.Wrap(err, "failed to output block")
 		}
 	case spec.DataVersionCapella:
-		if err := outputCapellaBlock(ctx, data.jsonOutput, data.sszOutput, signedBlock.Capella); err != nil {
+		if err := outputCapellaBlock(ctx, data.jsonOutput, data.sszOutput, block.Capella); err != nil {
 			return nil, errors.Wrap(err, "failed to output block")
 		}
 	case spec.DataVersionDeneb:
-		blobs, err := results.eth2Client.(eth2client.BeaconBlockBlobsProvider).BeaconBlockBlobs(ctx, data.blockID)
+		blobSidecarsResponse, err := results.eth2Client.(eth2client.BlobSidecarsProvider).BlobSidecars(ctx, &api.BlobSidecarsOpts{
+			Block: data.blockID,
+		})
 		if err != nil {
-			return nil, errors.Wrap(err, "failed to obtain blobs")
+			return nil, errors.Wrap(err, "failed to obtain blob sidecars")
 		}
-		if err := outputDenebBlock(ctx, data.jsonOutput, data.sszOutput, signedBlock.Deneb, blobs); err != nil {
+		blobSidecars := blobSidecarsResponse.Data
+		if err := outputDenebBlock(ctx, data.jsonOutput, data.sszOutput, block.Deneb, blobSidecars); err != nil {
 			return nil, errors.Wrap(err, "failed to output block")
 		}
 	default:
@@ -132,7 +141,7 @@ func process(ctx context.Context, data *dataIn) (*dataOut, error) {
 	return &dataOut{}, nil
 }
 
-func headEventHandler(event *api.Event) {
+func headEventHandler(event *apiv1.Event) {
 	ctx := context.Background()
 
 	// Only interested in head events.
@@ -140,35 +149,40 @@ func headEventHandler(event *api.Event) {
 		return
 	}
 
-	blockID := fmt.Sprintf("%#x", event.Data.(*api.HeadEvent).Block[:])
-	signedBlock, err := results.eth2Client.(eth2client.SignedBeaconBlockProvider).SignedBeaconBlock(ctx, blockID)
+	blockID := fmt.Sprintf("%#x", event.Data.(*apiv1.HeadEvent).Block[:])
+	blockResponse, err := results.eth2Client.(eth2client.SignedBeaconBlockProvider).SignedBeaconBlock(ctx, &api.SignedBeaconBlockOpts{
+		Block: blockID,
+	})
 	if err != nil {
 		if !jsonOutput && !sszOutput {
 			fmt.Printf("Failed to obtain block: %v\n", err)
 		}
 		return
 	}
-	if signedBlock == nil {
+	block := blockResponse.Data
+	if block == nil {
 		if !jsonOutput && !sszOutput {
 			fmt.Println("Empty beacon block")
 		}
 		return
 	}
 
-	switch signedBlock.Version {
+	switch block.Version {
 	case spec.DataVersionPhase0:
-		err = outputPhase0Block(ctx, jsonOutput, signedBlock.Phase0)
+		err = outputPhase0Block(ctx, jsonOutput, block.Phase0)
 	case spec.DataVersionAltair:
-		err = outputAltairBlock(ctx, jsonOutput, sszOutput, signedBlock.Altair)
+		err = outputAltairBlock(ctx, jsonOutput, sszOutput, block.Altair)
 	case spec.DataVersionBellatrix:
-		err = outputBellatrixBlock(ctx, jsonOutput, sszOutput, signedBlock.Bellatrix)
+		err = outputBellatrixBlock(ctx, jsonOutput, sszOutput, block.Bellatrix)
 	case spec.DataVersionCapella:
-		err = outputCapellaBlock(ctx, jsonOutput, sszOutput, signedBlock.Capella)
+		err = outputCapellaBlock(ctx, jsonOutput, sszOutput, block.Capella)
 	case spec.DataVersionDeneb:
-		var blobs []*deneb.BlobSidecar
-		blobs, err = results.eth2Client.(eth2client.BeaconBlockBlobsProvider).BeaconBlockBlobs(ctx, blockID)
+		var blobSidecarsResponse *api.Response[[]*deneb.BlobSidecar]
+		blobSidecarsResponse, err = results.eth2Client.(eth2client.BlobSidecarsProvider).BlobSidecars(ctx, &api.BlobSidecarsOpts{
+			Block: blockID,
+		})
 		if err == nil {
-			err = outputDenebBlock(context.Background(), jsonOutput, sszOutput, signedBlock.Deneb, blobs)
+			err = outputDenebBlock(context.Background(), jsonOutput, sszOutput, block.Deneb, blobSidecarsResponse.Data)
 		}
 	default:
 		err = errors.New("unknown block version")

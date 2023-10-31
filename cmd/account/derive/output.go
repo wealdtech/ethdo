@@ -15,6 +15,7 @@ package accountderive
 
 import (
 	"context"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -84,7 +85,7 @@ func outputKeystore(_ context.Context, data *dataOut) (string, error) {
 	}
 	ks := make(map[string]interface{})
 	ks["uuid"] = uuid.String()
-	ks["pubkey"] = fmt.Sprintf("%x", data.key.PublicKey().Marshal())
+	ks["pubkey"] = hex.EncodeToString(data.key.PublicKey().Marshal())
 	ks["version"] = 4
 	ks["path"] = data.path
 	ks["crypto"] = crypto

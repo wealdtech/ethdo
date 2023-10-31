@@ -21,6 +21,7 @@ import (
 	"strings"
 
 	consensusclient "github.com/attestantio/go-eth2-client"
+	"github.com/attestantio/go-eth2-client/api"
 	v1 "github.com/attestantio/go-eth2-client/api/v1"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
@@ -67,10 +68,11 @@ In quiet mode this will return 0 if the exit is verified correctly, otherwise 1.
 		opRoot, err := signedOp.Message.HashTreeRoot()
 		errCheck(err, "Failed to obtain exit hash tree root")
 
-		genesis, err := eth2Client.(consensusclient.GenesisProvider).Genesis(ctx)
+		genesisResponse, err := eth2Client.(consensusclient.GenesisProvider).Genesis(ctx)
 		errCheck(err, "Failed to obtain beacon chain genesis")
+		genesis := genesisResponse.Data
 
-		fork, err := eth2Client.(consensusclient.ForkProvider).Fork(ctx, "head")
+		response, err := eth2Client.(consensusclient.ForkProvider).Fork(ctx, &api.ForkOpts{State: "head"})
 		errCheck(err, "Failed to obtain fork information")
 
 		// Check against current and prior fork versions.
@@ -83,14 +85,14 @@ In quiet mode this will return 0 if the exit is verified correctly, otherwise 1.
 
 		// Try with the current fork.
 		domain := phase0.Domain{}
-		currentExitDomain, err := e2types.ComputeDomain(e2types.DomainVoluntaryExit, fork.CurrentVersion[:], genesis.GenesisValidatorsRoot[:])
+		currentExitDomain, err := e2types.ComputeDomain(e2types.DomainVoluntaryExit, response.Data.CurrentVersion[:], genesis.GenesisValidatorsRoot[:])
 		errCheck(err, "Failed to compute domain")
 		copy(domain[:], currentExitDomain)
 		verified, err = util.VerifyRoot(account, opRoot, domain, sig)
 		errCheck(err, "Failed to verify voluntary exit")
 		if !verified {
 			// Try again with the previous fork.
-			previousExitDomain, err := e2types.ComputeDomain(e2types.DomainVoluntaryExit, fork.PreviousVersion[:], genesis.GenesisValidatorsRoot[:])
+			previousExitDomain, err := e2types.ComputeDomain(e2types.DomainVoluntaryExit, response.Data.PreviousVersion[:], genesis.GenesisValidatorsRoot[:])
 			copy(domain[:], previousExitDomain)
 			errCheck(err, "Failed to compute domain")
 			verified, err = util.VerifyRoot(account, opRoot, domain, sig)

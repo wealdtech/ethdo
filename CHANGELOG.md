@@ -1,3 +1,6 @@
+1.34.0:
+  - update dependencies
+
 1.33.2:
   - fix windows build
 

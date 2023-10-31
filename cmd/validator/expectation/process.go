@@ -19,6 +19,7 @@ import (
 	"time"
 
 	eth2client "github.com/attestantio/go-eth2-client"
+	"github.com/attestantio/go-eth2-client/api"
 	"github.com/pkg/errors"
 	standardchaintime "github.com/wealdtech/ethdo/services/chaintime/standard"
 	"github.com/wealdtech/ethdo/util"
@@ -45,12 +46,12 @@ func (c *command) calculateProposalChance(ctx context.Context) error {
 	// Chance of proposing a block is 1/activeValidators.
 	// Expectation of number of slots before proposing a block is 1/p, == activeValidators slots.
 
-	spec, err := c.eth2Client.(eth2client.SpecProvider).Spec(ctx)
+	specResponse, err := c.eth2Client.(eth2client.SpecProvider).Spec(ctx)
 	if err != nil {
 		return err
 	}
 
-	tmp, exists := spec["SECONDS_PER_SLOT"]
+	tmp, exists := specResponse.Data["SECONDS_PER_SLOT"]
 	if !exists {
 		return errors.New("spec missing SECONDS_PER_SLOT")
 	}
@@ -68,12 +69,12 @@ func (c *command) calculateSyncCommitteeChance(ctx context.Context) error {
 	// Chance of being in a sync committee is SYNC_COMMITTEE_SIZE/activeValidators.
 	// Expectation of number of periods before being in a sync committee is 1/p, activeValidators/SYNC_COMMITTEE_SIZE periods.
 
-	spec, err := c.eth2Client.(eth2client.SpecProvider).Spec(ctx)
+	specResponse, err := c.eth2Client.(eth2client.SpecProvider).Spec(ctx)
 	if err != nil {
 		return err
 	}
 
-	tmp, exists := spec["SECONDS_PER_SLOT"]
+	tmp, exists := specResponse.Data["SECONDS_PER_SLOT"]
 	if !exists {
 		return errors.New("spec missing SECONDS_PER_SLOT")
 	}
@@ -82,7 +83,7 @@ func (c *command) calculateSyncCommitteeChance(ctx context.Context) error {
 		return errors.New("SECONDS_PER_SLOT of incorrect type")
 	}
 
-	tmp, exists = spec["SYNC_COMMITTEE_SIZE"]
+	tmp, exists = specResponse.Data["SYNC_COMMITTEE_SIZE"]
 	if !exists {
 		return errors.New("spec missing SYNC_COMMITTEE_SIZE")
 	}
@@ -91,7 +92,7 @@ func (c *command) calculateSyncCommitteeChance(ctx context.Context) error {
 		return errors.New("SYNC_COMMITTEE_SIZE of incorrect type")
 	}
 
-	tmp, exists = spec["SLOTS_PER_EPOCH"]
+	tmp, exists = specResponse.Data["SLOTS_PER_EPOCH"]
 	if !exists {
 		return errors.New("spec missing SLOTS_PER_EPOCH")
 	}
@@ -100,7 +101,7 @@ func (c *command) calculateSyncCommitteeChance(ctx context.Context) error {
 		return errors.New("SLOTS_PER_EPOCH of incorrect type")
 	}
 
-	tmp, exists = spec["EPOCHS_PER_SYNC_COMMITTEE_PERIOD"]
+	tmp, exists = specResponse.Data["EPOCHS_PER_SYNC_COMMITTEE_PERIOD"]
 	if !exists {
 		return errors.New("spec missing EPOCHS_PER_SYNC_COMMITTEE_PERIOD")
 	}
@@ -148,13 +149,15 @@ func (c *command) setup(ctx context.Context) error {
 		return errors.New("connection does not provide validator information")
 	}
 
-	validators, err := c.validatorsProvider.Validators(ctx, "head", nil)
+	response, err := c.validatorsProvider.Validators(ctx, &api.ValidatorsOpts{
+		State: "head",
+	})
 	if err != nil {
 		return errors.Wrap(err, "failed to obtain validators")
 	}
 
 	currentEpoch := chainTime.CurrentEpoch()
-	for _, validator := range validators {
+	for _, validator := range response.Data {
 		if validator.Validator.ActivationEpoch <= currentEpoch &&
 			validator.Validator.ExitEpoch > currentEpoch {
 			c.res.activeValidators++

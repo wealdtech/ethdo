@@ -18,6 +18,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"sort"
+	"strconv"
 	"time"
 
 	eth2client "github.com/attestantio/go-eth2-client"
@@ -46,7 +47,7 @@ In quiet mode this will return 0 if the chain specification can be obtained, oth
 		})
 		errCheck(err, "Failed to connect to Ethereum consensus node")
 
-		spec, err := eth2Client.(eth2client.SpecProvider).Spec(ctx)
+		specResponse, err := eth2Client.(eth2client.SpecProvider).Spec(ctx)
 		errCheck(err, "Failed to obtain chain specification")
 
 		if viper.GetBool("quiet") {
@@ -54,35 +55,35 @@ In quiet mode this will return 0 if the chain specification can be obtained, oth
 		}
 
 		// Tweak the spec for output.
-		for k, v := range spec {
+		for k, v := range specResponse.Data {
 			switch t := v.(type) {
 			case phase0.Version:
-				spec[k] = fmt.Sprintf("%#x", t)
+				specResponse.Data[k] = fmt.Sprintf("%#x", t)
 			case phase0.DomainType:
-				spec[k] = fmt.Sprintf("%#x", t)
+				specResponse.Data[k] = fmt.Sprintf("%#x", t)
 			case time.Time:
-				spec[k] = fmt.Sprintf("%d", t.Unix())
+				specResponse.Data[k] = strconv.FormatInt(t.Unix(), 10)
 			case time.Duration:
-				spec[k] = fmt.Sprintf("%d", uint64(t.Seconds()))
+				specResponse.Data[k] = strconv.FormatUint(uint64(t.Seconds()), 10)
 			case []byte:
-				spec[k] = fmt.Sprintf("%#x", t)
+				specResponse.Data[k] = fmt.Sprintf("%#x", t)
 			case uint64:
-				spec[k] = fmt.Sprintf("%d", t)
+				specResponse.Data[k] = strconv.FormatUint(t, 10)
 			}
 		}
 
 		if viper.GetBool("json") {
-			data, err := json.Marshal(spec)
+			data, err := json.Marshal(specResponse.Data)
 			errCheck(err, "Failed to marshal JSON")
 			fmt.Printf("%s\n", string(data))
 		} else {
-			keys := make([]string, 0, len(spec))
-			for k := range spec {
+			keys := make([]string, 0, len(specResponse.Data))
+			for k := range specResponse.Data {
 				keys = append(keys, k)
 			}
 			sort.Strings(keys)
 			for _, key := range keys {
-				fmt.Printf("%s: %v\n", key, spec[key])
+				fmt.Printf("%s: %v\n", key, specResponse.Data[key])
 			}
 		}
 	},

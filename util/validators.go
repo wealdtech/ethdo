@@ -20,6 +20,7 @@ import (
 	"strings"
 
 	eth2client "github.com/attestantio/go-eth2-client"
+	"github.com/attestantio/go-eth2-client/api"
 	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
@@ -47,11 +48,11 @@ func ParseValidators(ctx context.Context, validatorsProvider eth2client.Validato
 			for index := low; index <= high; index++ {
 				indices = append(indices, phase0.ValidatorIndex(index))
 			}
-			rangeValidators, err := validatorsProvider.Validators(ctx, stateID, indices)
+			response, err := validatorsProvider.Validators(ctx, &api.ValidatorsOpts{State: stateID, Indices: indices})
 			if err != nil {
 				return nil, errors.Wrap(err, fmt.Sprintf("failed to obtain validators %s", validatorsStr[i]))
 			}
-			for _, validator := range rangeValidators {
+			for _, validator := range response.Data {
 				validators = append(validators, validator)
 			}
 		} else {
@@ -79,10 +80,14 @@ func ParseValidator(ctx context.Context,
 	// Could be a simple index.
 	index, err := strconv.ParseUint(validatorStr, 10, 64)
 	if err == nil {
-		validators, err = validatorsProvider.Validators(ctx, stateID, []phase0.ValidatorIndex{phase0.ValidatorIndex(index)})
+		response, err := validatorsProvider.Validators(ctx, &api.ValidatorsOpts{
+			State:   stateID,
+			Indices: []phase0.ValidatorIndex{phase0.ValidatorIndex(index)},
+		})
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to obtain validator information")
 		}
+		validators = response.Data
 	} else {
 		// Some sort of specifier.
 		account, err := ParseAccount(ctx, validatorStr, nil, false)
@@ -96,13 +101,14 @@ func ParseValidator(ctx context.Context,
 		}
 		pubKey := phase0.BLSPubKey{}
 		copy(pubKey[:], accPubKey.Marshal())
-		validators, err = validatorsProvider.ValidatorsByPubKey(ctx,
-			stateID,
-			[]phase0.BLSPubKey{pubKey},
-		)
+		validatorsResponse, err := validatorsProvider.Validators(ctx, &api.ValidatorsOpts{
+			State:   stateID,
+			PubKeys: []phase0.BLSPubKey{pubKey},
+		})
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to obtain validator information")
 		}
+		validators = validatorsResponse.Data
 	}
 
 	// Validator is first and only entry in the map.

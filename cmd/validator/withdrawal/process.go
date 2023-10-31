@@ -20,6 +20,7 @@ import (
 	"time"
 
 	consensusclient "github.com/attestantio/go-eth2-client"
+	"github.com/attestantio/go-eth2-client/api"
 	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
 	"github.com/attestantio/go-eth2-client/spec"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
@@ -49,10 +50,13 @@ func (c *command) process(ctx context.Context) error {
 		return errors.New("validator has nothing to withdraw")
 	}
 
-	block, err := c.consensusClient.(consensusclient.SignedBeaconBlockProvider).SignedBeaconBlock(ctx, "head")
+	blockResponse, err := c.consensusClient.(consensusclient.SignedBeaconBlockProvider).SignedBeaconBlock(ctx, &api.SignedBeaconBlockOpts{
+		Block: "head",
+	})
 	if err != nil {
 		return errors.Wrap(err, "failed to obtain block")
 	}
+	block := blockResponse.Data
 	slot, err := block.Slot()
 	if err != nil {
 		return errors.Wrap(err, "failed to obtain block slot")
@@ -61,12 +65,14 @@ func (c *command) process(ctx context.Context) error {
 		fmt.Fprintf(os.Stderr, "Slot is %d\n", slot)
 	}
 
-	validatorsMap, err := c.consensusClient.(consensusclient.ValidatorsProvider).Validators(ctx, fmt.Sprintf("%d", slot), nil)
+	response, err := c.consensusClient.(consensusclient.ValidatorsProvider).Validators(ctx, &api.ValidatorsOpts{
+		State: fmt.Sprintf("%d", slot),
+	})
 	if err != nil {
 		return errors.Wrap(err, "failed to obtain validators")
 	}
-	validators := make([]*apiv1.Validator, len(validatorsMap))
-	for _, validator := range validatorsMap {
+	validators := make([]*apiv1.Validator, len(response.Data))
+	for _, validator := range response.Data {
 		validators[validator.Index] = validator
 	}
 
@@ -140,18 +146,18 @@ func (c *command) setup(ctx context.Context) error {
 		return errors.Wrap(err, "failed to create chaintime service")
 	}
 
-	spec, err := c.consensusClient.(consensusclient.SpecProvider).Spec(ctx)
+	specResponse, err := c.consensusClient.(consensusclient.SpecProvider).Spec(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to obtain spec")
 	}
 
-	if val, exists := spec["MAX_WITHDRAWALS_PER_PAYLOAD"]; !exists {
+	if val, exists := specResponse.Data["MAX_WITHDRAWALS_PER_PAYLOAD"]; !exists {
 		c.maxWithdrawalsPerPayload = 16
 	} else {
 		c.maxWithdrawalsPerPayload = val.(uint64)
 	}
 
-	if val, exists := spec["MAX_EFFECTIVE_BALANCE"]; !exists {
+	if val, exists := specResponse.Data["MAX_EFFECTIVE_BALANCE"]; !exists {
 		c.maxEffectiveBalance = 32000000000
 	} else {
 		c.maxEffectiveBalance = phase0.Gwei(val.(uint64))

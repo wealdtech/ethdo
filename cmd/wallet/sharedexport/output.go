@@ -15,7 +15,7 @@ package walletsharedexport
 
 import (
 	"context"
-	"fmt"
+	"encoding/hex"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -32,7 +32,7 @@ func output(_ context.Context, data *dataOut) (string, error) {
 
 	builder := strings.Builder{}
 	for i := range data.shares {
-		builder.WriteString(fmt.Sprintf("%x", data.shares[i]))
+		builder.WriteString(hex.EncodeToString(data.shares[i]))
 		if i != len(data.shares)-1 {
 			builder.WriteString("\n")
 		}

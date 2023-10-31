@@ -17,10 +17,12 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
 	eth2client "github.com/attestantio/go-eth2-client"
+	"github.com/attestantio/go-eth2-client/api"
 	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/spf13/cobra"
@@ -57,8 +59,11 @@ In quiet mode this will return 0 if the chain status can be obtained, otherwise 
 
 		finalityProvider, isProvider := eth2Client.(eth2client.FinalityProvider)
 		assert(isProvider, "beacon node does not provide finality; cannot report on chain status")
-		finality, err := finalityProvider.Finality(ctx, "head")
+		finalityResponse, err := finalityProvider.Finality(ctx, &api.FinalityOpts{
+			State: "head",
+		})
 		errCheck(err, "Failed to obtain finality information")
+		finality := finalityResponse.Data
 
 		slot := chainTime.CurrentSlot()
 
@@ -126,13 +131,13 @@ In quiet mode this will return 0 if the chain status can be obtained, otherwise 
 		if viper.GetBool("verbose") {
 			validatorsProvider, isProvider := eth2Client.(eth2client.ValidatorsProvider)
 			if isProvider {
-				validators, err := validatorsProvider.Validators(ctx, "head", nil)
+				validatorsResponse, err := validatorsProvider.Validators(ctx, &api.ValidatorsOpts{State: "head"})
 				errCheck(err, "Failed to obtain validators information")
 				// Stats of inteest.
 				totalBalance := phase0.Gwei(0)
 				activeEffectiveBalance := phase0.Gwei(0)
 				validatorCount := make(map[apiv1.ValidatorState]int)
-				for _, validator := range validators {
+				for _, validator := range validatorsResponse.Data {
 					validatorCount[validator.Status]++
 					totalBalance += validator.Balance
 					if validator.Status.IsActive() {
@@ -162,7 +167,7 @@ In quiet mode this will return 0 if the chain status can be obtained, otherwise 
 			nextPeriodTimestamp := chainTime.StartOfEpoch(nextPeriodStartEpoch)
 
 			res.WriteString("Sync committee period: ")
-			res.WriteString(fmt.Sprintf("%d", period))
+			res.WriteString(strconv.FormatUint(period, 10))
 			res.WriteString("\n")
 
 			if viper.GetBool("verbose") {

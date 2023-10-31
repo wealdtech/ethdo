@@ -15,7 +15,7 @@ package util
 
 import (
 	"context"
-	"fmt"
+	"encoding/hex"
 
 	eth2client "github.com/attestantio/go-eth2-client"
 	"github.com/pkg/errors"
@@ -45,14 +45,11 @@ func Network(ctx context.Context, eth2Client eth2client.Service) (string, error)
 	if !isProvider {
 		return "", errors.New("client does not provide deposit contract address")
 	}
-	config, err := provider.Spec(ctx)
+	specResponse, err := provider.Spec(ctx)
 	if err != nil {
 		return "", errors.Wrap(err, "failed to obtain chain specification")
 	}
-	if config == nil {
-		return "", errors.New("failed to return chain specification")
-	}
-	depositContractAddress, exists := config["DEPOSIT_CONTRACT_ADDRESS"]
+	depositContractAddress, exists := specResponse.Data["DEPOSIT_CONTRACT_ADDRESS"]
 	if exists {
 		address = depositContractAddress.([]byte)
 	}
@@ -62,7 +59,7 @@ func Network(ctx context.Context, eth2Client eth2client.Service) (string, error)
 
 // network returns a network given an Ethereum 1 contract address.
 func network(address []byte) string {
-	if network, exists := networks[fmt.Sprintf("%x", address)]; exists {
+	if network, exists := networks[hex.EncodeToString(address)]; exists {
 		return network
 	}
 	return "Unknown"

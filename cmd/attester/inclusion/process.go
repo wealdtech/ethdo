@@ -19,7 +19,8 @@ import (
 	"fmt"
 
 	eth2client "github.com/attestantio/go-eth2-client"
-	api "github.com/attestantio/go-eth2-client/api/v1"
+	"github.com/attestantio/go-eth2-client/api"
+	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 	standardchaintime "github.com/wealdtech/ethdo/services/chaintime/standard"
@@ -61,14 +62,17 @@ func process(ctx context.Context, data *dataIn) (*dataOut, error) {
 	startSlot := duty.Slot + 1
 	endSlot := startSlot + 32
 	for slot := startSlot; slot < endSlot; slot++ {
-		signedBlock, err := data.eth2Client.(eth2client.SignedBeaconBlockProvider).SignedBeaconBlock(ctx, fmt.Sprintf("%d", slot))
+		blockResponse, err := data.eth2Client.(eth2client.SignedBeaconBlockProvider).SignedBeaconBlock(ctx, &api.SignedBeaconBlockOpts{
+			Block: fmt.Sprintf("%d", slot),
+		})
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to obtain block")
 		}
-		if signedBlock == nil {
+		block := blockResponse.Data
+		if block == nil {
 			continue
 		}
-		blockSlot, err := signedBlock.Slot()
+		blockSlot, err := block.Slot()
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to obtain block slot")
 		}
@@ -78,7 +82,7 @@ func process(ctx context.Context, data *dataIn) (*dataOut, error) {
 		if data.debug {
 			fmt.Printf("Fetched block for slot %d\n", slot)
 		}
-		attestations, err := signedBlock.Attestations()
+		attestations, err := block.Attestations()
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to obtain block attestations")
 		}
@@ -121,21 +125,23 @@ func process(ctx context.Context, data *dataIn) (*dataOut, error) {
 func calcHeadCorrect(ctx context.Context, data *dataIn, attestation *phase0.Attestation) (bool, error) {
 	slot := attestation.Data.Slot
 	for {
-		header, err := data.eth2Client.(eth2client.BeaconBlockHeadersProvider).BeaconBlockHeader(ctx, fmt.Sprintf("%d", slot))
+		response, err := data.eth2Client.(eth2client.BeaconBlockHeadersProvider).BeaconBlockHeader(ctx, &api.BeaconBlockHeaderOpts{
+			Block: fmt.Sprintf("%d", slot),
+		})
 		if err != nil {
 			return false, err
 		}
-		if header == nil {
+		if response.Data == nil {
 			// No block.
 			slot--
 			continue
 		}
-		if !header.Canonical {
+		if !response.Data.Canonical {
 			// Not canonical.
 			slot--
 			continue
 		}
-		return bytes.Equal(header.Root[:], attestation.Data.BeaconBlockRoot[:]), nil
+		return bytes.Equal(response.Data.Root[:], attestation.Data.BeaconBlockRoot[:]), nil
 	}
 }
 
@@ -143,30 +149,36 @@ func calcTargetCorrect(ctx context.Context, data *dataIn, attestation *phase0.At
 	// Start with first slot of the target epoch.
 	slot := data.chainTime.FirstSlotOfEpoch(attestation.Data.Target.Epoch)
 	for {
-		header, err := data.eth2Client.(eth2client.BeaconBlockHeadersProvider).BeaconBlockHeader(ctx, fmt.Sprintf("%d", slot))
+		response, err := data.eth2Client.(eth2client.BeaconBlockHeadersProvider).BeaconBlockHeader(ctx, &api.BeaconBlockHeaderOpts{
+			Block: fmt.Sprintf("%d", slot),
+		})
 		if err != nil {
 			return false, err
 		}
-		if header == nil {
+		if response.Data == nil {
 			// No block.
 			slot--
 			continue
 		}
-		if !header.Canonical {
+		if !response.Data.Canonical {
 			// Not canonical.
 			slot--
 			continue
 		}
-		return bytes.Equal(header.Root[:], attestation.Data.Target.Root[:]), nil
+		return bytes.Equal(response.Data.Root[:], attestation.Data.Target.Root[:]), nil
 	}
 }
 
-func duty(ctx context.Context, eth2Client eth2client.Service, validator *api.Validator, epoch phase0.Epoch) (*api.AttesterDuty, error) {
+func duty(ctx context.Context, eth2Client eth2client.Service, validator *apiv1.Validator, epoch phase0.Epoch) (*apiv1.AttesterDuty, error) {
 	// Find the attesting slot for the given epoch.
-	duties, err := eth2Client.(eth2client.AttesterDutiesProvider).AttesterDuties(ctx, epoch, []phase0.ValidatorIndex{validator.Index})
+	dutiesResponse, err := eth2Client.(eth2client.AttesterDutiesProvider).AttesterDuties(ctx, &api.AttesterDutiesOpts{
+		Epoch:   epoch,
+		Indices: []phase0.ValidatorIndex{validator.Index},
+	})
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to obtain attester duties")
 	}
+	duties := dutiesResponse.Data
 
 	if len(duties) == 0 {
 		return nil, errors.New("validator does not have duty for that epoch")

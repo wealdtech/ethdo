@@ -20,6 +20,7 @@ import (
 	"time"
 
 	eth2client "github.com/attestantio/go-eth2-client"
+	"github.com/attestantio/go-eth2-client/api"
 	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -45,32 +46,32 @@ In quiet mode this will return 0 if the chain information can be obtained, other
 		})
 		errCheck(err, "Failed to connect to Ethereum 2 beacon node")
 
-		config, err := eth2Client.(eth2client.SpecProvider).Spec(ctx)
+		specResponse, err := eth2Client.(eth2client.SpecProvider).Spec(ctx)
 		errCheck(err, "Failed to obtain beacon chain specification")
 
-		genesis, err := eth2Client.(eth2client.GenesisProvider).Genesis(ctx)
+		genesisResponse, err := eth2Client.(eth2client.GenesisProvider).Genesis(ctx)
 		errCheck(err, "Failed to obtain beacon chain genesis")
 
-		fork, err := eth2Client.(eth2client.ForkProvider).Fork(ctx, "head")
+		forkResponse, err := eth2Client.(eth2client.ForkProvider).Fork(ctx, &api.ForkOpts{State: "head"})
 		errCheck(err, "Failed to obtain current fork")
 
 		if viper.GetBool("quiet") {
 			os.Exit(_exitSuccess)
 		}
 
-		if genesis.GenesisTime.Unix() == 0 {
+		if genesisResponse.Data.GenesisTime.Unix() == 0 {
 			fmt.Println("Genesis time: undefined")
 		} else {
-			fmt.Printf("Genesis time: %s\n", genesis.GenesisTime.Format(time.UnixDate))
-			outputIf(viper.GetBool("verbose"), fmt.Sprintf("Genesis timestamp: %v", genesis.GenesisTime.Unix()))
+			fmt.Printf("Genesis time: %s\n", genesisResponse.Data.GenesisTime.Format(time.UnixDate))
+			outputIf(viper.GetBool("verbose"), fmt.Sprintf("Genesis timestamp: %v", genesisResponse.Data.GenesisTime.Unix()))
 		}
-		fmt.Printf("Genesis validators root: %#x\n", genesis.GenesisValidatorsRoot)
-		fmt.Printf("Genesis fork version: %#x\n", config["GENESIS_FORK_VERSION"].(spec.Version))
-		fmt.Printf("Current fork version: %#x\n", fork.CurrentVersion)
+		fmt.Printf("Genesis validators root: %#x\n", genesisResponse.Data.GenesisValidatorsRoot)
+		fmt.Printf("Genesis fork version: %#x\n", specResponse.Data["GENESIS_FORK_VERSION"].(spec.Version))
+		fmt.Printf("Current fork version: %#x\n", forkResponse.Data.CurrentVersion)
 		if viper.GetBool("verbose") {
 			forkData := &spec.ForkData{
-				CurrentVersion:        fork.CurrentVersion,
-				GenesisValidatorsRoot: genesis.GenesisValidatorsRoot,
+				CurrentVersion:        forkResponse.Data.CurrentVersion,
+				GenesisValidatorsRoot: genesisResponse.Data.GenesisValidatorsRoot,
 			}
 			forkDataRoot, err := forkData.HashTreeRoot()
 			if err == nil {
@@ -79,8 +80,8 @@ In quiet mode this will return 0 if the chain information can be obtained, other
 				fmt.Printf("Fork digest: %#x\n", forkDigest)
 			}
 		}
-		fmt.Printf("Seconds per slot: %d\n", int(config["SECONDS_PER_SLOT"].(time.Duration).Seconds()))
-		fmt.Printf("Slots per epoch: %d\n", config["SLOTS_PER_EPOCH"].(uint64))
+		fmt.Printf("Seconds per slot: %d\n", int(specResponse.Data["SECONDS_PER_SLOT"].(time.Duration).Seconds()))
+		fmt.Printf("Slots per epoch: %d\n", specResponse.Data["SLOTS_PER_EPOCH"].(uint64))
 
 		os.Exit(_exitSuccess)
 	},

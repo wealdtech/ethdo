@@ -18,7 +18,8 @@ import (
 	"time"
 
 	eth2client "github.com/attestantio/go-eth2-client"
-	api "github.com/attestantio/go-eth2-client/api/v1"
+	"github.com/attestantio/go-eth2-client/api"
+	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
 	"github.com/attestantio/go-eth2-client/spec"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
@@ -42,7 +43,7 @@ func (m *GenesisTimeProvider) GenesisTime(_ context.Context) (time.Time, error) 
 
 // SpecProvider is a mock for eth2client.SpecProvider.
 type SpecProvider struct {
-	spec map[string]interface{}
+	spec map[string]any
 }
 
 // NewSpecProvider returns a mock spec provider with the provided values.
@@ -51,7 +52,7 @@ func NewSpecProvider(slotDuration time.Duration,
 	epochsPerSyncCommitteePeriod uint64,
 ) eth2client.SpecProvider {
 	return &SpecProvider{
-		spec: map[string]interface{}{
+		spec: map[string]any{
 			"SECONDS_PER_SLOT":                 slotDuration,
 			"SLOTS_PER_EPOCH":                  slotsPerEpoch,
 			"EPOCHS_PER_SYNC_COMMITTEE_PERIOD": epochsPerSyncCommitteePeriod,
@@ -60,8 +61,11 @@ func NewSpecProvider(slotDuration time.Duration,
 }
 
 // Spec is a mock.
-func (m *SpecProvider) Spec(_ context.Context) (map[string]interface{}, error) {
-	return m.spec, nil
+func (m *SpecProvider) Spec(_ context.Context) (*api.Response[map[string]any], error) {
+	return &api.Response[map[string]any]{
+		Data:     m.spec,
+		Metadata: make(map[string]any),
+	}, nil
 }
 
 // ForkScheduleProvider is a mock for eth2client.ForkScheduleProvider.
@@ -77,8 +81,11 @@ func NewForkScheduleProvider(schedule []*phase0.Fork) eth2client.ForkSchedulePro
 }
 
 // ForkSchedule is a mock.
-func (m *ForkScheduleProvider) ForkSchedule(_ context.Context) ([]*phase0.Fork, error) {
-	return m.schedule, nil
+func (m *ForkScheduleProvider) ForkSchedule(_ context.Context) (*api.Response[[]*phase0.Fork], error) {
+	return &api.Response[[]*phase0.Fork]{
+		Data:     m.schedule,
+		Metadata: make(map[string]any),
+	}, nil
 }
 
 // SlotsPerEpochProvider is a mock for eth2client.SlotsPerEpochProvider.
@@ -146,6 +153,6 @@ func NewBeaconCommitteeSubscriptionsSubmitter() eth2client.BeaconCommitteeSubscr
 }
 
 // SubmitBeaconCommitteeSubscriptions is a mock.
-func (m *BeaconCommitteeSubscriptionsSubmitter) SubmitBeaconCommitteeSubscriptions(_ context.Context, _ []*api.BeaconCommitteeSubscription) error {
+func (m *BeaconCommitteeSubscriptionsSubmitter) SubmitBeaconCommitteeSubscriptions(_ context.Context, _ []*apiv1.BeaconCommitteeSubscription) error {
 	return nil
 }

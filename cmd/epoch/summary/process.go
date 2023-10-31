@@ -19,6 +19,7 @@ import (
 	"sort"
 
 	eth2client "github.com/attestantio/go-eth2-client"
+	"github.com/attestantio/go-eth2-client/api"
 	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
 	"github.com/attestantio/go-eth2-client/spec"
 	"github.com/attestantio/go-eth2-client/spec/altair"
@@ -55,14 +56,14 @@ func (c *command) process(ctx context.Context) error {
 }
 
 func (c *command) processProposerDuties(ctx context.Context) error {
-	duties, err := c.proposerDutiesProvider.ProposerDuties(ctx, c.summary.Epoch, nil)
+	response, err := c.proposerDutiesProvider.ProposerDuties(ctx, &api.ProposerDutiesOpts{
+		Epoch: c.summary.Epoch,
+	})
 	if err != nil {
 		return errors.Wrap(err, "failed to obtain proposer duties")
 	}
-	if duties == nil {
-		return errors.New("empty proposer duties")
-	}
-	for _, duty := range duties {
+
+	for _, duty := range response.Data {
 		block, err := c.fetchBlock(ctx, fmt.Sprintf("%d", duty.Slot))
 		if err != nil {
 			return errors.Wrap(err, fmt.Sprintf("failed to obtain block for slot %d", duty.Slot))
@@ -79,12 +80,14 @@ func (c *command) processProposerDuties(ctx context.Context) error {
 }
 
 func (c *command) activeValidators(ctx context.Context) (map[phase0.ValidatorIndex]*apiv1.Validator, error) {
-	validators, err := c.validatorsProvider.Validators(ctx, fmt.Sprintf("%d", c.chainTime.FirstSlotOfEpoch(c.summary.Epoch)), nil)
+	response, err := c.validatorsProvider.Validators(ctx, &api.ValidatorsOpts{
+		State: fmt.Sprintf("%d", c.chainTime.FirstSlotOfEpoch(c.summary.Epoch)),
+	})
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to obtain validators for epoch")
 	}
 	activeValidators := make(map[phase0.ValidatorIndex]*apiv1.Validator)
-	for _, validator := range validators {
+	for _, validator := range response.Data {
 		if validator.Validator.ActivationEpoch <= c.summary.Epoch && validator.Validator.ExitEpoch > c.summary.Epoch {
 			activeValidators[validator.Index] = validator
 		}
@@ -187,11 +190,13 @@ func (c *command) processSlots(ctx context.Context,
 			}
 			slotCommittees, exists := allCommittees[attestation.Data.Slot]
 			if !exists {
-				beaconCommittees, err := c.beaconCommitteesProvider.BeaconCommittees(ctx, fmt.Sprintf("%d", attestation.Data.Slot))
+				response, err := c.beaconCommitteesProvider.BeaconCommittees(ctx, &api.BeaconCommitteesOpts{
+					State: fmt.Sprintf("%d", attestation.Data.Slot),
+				})
 				if err != nil {
 					return 0, 0, 0, 0, 0, 0, nil, nil, errors.Wrap(err, fmt.Sprintf("failed to obtain committees for slot %d", attestation.Data.Slot))
 				}
-				for _, beaconCommittee := range beaconCommittees {
+				for _, beaconCommittee := range response.Data {
 					if _, exists := allCommittees[beaconCommittee.Slot]; !exists {
 						allCommittees[beaconCommittee.Slot] = make(map[phase0.CommitteeIndex][]phase0.ValidatorIndex)
 					}
@@ -257,10 +262,13 @@ func (c *command) processSyncCommitteeDuties(ctx context.Context) error {
 		return nil
 	}
 
-	committee, err := c.syncCommitteesProvider.SyncCommittee(ctx, fmt.Sprintf("%d", c.summary.FirstSlot))
+	committeeResponse, err := c.syncCommitteesProvider.SyncCommittee(ctx, &api.SyncCommitteeOpts{
+		State: fmt.Sprintf("%d", c.summary.FirstSlot),
+	})
 	if err != nil {
 		return errors.Wrap(err, "failed to obtain sync committee")
 	}
+	committee := committeeResponse.Data
 	if len(committee.Validators) == 0 {
 		return errors.Wrap(err, "empty sync committee")
 	}
@@ -407,10 +415,13 @@ func (c *command) fetchBlock(ctx context.Context,
 	block, exists := c.blocksCache[blockID]
 	if !exists {
 		var err error
-		block, err = c.blocksProvider.SignedBeaconBlock(ctx, blockID)
+		blockResponse, err := c.blocksProvider.SignedBeaconBlock(ctx, &api.SignedBeaconBlockOpts{
+			Block: blockID,
+		})
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to fetch block")
 		}
+		block = blockResponse.Data
 		c.blocksCache[blockID] = block
 	}
 	return block, nil

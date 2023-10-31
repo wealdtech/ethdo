@@ -18,6 +18,7 @@ import (
 	"fmt"
 
 	eth2client "github.com/attestantio/go-eth2-client"
+	"github.com/attestantio/go-eth2-client/api"
 	"github.com/pkg/errors"
 	standardchaintime "github.com/wealdtech/ethdo/services/chaintime/standard"
 	"github.com/wealdtech/ethdo/util"
@@ -34,12 +35,14 @@ func (c *command) process(ctx context.Context) error {
 		return err
 	}
 
-	validators, err := c.validatorsProvider.Validators(ctx, fmt.Sprintf("%d", c.chainTime.FirstSlotOfEpoch(epoch)), nil)
+	response, err := c.validatorsProvider.Validators(ctx, &api.ValidatorsOpts{
+		State: fmt.Sprintf("%d", c.chainTime.FirstSlotOfEpoch(epoch)),
+	})
 	if err != nil {
 		return errors.Wrap(err, "failed to obtain validators")
 	}
 
-	for _, validator := range validators {
+	for _, validator := range response.Data {
 		if validator.Validator == nil {
 			continue
 		}

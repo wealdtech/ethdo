@@ -55,12 +55,12 @@ func New(ctx context.Context, params ...Parameter) (*Service, error) {
 	}
 	log.Trace().Time("genesis_time", genesisTime).Msg("Obtained genesis time")
 
-	spec, err := parameters.specProvider.Spec(ctx)
+	specResponse, err := parameters.specProvider.Spec(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to obtain spec")
 	}
 
-	tmp, exists := spec["SECONDS_PER_SLOT"]
+	tmp, exists := specResponse.Data["SECONDS_PER_SLOT"]
 	if !exists {
 		return nil, errors.New("SECONDS_PER_SLOT not found in spec")
 	}
@@ -69,7 +69,7 @@ func New(ctx context.Context, params ...Parameter) (*Service, error) {
 		return nil, errors.New("SECONDS_PER_SLOT of unexpected type")
 	}
 
-	tmp, exists = spec["SLOTS_PER_EPOCH"]
+	tmp, exists = specResponse.Data["SLOTS_PER_EPOCH"]
 	if !exists {
 		return nil, errors.New("SLOTS_PER_EPOCH not found in spec")
 	}
@@ -79,7 +79,7 @@ func New(ctx context.Context, params ...Parameter) (*Service, error) {
 	}
 
 	var epochsPerSyncCommitteePeriod uint64
-	if tmp, exists := spec["EPOCHS_PER_SYNC_COMMITTEE_PERIOD"]; exists {
+	if tmp, exists := specResponse.Data["EPOCHS_PER_SYNC_COMMITTEE_PERIOD"]; exists {
 		tmp2, ok := tmp.(uint64)
 		if !ok {
 			return nil, errors.New("EPOCHS_PER_SYNC_COMMITTEE_PERIOD of unexpected type")
@@ -237,11 +237,11 @@ func fetchAltairForkEpoch(ctx context.Context,
 	error,
 ) {
 	// Fetch the fork version.
-	spec, err := specProvider.Spec(ctx)
+	specResponse, err := specProvider.Spec(ctx)
 	if err != nil {
 		return 0, errors.Wrap(err, "failed to obtain spec")
 	}
-	tmp, exists := spec["ALTAIR_FORK_EPOCH"]
+	tmp, exists := specResponse.Data["ALTAIR_FORK_EPOCH"]
 	if !exists {
 		return 0, errors.New("altair fork version not known by chain")
 	}
@@ -266,11 +266,11 @@ func fetchBellatrixForkEpoch(ctx context.Context,
 	error,
 ) {
 	// Fetch the fork version.
-	spec, err := specProvider.Spec(ctx)
+	specResponse, err := specProvider.Spec(ctx)
 	if err != nil {
 		return 0, errors.Wrap(err, "failed to obtain spec")
 	}
-	tmp, exists := spec["BELLATRIX_FORK_EPOCH"]
+	tmp, exists := specResponse.Data["BELLATRIX_FORK_EPOCH"]
 	if !exists {
 		return 0, errors.New("bellatrix fork version not known by chain")
 	}
@@ -295,11 +295,11 @@ func fetchCapellaForkEpoch(ctx context.Context,
 	error,
 ) {
 	// Fetch the fork version.
-	spec, err := specProvider.Spec(ctx)
+	specResponse, err := specProvider.Spec(ctx)
 	if err != nil {
 		return 0, errors.Wrap(err, "failed to obtain spec")
 	}
-	tmp, exists := spec["CAPELLA_FORK_EPOCH"]
+	tmp, exists := specResponse.Data["CAPELLA_FORK_EPOCH"]
 	if !exists {
 		return 0, errors.New("capella fork version not known by chain")
 	}
@@ -324,11 +324,11 @@ func fetchDenebForkEpoch(ctx context.Context,
 	error,
 ) {
 	// Fetch the fork version.
-	spec, err := specProvider.Spec(ctx)
+	specResponse, err := specProvider.Spec(ctx)
 	if err != nil {
 		return 0, errors.Wrap(err, "failed to obtain spec")
 	}
-	tmp, exists := spec["DENEB_FORK_EPOCH"]
+	tmp, exists := specResponse.Data["DENEB_FORK_EPOCH"]
 	if !exists {
 		return 0, errors.New("deneb fork version not known by chain")
 	}

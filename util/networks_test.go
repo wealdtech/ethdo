@@ -18,6 +18,7 @@ import (
 	"testing"
 
 	eth2client "github.com/attestantio/go-eth2-client"
+	"github.com/attestantio/go-eth2-client/api"
 	"github.com/stretchr/testify/require"
 	"github.com/wealdtech/ethdo/testutil"
 	"github.com/wealdtech/ethdo/util"
@@ -39,9 +40,12 @@ func (c *specETH2Client) Address() string {
 }
 
 // Spec provides the spec information of the chain.
-func (c *specETH2Client) Spec(ctx context.Context) (map[string]interface{}, error) {
-	return map[string]interface{}{
-		"DEPOSIT_CONTRACT_ADDRESS": c.address,
+func (c *specETH2Client) Spec(ctx context.Context) (*api.Response[map[string]any], error) {
+	return &api.Response[map[string]any]{
+		Data: map[string]any{
+			"DEPOSIT_CONTRACT_ADDRESS": c.address,
+		},
+		Metadata: make(map[string]any),
 	}, nil
 }
 

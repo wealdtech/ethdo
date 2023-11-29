@@ -1,5 +1,6 @@
 1.34.0:
   - update dependencies
+  - use Capella fork for all exits
 
 1.33.2:
   - fix windows build

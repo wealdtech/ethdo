@@ -35,6 +35,7 @@ type ChainInfo struct {
 	GenesisValidatorsRoot          phase0.Root
 	Epoch                          phase0.Epoch
 	GenesisForkVersion             phase0.Version
+	ExitForkVersion                phase0.Version
 	CurrentForkVersion             phase0.Version
 	BLSToExecutionChangeDomainType phase0.DomainType
 	VoluntaryExitDomainType        phase0.DomainType
@@ -46,6 +47,7 @@ type chainInfoJSON struct {
 	GenesisValidatorsRoot          string           `json:"genesis_validators_root"`
 	Epoch                          string           `json:"epoch"`
 	GenesisForkVersion             string           `json:"genesis_fork_version"`
+	ExitForkVersion                string           `json:"exit_fork_version"`
 	CurrentForkVersion             string           `json:"current_fork_version"`
 	BLSToExecutionChangeDomainType string           `json:"bls_to_execution_change_domain_type"`
 	VoluntaryExitDomainType        string           `json:"voluntary_exit_domain_type"`
@@ -63,6 +65,7 @@ func (c *ChainInfo) MarshalJSON() ([]byte, error) {
 		GenesisValidatorsRoot:          fmt.Sprintf("%#x", c.GenesisValidatorsRoot),
 		Epoch:                          fmt.Sprintf("%d", c.Epoch),
 		GenesisForkVersion:             fmt.Sprintf("%#x", c.GenesisForkVersion),
+		ExitForkVersion:                fmt.Sprintf("%#x", c.ExitForkVersion),
 		CurrentForkVersion:             fmt.Sprintf("%#x", c.CurrentForkVersion),
 		BLSToExecutionChangeDomainType: fmt.Sprintf("%#x", c.BLSToExecutionChangeDomainType),
 		VoluntaryExitDomainType:        fmt.Sprintf("%#x", c.VoluntaryExitDomainType),
@@ -83,7 +86,7 @@ func (c *ChainInfo) UnmarshalJSON(input []byte) error {
 	if err != nil {
 		return errors.Wrap(err, "version invalid")
 	}
-	if version < 2 {
+	if version < 3 {
 		return errors.New("outdated version; please regenerate your offline data")
 	}
 	c.Version = version
@@ -130,6 +133,18 @@ func (c *ChainInfo) UnmarshalJSON(input []byte) error {
 		return errors.New("genesis fork version incorrect length")
 	}
 	copy(c.GenesisForkVersion[:], genesisForkVersionBytes)
+
+	if data.ExitForkVersion == "" {
+		return errors.New("exit fork version missing")
+	}
+	exitForkVersionBytes, err := hex.DecodeString(strings.TrimPrefix(data.ExitForkVersion, "0x"))
+	if err != nil {
+		return errors.Wrap(err, "exit fork version invalid")
+	}
+	if len(exitForkVersionBytes) != phase0.ForkVersionLength {
+		return errors.New("exit fork version incorrect length")
+	}
+	copy(c.ExitForkVersion[:], exitForkVersionBytes)
 
 	if data.CurrentForkVersion == "" {
 		return errors.New("current fork version missing")
@@ -236,7 +251,7 @@ func ObtainChainInfoFromNode(ctx context.Context,
 	error,
 ) {
 	res := &ChainInfo{
-		Version:    2,
+		Version:    3,
 		Validators: make([]*ValidatorInfo, 0),
 		Epoch:      chainTime.CurrentEpoch(),
 	}
@@ -276,6 +291,16 @@ func ObtainChainInfoFromNode(ctx context.Context,
 	res.GenesisForkVersion, isForkVersion = tmp.(phase0.Version)
 	if !isForkVersion {
 		return nil, errors.New("could not obtain GENESIS_FORK_VERSION")
+	}
+
+	// Fetch the exit fork version (Capella) from the specification.
+	tmp, exists = specResponse.Data["CAPELLA_FORK_VERSION"]
+	if !exists {
+		return nil, errors.New("capella fork version not known by chain")
+	}
+	res.ExitForkVersion, isForkVersion = tmp.(phase0.Version)
+	if !isForkVersion {
+		return nil, errors.New("could not obtain CAPELLA_FORK_VERSION")
 	}
 
 	// Fetch the current fork version from the fork schedule.

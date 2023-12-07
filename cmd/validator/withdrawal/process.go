@@ -139,14 +139,14 @@ func (c *command) setup(ctx context.Context) error {
 
 	// Set up chaintime.
 	c.chainTime, err = standardchaintime.New(ctx,
-		standardchaintime.WithGenesisTimeProvider(c.consensusClient.(consensusclient.GenesisTimeProvider)),
+		standardchaintime.WithGenesisProvider(c.consensusClient.(consensusclient.GenesisProvider)),
 		standardchaintime.WithSpecProvider(c.consensusClient.(consensusclient.SpecProvider)),
 	)
 	if err != nil {
 		return errors.Wrap(err, "failed to create chaintime service")
 	}
 
-	specResponse, err := c.consensusClient.(consensusclient.SpecProvider).Spec(ctx)
+	specResponse, err := c.consensusClient.(consensusclient.SpecProvider).Spec(ctx, &api.SpecOpts{})
 	if err != nil {
 		return errors.Wrap(err, "failed to obtain spec")
 	}

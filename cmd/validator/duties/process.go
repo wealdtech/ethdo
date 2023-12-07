@@ -76,13 +76,13 @@ func process(ctx context.Context, data *dataIn) (*dataOut, error) {
 	}
 	results.nextEpochAttesterDuty = nextEpochAttesterDuty
 
-	genesisResponse, err := eth2Client.(eth2client.GenesisProvider).Genesis(ctx)
+	genesisResponse, err := eth2Client.(eth2client.GenesisProvider).Genesis(ctx, &api.GenesisOpts{})
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to obtain genesis data")
 	}
 	results.genesisTime = genesisResponse.Data.GenesisTime
 
-	specResponse, err := eth2Client.(eth2client.SpecProvider).Spec(ctx)
+	specResponse, err := eth2Client.(eth2client.SpecProvider).Spec(ctx, &api.SpecOpts{})
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to obtain beacon chain configuration")
 	}
@@ -124,14 +124,14 @@ func proposerDuties(ctx context.Context, eth2Client eth2client.Service, validato
 }
 
 func currentEpoch(ctx context.Context, eth2Client eth2client.Service) (spec.Epoch, error) {
-	specResponse, err := eth2Client.(eth2client.SpecProvider).Spec(ctx)
+	specResponse, err := eth2Client.(eth2client.SpecProvider).Spec(ctx, &api.SpecOpts{})
 	if err != nil {
 		return 0, errors.Wrap(err, "failed to obtain beacon chain configuration")
 	}
 	slotsPerEpoch := specResponse.Data["SLOTS_PER_EPOCH"].(uint64)
 	slotDuration := specResponse.Data["SECONDS_PER_SLOT"].(time.Duration)
 
-	genesisResponse, err := eth2Client.(eth2client.GenesisProvider).Genesis(ctx)
+	genesisResponse, err := eth2Client.(eth2client.GenesisProvider).Genesis(ctx, &api.GenesisOpts{})
 	if err != nil {
 		return 0, errors.Wrap(err, "failed to obtain genesis data")
 	}

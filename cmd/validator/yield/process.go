@@ -49,7 +49,7 @@ var (
 
 // calculateYield calculates yield from the number of active validators.
 func (c *command) calculateYield(ctx context.Context) error {
-	specResponse, err := c.eth2Client.(eth2client.SpecProvider).Spec(ctx)
+	specResponse, err := c.eth2Client.(eth2client.SpecProvider).Spec(ctx, &api.SpecOpts{})
 	if err != nil {
 		return err
 	}
@@ -126,7 +126,7 @@ func (c *command) setup(ctx context.Context) error {
 	if c.validators == "" {
 		chainTime, err := standardchaintime.New(ctx,
 			standardchaintime.WithSpecProvider(c.eth2Client.(eth2client.SpecProvider)),
-			standardchaintime.WithGenesisTimeProvider(c.eth2Client.(eth2client.GenesisTimeProvider)),
+			standardchaintime.WithGenesisProvider(c.eth2Client.(eth2client.GenesisProvider)),
 		)
 		if err != nil {
 			return errors.Wrap(err, "failed to set up chaintime service")

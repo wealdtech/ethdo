@@ -19,6 +19,7 @@ import (
 	"time"
 
 	eth2client "github.com/attestantio/go-eth2-client"
+	"github.com/attestantio/go-eth2-client/api"
 	"github.com/pkg/errors"
 )
 
@@ -41,13 +42,13 @@ func process(ctx context.Context, data *dataIn) (*dataOut, error) {
 		return nil, errors.New("slot must be a positive integer")
 	}
 
-	genesisResponse, err := data.eth2Client.(eth2client.GenesisProvider).Genesis(ctx)
+	genesisResponse, err := data.eth2Client.(eth2client.GenesisProvider).Genesis(ctx, &api.GenesisOpts{})
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to obtain genesis information")
 	}
 	genesis := genesisResponse.Data
 
-	specResponse, err := data.eth2Client.(eth2client.SpecProvider).Spec(ctx)
+	specResponse, err := data.eth2Client.(eth2client.SpecProvider).Spec(ctx, &api.SpecOpts{})
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to obtain chain specifications")
 	}

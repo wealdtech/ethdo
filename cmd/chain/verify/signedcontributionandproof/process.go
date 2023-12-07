@@ -141,7 +141,7 @@ func (c *command) isAggregator(ctx context.Context) (bool, error) {
 	if !isProvider {
 		return false, errors.New("connection does not provide spec information")
 	}
-	specResponse, err := specProvider.Spec(ctx)
+	specResponse, err := specProvider.Spec(ctx, &api.SpecOpts{})
 	if err != nil {
 		return false, errors.Wrap(err, "failed to obtain spec information")
 	}

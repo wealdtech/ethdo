@@ -56,7 +56,7 @@ In quiet mode this will return 0 if the validator information can be obtained, o
 
 		chainTime, err := standardchaintime.New(ctx,
 			standardchaintime.WithSpecProvider(eth2Client.(eth2client.SpecProvider)),
-			standardchaintime.WithGenesisTimeProvider(eth2Client.(eth2client.GenesisTimeProvider)),
+			standardchaintime.WithGenesisProvider(eth2Client.(eth2client.GenesisProvider)),
 		)
 		if err != nil {
 			errCheck(err, "failed to set up chaintime service")

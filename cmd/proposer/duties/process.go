@@ -99,7 +99,7 @@ func (c *command) setup(ctx context.Context) error {
 
 	c.chainTime, err = standardchaintime.New(ctx,
 		standardchaintime.WithSpecProvider(c.eth2Client.(eth2client.SpecProvider)),
-		standardchaintime.WithGenesisTimeProvider(c.eth2Client.(eth2client.GenesisTimeProvider)),
+		standardchaintime.WithGenesisProvider(c.eth2Client.(eth2client.GenesisProvider)),
 	)
 	if err != nil {
 		return errors.Wrap(err, "failed to set up chaintime service")

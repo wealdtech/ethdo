@@ -52,7 +52,7 @@ In quiet mode this will return 0 if the chain status can be obtained, otherwise 
 		errCheck(err, "Failed to connect to Ethereum 2 beacon node")
 
 		chainTime, err := standardchaintime.New(ctx,
-			standardchaintime.WithGenesisTimeProvider(eth2Client.(eth2client.GenesisTimeProvider)),
+			standardchaintime.WithGenesisProvider(eth2Client.(eth2client.GenesisProvider)),
 			standardchaintime.WithSpecProvider(eth2Client.(eth2client.SpecProvider)),
 		)
 		errCheck(err, "Failed to configure chaintime service")

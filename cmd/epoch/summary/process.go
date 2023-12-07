@@ -349,7 +349,7 @@ func (c *command) setup(ctx context.Context) error {
 
 	c.chainTime, err = standardchaintime.New(ctx,
 		standardchaintime.WithSpecProvider(c.eth2Client.(eth2client.SpecProvider)),
-		standardchaintime.WithGenesisTimeProvider(c.eth2Client.(eth2client.GenesisTimeProvider)),
+		standardchaintime.WithGenesisProvider(c.eth2Client.(eth2client.GenesisProvider)),
 	)
 	if err != nil {
 		return errors.Wrap(err, "failed to set up chaintime service")
@@ -397,7 +397,7 @@ func (c *command) processBlobs(ctx context.Context) error {
 		case spec.DataVersionPhase0, spec.DataVersionAltair, spec.DataVersionBellatrix, spec.DataVersionCapella:
 			// No blobs in these forks.
 		case spec.DataVersionDeneb:
-			c.summary.Blobs += len(block.Deneb.Message.Body.BlobKzgCommitments)
+			c.summary.Blobs += len(block.Deneb.Message.Body.BlobKZGCommitments)
 		default:
 			return fmt.Errorf("unhandled block version %v", block.Version)
 		}

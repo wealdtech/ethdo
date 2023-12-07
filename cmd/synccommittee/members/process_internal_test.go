@@ -36,7 +36,7 @@ func TestProcess(t *testing.T) {
 	require.NoError(t, err)
 
 	chainTime, err := standardchaintime.New(context.Background(),
-		standardchaintime.WithGenesisTimeProvider(eth2Client.(eth2client.GenesisTimeProvider)),
+		standardchaintime.WithGenesisProvider(eth2Client.(eth2client.GenesisProvider)),
 		standardchaintime.WithSpecProvider(eth2Client.(eth2client.SpecProvider)),
 	)
 	require.NoError(t, err)

@@ -72,7 +72,7 @@ func input(ctx context.Context) (*dataIn, error) {
 
 	data.chainTime, err = standardchaintime.New(ctx,
 		standardchaintime.WithSpecProvider(data.eth2Client.(eth2client.SpecProvider)),
-		standardchaintime.WithGenesisTimeProvider(data.eth2Client.(eth2client.GenesisTimeProvider)),
+		standardchaintime.WithGenesisProvider(data.eth2Client.(eth2client.GenesisProvider)),
 	)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to set up chaintime service")

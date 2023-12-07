@@ -34,11 +34,11 @@ func TestParseEpoch(t *testing.T) {
 	slotDuration := 12 * time.Second
 	slotsPerEpoch := uint64(32)
 	epochsPerSyncCommitteePeriod := uint64(256)
-	mockGenesisTimeProvider := mock.NewGenesisTimeProvider(genesisTime)
+	mockGenesisProvider := mock.NewGenesisProvider(genesisTime)
 	mockSpecProvider := mock.NewSpecProvider(slotDuration, slotsPerEpoch, epochsPerSyncCommitteePeriod)
 	chainTime, err := standardchaintime.New(context.Background(),
 		standardchaintime.WithLogLevel(zerolog.Disabled),
-		standardchaintime.WithGenesisTimeProvider(mockGenesisTimeProvider),
+		standardchaintime.WithGenesisProvider(mockGenesisProvider),
 		standardchaintime.WithSpecProvider(mockSpecProvider),
 	)
 	require.NoError(t, err)

@@ -18,6 +18,7 @@ import (
 	"encoding/hex"
 
 	eth2client "github.com/attestantio/go-eth2-client"
+	"github.com/attestantio/go-eth2-client/api"
 	"github.com/pkg/errors"
 )
 
@@ -45,7 +46,7 @@ func Network(ctx context.Context, eth2Client eth2client.Service) (string, error)
 	if !isProvider {
 		return "", errors.New("client does not provide deposit contract address")
 	}
-	specResponse, err := provider.Spec(ctx)
+	specResponse, err := provider.Spec(ctx, &api.SpecOpts{})
 	if err != nil {
 		return "", errors.Wrap(err, "failed to obtain chain specification")
 	}

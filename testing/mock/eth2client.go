@@ -24,21 +24,26 @@ import (
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
-// GenesisTimeProvider is a mock for eth2client.GenesisTimeProvider.
-type GenesisTimeProvider struct {
+// GenesisProvider is a mock for eth2client.GenesisProvider.
+type GenesisProvider struct {
 	genesisTime time.Time
 }
 
-// NewGenesisTimeProvider returns a mock genesis time provider with the provided value.
-func NewGenesisTimeProvider(genesisTime time.Time) eth2client.GenesisTimeProvider {
-	return &GenesisTimeProvider{
+// NewGenesisProvider returns a mock genesis provider with the provided value.
+func NewGenesisProvider(genesisTime time.Time) eth2client.GenesisProvider {
+	return &GenesisProvider{
 		genesisTime: genesisTime,
 	}
 }
 
-// GenesisTime is a mock.
-func (m *GenesisTimeProvider) GenesisTime(_ context.Context) (time.Time, error) {
-	return m.genesisTime, nil
+// Genesisis a mock.
+func (m *GenesisProvider) Genesis(_ context.Context, _ *api.GenesisOpts) (*api.Response[*apiv1.Genesis], error) {
+	return &api.Response[*apiv1.Genesis]{
+		Data: &apiv1.Genesis{
+			GenesisTime: m.genesisTime,
+		},
+		Metadata: make(map[string]any),
+	}, nil
 }
 
 // SpecProvider is a mock for eth2client.SpecProvider.
@@ -61,7 +66,7 @@ func NewSpecProvider(slotDuration time.Duration,
 }
 
 // Spec is a mock.
-func (m *SpecProvider) Spec(_ context.Context) (*api.Response[map[string]any], error) {
+func (m *SpecProvider) Spec(_ context.Context, _ *api.SpecOpts) (*api.Response[map[string]any], error) {
 	return &api.Response[map[string]any]{
 		Data:     m.spec,
 		Metadata: make(map[string]any),
@@ -81,7 +86,7 @@ func NewForkScheduleProvider(schedule []*phase0.Fork) eth2client.ForkSchedulePro
 }
 
 // ForkSchedule is a mock.
-func (m *ForkScheduleProvider) ForkSchedule(_ context.Context) (*api.Response[[]*phase0.Fork], error) {
+func (m *ForkScheduleProvider) ForkSchedule(_ context.Context, _ *api.ForkScheduleOpts) (*api.Response[[]*phase0.Fork], error) {
 	return &api.Response[[]*phase0.Fork]{
 		Data:     m.schedule,
 		Metadata: make(map[string]any),

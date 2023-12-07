@@ -55,11 +55,11 @@ func process(ctx context.Context, data *dataIn) (*dataOut, error) {
 		eth2Client: data.eth2Client,
 	}
 
-	specResponse, err := results.eth2Client.(eth2client.SpecProvider).Spec(ctx)
+	specResponse, err := results.eth2Client.(eth2client.SpecProvider).Spec(ctx, &api.SpecOpts{})
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to connect to obtain configuration information")
 	}
-	genesisResponse, err := results.eth2Client.(eth2client.GenesisProvider).Genesis(ctx)
+	genesisResponse, err := results.eth2Client.(eth2client.GenesisProvider).Genesis(ctx, &api.GenesisOpts{})
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to connect to obtain genesis information")
 	}
@@ -345,7 +345,7 @@ func timeToBlockID(ctx context.Context, eth2Client eth2client.Service, input str
 	// Assume timestamp.
 	chainTime, err := standardchaintime.New(ctx,
 		standardchaintime.WithSpecProvider(eth2Client.(eth2client.SpecProvider)),
-		standardchaintime.WithGenesisTimeProvider(eth2Client.(eth2client.GenesisTimeProvider)),
+		standardchaintime.WithGenesisProvider(eth2Client.(eth2client.GenesisProvider)),
 	)
 	if err != nil {
 		return "", errors.Wrap(err, "failed to set up chaintime service")

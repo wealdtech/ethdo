@@ -46,7 +46,7 @@ func (c *command) calculateProposalChance(ctx context.Context) error {
 	// Chance of proposing a block is 1/activeValidators.
 	// Expectation of number of slots before proposing a block is 1/p, == activeValidators slots.
 
-	specResponse, err := c.eth2Client.(eth2client.SpecProvider).Spec(ctx)
+	specResponse, err := c.eth2Client.(eth2client.SpecProvider).Spec(ctx, &api.SpecOpts{})
 	if err != nil {
 		return err
 	}
@@ -69,7 +69,7 @@ func (c *command) calculateSyncCommitteeChance(ctx context.Context) error {
 	// Chance of being in a sync committee is SYNC_COMMITTEE_SIZE/activeValidators.
 	// Expectation of number of periods before being in a sync committee is 1/p, activeValidators/SYNC_COMMITTEE_SIZE periods.
 
-	specResponse, err := c.eth2Client.(eth2client.SpecProvider).Spec(ctx)
+	specResponse, err := c.eth2Client.(eth2client.SpecProvider).Spec(ctx, &api.SpecOpts{})
 	if err != nil {
 		return err
 	}
@@ -136,7 +136,7 @@ func (c *command) setup(ctx context.Context) error {
 
 	chainTime, err := standardchaintime.New(ctx,
 		standardchaintime.WithSpecProvider(c.eth2Client.(eth2client.SpecProvider)),
-		standardchaintime.WithGenesisTimeProvider(c.eth2Client.(eth2client.GenesisTimeProvider)),
+		standardchaintime.WithGenesisProvider(c.eth2Client.(eth2client.GenesisProvider)),
 	)
 	if err != nil {
 		return errors.Wrap(err, "failed to set up chaintime service")

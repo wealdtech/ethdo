@@ -278,7 +278,7 @@ func outputBlockSyncAggregate(ctx context.Context, eth2Client eth2client.Service
 	if verbose {
 		specProvider, isProvider := eth2Client.(eth2client.SpecProvider)
 		if isProvider {
-			specResponse, err := specProvider.Spec(ctx)
+			specResponse, err := specProvider.Spec(ctx, &api.SpecOpts{})
 			if err == nil {
 				slotsPerEpoch := specResponse.Data["SLOTS_PER_EPOCH"].(uint64)
 
@@ -916,7 +916,7 @@ func outputDenebBlobInfo(_ context.Context,
 	}
 
 	if !verbose {
-		return fmt.Sprintf("Blobs: %d\n", len(body.BlobKzgCommitments)), nil
+		return fmt.Sprintf("Blobs: %d\n", len(body.BlobKZGCommitments)), nil
 	}
 
 	res := strings.Builder{}
@@ -926,8 +926,7 @@ func outputDenebBlobInfo(_ context.Context,
 			res.WriteString("Blobs\n")
 		}
 		res.WriteString(fmt.Sprintf("  Index: %d\n", blob.Index))
-		res.WriteString(fmt.Sprintf("  KZG commitment: %s\n", blob.KzgCommitment.String()))
-		res.WriteString(fmt.Sprintf("  KZG proof: %s\n", blob.KzgProof.String()))
+		res.WriteString(fmt.Sprintf("  KZG commitment: %s\n", body.BlobKZGCommitments[i].String()))
 	}
 
 	return res.String(), nil

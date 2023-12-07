@@ -40,7 +40,7 @@ func (c *specETH2Client) Address() string {
 }
 
 // Spec provides the spec information of the chain.
-func (c *specETH2Client) Spec(ctx context.Context) (*api.Response[map[string]any], error) {
+func (c *specETH2Client) Spec(ctx context.Context, _ *api.SpecOpts) (*api.Response[map[string]any], error) {
 	return &api.Response[map[string]any]{
 		Data: map[string]any{
 			"DEPOSIT_CONTRACT_ADDRESS": c.address,

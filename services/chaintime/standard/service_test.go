@@ -32,7 +32,7 @@ func TestService(t *testing.T) {
 	slotsPerEpoch := uint64(32)
 	epochsPerSyncCommitteePeriod := uint64(256)
 
-	mockGenesisTimeProvider := mock.NewGenesisTimeProvider(genesisTime)
+	mockGenesisProvider := mock.NewGenesisProvider(genesisTime)
 	mockSpecProvider := mock.NewSpecProvider(slotDuration, slotsPerEpoch, epochsPerSyncCommitteePeriod)
 
 	tests := []struct {
@@ -41,18 +41,18 @@ func TestService(t *testing.T) {
 		err    string
 	}{
 		{
-			name: "GenesisTimeProviderMissing",
+			name: "GenesisProviderMissing",
 			params: []standard.Parameter{
 				standard.WithLogLevel(zerolog.Disabled),
 				standard.WithSpecProvider(mockSpecProvider),
 			},
-			err: "problem with parameters: no genesis time provider specified",
+			err: "problem with parameters: no genesis provider specified",
 		},
 		{
 			name: "SpecProviderMissing",
 			params: []standard.Parameter{
 				standard.WithLogLevel(zerolog.Disabled),
-				standard.WithGenesisTimeProvider(mockGenesisTimeProvider),
+				standard.WithGenesisProvider(mockGenesisProvider),
 			},
 			err: "problem with parameters: no spec provider specified",
 		},
@@ -60,7 +60,7 @@ func TestService(t *testing.T) {
 			name: "Good",
 			params: []standard.Parameter{
 				standard.WithLogLevel(zerolog.Disabled),
-				standard.WithGenesisTimeProvider(mockGenesisTimeProvider),
+				standard.WithGenesisProvider(mockGenesisProvider),
 				standard.WithSpecProvider(mockSpecProvider),
 			},
 		},
@@ -96,10 +96,10 @@ func createService(genesisTime time.Time) (chaintime.Service, time.Duration, uin
 		},
 	}
 
-	mockGenesisTimeProvider := mock.NewGenesisTimeProvider(genesisTime)
+	mockGenesisProvider := mock.NewGenesisProvider(genesisTime)
 	mockSpecProvider := mock.NewSpecProvider(slotDuration, slotsPerEpoch, epochsPerSyncCommitteePeriod)
 	s, err := standard.New(context.Background(),
-		standard.WithGenesisTimeProvider(mockGenesisTimeProvider),
+		standard.WithGenesisProvider(mockGenesisProvider),
 		standard.WithSpecProvider(mockSpecProvider),
 	)
 	return s, slotDuration, slotsPerEpoch, epochsPerSyncCommitteePeriod, forkSchedule, err

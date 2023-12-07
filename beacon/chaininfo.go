@@ -272,14 +272,14 @@ func ObtainChainInfoFromNode(ctx context.Context,
 	}
 
 	// Genesis validators root obtained from beacon node.
-	genesisResponse, err := consensusClient.(consensusclient.GenesisProvider).Genesis(ctx)
+	genesisResponse, err := consensusClient.(consensusclient.GenesisProvider).Genesis(ctx, &api.GenesisOpts{})
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to obtain genesis information")
 	}
 	res.GenesisValidatorsRoot = genesisResponse.Data.GenesisValidatorsRoot
 
 	// Fetch the genesis fork version from the specification.
-	specResponse, err := consensusClient.(consensusclient.SpecProvider).Spec(ctx)
+	specResponse, err := consensusClient.(consensusclient.SpecProvider).Spec(ctx, &api.SpecOpts{})
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to obtain spec")
 	}
@@ -304,7 +304,7 @@ func ObtainChainInfoFromNode(ctx context.Context,
 	}
 
 	// Fetch the current fork version from the fork schedule.
-	forkScheduleResponse, err := consensusClient.(consensusclient.ForkScheduleProvider).ForkSchedule(ctx)
+	forkScheduleResponse, err := consensusClient.(consensusclient.ForkScheduleProvider).ForkSchedule(ctx, &api.ForkScheduleOpts{})
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to obtain fork schedule")
 	}

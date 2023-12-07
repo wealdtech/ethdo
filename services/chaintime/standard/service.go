@@ -18,6 +18,7 @@ import (
 	"time"
 
 	eth2client "github.com/attestantio/go-eth2-client"
+	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
@@ -49,13 +50,13 @@ func New(ctx context.Context, params ...Parameter) (*Service, error) {
 	// Set logging.
 	log = zerologger.With().Str("service", "chaintime").Str("impl", "standard").Logger().Level(parameters.logLevel)
 
-	genesisTime, err := parameters.genesisTimeProvider.GenesisTime(ctx)
+	genesisResponse, err := parameters.genesisProvider.Genesis(ctx, &api.GenesisOpts{})
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to obtain genesis time")
 	}
-	log.Trace().Time("genesis_time", genesisTime).Msg("Obtained genesis time")
+	log.Trace().Time("genesis_time", genesisResponse.Data.GenesisTime).Msg("Obtained genesis time")
 
-	specResponse, err := parameters.specProvider.Spec(ctx)
+	specResponse, err := parameters.specProvider.Spec(ctx, &api.SpecOpts{})
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to obtain spec")
 	}
@@ -116,7 +117,7 @@ func New(ctx context.Context, params ...Parameter) (*Service, error) {
 	log.Trace().Uint64("epoch", uint64(denebForkEpoch)).Msg("Obtained Deneb fork epoch")
 
 	s := &Service{
-		genesisTime:                  genesisTime,
+		genesisTime:                  genesisResponse.Data.GenesisTime,
 		slotDuration:                 slotDuration,
 		slotsPerEpoch:                slotsPerEpoch,
 		epochsPerSyncCommitteePeriod: epochsPerSyncCommitteePeriod,
@@ -237,7 +238,7 @@ func fetchAltairForkEpoch(ctx context.Context,
 	error,
 ) {
 	// Fetch the fork version.
-	specResponse, err := specProvider.Spec(ctx)
+	specResponse, err := specProvider.Spec(ctx, &api.SpecOpts{})
 	if err != nil {
 		return 0, errors.Wrap(err, "failed to obtain spec")
 	}
@@ -266,7 +267,7 @@ func fetchBellatrixForkEpoch(ctx context.Context,
 	error,
 ) {
 	// Fetch the fork version.
-	specResponse, err := specProvider.Spec(ctx)
+	specResponse, err := specProvider.Spec(ctx, &api.SpecOpts{})
 	if err != nil {
 		return 0, errors.Wrap(err, "failed to obtain spec")
 	}
@@ -295,7 +296,7 @@ func fetchCapellaForkEpoch(ctx context.Context,
 	error,
 ) {
 	// Fetch the fork version.
-	specResponse, err := specProvider.Spec(ctx)
+	specResponse, err := specProvider.Spec(ctx, &api.SpecOpts{})
 	if err != nil {
 		return 0, errors.Wrap(err, "failed to obtain spec")
 	}
@@ -324,7 +325,7 @@ func fetchDenebForkEpoch(ctx context.Context,
 	error,
 ) {
 	// Fetch the fork version.
-	specResponse, err := specProvider.Spec(ctx)
+	specResponse, err := specProvider.Spec(ctx, &api.SpecOpts{})
 	if err != nil {
 		return 0, errors.Wrap(err, "failed to obtain spec")
 	}

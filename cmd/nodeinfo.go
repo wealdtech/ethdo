@@ -19,6 +19,7 @@ import (
 	"os"
 
 	eth2client "github.com/attestantio/go-eth2-client"
+	"github.com/attestantio/go-eth2-client/api"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/wealdtech/ethdo/util"
@@ -48,12 +49,12 @@ In quiet mode this will return 0 if the node information can be obtained, otherw
 		}
 
 		if viper.GetBool("verbose") {
-			versionResponse, err := eth2Client.(eth2client.NodeVersionProvider).NodeVersion(ctx)
+			versionResponse, err := eth2Client.(eth2client.NodeVersionProvider).NodeVersion(ctx, &api.NodeVersionOpts{})
 			errCheck(err, "Failed to obtain node version")
 			fmt.Printf("Version: %s\n", versionResponse.Data)
 		}
 
-		syncStateResponse, err := eth2Client.(eth2client.NodeSyncingProvider).NodeSyncing(ctx)
+		syncStateResponse, err := eth2Client.(eth2client.NodeSyncingProvider).NodeSyncing(ctx, &api.NodeSyncingOpts{})
 		errCheck(err, "failed to obtain node sync state")
 		fmt.Printf("Syncing: %t\n", syncStateResponse.Data.SyncDistance != 0)
 

@@ -22,6 +22,7 @@ import (
 	"time"
 
 	eth2client "github.com/attestantio/go-eth2-client"
+	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -47,7 +48,7 @@ In quiet mode this will return 0 if the chain specification can be obtained, oth
 		})
 		errCheck(err, "Failed to connect to Ethereum consensus node")
 
-		specResponse, err := eth2Client.(eth2client.SpecProvider).Spec(ctx)
+		specResponse, err := eth2Client.(eth2client.SpecProvider).Spec(ctx, &api.SpecOpts{})
 		errCheck(err, "Failed to obtain chain specification")
 
 		if viper.GetBool("quiet") {

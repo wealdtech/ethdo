@@ -68,7 +68,7 @@ In quiet mode this will return 0 if the exit is verified correctly, otherwise 1.
 		opRoot, err := signedOp.Message.HashTreeRoot()
 		errCheck(err, "Failed to obtain exit hash tree root")
 
-		genesisResponse, err := eth2Client.(consensusclient.GenesisProvider).Genesis(ctx)
+		genesisResponse, err := eth2Client.(consensusclient.GenesisProvider).Genesis(ctx, &api.GenesisOpts{})
 		errCheck(err, "Failed to obtain beacon chain genesis")
 		genesis := genesisResponse.Data
 

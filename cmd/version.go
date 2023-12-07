@@ -16,7 +16,7 @@ package cmd
 import (
 	"fmt"
 	"os"
-	dbg "runtime/debug"
+	"runtime/debug"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -36,7 +36,16 @@ var versionCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println(ReleaseVersion)
 		if viper.GetBool("verbose") {
-			buildInfo, ok := dbg.ReadBuildInfo()
+			if info, ok := debug.ReadBuildInfo(); ok {
+				for _, setting := range info.Settings {
+					if setting.Key == "vcs.revision" {
+						fmt.Printf("Commit hash: %s\n", setting.Value)
+						break
+					}
+				}
+			}
+
+			buildInfo, ok := debug.ReadBuildInfo()
 			if ok {
 				fmt.Printf("Package: %s\n", buildInfo.Path)
 				fmt.Println("Dependencies:")

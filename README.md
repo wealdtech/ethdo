@@ -38,7 +38,7 @@ docker pull wealdtech/ethdo
 go install github.com/wealdtech/ethdo@latest
 ```
 
-Note that `ethdo` requires at least version 1.13 of go to operate.  The version of go can be found with `go version`.
+Note that `ethdo` requires at least version 1.20 of go to operate.  The version of go can be found with `go version`.
 
 If this does not work please see the [troubleshooting](https://github.com/wealdtech/ethdo/blob/master/docs/troubleshooting.md) page.
 

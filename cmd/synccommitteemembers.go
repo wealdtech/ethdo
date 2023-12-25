@@ -49,7 +49,7 @@ epoch can be a specific epoch.  period can be 'current' for the current sync per
 func init() {
 	synccommitteeCmd.AddCommand(synccommitteeMembersCmd)
 	synccommitteeFlags(synccommitteeMembersCmd)
-	synccommitteeMembersCmd.Flags().Int64("epoch", -1, "the epoch for which to fetch sync committees")
+	synccommitteeMembersCmd.Flags().String("epoch", "", "the epoch for which to fetch sync committees")
 	synccommitteeMembersCmd.Flags().String("period", "", "the sync committee period for which to fetch sync committees ('current', 'next')")
 }
 

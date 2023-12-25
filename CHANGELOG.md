@@ -1,3 +1,6 @@
+dev:
+  - fix period parsing for "synccommittee members" command
+
 1.34.0:
   - update dependencies
   - use Capella fork for all exits

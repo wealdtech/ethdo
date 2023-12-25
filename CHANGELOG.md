@@ -1,4 +1,4 @@
-dev:
+1.34.1:
   - fix period parsing for "synccommittee members" command
 
 1.34.0:

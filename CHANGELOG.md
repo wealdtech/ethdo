@@ -1,3 +1,7 @@
+1.35.0:
+  - support Deneb
+  - add start and end dates for eth1votes period
+
 1.34.1:
   - fix period parsing for "synccommittee members" command
 

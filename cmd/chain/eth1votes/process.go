@@ -103,6 +103,8 @@ func (c *command) process(ctx context.Context) error {
 	}
 
 	c.period = uint64(c.epoch) / c.epochsPerEth1VotingPeriod
+	c.periodStart = c.chainTime.StartOfEpoch(phase0.Epoch(c.period * c.epochsPerEth1VotingPeriod))
+	c.periodEnd = c.chainTime.StartOfEpoch(phase0.Epoch((c.period + 1) * c.epochsPerEth1VotingPeriod))
 
 	c.votes = make(map[string]*vote)
 	for _, eth1Vote := range c.eth1DataVotes {

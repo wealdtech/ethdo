@@ -24,11 +24,13 @@ import (
 )
 
 type jsonOutput struct {
-	Period    uint64           `json:"period"`
-	Epoch     phase0.Epoch     `json:"epoch"`
-	Slot      phase0.Slot      `json:"slot"`
-	Incumbent *phase0.ETH1Data `json:"incumbent"`
-	Votes     []*vote          `json:"votes"`
+	Period      uint64           `json:"period"`
+	PeriodStart int64            `json:"period_start"`
+	PeriodEnd   int64            `json:"period_end"`
+	Epoch       phase0.Epoch     `json:"epoch"`
+	Slot        phase0.Slot      `json:"slot"`
+	Incumbent   *phase0.ETH1Data `json:"incumbent"`
+	Votes       []*vote          `json:"votes"`
 }
 
 func (c *command) output(ctx context.Context) (string, error) {
@@ -57,11 +59,13 @@ func (c *command) outputJSON(_ context.Context) (string, error) {
 	})
 
 	output := &jsonOutput{
-		Period:    c.period,
-		Epoch:     c.epoch,
-		Slot:      c.slot,
-		Incumbent: c.incumbent,
-		Votes:     votes,
+		Period:      c.period,
+		PeriodStart: c.periodStart.Unix(),
+		PeriodEnd:   c.periodEnd.Unix(),
+		Epoch:       c.epoch,
+		Slot:        c.slot,
+		Incumbent:   c.incumbent,
+		Votes:       votes,
 	}
 	data, err := json.Marshal(output)
 	if err != nil {
@@ -78,6 +82,11 @@ func (c *command) outputText(_ context.Context) (string, error) {
 	builder.WriteString(fmt.Sprintf("%d\n", c.period))
 
 	if c.verbose {
+		builder.WriteString("Period start: ")
+		builder.WriteString(fmt.Sprintf("%s\n", c.periodStart))
+		builder.WriteString("Period end: ")
+		builder.WriteString(fmt.Sprintf("%s\n", c.periodEnd))
+
 		builder.WriteString("Incumbent: ")
 		builder.WriteString(fmt.Sprintf("block %#x, deposit count %d\n", c.incumbent.BlockHash, c.incumbent.DepositCount))
 	}

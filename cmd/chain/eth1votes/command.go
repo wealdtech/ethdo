@@ -50,6 +50,8 @@ type command struct {
 	slot          phase0.Slot
 	epoch         phase0.Epoch
 	period        uint64
+	periodStart   time.Time
+	periodEnd     time.Time
 	incumbent     *phase0.ETH1Data
 	eth1DataVotes []*phase0.ETH1Data
 	votes         map[string]*vote

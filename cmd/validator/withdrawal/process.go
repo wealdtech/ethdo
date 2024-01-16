@@ -22,7 +22,6 @@ import (
 	consensusclient "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
 	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
-	"github.com/attestantio/go-eth2-client/spec"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 	standardchaintime "github.com/wealdtech/ethdo/services/chaintime/standard"
@@ -76,23 +75,14 @@ func (c *command) process(ctx context.Context) error {
 		validators[validator.Index] = validator
 	}
 
-	var nextWithdrawalValidatorIndex phase0.ValidatorIndex
-	switch block.Version {
-	case spec.DataVersionCapella:
-		withdrawals := block.Capella.Message.Body.ExecutionPayload.Withdrawals
-		if len(withdrawals) == 0 {
-			return errors.New("block without withdrawals; cannot obtain next withdrawal validator index")
-		}
-		nextWithdrawalValidatorIndex = phase0.ValidatorIndex((int(withdrawals[len(withdrawals)-1].ValidatorIndex) + 1) % len(validators))
-	case spec.DataVersionDeneb:
-		withdrawals := block.Deneb.Message.Body.ExecutionPayload.Withdrawals
-		if len(withdrawals) == 0 {
-			return errors.New("block without withdrawals; cannot obtain next withdrawal validator index")
-		}
-		nextWithdrawalValidatorIndex = phase0.ValidatorIndex((int(withdrawals[len(withdrawals)-1].ValidatorIndex) + 1) % len(validators))
-	default:
-		return fmt.Errorf("unhandled block version %v", block.Version)
+	withdrawals, err := block.Withdrawals()
+	if err != nil {
+		return errors.Wrap(err, "failed to obtain withdrawals from block")
 	}
+	if len(withdrawals) == 0 {
+		return errors.New("block without withdrawals; cannot obtain next withdrawal validator index")
+	}
+	nextWithdrawalValidatorIndex := phase0.ValidatorIndex((int(withdrawals[len(withdrawals)-1].ValidatorIndex) + 1) % len(validators))
 
 	if c.debug {
 		fmt.Fprintf(os.Stderr, "Next withdrawal validator index is %d\n", nextWithdrawalValidatorIndex)

@@ -22,7 +22,6 @@ import (
 	"github.com/attestantio/go-eth2-client/api"
 	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
 	"github.com/attestantio/go-eth2-client/spec"
-	"github.com/attestantio/go-eth2-client/spec/altair"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 	standardchaintime "github.com/wealdtech/ethdo/services/chaintime/standard"
@@ -287,21 +286,14 @@ func (c *command) processSyncCommitteeDuties(ctx context.Context) error {
 			// If the block is missed we don't count the sync aggregate miss.
 			continue
 		}
-		var aggregate *altair.SyncAggregate
-		switch block.Version {
-		case spec.DataVersionPhase0:
+		if block.Version == spec.DataVersionPhase0 {
 			// No sync committees in this fork.
 			return nil
-		case spec.DataVersionAltair:
-			aggregate = block.Altair.Message.Body.SyncAggregate
-		case spec.DataVersionBellatrix:
-			aggregate = block.Bellatrix.Message.Body.SyncAggregate
-		case spec.DataVersionCapella:
-			aggregate = block.Capella.Message.Body.SyncAggregate
-		case spec.DataVersionDeneb:
-			aggregate = block.Deneb.Message.Body.SyncAggregate
-		default:
-			return fmt.Errorf("unhandled block version %v", block.Version)
+		}
+
+		aggregate, err := block.SyncAggregate()
+		if err != nil {
+			return errors.Wrapf(err, "failed to obtain sync aggregate for slot %d", slot)
 		}
 		for i := uint64(0); i < aggregate.SyncCommitteeBits.Len(); i++ {
 			if !aggregate.SyncCommitteeBits.BitAt(i) {

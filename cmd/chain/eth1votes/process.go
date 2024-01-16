@@ -77,25 +77,24 @@ func (c *command) process(ctx context.Context) error {
 		}
 	}
 
+	c.slot, err = state.Slot()
+	if err != nil {
+		return errors.Wrap(err, "failed to obtain slot")
+	}
 	switch state.Version {
 	case spec.DataVersionPhase0:
-		c.slot = state.Phase0.Slot
 		c.incumbent = state.Phase0.ETH1Data
 		c.eth1DataVotes = state.Phase0.ETH1DataVotes
 	case spec.DataVersionAltair:
-		c.slot = state.Altair.Slot
 		c.incumbent = state.Altair.ETH1Data
 		c.eth1DataVotes = state.Altair.ETH1DataVotes
 	case spec.DataVersionBellatrix:
-		c.slot = state.Bellatrix.Slot
 		c.incumbent = state.Bellatrix.ETH1Data
 		c.eth1DataVotes = state.Bellatrix.ETH1DataVotes
 	case spec.DataVersionCapella:
-		c.slot = state.Capella.Slot
 		c.incumbent = state.Capella.ETH1Data
 		c.eth1DataVotes = state.Capella.ETH1DataVotes
 	case spec.DataVersionDeneb:
-		c.slot = state.Deneb.Slot
 		c.incumbent = state.Deneb.ETH1Data
 		c.eth1DataVotes = state.Deneb.ETH1DataVotes
 	default:

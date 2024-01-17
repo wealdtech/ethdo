@@ -16,6 +16,7 @@ package inclusion
 import (
 	"context"
 	"fmt"
+	"net/http"
 
 	eth2client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
@@ -76,8 +77,14 @@ func (c *command) process(ctx context.Context) error {
 				Block: fmt.Sprintf("%d", slot),
 			})
 			if err != nil {
-				return err
+				var apiErr *api.Error
+				if errors.As(err, &apiErr) && apiErr.StatusCode == http.StatusNotFound {
+					c.inclusions = append(c.inclusions, 0)
+					continue
+				}
+				return errors.Wrap(err, "failed to obtain beacon block")
 			}
+
 			block := blockResponse.Data
 			if block == nil {
 				c.inclusions = append(c.inclusions, 0)

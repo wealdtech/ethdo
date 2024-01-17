@@ -17,6 +17,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"net/http"
 
 	eth2client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
@@ -66,6 +67,11 @@ func process(ctx context.Context, data *dataIn) (*dataOut, error) {
 			Block: fmt.Sprintf("%d", slot),
 		})
 		if err != nil {
+			var apiErr *api.Error
+			if errors.As(err, &apiErr) && apiErr.StatusCode == http.StatusNotFound {
+				// No block for this slot, that's fine.
+				continue
+			}
 			return nil, errors.Wrap(err, "failed to obtain block")
 		}
 		block := blockResponse.Data
@@ -129,12 +135,14 @@ func calcHeadCorrect(ctx context.Context, data *dataIn, attestation *phase0.Atte
 			Block: fmt.Sprintf("%d", slot),
 		})
 		if err != nil {
+			var apiErr *api.Error
+			if errors.As(err, &apiErr) && apiErr.StatusCode == http.StatusNotFound {
+				// No block.
+				slot--
+				continue
+			}
+
 			return false, err
-		}
-		if response.Data == nil {
-			// No block.
-			slot--
-			continue
 		}
 		if !response.Data.Canonical {
 			// Not canonical.
@@ -153,12 +161,14 @@ func calcTargetCorrect(ctx context.Context, data *dataIn, attestation *phase0.At
 			Block: fmt.Sprintf("%d", slot),
 		})
 		if err != nil {
+			var apiErr *api.Error
+			if errors.As(err, &apiErr) && apiErr.StatusCode == http.StatusNotFound {
+				// No block.
+				slot--
+				continue
+			}
+
 			return false, err
-		}
-		if response.Data == nil {
-			// No block.
-			slot--
-			continue
 		}
 		if !response.Data.Canonical {
 			// Not canonical.

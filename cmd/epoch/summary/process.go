@@ -16,6 +16,7 @@ package epochsummary
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"sort"
 
 	eth2client "github.com/attestantio/go-eth2-client"
@@ -411,6 +412,12 @@ func (c *command) fetchBlock(ctx context.Context,
 			Block: blockID,
 		})
 		if err != nil {
+			var apiErr *api.Error
+			if errors.As(err, &apiErr) && apiErr.StatusCode == http.StatusNotFound {
+				// No block for this slot, that's okay.
+				return nil, nil
+			}
+
 			return nil, errors.Wrap(err, "failed to fetch block")
 		}
 		block = blockResponse.Data

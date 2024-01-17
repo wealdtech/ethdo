@@ -16,6 +16,7 @@ package validatorsummary
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"sort"
 
 	eth2client "github.com/attestantio/go-eth2-client"
@@ -96,6 +97,11 @@ func (c *command) processProposerDuties(ctx context.Context) error {
 			Block: fmt.Sprintf("%d", duty.Slot),
 		})
 		if err != nil {
+			var apiErr *api.Error
+			if errors.As(err, &apiErr) && apiErr.StatusCode == http.StatusNotFound {
+				return nil
+			}
+
 			return errors.Wrap(err, fmt.Sprintf("failed to obtain block for slot %d", duty.Slot))
 		}
 		block := blockResponse.Data
@@ -224,7 +230,12 @@ func (c *command) processAttesterDutiesSlot(ctx context.Context,
 		Block: fmt.Sprintf("%d", slot),
 	})
 	if err != nil {
-		return errors.Wrap(err, fmt.Sprintf("failed to obtain block for slot %d", slot))
+		var apiErr *api.Error
+		if errors.As(err, &apiErr) && apiErr.StatusCode == http.StatusNotFound {
+			return nil
+		}
+
+		return errors.Wrap(err, "failed to obtain beacon block")
 	}
 	block := blockResponse.Data
 	attestations, err := block.Attestations()

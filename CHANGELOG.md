@@ -1,3 +1,6 @@
+1.35.1:
+  - fix output for various commands that may encounter an empty slot
+
 1.35.0:
   - support Deneb
   - add start and end dates for eth1votes period

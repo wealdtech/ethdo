@@ -15,7 +15,9 @@ package util
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"net/http"
 
 	eth2client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
@@ -53,11 +55,13 @@ func (b *BeaconBlockHeaderCache) Fetch(ctx context.Context,
 	if !exists {
 		response, err := b.beaconBlockHeadersProvider.BeaconBlockHeader(ctx, &api.BeaconBlockHeaderOpts{Block: fmt.Sprintf("%d", slot)})
 		if err != nil {
-			return nil, err
-		}
-		if response.Data == nil {
-			entry = &beaconBlockHeaderEntry{
-				present: false,
+			var apiErr *api.Error
+			if errors.As(err, &apiErr) && apiErr.StatusCode == http.StatusNotFound {
+				entry = &beaconBlockHeaderEntry{
+					present: false,
+				}
+			} else {
+				return nil, err
 			}
 		} else {
 			entry = &beaconBlockHeaderEntry{
@@ -65,6 +69,7 @@ func (b *BeaconBlockHeaderCache) Fetch(ctx context.Context,
 				value:   response.Data,
 			}
 		}
+
 		b.entries[slot] = entry
 	}
 	return entry.value, nil

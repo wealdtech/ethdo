@@ -17,6 +17,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"os"
 	"strconv"
 	"strings"
@@ -80,12 +81,14 @@ func process(ctx context.Context, data *dataIn) (*dataOut, error) {
 	})
 	if err != nil {
 		var apiErr *api.Error
-		if errors.As(err, &apiErr) && apiErr.StatusCode == 404 {
+		if errors.As(err, &apiErr) && apiErr.StatusCode == http.StatusNotFound {
 			if data.quiet {
 				os.Exit(1)
 			}
+
 			return nil, errors.New("empty beacon block")
 		}
+
 		return nil, errors.Wrap(err, "failed to obtain beacon block")
 	}
 	block := blockResponse.Data

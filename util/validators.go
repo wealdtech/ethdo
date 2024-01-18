@@ -29,6 +29,7 @@ import (
 // ParseValidators parses input to obtain the list of validators.
 func ParseValidators(ctx context.Context, validatorsProvider eth2client.ValidatorsProvider, validatorsStr []string, stateID string) ([]*apiv1.Validator, error) {
 	validators := make([]*apiv1.Validator, 0, len(validatorsStr))
+	indices := make([]phase0.ValidatorIndex, 0)
 	for i := range validatorsStr {
 		if strings.Contains(validatorsStr[i], "-") {
 			// Range.
@@ -44,24 +45,24 @@ func ParseValidators(ctx context.Context, validatorsProvider eth2client.Validato
 			if err != nil {
 				return nil, errors.Wrap(err, "invalid range end")
 			}
-			indices := make([]phase0.ValidatorIndex, 0)
 			for index := low; index <= high; index++ {
 				indices = append(indices, phase0.ValidatorIndex(index))
 			}
-			response, err := validatorsProvider.Validators(ctx, &api.ValidatorsOpts{State: stateID, Indices: indices})
-			if err != nil {
-				return nil, errors.Wrap(err, fmt.Sprintf("failed to obtain validators %s", validatorsStr[i]))
-			}
-			for _, validator := range response.Data {
-				validators = append(validators, validator)
-			}
 		} else {
-			validator, err := ParseValidator(ctx, validatorsProvider, validatorsStr[i], stateID)
+			index, err := strconv.ParseUint(validatorsStr[i], 10, 64)
 			if err != nil {
-				return nil, errors.Wrap(err, fmt.Sprintf("unknown validator %s", validatorsStr[i]))
+				return nil, errors.Wrapf(err, "failed to parse validator %s", validatorsStr[i])
 			}
-			validators = append(validators, validator)
+			indices = append(indices, phase0.ValidatorIndex(index))
 		}
+	}
+
+	response, err := validatorsProvider.Validators(ctx, &api.ValidatorsOpts{State: stateID, Indices: indices})
+	if err != nil {
+		return nil, errors.Wrap(err, fmt.Sprintf("failed to obtain validators %v", indices))
+	}
+	for _, validator := range response.Data {
+		validators = append(validators, validator)
 	}
 	return validators, nil
 }

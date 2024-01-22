@@ -1,3 +1,6 @@
+1.35.2:
+  - update dependencies
+
 1.35.1:
   - fix output for various commands that may encounter an empty slot
 

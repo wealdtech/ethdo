@@ -1,4 +1,4 @@
-// Copyright © 2019, 2020 Weald Technology Trading
+// Copyright © 2019 - 2024 Weald Technology Trading.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -15,8 +15,8 @@ package nodeevents
 
 import (
 	"context"
+	"errors"
 
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
 
@@ -25,14 +25,19 @@ func Run(cmd *cobra.Command) (string, error) {
 	ctx := context.Background()
 	dataIn, err := input(ctx)
 	if err != nil {
-		return "", errors.Wrap(err, "failed to obtain input")
+		return "", errors.Join(errors.New("failed to set up command"), err)
 	}
 
 	// Further errors do not need a usage report.
 	cmd.SilenceUsage = true
 
 	if err := process(ctx, dataIn); err != nil {
-		return "", errors.Wrap(err, "failed to process")
+		switch {
+		case errors.Is(err, context.DeadlineExceeded):
+			return "", errors.New("operation timed out; try increasing with --timeout option")
+		default:
+			return "", errors.Join(errors.New("failed to process"), err)
+		}
 	}
 
 	// Process generates all output.

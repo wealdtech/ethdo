@@ -1,4 +1,4 @@
-// Copyright © 2020 Weald Technology Trading
+// Copyright © 2020, 2024 Weald Technology Trading.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -15,9 +15,9 @@ package accountderive
 
 import (
 	"context"
+	"errors"
 	"strings"
 
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
 
@@ -26,7 +26,7 @@ func Run(cmd *cobra.Command) (string, error) {
 	ctx := context.Background()
 	dataIn, err := input(ctx)
 	if err != nil {
-		return "", errors.Wrap(err, "failed to obtain input")
+		return "", errors.Join(errors.New("failed to obtain input"), err)
 	}
 
 	// Further errors do not need a usage report.
@@ -34,7 +34,12 @@ func Run(cmd *cobra.Command) (string, error) {
 
 	dataOut, err := process(ctx, dataIn)
 	if err != nil {
-		return "", errors.Wrap(err, "failed to process")
+		switch {
+		case errors.Is(err, context.DeadlineExceeded):
+			return "", errors.New("operation timed out; try increasing with --timeout option")
+		default:
+			return "", errors.Join(errors.New("failed to process"), err)
+		}
 	}
 
 	if dataIn.quiet {
@@ -43,7 +48,7 @@ func Run(cmd *cobra.Command) (string, error) {
 
 	results, err := output(ctx, dataOut)
 	if err != nil {
-		return "", errors.Wrap(err, "failed to obtain output")
+		return "", errors.Join(errors.New("failed to obtain output"), err)
 	}
 
 	return strings.TrimSuffix(results, "\n"), nil

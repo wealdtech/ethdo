@@ -1,4 +1,4 @@
-// Copyright © 2021 Weald Technology Trading.
+// Copyright © 2021, 2024 Weald Technology Trading.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -15,8 +15,8 @@ package validatorexpectation
 
 import (
 	"context"
+	"errors"
 
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -27,14 +27,19 @@ func Run(cmd *cobra.Command) (string, error) {
 
 	c, err := newCommand(ctx)
 	if err != nil {
-		return "", errors.Wrap(err, "failed to set up command")
+		return "", errors.Join(errors.New("failed to set up command"), err)
 	}
 
 	// Further errors do not need a usage report.
 	cmd.SilenceUsage = true
 
 	if err := c.process(ctx); err != nil {
-		return "", errors.Wrap(err, "failed to process")
+		switch {
+		case errors.Is(err, context.DeadlineExceeded):
+			return "", errors.New("operation timed out; try increasing with --timeout option")
+		default:
+			return "", errors.Join(errors.New("failed to process"), err)
+		}
 	}
 
 	if viper.GetBool("quiet") {
@@ -43,7 +48,7 @@ func Run(cmd *cobra.Command) (string, error) {
 
 	results, err := c.output(ctx)
 	if err != nil {
-		return "", errors.Wrap(err, "failed to obtain output")
+		return "", errors.Join(errors.New("failed to obtain output"), err)
 	}
 
 	return results, nil

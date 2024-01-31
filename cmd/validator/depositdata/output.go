@@ -112,7 +112,7 @@ func validatorDepositDataOutputLaunchpad(datum *dataOut) (string, error) {
 		[4]byte{0x00, 0x00, 0x10, 0x20}: "goerli",
 		[4]byte{0x80, 0x00, 0x00, 0x69}: "ropsten",
 		[4]byte{0x90, 0x00, 0x00, 0x69}: "sepolia",
-		[4]byte{0x00, 0x01, 0x70, 0x00}: "holesky",
+		[4]byte{0x01, 0x01, 0x70, 0x00}: "holesky",
 	}
 
 	if datum.validatorPubKey == nil {
@@ -138,7 +138,7 @@ func validatorDepositDataOutputLaunchpad(datum *dataOut) (string, error) {
 	if network, exists := forkVersionMap[*datum.forkVersion]; exists {
 		networkName = network
 	}
-	output := fmt.Sprintf(`{"pubkey":"%x","withdrawal_credentials":"%x","amount":%d,"signature":"%x","deposit_message_root":"%x","deposit_data_root":"%x","fork_version":"%x","eth2_network_name":"%s","deposit_cli_version":"2.5.0"}`,
+	output := fmt.Sprintf(`{"pubkey":"%x","withdrawal_credentials":"%x","amount":%d,"signature":"%x","deposit_message_root":"%x","deposit_data_root":"%x","fork_version":"%x","network_name":"%s","deposit_cli_version":"2.7.0"}`,
 		*datum.validatorPubKey,
 		datum.withdrawalCredentials,
 		datum.amount,

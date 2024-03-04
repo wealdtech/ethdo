@@ -28,7 +28,7 @@ var chainVerifySignedContributionAndProofCmd = &cobra.Command{
     ethdo chain verify signedcontributionandproof --data=... --validator=...
 
 validator can be an account, a public key or an index.`,
-	RunE: func(cmd *cobra.Command, args []string) error {
+	RunE: func(cmd *cobra.Command, _ []string) error {
 		res, err := chainverifysignedcontributionandproof.Run(cmd)
 		if err != nil {
 			return err

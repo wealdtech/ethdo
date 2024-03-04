@@ -29,7 +29,7 @@ var walletCreateCmd = &cobra.Command{
     ethdo wallet create --wallet="Primary wallet" --type=non-deterministic
 
 In quiet mode this will return 0 if the wallet is created successfully, otherwise 1.`,
-	RunE: func(cmd *cobra.Command, args []string) error {
+	RunE: func(cmd *cobra.Command, _ []string) error {
 		res, err := walletcreate.Run(cmd)
 		if err != nil {
 			return err

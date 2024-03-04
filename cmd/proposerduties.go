@@ -29,7 +29,7 @@ var proposerDutiesCmd = &cobra.Command{
     ethdo proposer duties --epoch=12345
 
 In quiet mode this will return 0 if duties can be obtained, otherwise 1.`,
-	RunE: func(cmd *cobra.Command, args []string) error {
+	RunE: func(cmd *cobra.Command, _ []string) error {
 		res, err := proposerduties.Run(cmd)
 		if err != nil {
 			return err

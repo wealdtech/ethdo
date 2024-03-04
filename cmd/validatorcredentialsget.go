@@ -29,7 +29,7 @@ var validatorCredentialsGetCmd = &cobra.Command{
     ethdo validator credentials get --validator=primary/validator
 
 In quiet mode this will return 0 if the validator exists, otherwise 1.`,
-	RunE: func(cmd *cobra.Command, args []string) error {
+	RunE: func(cmd *cobra.Command, _ []string) error {
 		res, err := validatorcredentialsget.Run(cmd)
 		if err != nil {
 			return err

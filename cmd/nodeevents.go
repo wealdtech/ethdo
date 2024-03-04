@@ -27,7 +27,7 @@ var nodeEventsCmd = &cobra.Command{
 	Long: `Report events from a node.  For example:
 
     ethdo node events --events=head,chain_reorg.`,
-	RunE: func(cmd *cobra.Command, args []string) error {
+	RunE: func(cmd *cobra.Command, _ []string) error {
 		res, err := nodeevents.Run(cmd)
 		if err != nil {
 			return err

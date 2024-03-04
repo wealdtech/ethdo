@@ -27,7 +27,7 @@ var walletSharedExportCmd = &cobra.Command{
 	Long: `Export a wallet for backup of transfer using Shamir secret sharing.  For example:
 
     ethdo wallet sharedexport --wallet=primary --participants=5 --threshold=3 --file=backup.dat`,
-	RunE: func(cmd *cobra.Command, args []string) error {
+	RunE: func(cmd *cobra.Command, _ []string) error {
 		res, err := walletsharedexport.Run(cmd)
 		if err != nil {
 			return err

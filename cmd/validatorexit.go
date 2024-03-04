@@ -39,7 +39,7 @@ The validator and key can be specified in one of a number of ways:
   - validator account using --validator
 
 In quiet mode this will return 0 if the exit operation has been generated (and successfully broadcast if online), otherwise 1.`,
-	RunE: func(cmd *cobra.Command, args []string) error {
+	RunE: func(cmd *cobra.Command, _ []string) error {
 		res, err := validatorexit.Run(cmd)
 		if err != nil {
 			return err

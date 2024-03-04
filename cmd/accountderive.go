@@ -29,7 +29,7 @@ var accountDeriveCmd = &cobra.Command{
     ethdo account derive --mnemonic="..." --path="m/12381/3600/0/0"
 
 In quiet mode this will return 0 if the inputs can derive an account account, otherwise 1.`,
-	RunE: func(cmd *cobra.Command, args []string) error {
+	RunE: func(cmd *cobra.Command, _ []string) error {
 		res, err := accountderive.Run(cmd)
 		if err != nil {
 			return err

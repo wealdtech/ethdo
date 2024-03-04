@@ -50,7 +50,7 @@ var depositVerifyCmd = &cobra.Command{
 The deposit data is compared to the supplied withdrawal account/public key, validator public key, and value to ensure they match.
 
 In quiet mode this will return 0 if the data is verified correctly, otherwise 1.`,
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, _ []string) {
 		assert(depositVerifyData != "", "--data is required")
 		var data []byte
 		var err error

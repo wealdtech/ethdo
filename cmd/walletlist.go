@@ -30,7 +30,7 @@ var walletListCmd = &cobra.Command{
     ethdo wallet list
 
 In quiet mode this will return 0 if any wallets are found, otherwise 1.`,
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, _ []string) {
 		assert(viper.GetString("remote") == "", "wallet list not available with remote wallets")
 		assert(viper.GetString("wallet") == "", "wallet list does not take a --wallet parameter")
 

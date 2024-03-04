@@ -30,7 +30,7 @@ var accountUnlockCmd = &cobra.Command{
     ethdo account unlock --account="primary/my funds" --passphrase="secret"
 
 In quiet mode this will return 0 if the account is unlocked, otherwise 1.`,
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, _ []string) {
 		ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("timeout"))
 		defer cancel()
 

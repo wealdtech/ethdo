@@ -27,7 +27,7 @@ var chainTimeCmd = &cobra.Command{
 	Long: `Obtain info about the chain at a given time.  For example:
 
     ethdo chain time --slot=12345`,
-	RunE: func(cmd *cobra.Command, args []string) error {
+	RunE: func(cmd *cobra.Command, _ []string) error {
 		res, err := chaintime.Run(cmd)
 		if err != nil {
 			return err

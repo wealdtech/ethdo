@@ -29,7 +29,7 @@ var validatorSummaryCmd = &cobra.Command{
     ethdo validator summary --validators=1,2,3 --epoch=12345
 
 In quiet mode this will return 0 if information for the epoch is found, otherwise 1.`,
-	RunE: func(cmd *cobra.Command, args []string) error {
+	RunE: func(cmd *cobra.Command, _ []string) error {
 		res, err := validatorsummary.Run(cmd)
 		if err != nil {
 			return err

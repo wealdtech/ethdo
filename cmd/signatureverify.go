@@ -41,7 +41,7 @@ var signatureVerifyCmd = &cobra.Command{
     ethdo signature verify --data=0x5f24e819400c6a8ee2bfc014343cd971b7eb707320025a7bcd83e621e26c35b7 --signature=0x8888... --account="Personal wallet/Operations"
 
 In quiet mode this will return 0 if the data can be signed, otherwise 1.`,
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, _ []string) {
 		ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("timeout"))
 		defer cancel()
 

@@ -34,7 +34,7 @@ var walletAccountsCmd = &cobra.Command{
     ethdo wallet accounts --wallet=primary
 
 In quiet mode this will return 0 if the wallet holds any addresses, otherwise 1.`,
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, _ []string) {
 		ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("timeout"))
 		defer cancel()
 

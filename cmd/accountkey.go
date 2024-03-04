@@ -30,7 +30,7 @@ var accountKeyCmd = &cobra.Command{
     ethdo account key --account="Personal wallet/Operations" --passphrase="my account passphrase"
 
 In quiet mode this will return 0 if the key can be obtained, otherwise 1.`,
-	RunE: func(cmd *cobra.Command, args []string) error {
+	RunE: func(cmd *cobra.Command, _ []string) error {
 		res, err := accountkey.Run(cmd)
 		if err != nil {
 			return err

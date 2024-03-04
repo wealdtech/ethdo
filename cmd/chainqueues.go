@@ -29,7 +29,7 @@ var chainQueuesCmd = &cobra.Command{
     ethdo chain queues
 
 In quiet mode this will return 0 if the entry and exit queues are 0, otherwise 1.`,
-	RunE: func(cmd *cobra.Command, args []string) error {
+	RunE: func(cmd *cobra.Command, _ []string) error {
 		res, err := chainqueues.Run(cmd)
 		if err != nil {
 			return err

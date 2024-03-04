@@ -31,7 +31,7 @@ var validatorKeycheckCmd = &cobra.Command{
 A mnemonic can be used in place of a private key, in which case the first 1,024 indices of the standard withdrawal key path will be scanned for a matching key.
 
 In quiet mode this will return 0 if the withdrawal credentials match the key, otherwise 1.`,
-	RunE: func(cmd *cobra.Command, args []string) error {
+	RunE: func(cmd *cobra.Command, _ []string) error {
 		res, err := validatorkeycheck.Run(cmd)
 		if err != nil {
 			return err

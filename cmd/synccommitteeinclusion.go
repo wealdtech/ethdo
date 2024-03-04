@@ -31,7 +31,7 @@ var synccommitteeInclusionCmd = &cobra.Command{
 In quiet mode this will return 0 if the validator was in the sync committee, otherwise 1.
 
 epoch can be a specific epoch; If not supplied all slots for the current sync committee period will be provided`,
-	RunE: func(cmd *cobra.Command, args []string) error {
+	RunE: func(cmd *cobra.Command, _ []string) error {
 		res, err := synccommitteeinclusion.Run(cmd)
 		if err != nil {
 			return err

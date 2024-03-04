@@ -29,7 +29,7 @@ var walletBatchCmd = &cobra.Command{
     ethdo wallet batch --wallet="Primary wallet" --passphrase=accounts-secret --batch-passphrase=batch-secret
 
 In quiet mode this will return 0 if the wallet is batched successfully, otherwise 1.`,
-	RunE: func(cmd *cobra.Command, args []string) error {
+	RunE: func(cmd *cobra.Command, _ []string) error {
 		res, err := walletbatch.Run(cmd)
 		if err != nil {
 			return err

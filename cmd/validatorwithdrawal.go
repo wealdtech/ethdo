@@ -29,7 +29,7 @@ var validatorWithdrawalCmd = &cobra.Command{
     ethdo validator withdrawal --validator=primary/validator
 
 In quiet mode this will return 0 if the validator exists, otherwise 1.`,
-	RunE: func(cmd *cobra.Command, args []string) error {
+	RunE: func(cmd *cobra.Command, _ []string) error {
 		res, err := validatorwithdrawal.Run(cmd)
 		if err != nil {
 			return err

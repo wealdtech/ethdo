@@ -29,7 +29,7 @@ var accountLockCmd = &cobra.Command{
     ethdo account lock --account="primary/my funds"
 
 In quiet mode this will return 0 if the account is locked, otherwise 1.`,
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, _ []string) {
 		ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("timeout"))
 		defer cancel()
 

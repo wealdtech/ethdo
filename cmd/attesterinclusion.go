@@ -29,7 +29,7 @@ var attesterInclusionCmd = &cobra.Command{
     ethdo attester inclusion --validator=Validators/00001 --epoch=12345
 
 In quiet mode this will return 0 if an attestation from the attester is found on the block of the given epoch, otherwise 1.`,
-	RunE: func(cmd *cobra.Command, args []string) error {
+	RunE: func(cmd *cobra.Command, _ []string) error {
 		res, err := attesterinclusion.Run(cmd)
 		if err != nil {
 			return err

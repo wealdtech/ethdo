@@ -31,7 +31,7 @@ var validatorDutiesCmd = &cobra.Command{
 Attester duties are known for the current and next epoch.  Proposer duties are known for the current epoch.
 
 In quiet mode this will return 0 if the duties have been obtained, otherwise 1.`,
-	RunE: func(cmd *cobra.Command, args []string) error {
+	RunE: func(cmd *cobra.Command, _ []string) error {
 		res, err := validatorduties.Run(cmd)
 		if err != nil {
 			return err

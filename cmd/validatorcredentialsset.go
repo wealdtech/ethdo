@@ -38,7 +38,7 @@ The validator account can be specified in one of a number of ways:
   - account and withdrawal account using --account and --withdrawal-account; this will generate a single operation
 
 In quiet mode this will return 0 if the credentials operation has been generated (and successfully broadcast if online), otherwise 1.`,
-	RunE: func(cmd *cobra.Command, args []string) error {
+	RunE: func(cmd *cobra.Command, _ []string) error {
 		res, err := validatorcredentialsset.Run(cmd)
 		if err != nil {
 			return err

@@ -40,7 +40,7 @@ var signatureAggregateCmd = &cobra.Command{
 Signatures are specified as "signature" for simple aggregation, and as "id:signature" for threshold aggregation.
 
 In quiet mode this will return 0 if the signatures can be aggregated, otherwise 1.`,
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, _ []string) {
 		assert(len(signatureAggregateSignatures) > 1, "multiple signatures required to aggregate")
 		var signature *bls.Sign
 		var err error

@@ -28,7 +28,7 @@ var validatorExpectationCmd = &cobra.Command{
 	Long: `Calculate expectation for individual validators.  For example:
 
     ethdo validator expectation`,
-	RunE: func(cmd *cobra.Command, args []string) error {
+	RunE: func(cmd *cobra.Command, _ []string) error {
 		res, err := validatorexpectation.Run(cmd)
 		if err != nil {
 			return err

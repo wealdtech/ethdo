@@ -30,7 +30,7 @@ var validatorYieldCmd = &cobra.Command{
     ethdo validator yield
 
 It is important to understand the yield is both probabilistic and dependent on network conditions.`,
-	RunE: func(cmd *cobra.Command, args []string) error {
+	RunE: func(cmd *cobra.Command, _ []string) error {
 		res, err := validatoryield.Run(cmd)
 		if err != nil {
 			return err

@@ -29,7 +29,7 @@ var walletSharedImportCmd = &cobra.Command{
 	ethdo wallet sharedimport --file=backup.dat --shares="1234 2345 3456"
 
 In quiet mode this will return 0 if the wallet is imported successfully, otherwise 1.`,
-	RunE: func(cmd *cobra.Command, args []string) error {
+	RunE: func(cmd *cobra.Command, _ []string) error {
 		res, err := walletsharedimport.Run(cmd)
 		if err != nil {
 			return err

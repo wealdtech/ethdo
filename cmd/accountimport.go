@@ -29,7 +29,7 @@ var accountImportCmd = &cobra.Command{
     ethdo account import --account="primary/testing" --key="0x..." --passphrase="my secret"
 
 In quiet mode this will return 0 if the account is imported successfully, otherwise 1.`,
-	RunE: func(cmd *cobra.Command, args []string) error {
+	RunE: func(cmd *cobra.Command, _ []string) error {
 		res, err := accountimport.Run(cmd)
 		if err != nil {
 			return err

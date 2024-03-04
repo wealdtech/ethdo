@@ -33,7 +33,7 @@ If validatoraccount is provided with an account path it will generate deposit da
 The information generated can be passed to ethereal to create a deposit from the Ethereum 1 chain.
 
 In quiet mode this will return 0 if the data can be generated correctly, otherwise 1.`,
-	RunE: func(cmd *cobra.Command, args []string) error {
+	RunE: func(cmd *cobra.Command, _ []string) error {
 		res, err := validatordepositdata.Run(cmd)
 		if err != nil {
 			return err

@@ -29,7 +29,7 @@ var accountCreateCmd = &cobra.Command{
     ethdo account create --account="primary/operations" --passphrase="my secret"
 
 In quiet mode this will return 0 if the account is created successfully, otherwise 1.`,
-	RunE: func(cmd *cobra.Command, args []string) error {
+	RunE: func(cmd *cobra.Command, _ []string) error {
 		res, err := accountcreate.Run(cmd)
 		if err != nil {
 			return err

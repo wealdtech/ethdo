@@ -29,7 +29,7 @@ var attesterDutiesCmd = &cobra.Command{
     ethdo attester duties --validator=Validators/00001 --epoch=12345
 
 In quiet mode this will return 0 if a duty from the attester is found, otherwise 1.`,
-	RunE: func(cmd *cobra.Command, args []string) error {
+	RunE: func(cmd *cobra.Command, _ []string) error {
 		res, err := attesterduties.Run(cmd)
 		if err != nil {
 			return err

@@ -39,7 +39,7 @@ var exitVerifyCmd = &cobra.Command{
     ethdo exit verify --signed-operation=exitdata.json --validator=primary/current
 
 In quiet mode this will return 0 if the exit is verified correctly, otherwise 1.`,
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, _ []string) {
 		ctx := context.Background()
 
 		assert(viper.GetString("signed-operation") != "", "signed-operation is required")

@@ -31,7 +31,7 @@ var chainEth1VotesCmd = &cobra.Command{
 Note that this will fetch the votes made in blocks up to the end of the provided epoch.
 
 In quiet mode this will return 0 if there is a majority for the votes, otherwise 1.`,
-	RunE: func(cmd *cobra.Command, args []string) error {
+	RunE: func(cmd *cobra.Command, _ []string) error {
 		res, err := chaineth1votes.Run(cmd)
 		if err != nil {
 			return err

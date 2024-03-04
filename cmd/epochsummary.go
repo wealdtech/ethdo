@@ -29,7 +29,7 @@ var epochSummaryCmd = &cobra.Command{
     ethdo epoch summary --epoch=12345
 
 In quiet mode this will return 0 if information for the epoch is found, otherwise 1.`,
-	RunE: func(cmd *cobra.Command, args []string) error {
+	RunE: func(cmd *cobra.Command, _ []string) error {
 		res, err := epochsummary.Run(cmd)
 		if err != nil {
 			return err

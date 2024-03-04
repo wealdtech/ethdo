@@ -28,7 +28,7 @@ var walletDeleteCmd = &cobra.Command{
     ethdo wallet delete --wallet=primary
 
 In quiet mode this will return 0 if the wallet has been deleted, otherwise 1.`,
-	RunE: func(cmd *cobra.Command, args []string) error {
+	RunE: func(cmd *cobra.Command, _ []string) error {
 		res, err := walletdelete.Run(cmd)
 		if err != nil {
 			return err

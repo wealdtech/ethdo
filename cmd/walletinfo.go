@@ -32,7 +32,7 @@ var walletInfoCmd = &cobra.Command{
     ethdo wallet info --wallet=primary
 
 In quiet mode this will return 0 if the wallet exists, otherwise 1.`,
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, _ []string) {
 		ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("timeout"))
 		defer cancel()
 

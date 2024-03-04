@@ -33,7 +33,7 @@ var versionCmd = &cobra.Command{
 	Long: `Obtain the version of ethdo.  For example:
 
     ethdo version`,
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, _ []string) {
 		fmt.Println(ReleaseVersion)
 		if viper.GetBool("verbose") {
 			if info, ok := debug.ReadBuildInfo(); ok {

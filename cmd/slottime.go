@@ -29,7 +29,7 @@ var slotTimeCmd = &cobra.Command{
     ethdo slot time --slot=12345
 
 In quiet mode this will return 0.`,
-	RunE: func(cmd *cobra.Command, args []string) error {
+	RunE: func(cmd *cobra.Command, _ []string) error {
 		res, err := slottime.Run(cmd)
 		if err != nil {
 			return err

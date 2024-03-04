@@ -18,6 +18,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -270,6 +271,10 @@ func ObtainChainInfoFromNode(ctx context.Context,
 			State:                 validator.Status,
 		})
 	}
+	// Order validators by index.
+	sort.Slice(res.Validators, func(i int, j int) bool {
+		return res.Validators[i].Index < res.Validators[j].Index
+	})
 
 	// Genesis validators root obtained from beacon node.
 	genesisResponse, err := consensusClient.(consensusclient.GenesisProvider).Genesis(ctx, &api.GenesisOpts{})

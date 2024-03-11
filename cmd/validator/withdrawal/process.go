@@ -1,4 +1,4 @@
-// Copyright © 2023 Weald Technology Trading.
+// Copyright © 2023, 2024 Weald Technology Trading.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -61,7 +61,7 @@ func (c *command) process(ctx context.Context) error {
 		return errors.Wrap(err, "failed to obtain block slot")
 	}
 	if c.debug {
-		fmt.Fprintf(os.Stderr, "Slot is %d\n", slot)
+		fmt.Fprintf(os.Stderr, "Current slot is %d\n", slot)
 	}
 
 	response, err := c.consensusClient.(consensusclient.ValidatorsProvider).Validators(ctx, &api.ValidatorsOpts{
@@ -88,6 +88,8 @@ func (c *command) process(ctx context.Context) error {
 		fmt.Fprintf(os.Stderr, "Next withdrawal validator index is %d\n", nextWithdrawalValidatorIndex)
 	}
 
+	withdrawalSlot := slot + 1
+	withdrawalsInSlot := 0
 	index := int(nextWithdrawalValidatorIndex)
 	for {
 		if index == len(validators) {
@@ -97,10 +99,19 @@ func (c *command) process(ctx context.Context) error {
 			break
 		}
 		if validators[index].Validator.WithdrawalCredentials[0] == ethWithdrawalPrefix &&
-			validators[index].Validator.EffectiveBalance == c.maxEffectiveBalance {
+			validators[index].Validator.EffectiveBalance == c.maxEffectiveBalance &&
+			validators[index].Validator.ActivationEpoch <= c.chainTime.SlotToEpoch(withdrawalSlot) {
 			c.res.WithdrawalsToGo++
+			withdrawalsInSlot++
+			if withdrawalsInSlot == int(c.maxWithdrawalsPerPayload) {
+				withdrawalSlot++
+				withdrawalsInSlot = 0
+			}
 		}
 		index++
+	}
+	if c.debug {
+		fmt.Fprintf(os.Stderr, "There are %d withdrawals to go until this validator\n", c.res.WithdrawalsToGo)
 	}
 
 	c.res.BlocksToGo = c.res.WithdrawalsToGo / c.maxWithdrawalsPerPayload

@@ -36,6 +36,7 @@ type command struct {
 	// Input.
 	passphrases           []string
 	mnemonic              string
+	seed 		      string
 	path                  string
 	privateKey            string
 	validator             string
@@ -75,6 +76,7 @@ func newCommand(_ context.Context) (*command, error) {
 		prepareOffline:           viper.GetBool("prepare-offline"),
 		passphrases:              util.GetPassphrases(),
 		mnemonic:                 viper.GetString("mnemonic"),
+		seed: 			  viper.GetString("seed"),
 		path:                     viper.GetString("path"),
 		privateKey:               viper.GetString("private-key"),
 		signedOperationsInput:    viper.GetString("signed-operations"),

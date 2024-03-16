@@ -40,6 +40,7 @@ type command struct {
 	withdrawalAccount     string
 	passphrases           []string
 	mnemonic              string
+	seed 		      string
 	path                  string
 	privateKey            string
 	validator             string
@@ -82,6 +83,7 @@ func newCommand(_ context.Context) (*command, error) {
 		withdrawalAccount:        viper.GetString("withdrawal-account"),
 		passphrases:              util.GetPassphrases(),
 		mnemonic:                 viper.GetString("mnemonic"),
+		seed: 			  viper.GetString("seed"),
 		path:                     viper.GetString("path"),
 		privateKey:               viper.GetString("private-key"),
 		signedOperationsInput:    viper.GetString("signed-operations"),

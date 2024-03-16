@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"regexp"
 
 	"github.com/pkg/errors"
 	"github.com/wealdtech/go-ecodec"
@@ -64,6 +65,11 @@ func ParseAccount(ctx context.Context,
 		// A mnemonic.
 		return parseAccountFromMnemonic(ctx, accountStr, supplementary, unlock)
 	default:
+		// This could be a seed
+                match, err := regexp.MatchString(`^[0-9a-fA-F]{128}$`, accountStr)
+                if err == nil && match {
+                        return parseAccountFromSeed(ctx, accountStr, supplementary, unlock)
+                }
 		// This could be the path to a keystore.
 		if _, err := os.Stat(accountStr); err != nil {
 			return nil, fmt.Errorf("unknown account specifier %s", accountStr)
@@ -174,6 +180,33 @@ func parseAccountFromMnemonic(ctx context.Context,
 	return account, nil
 }
 
+func parseAccountFromSeed(ctx context.Context,
+        accountStr string,
+        supplementary []string,
+        unlock bool,
+) (
+        e2wtypes.Account,
+        error,
+) {
+        var account e2wtypes.Account
+        var err error
+
+        if len(supplementary) == 0 {
+                return nil, errors.New("missing derivation path")
+        }
+        account, err = accountFromSeedAndPath(accountStr, supplementary[0])
+        if err != nil {
+                return nil, err
+        }
+        if unlock {
+                err = account.(e2wtypes.AccountLocker).Unlock(ctx, nil)
+                if err != nil {
+                        return nil, errors.Wrap(err, "failed to unlock account")
+                }
+        }
+
+        return account, nil
+}
 func parseAccountFromKeystore(ctx context.Context,
 	accountStr string,
 	supplementary []string,
@@ -270,6 +303,33 @@ func accountFromMnemonicAndPath(mnemonic string, path string) (e2wtypes.Account,
 	}
 
 	return account, nil
+}
+
+func accountFromSeedAndPath(hexseed string, path string) (e2wtypes.Account, error) {
+        seed, err := hex.DecodeString(hexseed)
+        if err != nil {
+                return nil, err
+        }
+
+        // Ensure the path is valid.
+        match := hdPathRegex.MatchString(path)
+        if !match {
+                return nil, errors.New("path does not match expected format m/…")
+        }
+
+        // Derive private key from seed and path.
+        key, err := util.PrivateKeyFromSeedAndPath(seed, path)
+        if err != nil {
+                return nil, errors.Wrap(err, "failed to generate key")
+        }
+
+        // Create a scratch account given the private key.
+        account, err := newScratchAccountFromPrivKey(key.Marshal())
+        if err != nil {
+                return nil, errors.Wrap(err, "failed to generate scratch account")
+        }
+
+        return account, nil
 }
 
 // UnlockAccount attempts to unlock an account.  It returns true if the account was already unlocked.

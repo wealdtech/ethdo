@@ -546,7 +546,11 @@ func (c *command) generateOperationFromSeedAndPath(ctx context.Context,
 			return false, errors.Wrap(err, "failed to generate withdrawal private key")
 		}
 		withdrawalPubkey = withdrawalPrivkey.PublicKey().Marshal()
-		withdrawalAccount, err = util.ParseAccount(ctx, c.seed, []string{withdrawalKeyPath}, true)
+                if c.mnemonic != "" {
+		        withdrawalAccount, err = util.ParseAccount(ctx, c.mnemonic, []string{withdrawalKeyPath}, true)
+                } else {
+		        withdrawalAccount, err = util.ParseAccount(ctx, c.seed, []string{withdrawalKeyPath}, true)
+                }
 		if err != nil {
 			return false, errors.Wrap(err, "failed to create withdrawal account")
 		}

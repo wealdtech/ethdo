@@ -96,7 +96,7 @@ func (c *command) process(ctx context.Context) error {
 }
 
 func (c *command) obtainOperations(ctx context.Context) error {
-	if c.account == "" && c.mnemonic == "" && c.privateKey == "" && c.validator == "" {
+	if c.account == "" && c.mnemonic == "" && c.seed == "" && c.privateKey == "" && c.validator == "" {
 		// No input information; fetch the operations from a file.
 		err := c.obtainOperationsFromFileOrInput(ctx)
 		if err == nil {
@@ -126,6 +126,11 @@ func (c *command) obtainOperations(ctx context.Context) error {
 		}
 	}
 
+        if c.seed != "" {
+                // Only scanning is supported
+                return c.generateOperationsFromSeed(ctx)
+        }
+	
 	if c.account != "" {
 		switch {
 		case c.withdrawalAccount != "":
@@ -272,6 +277,45 @@ func (c *command) generateOperationsFromMnemonic(ctx context.Context) error {
 		}
 	}
 	return nil
+}
+
+func (c *command) generateOperationsFromSeed(ctx context.Context) error {
+        seed, err := hex.DecodeString(c.seed)
+	if err != nil {
+		return err
+	}
+
+        // Turn the validators in to a map for easy lookup.
+        validators := make(map[string]*beacon.ValidatorInfo, 0)
+        for _, validator := range c.chainInfo.Validators {
+                validators[fmt.Sprintf("%#x", validator.Pubkey)] = validator
+        }
+
+        maxDistance := 1024
+        // Start scanning the validator keys.
+        lastFoundIndex := 0
+        foundValidatorCount := 0
+        for i := 0; ; i++ {
+                // If no validators have been found in the last maxDistance indices, stop scanning.
+                if i-lastFoundIndex > maxDistance {
+                        // If no validators were found at all, return an error.
+                        if foundValidatorCount == 0 {
+                                return fmt.Errorf("failed to find validators using the provided seed: searched %d indices without finding a validator", maxDistance)
+                        }
+                        break
+                }
+                validatorKeyPath := fmt.Sprintf("m/12381/3600/%d/0/0", i)
+
+                found, err := c.generateOperationFromSeedAndPath(ctx, validators, seed, validatorKeyPath)
+                if err != nil {
+                        return errors.Wrap(err, "failed to generate operation from seed and path")
+                }
+                if found {
+                        lastFoundIndex = i
+                        foundValidatorCount++
+                }
+        }
+        return nil
 }
 
 func (c *command) generateOperationsFromAccountAndWithdrawalAccount(ctx context.Context) error {
@@ -502,7 +546,7 @@ func (c *command) generateOperationFromSeedAndPath(ctx context.Context,
 			return false, errors.Wrap(err, "failed to generate withdrawal private key")
 		}
 		withdrawalPubkey = withdrawalPrivkey.PublicKey().Marshal()
-		withdrawalAccount, err = util.ParseAccount(ctx, c.mnemonic, []string{withdrawalKeyPath}, true)
+		withdrawalAccount, err = util.ParseAccount(ctx, c.seed, []string{withdrawalKeyPath}, true)
 		if err != nil {
 			return false, errors.Wrap(err, "failed to create withdrawal account")
 		}

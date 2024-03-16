@@ -30,6 +30,7 @@ var validatorCredentialsSetCmd = &cobra.Command{
 
 The validator account can be specified in one of a number of ways:
 
+  - seed using --seed; this will scan the seed and generate all applicable operations
   - mnemonic using --mnemonic; this will scan the mnemonic and generate all applicable operations
   - mnemonic and path to the validator key using --mnemonic and --path; this will generate a single operation
   - mnemonic and validator index or public key --mnemonic and --validator; this will generate a single operation
@@ -57,6 +58,7 @@ func init() {
 	validatorCredentialsCmd.AddCommand(validatorCredentialsSetCmd)
 	validatorCredentialsFlags(validatorCredentialsSetCmd)
 	validatorCredentialsSetCmd.Flags().Bool("prepare-offline", false, "Create files for offline use")
+	validatorCredentialsSetCmd.Flags().String("seed", "", "Seed to scan for validators")
 	validatorCredentialsSetCmd.Flags().String("validator", "", "Validator for which to set validator credentials")
 	validatorCredentialsSetCmd.Flags().String("withdrawal-account", "", "Account with which the validator's withdrawal credentials were set")
 	validatorCredentialsSetCmd.Flags().String("withdrawal-address", "", "Execution address to which to direct withdrawals")
@@ -68,6 +70,9 @@ func init() {
 
 func validatorCredentialsSetBindings(cmd *cobra.Command) {
 	if err := viper.BindPFlag("prepare-offline", cmd.Flags().Lookup("prepare-offline")); err != nil {
+		panic(err)
+	}
+	if err := viper.BindPFlag("seed", cmd.Flags().Lookup("seed")); err != nil {
 		panic(err)
 	}
 	if err := viper.BindPFlag("validator", cmd.Flags().Lookup("validator")); err != nil {

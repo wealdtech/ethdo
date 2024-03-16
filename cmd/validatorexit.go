@@ -30,6 +30,7 @@ var validatorExitCmd = &cobra.Command{
 
 The validator and key can be specified in one of a number of ways:
 
+  - seed using --seed; this will scan the seed and generate all applicable operations
   - mnemonic using --mnemonic; this will scan the mnemonic and generate all applicable operations
   - mnemonic and path to the validator key using --mnemonic and --path; this will generate a single operation
   - mnemonic and validator index or public key --mnemonic and --validator; this will generate a single operation
@@ -59,6 +60,7 @@ func init() {
 	validatorFlags(validatorExitCmd)
 	validatorExitCmd.Flags().String("epoch", "", "Epoch at which to exit (defaults to current epoch)")
 	validatorExitCmd.Flags().Bool("prepare-offline", false, "Create files for offline use")
+	validatorExitCmd.Flags().String("seed", "", "Seed to scan for validators")
 	validatorExitCmd.Flags().String("validator", "", "Validator to exit")
 	validatorExitCmd.Flags().String("signed-operations", "", "Use pre-defined JSON signed operation as created by --json to transmit the exit operations (reads from exit-operations.json if not present)")
 	validatorExitCmd.Flags().Bool("offline", false, "Do not attempt to connect to a beacon node to obtain information for the operation")
@@ -68,6 +70,9 @@ func init() {
 
 func validatorExitBindings(cmd *cobra.Command) {
 	if err := viper.BindPFlag("epoch", cmd.Flags().Lookup("epoch")); err != nil {
+		panic(err)
+	}
+	if err := viper.BindPFlag("seed", cmd.Flags().Lookup("seed")); err != nil {
 		panic(err)
 	}
 	if err := viper.BindPFlag("prepare-offline", cmd.Flags().Lookup("prepare-offline")); err != nil {

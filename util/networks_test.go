@@ -39,6 +39,16 @@ func (c *specETH2Client) Address() string {
 	return "mock"
 }
 
+// IsActive returns true if the client is active.
+func (c *specETH2Client) IsActive() bool {
+	return true
+}
+
+// IsSynced returns true if the client is synced.
+func (c *specETH2Client) IsSynced() bool {
+	return true
+}
+
 // Spec provides the spec information of the chain.
 func (c *specETH2Client) Spec(ctx context.Context, _ *api.SpecOpts) (*api.Response[map[string]any], error) {
 	return &api.Response[map[string]any]{

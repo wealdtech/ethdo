@@ -1,6 +1,7 @@
 dev:
   - provide better error message on context deadlline exceeded
   - update launchpad output to match latest version
+  - add deposit contract address to "chain info"
 
 1.35.2:
   - update dependencies

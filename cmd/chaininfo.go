@@ -1,4 +1,4 @@
-// Copyright © 2020, 2022 Weald Technology Trading
+// Copyright © 2020 - 2024 Weald Technology Trading
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -21,6 +21,7 @@ import (
 
 	eth2client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
+	"github.com/attestantio/go-eth2-client/spec/bellatrix"
 	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -65,6 +66,7 @@ In quiet mode this will return 0 if the chain information can be obtained, other
 			fmt.Printf("Genesis time: %s\n", genesisResponse.Data.GenesisTime.Format(time.UnixDate))
 			outputIf(viper.GetBool("verbose"), fmt.Sprintf("Genesis timestamp: %v", genesisResponse.Data.GenesisTime.Unix()))
 		}
+
 		fmt.Printf("Genesis validators root: %#x\n", genesisResponse.Data.GenesisValidatorsRoot)
 		fmt.Printf("Genesis fork version: %#x\n", specResponse.Data["GENESIS_FORK_VERSION"].(spec.Version))
 		fmt.Printf("Current fork version: %#x\n", forkResponse.Data.CurrentVersion)
@@ -82,6 +84,10 @@ In quiet mode this will return 0 if the chain information can be obtained, other
 		}
 		fmt.Printf("Seconds per slot: %d\n", int(specResponse.Data["SECONDS_PER_SLOT"].(time.Duration).Seconds()))
 		fmt.Printf("Slots per epoch: %d\n", specResponse.Data["SLOTS_PER_EPOCH"].(uint64))
+
+		depositContractAddress := bellatrix.ExecutionAddress{}
+		copy(depositContractAddress[:], specResponse.Data["DEPOSIT_CONTRACT_ADDRESS"].([]byte))
+		fmt.Printf("Deposit contract address: %s\n", depositContractAddress.String())
 
 		os.Exit(_exitSuccess)
 	},

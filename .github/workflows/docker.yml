@@ -6,7 +6,7 @@ on:
 jobs:
   # Set variables that will be available to all builds.
   env_vars:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     outputs:
       release_version: ${{ steps.release_version.outputs.release_version }}
       binary: ${{ steps.binary.outputs.binary }}
@@ -22,7 +22,7 @@ jobs:
 
   # Build.
   build:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     needs: [env_vars]
     steps:
       - name: Check out repository into the Go module directory

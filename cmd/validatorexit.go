@@ -64,6 +64,7 @@ func init() {
 	validatorExitCmd.Flags().Bool("offline", false, "Do not attempt to connect to a beacon node to obtain information for the operation")
 	validatorExitCmd.Flags().String("fork-version", "", "Fork version to use for signing (overrides fetching from beacon node)")
 	validatorExitCmd.Flags().String("genesis-validators-root", "", "Genesis validators root to use for signing (overrides fetching from beacon node)")
+	validatorExitCmd.Flags().Uint64("max-distance", 1024, "Maximum indices to scan for finding the validator.")
 }
 
 func validatorExitBindings(cmd *cobra.Command) {
@@ -86,6 +87,9 @@ func validatorExitBindings(cmd *cobra.Command) {
 		panic(err)
 	}
 	if err := viper.BindPFlag("genesis-validators-root", cmd.Flags().Lookup("genesis-validators-root")); err != nil {
+		panic(err)
+	}
+	if err := viper.BindPFlag("max-distance", cmd.Flags().Lookup("max-distance")); err != nil {
 		panic(err)
 	}
 }

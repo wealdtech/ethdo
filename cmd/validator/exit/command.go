@@ -44,6 +44,7 @@ type command struct {
 	prepareOffline        bool
 	signedOperationsInput string
 	epoch                 string
+	maxDistance           uint64
 
 	// Beacon node connection.
 	timeout                  time.Duration
@@ -82,6 +83,7 @@ func newCommand(_ context.Context) (*command, error) {
 		forkVersion:              viper.GetString("fork-version"),
 		genesisValidatorsRoot:    viper.GetString("genesis-validators-root"),
 		epoch:                    viper.GetString("epoch"),
+		maxDistance:              viper.GetUint64("max-distance"),
 		signedOperations:         make([]*phase0.SignedVoluntaryExit, 0),
 	}
 

@@ -197,6 +197,9 @@ func (c *command) generateOperationFromMnemonicAndValidator(ctx context.Context)
 
 	// Scan the keys from the seed to find the path.
 	maxDistance := 1024
+	if c.maxDistance > 0 {
+		maxDistance = int(c.maxDistance)
+	}
 	// Start scanning the validator keys.
 	var withdrawalAccount e2wtypes.Account
 	for i := 0; ; i++ {
@@ -247,10 +250,13 @@ func (c *command) generateOperationsFromMnemonic(ctx context.Context) error {
 		validators[fmt.Sprintf("%#x", validator.Pubkey)] = validator
 	}
 
-	maxDistance := 1024
 	// Start scanning the validator keys.
 	lastFoundIndex := 0
 	foundValidatorCount := 0
+	maxDistance := 1024
+	if c.maxDistance > 0 {
+		maxDistance = int(c.maxDistance)
+	}
 	for i := 0; ; i++ {
 		// If no validators have been found in the last maxDistance indices, stop scanning.
 		if i-lastFoundIndex > maxDistance {

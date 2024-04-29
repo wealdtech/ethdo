@@ -177,6 +177,9 @@ func (c *command) generateOperationFromMnemonicAndValidator(ctx context.Context)
 
 	// Scan the keys from the seed to find the path.
 	maxDistance := 1024
+	if c.maxDistance > 0 {
+		maxDistance = int(c.maxDistance)
+	}
 	// Start scanning the validator keys.
 	for i := 0; ; i++ {
 		if i == maxDistance {
@@ -219,7 +222,11 @@ func (c *command) generateOperationsFromMnemonic(ctx context.Context) error {
 		validators[fmt.Sprintf("%#x", validator.Pubkey)] = validator
 	}
 
+	// Scan the keys from the seed to find the path.
 	maxDistance := 1024
+	if c.maxDistance > 0 {
+		maxDistance = int(c.maxDistance)
+	}
 	// Start scanning the validator keys.
 	lastFoundIndex := 0
 	foundValidatorCount := 0

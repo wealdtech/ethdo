@@ -48,6 +48,7 @@ type command struct {
 	genesisValidatorsRoot string
 	prepareOffline        bool
 	signedOperationsInput string
+	maxDistance           uint64
 
 	// Beacon node connection.
 	timeout                  time.Duration
@@ -90,6 +91,7 @@ func newCommand(_ context.Context) (*command, error) {
 		withdrawalAddressStr:  viper.GetString("withdrawal-address"),
 		forkVersion:           viper.GetString("fork-version"),
 		genesisValidatorsRoot: viper.GetString("genesis-validators-root"),
+		maxDistance:           viper.GetUint64("max-distance"),
 	}
 
 	// Timeout is required.

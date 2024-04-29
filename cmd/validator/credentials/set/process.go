@@ -196,12 +196,16 @@ func (c *command) generateOperationFromMnemonicAndValidator(ctx context.Context)
 	}
 
 	// Scan the keys from the seed to find the path.
+	maxDistance := 1024
+	if c.maxDistance > 0 {
+		maxDistance = int(c.maxDistance)
+	}
 	// Start scanning the validator keys.
 	var withdrawalAccount e2wtypes.Account
 	for i := 0; ; i++ {
-		if uint64(i) == c.maxDistance {
+		if i == maxDistance {
 			if c.debug {
-				fmt.Fprintf(os.Stderr, "Gone %d indices without finding the validator, not scanning any further\n", c.maxDistance)
+				fmt.Fprintf(os.Stderr, "Gone %d indices without finding the validator, not scanning any further\n", maxDistance)
 			}
 			return fmt.Errorf("failed to find validator using the provided mnemonic, validator=%s, pubkey=%#x", c.validator, validatorInfo.Pubkey)
 		}
@@ -249,12 +253,16 @@ func (c *command) generateOperationsFromMnemonic(ctx context.Context) error {
 	// Start scanning the validator keys.
 	lastFoundIndex := 0
 	foundValidatorCount := 0
+	maxDistance := 1024
+	if c.maxDistance > 0 {
+		maxDistance = int(c.maxDistance)
+	}
 	for i := 0; ; i++ {
 		// If no validators have been found in the last maxDistance indices, stop scanning.
-		if uint64(i-lastFoundIndex) > c.maxDistance {
+		if i-lastFoundIndex > maxDistance {
 			// If no validators were found at all, return an error.
 			if foundValidatorCount == 0 {
-				return fmt.Errorf("failed to find validators using the provided mnemonic: searched %d indices without finding a validator", c.maxDistance)
+				return fmt.Errorf("failed to find validators using the provided mnemonic: searched %d indices without finding a validator", maxDistance)
 			}
 			break
 		}

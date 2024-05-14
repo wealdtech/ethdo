@@ -54,6 +54,7 @@ type command struct {
 	timeout                  time.Duration
 	connection               string
 	allowInsecureConnections bool
+	customSpecSupport        bool
 
 	// Information required to generate the operations.
 	withdrawalAddress bellatrix.ExecutionAddress
@@ -78,6 +79,7 @@ func newCommand(_ context.Context) (*command, error) {
 		timeout:                  viper.GetDuration("timeout"),
 		connection:               viper.GetString("connection"),
 		allowInsecureConnections: viper.GetBool("allow-insecure-connections"),
+		customSpecSupport:        viper.GetBool("custom-spec"),
 		prepareOffline:           viper.GetBool("prepare-offline"),
 		account:                  viper.GetString("account"),
 		withdrawalAccount:        viper.GetString("withdrawal-account"),

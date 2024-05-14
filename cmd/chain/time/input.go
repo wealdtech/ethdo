@@ -31,6 +31,7 @@ type dataIn struct {
 	// Input
 	connection               string
 	allowInsecureConnections bool
+	customSpecSupport        bool
 	timestamp                string
 	slot                     string
 	epoch                    string
@@ -73,6 +74,7 @@ func input(_ context.Context) (*dataIn, error) {
 
 	data.connection = viper.GetString("connection")
 	data.allowInsecureConnections = viper.GetBool("allow-insecure-connections")
+	data.customSpecSupport = viper.GetBool("custom-spec")
 
 	return data, nil
 }

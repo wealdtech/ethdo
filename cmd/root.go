@@ -136,6 +136,7 @@ func init() {
 	addPersistentFlags()
 }
 
+//nolint:gocyclo
 func addPersistentFlags() {
 	RootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.ethdo.yaml)")
 
@@ -250,6 +251,10 @@ func addPersistentFlags() {
 	}
 	RootCmd.PersistentFlags().Bool("allow-insecure-connections", false, "allow insecure connections to remote beacon nodes")
 	if err := viper.BindPFlag("allow-insecure-connections", RootCmd.PersistentFlags().Lookup("allow-insecure-connections")); err != nil {
+		panic(err)
+	}
+	RootCmd.PersistentFlags().Bool("custom-spec", false, "allow custom (non-mainnet) beacon node specifications")
+	if err := viper.BindPFlag("custom-spec", RootCmd.PersistentFlags().Lookup("custom-spec")); err != nil {
 		panic(err)
 	}
 }

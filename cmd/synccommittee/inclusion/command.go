@@ -33,6 +33,7 @@ type command struct {
 	timeout                  time.Duration
 	connection               string
 	allowInsecureConnections bool
+	customSpecSupport        bool
 
 	// Input.
 	validator string
@@ -51,9 +52,10 @@ type command struct {
 
 func newCommand(_ context.Context) (*command, error) {
 	c := &command{
-		quiet:   viper.GetBool("quiet"),
-		verbose: viper.GetBool("verbose"),
-		debug:   viper.GetBool("debug"),
+		quiet:             viper.GetBool("quiet"),
+		verbose:           viper.GetBool("verbose"),
+		debug:             viper.GetBool("debug"),
+		customSpecSupport: viper.GetBool("custom-spec"),
 	}
 
 	// Timeout.

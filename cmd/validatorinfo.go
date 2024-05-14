@@ -47,10 +47,11 @@ In quiet mode this will return 0 if the validator information can be obtained, o
 		ctx := context.Background()
 
 		eth2Client, err := util.ConnectToBeaconNode(ctx, &util.ConnectOpts{
-			Address:       viper.GetString("connection"),
-			Timeout:       viper.GetDuration("timeout"),
-			AllowInsecure: viper.GetBool("allow-insecure-connections"),
-			LogFallback:   !viper.GetBool("quiet"),
+			Address:           viper.GetString("connection"),
+			Timeout:           viper.GetDuration("timeout"),
+			AllowInsecure:     viper.GetBool("allow-insecure-connections"),
+			CustomSpecSupport: viper.GetBool("custom-spec"),
+			LogFallback:       !viper.GetBool("quiet"),
 		})
 		errCheck(err, "Failed to connect to Ethereum 2 beacon node")
 

@@ -33,6 +33,7 @@ type command struct {
 	timeout                  time.Duration
 	connection               string
 	allowInsecureConnections bool
+	customSpecSupport        bool
 
 	// Input.
 	validators string
@@ -76,6 +77,7 @@ func newCommand(_ context.Context) (*command, error) {
 
 	c.connection = viper.GetString("connection")
 	c.allowInsecureConnections = viper.GetBool("allow-insecure-connections")
+	c.customSpecSupport = viper.GetBool("custom-spec")
 
 	c.validators = viper.GetString("validators")
 

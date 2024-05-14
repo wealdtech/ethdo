@@ -34,6 +34,7 @@ type command struct {
 	timeout                  time.Duration
 	connection               string
 	allowInsecureConnections bool
+	customSpecSupport        bool
 
 	// Operation.
 	epoch      string
@@ -62,6 +63,7 @@ func newCommand(_ context.Context) (*command, error) {
 		timeout:                  viper.GetDuration("timeout"),
 		connection:               viper.GetString("connection"),
 		allowInsecureConnections: viper.GetBool("allow-insecure-connections"),
+		customSpecSupport:        viper.GetBool("custom-spec"),
 		epoch:                    viper.GetString("epoch"),
 		slot:                     viper.GetString("slot"),
 		jsonOutput:               viper.GetBool("json"),

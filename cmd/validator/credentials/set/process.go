@@ -482,17 +482,17 @@ func (c *command) generateOperationFromSeedAndPath(ctx context.Context,
 	validator, exists := validators[validatorPubkey]
 	if !exists {
 		if c.debug {
-			fmt.Fprintf(os.Stderr, "no validator found with public key %s at path %s\n", validatorPubkey, path)
+			fmt.Fprintf(os.Stderr, "No validator found with public key %s at path %s\n", validatorPubkey, path)
 		}
 		return false, nil
 	}
 
-	if c.verbose {
+	if c.verbose || c.debug {
 		fmt.Fprintf(os.Stderr, "Validator %d found with public key %s at path %s\n", validator.Index, validatorPubkey, path)
 	}
 
 	if validator.WithdrawalCredentials[0] != byte(0) {
-		if c.debug {
+		if c.verbose || c.debug {
 			fmt.Fprintf(os.Stderr, "Validator %s has non-BLS withdrawal credentials %#x\n", validatorPubkey, validator.WithdrawalCredentials)
 		}
 		return false, nil
@@ -523,7 +523,7 @@ func (c *command) generateOperationFromSeedAndPath(ctx context.Context,
 	withdrawalCredentials := ethutil.SHA256(withdrawalPubkey)
 	withdrawalCredentials[0] = byte(0) // BLS_WITHDRAWAL_PREFIX
 	if !bytes.Equal(withdrawalCredentials, validator.WithdrawalCredentials) {
-		if c.verbose && c.privateKey == "" {
+		if (c.verbose || c.debug) && c.privateKey == "" {
 			fmt.Fprintf(os.Stderr, "Validator %s withdrawal credentials %#x do not match expected credentials, cannot update\n", validatorPubkey, validator.WithdrawalCredentials)
 		}
 		return false, nil
@@ -536,6 +536,10 @@ func (c *command) generateOperationFromSeedAndPath(ctx context.Context,
 	err = c.generateOperationFromAccount(ctx, validator, withdrawalAccount)
 	if err != nil {
 		return false, err
+	}
+
+	if c.verbose || c.debug {
+		fmt.Fprintf(os.Stderr, "Withdrawal credentials change operation generated for validator with public key %s at path %s\n", validatorPubkey, path)
 	}
 
 	return true, nil
@@ -727,10 +731,11 @@ func (c *command) setup(ctx context.Context) error {
 	// Connect to the consensus node.
 	var err error
 	c.consensusClient, err = util.ConnectToBeaconNode(ctx, &util.ConnectOpts{
-		Address:       c.connection,
-		Timeout:       c.timeout,
-		AllowInsecure: c.allowInsecureConnections,
-		LogFallback:   !c.quiet,
+		Address:           c.connection,
+		Timeout:           c.timeout,
+		AllowInsecure:     c.allowInsecureConnections,
+		CustomSpecSupport: c.customSpecSupport,
+		LogFallback:       !c.quiet,
 	})
 	if err != nil {
 		return err

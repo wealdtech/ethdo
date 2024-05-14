@@ -28,8 +28,9 @@ type dataIn struct {
 	verbose bool
 	debug   bool
 	// Ethereum 2 connection.
-	eth2Client    string
-	allowInsecure bool
+	eth2Client        string
+	allowInsecure     bool
+	customSpecSupport bool
 	// Operation.
 	account string
 	pubKey  string
@@ -50,6 +51,7 @@ func input(_ context.Context) (*dataIn, error) {
 	// Ethereum 2 connection.
 	data.eth2Client = viper.GetString("connection")
 	data.allowInsecure = viper.GetBool("allow-insecure-connections")
+	data.customSpecSupport = viper.GetBool("custom-spec")
 
 	// Account.
 	data.account = viper.GetString("account")

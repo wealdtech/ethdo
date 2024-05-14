@@ -24,7 +24,7 @@ import (
 var accountImportCmd = &cobra.Command{
 	Use:   "import",
 	Short: "Import an account",
-	Long: `Import an account from its private key.  For example:
+	Long: `Import an account from its private key or keystore.  For example:
 
     ethdo account import --account="primary/testing" --key="0x..." --passphrase="my secret"
 

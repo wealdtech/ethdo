@@ -31,6 +31,7 @@ import (
 	"github.com/attestantio/go-eth2-client/spec/bellatrix"
 	"github.com/attestantio/go-eth2-client/spec/capella"
 	"github.com/attestantio/go-eth2-client/spec/deneb"
+	"github.com/attestantio/go-eth2-client/spec/electra"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 	standardchaintime "github.com/wealdtech/ethdo/services/chaintime/standard"
@@ -124,6 +125,17 @@ func process(ctx context.Context, data *dataIn) (*dataOut, error) {
 		if err := outputDenebBlock(ctx, data.jsonOutput, data.sszOutput, block.Deneb, blobSidecars); err != nil {
 			return nil, errors.Wrap(err, "failed to output block")
 		}
+	case spec.DataVersionElectra:
+		blobSidecarsResponse, err := results.eth2Client.(eth2client.BlobSidecarsProvider).BlobSidecars(ctx, &api.BlobSidecarsOpts{
+			Block: data.blockID,
+		})
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to obtain blob sidecars")
+		}
+		blobSidecars := blobSidecarsResponse.Data
+		if err := outputElectraBlock(ctx, data.jsonOutput, data.sszOutput, block.Electra, blobSidecars); err != nil {
+			return nil, errors.Wrap(err, "failed to output block")
+		}
 	default:
 		return nil, errors.New("unknown block version")
 	}
@@ -186,6 +198,14 @@ func headEventHandler(event *apiv1.Event) {
 		})
 		if err == nil {
 			err = outputDenebBlock(context.Background(), jsonOutput, sszOutput, block.Deneb, blobSidecarsResponse.Data)
+		}
+	case spec.DataVersionElectra:
+		var blobSidecarsResponse *api.Response[[]*deneb.BlobSidecar]
+		blobSidecarsResponse, err = results.eth2Client.(eth2client.BlobSidecarsProvider).BlobSidecars(ctx, &api.BlobSidecarsOpts{
+			Block: blockID,
+		})
+		if err == nil {
+			err = outputElectraBlock(context.Background(), jsonOutput, sszOutput, block.Electra, blobSidecarsResponse.Data)
 		}
 	default:
 		err = errors.New("unknown block version")
@@ -311,6 +331,35 @@ func outputDenebBlock(ctx context.Context,
 		fmt.Printf("%x\n", data)
 	default:
 		data, err := outputDenebBlockText(ctx, results, signedBlock, blobs)
+		if err != nil {
+			return errors.Wrap(err, "failed to generate text")
+		}
+		fmt.Print(data)
+	}
+	return nil
+}
+
+func outputElectraBlock(ctx context.Context,
+	jsonOutput bool,
+	sszOutput bool,
+	signedBlock *electra.SignedBeaconBlock,
+	blobs []*deneb.BlobSidecar,
+) error {
+	switch {
+	case jsonOutput:
+		data, err := json.Marshal(signedBlock)
+		if err != nil {
+			return errors.Wrap(err, "failed to generate JSON")
+		}
+		fmt.Printf("%s\n", string(data))
+	case sszOutput:
+		data, err := signedBlock.MarshalSSZ()
+		if err != nil {
+			return errors.Wrap(err, "failed to generate SSZ")
+		}
+		fmt.Printf("%x\n", data)
+	default:
+		data, err := outputElectraBlockText(ctx, results, signedBlock, blobs)
 		if err != nil {
 			return errors.Wrap(err, "failed to generate text")
 		}

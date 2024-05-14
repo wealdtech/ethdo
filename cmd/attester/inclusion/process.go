@@ -93,23 +93,33 @@ func process(ctx context.Context, data *dataIn) (*dataOut, error) {
 			return nil, errors.Wrap(err, "failed to obtain block attestations")
 		}
 		for i, attestation := range attestations {
-			if attestation.Data.Slot == duty.Slot &&
-				attestation.Data.Index == duty.CommitteeIndex &&
-				attestation.AggregationBits.BitAt(duty.ValidatorCommitteeIndex) {
+			attestationData, err := attestation.Data()
+			if err != nil {
+				return nil, errors.Wrap(err, "failed to obtain attestation data")
+			}
+			aggregationBits, err := attestation.AggregationBits()
+			if err != nil {
+				return nil, errors.Wrap(err, "failed to obtain attestation aggregation bits")
+			}
+
+			if attestationData.Slot == duty.Slot &&
+				attestationData.Index == duty.CommitteeIndex &&
+				aggregationBits.BitAt(duty.ValidatorCommitteeIndex) {
 				headCorrect := false
 				targetCorrect := false
 				if data.verbose {
-					headCorrect, err = calcHeadCorrect(ctx, data, attestation)
+					headCorrect, err = calcHeadCorrect(ctx, data, attestationData)
 					if err != nil {
 						return nil, errors.Wrap(err, "failed to obtain head correct result")
 					}
-					targetCorrect, err = calcTargetCorrect(ctx, data, attestation)
+					targetCorrect, err = calcTargetCorrect(ctx, data, attestationData)
 					if err != nil {
 						return nil, errors.Wrap(err, "failed to obtain target correct result")
 					}
 				}
 				results.found = true
-				results.attestation = attestation
+				// TODO fix.
+				// results.attestation = attestation
 				results.slot = slot
 				results.attestationIndex = uint64(i)
 				results.inclusionDelay = slot - duty.Slot
@@ -128,8 +138,8 @@ func process(ctx context.Context, data *dataIn) (*dataOut, error) {
 	return results, nil
 }
 
-func calcHeadCorrect(ctx context.Context, data *dataIn, attestation *phase0.Attestation) (bool, error) {
-	slot := attestation.Data.Slot
+func calcHeadCorrect(ctx context.Context, data *dataIn, attestationData *phase0.AttestationData) (bool, error) {
+	slot := attestationData.Slot
 	for {
 		response, err := data.eth2Client.(eth2client.BeaconBlockHeadersProvider).BeaconBlockHeader(ctx, &api.BeaconBlockHeaderOpts{
 			Block: fmt.Sprintf("%d", slot),
@@ -149,13 +159,13 @@ func calcHeadCorrect(ctx context.Context, data *dataIn, attestation *phase0.Atte
 			slot--
 			continue
 		}
-		return bytes.Equal(response.Data.Root[:], attestation.Data.BeaconBlockRoot[:]), nil
+		return bytes.Equal(response.Data.Root[:], attestationData.BeaconBlockRoot[:]), nil
 	}
 }
 
-func calcTargetCorrect(ctx context.Context, data *dataIn, attestation *phase0.Attestation) (bool, error) {
+func calcTargetCorrect(ctx context.Context, data *dataIn, attestationData *phase0.AttestationData) (bool, error) {
 	// Start with first slot of the target epoch.
-	slot := data.chainTime.FirstSlotOfEpoch(attestation.Data.Target.Epoch)
+	slot := data.chainTime.FirstSlotOfEpoch(attestationData.Target.Epoch)
 	for {
 		response, err := data.eth2Client.(eth2client.BeaconBlockHeadersProvider).BeaconBlockHeader(ctx, &api.BeaconBlockHeaderOpts{
 			Block: fmt.Sprintf("%d", slot),
@@ -175,7 +185,7 @@ func calcTargetCorrect(ctx context.Context, data *dataIn, attestation *phase0.At
 			slot--
 			continue
 		}
-		return bytes.Equal(response.Data.Root[:], attestation.Data.Target.Root[:]), nil
+		return bytes.Equal(response.Data.Root[:], attestationData.Target.Root[:]), nil
 	}
 }
 

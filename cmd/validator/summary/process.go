@@ -243,16 +243,24 @@ func (c *command) processAttesterDutiesSlot(ctx context.Context,
 		return err
 	}
 	for _, attestation := range attestations {
-		if _, exists := dutiesBySlot[attestation.Data.Slot]; !exists {
+		attestationData, err := attestation.Data()
+		if err != nil {
+			continue
+		}
+		aggregationBits, err := attestation.AggregationBits()
+		if err != nil {
+			continue
+		}
+		if _, exists := dutiesBySlot[attestationData.Slot]; !exists {
 			// We do not have any attestations for this slot.
 			continue
 		}
-		if _, exists := dutiesBySlot[attestation.Data.Slot][attestation.Data.Index]; !exists {
+		if _, exists := dutiesBySlot[attestationData.Slot][attestationData.Index]; !exists {
 			// We do not have any attestations for this committee.
 			continue
 		}
-		for _, duty := range dutiesBySlot[attestation.Data.Slot][attestation.Data.Index] {
-			if attestation.AggregationBits.BitAt(duty.ValidatorCommitteeIndex) {
+		for _, duty := range dutiesBySlot[attestationData.Slot][attestationData.Index] {
+			if aggregationBits.BitAt(duty.ValidatorCommitteeIndex) {
 				// Found it.
 				if _, exists := votes[duty.ValidatorIndex]; exists {
 					// Duplicate; ignore.
@@ -261,17 +269,17 @@ func (c *command) processAttesterDutiesSlot(ctx context.Context,
 				votes[duty.ValidatorIndex] = struct{}{}
 
 				// Update the metrics for the attestation.
-				index := int(attestation.Data.Slot - c.chainTime.FirstSlotOfEpoch(c.summary.Epoch))
+				index := int(attestationData.Slot - c.chainTime.FirstSlotOfEpoch(c.summary.Epoch))
 				c.summary.Slots[index].Attestations.Included++
 				inclusionDelay := slot - duty.Slot
 
 				fault := &validatorFault{
 					Validator:         duty.ValidatorIndex,
-					AttestationData:   attestation.Data,
+					AttestationData:   attestationData,
 					InclusionDistance: int(inclusionDelay),
 				}
 
-				headCorrect, err := util.AttestationHeadCorrect(ctx, headersCache, attestation)
+				headCorrect, err := util.AttestationHeadCorrect(ctx, headersCache, attestationData)
 				if err != nil {
 					return errors.Wrap(err, "failed to calculate if attestation had correct head vote")
 				}
@@ -295,7 +303,7 @@ func (c *command) processAttesterDutiesSlot(ctx context.Context,
 					c.summary.UntimelySourceValidators = append(c.summary.UntimelySourceValidators, fault)
 				}
 
-				targetCorrect, err := util.AttestationTargetCorrect(ctx, headersCache, c.chainTime, attestation)
+				targetCorrect, err := util.AttestationTargetCorrect(ctx, headersCache, c.chainTime, attestationData)
 				if err != nil {
 					return errors.Wrap(err, "failed to calculate if attestation had correct target vote")
 				}

@@ -184,17 +184,21 @@ func (c *command) processSlots(ctx context.Context,
 			return 0, 0, 0, 0, 0, 0, nil, nil, err
 		}
 		for _, attestation := range attestations {
-			if attestation.Data.Slot < c.chainTime.FirstSlotOfEpoch(c.summary.Epoch) || attestation.Data.Slot >= c.chainTime.FirstSlotOfEpoch(c.summary.Epoch+1) {
+			attestationData, err := attestation.Data()
+			if err != nil {
+				return 0, 0, 0, 0, 0, 0, nil, nil, errors.Wrap(err, fmt.Sprintf("failed to obtain attestation data for slot %d", slot))
+			}
+			if attestationData.Slot < c.chainTime.FirstSlotOfEpoch(c.summary.Epoch) || attestationData.Slot >= c.chainTime.FirstSlotOfEpoch(c.summary.Epoch+1) {
 				// Outside of this epoch's range.
 				continue
 			}
-			slotCommittees, exists := allCommittees[attestation.Data.Slot]
+			slotCommittees, exists := allCommittees[attestationData.Slot]
 			if !exists {
 				response, err := c.beaconCommitteesProvider.BeaconCommittees(ctx, &api.BeaconCommitteesOpts{
-					State: fmt.Sprintf("%d", attestation.Data.Slot),
+					State: fmt.Sprintf("%d", attestationData.Slot),
 				})
 				if err != nil {
-					return 0, 0, 0, 0, 0, 0, nil, nil, errors.Wrap(err, fmt.Sprintf("failed to obtain committees for slot %d", attestation.Data.Slot))
+					return 0, 0, 0, 0, 0, 0, nil, nil, errors.Wrap(err, fmt.Sprintf("failed to obtain committees for slot %d", attestationData.Slot))
 				}
 				for _, beaconCommittee := range response.Data {
 					if _, exists := allCommittees[beaconCommittee.Slot]; !exists {
@@ -209,22 +213,26 @@ func (c *command) processSlots(ctx context.Context,
 						}
 					}
 				}
-				slotCommittees = allCommittees[attestation.Data.Slot]
+				slotCommittees = allCommittees[attestationData.Slot]
 			}
-			committee := slotCommittees[attestation.Data.Index]
+			committee := slotCommittees[attestationData.Index]
 
-			inclusionDistance := slot - attestation.Data.Slot
-			headCorrect, err := util.AttestationHeadCorrect(ctx, headersCache, attestation)
+			inclusionDistance := slot - attestationData.Slot
+			headCorrect, err := util.AttestationHeadCorrect(ctx, headersCache, attestationData)
 			if err != nil {
 				return 0, 0, 0, 0, 0, 0, nil, nil, err
 			}
-			targetCorrect, err := util.AttestationTargetCorrect(ctx, headersCache, c.chainTime, attestation)
+			targetCorrect, err := util.AttestationTargetCorrect(ctx, headersCache, c.chainTime, attestationData)
 			if err != nil {
 				return 0, 0, 0, 0, 0, 0, nil, nil, err
 			}
 
-			for i := uint64(0); i < attestation.AggregationBits.Len(); i++ {
-				if attestation.AggregationBits.BitAt(i) {
+			aggregationBits, err := attestation.AggregationBits()
+			if err != nil {
+				return 0, 0, 0, 0, 0, 0, nil, nil, err
+			}
+			for i := uint64(0); i < aggregationBits.Len(); i++ {
+				if aggregationBits.BitAt(i) {
 					votes[committee[int(i)]] = struct{}{}
 					if _, exists := headCorrects[committee[int(i)]]; !exists && headCorrect {
 						headCorrects[committee[int(i)]] = struct{}{}
@@ -245,6 +253,7 @@ func (c *command) processSlots(ctx context.Context,
 			}
 		}
 	}
+
 	return len(votes),
 		len(headCorrects),
 		len(headTimelys),
@@ -392,6 +401,8 @@ func (c *command) processBlobs(ctx context.Context) error {
 			// No blobs in these forks.
 		case spec.DataVersionDeneb:
 			c.summary.Blobs += len(block.Deneb.Message.Body.BlobKZGCommitments)
+		case spec.DataVersionElectra:
+			c.summary.Blobs += len(block.Electra.Message.Body.BlobKZGCommitments)
 		default:
 			return fmt.Errorf("unhandled block version %v", block.Version)
 		}

@@ -123,8 +123,10 @@ func (c *command) analyzeAttestations(ctx context.Context, block *spec.Versioned
 		case spec.DataVersionElectra:
 			analysis, err = c.electraAnalysis(ctx, slot, attestation.Electra, blockVotes, spec.DataVersionElectra)
 		default:
-			return fmt.Errorf("unknown version %s\n", attestation.Version)
-
+			return fmt.Errorf("unknown version %s", attestation.Version)
+		}
+		if err != nil {
+			return err
 		}
 
 		// Calculate score and value.

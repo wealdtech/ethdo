@@ -130,7 +130,9 @@ linters:
     - deadcode
     - depguard
     - dupl
+    - err113
     - errorlint
+    - execinquery
     - exhaustive
     - exhaustivestruct
     - exhaustruct
@@ -142,7 +144,6 @@ linters:
     - gochecknoinits
     - gocognit
     - goconst
-    - goerr113
     - goheader
     - golint
     - gomnd
@@ -152,6 +153,7 @@ linters:
     - lll
     - maintidx
     - maligned
+    - mnd
     - musttag
     - nestif
     - nilnil

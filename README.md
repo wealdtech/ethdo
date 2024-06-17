@@ -151,9 +151,13 @@ Amazon S3-compatible stores have additional options available, which can be conf
 {
   "stores": {
     "s3": {
-      "bucket":"mybucketname",
-      "path":"path/in/bucket",
-      "passphrase":"secret"
+      "region": "us-west-1",
+      "bucket": "my-s3-store",
+      "path": "/wallets",
+      "credentials": {
+        "id": "ABCDEF123",
+        "secret": "XXXXXXXXX"
+      }
     }
   }
 }

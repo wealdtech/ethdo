@@ -17,6 +17,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"net/http"
 
 	eth2client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
@@ -39,7 +40,7 @@ func (c *command) process(ctx context.Context) error {
 	})
 	if err != nil {
 		var apiError *api.Error
-		if errors.As(err, &apiError) && apiError.StatusCode == 404 {
+		if errors.As(err, &apiError) && apiError.StatusCode == http.StatusNotFound {
 			return errors.New("empty beacon block")
 		}
 		return errors.Wrap(err, "failed to obtain beacon block")
@@ -211,7 +212,7 @@ func (c *command) fetchParents(ctx context.Context, block *spec.VersionedSignedB
 	})
 	if err != nil {
 		var apiError *api.Error
-		if errors.As(err, &apiError) && apiError.StatusCode == 404 {
+		if errors.As(err, &apiError) && apiError.StatusCode == http.StatusNotFound {
 			return errors.New("empty beacon block")
 		}
 		return err
@@ -394,7 +395,7 @@ func (c *command) calcHeadCorrect(ctx context.Context, attestation *phase0.Attes
 			})
 			if err != nil {
 				var apiError *api.Error
-				if errors.As(err, &apiError) && apiError.StatusCode == 404 {
+				if errors.As(err, &apiError) && apiError.StatusCode == http.StatusNotFound {
 					if c.debug {
 						fmt.Printf("No block available for slot %d, assuming not in canonical chain", slot)
 					}
@@ -432,7 +433,7 @@ func (c *command) calcTargetCorrect(ctx context.Context, attestation *phase0.Att
 			})
 			if err != nil {
 				var apiError *api.Error
-				if errors.As(err, &apiError) && apiError.StatusCode == 404 {
+				if errors.As(err, &apiError) && apiError.StatusCode == http.StatusNotFound {
 					if c.debug {
 						fmt.Printf("No block available for slot %d, assuming not in canonical chain", slot)
 					}

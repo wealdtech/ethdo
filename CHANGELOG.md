@@ -1,4 +1,4 @@
-dev:
+1.35.3:
   - provide better error message on context deadlline exceeded
   - update launchpad output to match latest version
   - add deposit contract address to "chain info"

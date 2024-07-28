@@ -19,6 +19,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"math/big"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
@@ -54,7 +55,7 @@ func output(_ context.Context, data *dataOut) (string, error) {
 	return "", nil
 }
 
-func outputBlockGeneral(_ context.Context,
+func outputBlockGeneral(ctx context.Context,
 	verbose bool,
 	slot phase0.Slot,
 	proposerIndex phase0.ValidatorIndex,
@@ -82,14 +83,7 @@ func outputBlockGeneral(_ context.Context,
 		res.WriteString(fmt.Sprintf("Parent root: %#x\n", parentRoot))
 		res.WriteString(fmt.Sprintf("State root: %#x\n", stateRoot))
 	}
-	if len(graffiti) > 0 && hex.EncodeToString(graffiti) != "0000000000000000000000000000000000000000000000000000000000000000" {
-		graffiti = bytes.TrimRight(graffiti, "\u0000")
-		if utf8.Valid(graffiti) {
-			res.WriteString(fmt.Sprintf("Graffiti: %s\n", string(graffiti)))
-		} else {
-			res.WriteString(fmt.Sprintf("Graffiti: %#x\n", graffiti))
-		}
-	}
+	res.WriteString(blockGraffiti(ctx, graffiti))
 
 	return res.String(), nil
 }
@@ -1061,4 +1055,95 @@ func attestingIndices(input bitfield.Bitlist, indices []phase0.ValidatorIndex) s
 		}
 	}
 	return strings.TrimSpace(res)
+}
+
+func blockGraffiti(_ context.Context, graffiti []byte) string {
+	if len(graffiti) == 0 || hex.EncodeToString(graffiti) == "0000000000000000000000000000000000000000000000000000000000000000" {
+		// No graffiti.
+		return ""
+	}
+
+	// Remove any trailing null characters.
+	graffiti = bytes.TrimRight(graffiti, "\u0000")
+
+	if !utf8.Valid(graffiti) {
+		// Graffiti is not valid UTF-8, return hex.
+		return fmt.Sprintf("Graffiti: %#x\n", graffiti)
+	}
+
+	// See if there is client identification information present in the graffiti.
+	// The client identification will always be the last entry in the graffiti, with a space beforehand.
+	parts := bytes.Split(graffiti, []byte{' '})
+
+	// Consensus and execution client values come from
+	// https://github.com/ethereum/execution-apis/blob/main/src/engine/identification.md
+	consensusClients := map[string]string{
+		"GR": "grandine",
+		"LH": "lighthouse",
+		"LS": "lodestar",
+		"NB": "nimbus",
+		"PM": "prysm",
+		"TK": "teku",
+	}
+	consensusRegex := regexp.MustCompile(`(GR|LH|LS|NB|PM|TK)([0-9a-f]*)`)
+	consensusData := consensusRegex.Find(parts[len(parts)-1])
+
+	executionClients := map[string]string{
+		"BU": "besu",
+		"EG": "erigon",
+		"EJ": "ethereumJS",
+		"GE": "go-ethereum",
+		"NM": "nethermind",
+		"RH": "reth",
+	}
+	executionRegex := regexp.MustCompile(`(BU|EG|EJ|GE|NM|RH)([0-9a-f]*)`)
+	executionData := executionRegex.Find(parts[len(parts)-1])
+
+	if len(consensusData) == 0 && len(executionData) == 0 {
+		// There is no identifier; return the graffiti as-is.
+		return fmt.Sprintf("Graffiti: %s\n", string(graffiti))
+	}
+
+	res := strings.Builder{}
+
+	truncatedGraffiti := bytes.Join(parts[0:len(parts)-1], []byte(" "))
+	if len(truncatedGraffiti) > 0 {
+		res.WriteString(fmt.Sprintf("Graffiti: %s\n", string(truncatedGraffiti)))
+	}
+
+	if len(consensusData) > 0 {
+		consensusClient := consensusData[0:2]
+		consensusHash := ""
+		if len(consensusData) > 2 {
+			consensusHash = string(consensusData[2:])
+		}
+
+		res.WriteString("Consensus client: ")
+		res.WriteString(consensusClients[string(consensusClient)])
+		if consensusHash != "" {
+			res.WriteString(" (version hash ")
+			res.WriteString(consensusHash)
+			res.WriteString(")")
+		}
+		res.WriteString("\n")
+	}
+
+	if len(executionData) > 0 {
+		executionClient := executionData[0:2]
+		executionHash := ""
+		if len(executionData) > 2 {
+			executionHash = string(executionData[2:])
+		}
+
+		res.WriteString("Execution client: ")
+		res.WriteString(executionClients[string(executionClient)])
+		if executionHash != "" {
+			res.WriteString(" (version hash ")
+			res.WriteString(executionHash)
+			res.WriteString(")")
+		}
+		res.WriteString("\n")
+	}
+
+	return res.String()
 }

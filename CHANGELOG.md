@@ -1,3 +1,6 @@
+1.35.4:
+  - provide consensus and execution client info in block info output 
+
 1.35.3:
   - provide better error message on context deadlline exceeded
   - update launchpad output to match latest version

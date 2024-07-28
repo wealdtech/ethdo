@@ -175,3 +175,58 @@ func TestOutputBlockETH1Data(t *testing.T) {
 		})
 	}
 }
+
+func TestBlockGraffiti(t *testing.T) {
+	tests := []struct {
+		name     string
+		graffiti []byte
+		res      string
+	}{
+		{
+			name:     "Empty",
+			graffiti: []byte(""),
+		},
+		{
+			name:     "NoID",
+			graffiti: []byte("No identifier"),
+			res:      "Graffiti: No identifier\n",
+		},
+		{
+			name:     "SingleClient",
+			graffiti: []byte("Graffiti TK"),
+			res:      "Graffiti: Graffiti\nConsensus client: teku\n",
+		},
+		{
+			name:     "SingleClientImmediate",
+			graffiti: []byte("TK"),
+			res:      "Consensus client: teku\n",
+		},
+		{
+			name:     "SingleClientAndHashImmediate",
+			graffiti: []byte("TKa9f98260"),
+			res:      "Consensus client: teku (version hash a9f98260)\n",
+		},
+		{
+			name:     "DualClients",
+			graffiti: []byte("LHGE"),
+			res:      "Consensus client: lighthouse\nExecution client: go-ethereum\n",
+		},
+		{
+			name:     "DualClientsReverseOrder",
+			graffiti: []byte("GELH"),
+			res:      "Consensus client: lighthouse\nExecution client: go-ethereum\n",
+		},
+		{
+			name:     "DualClientsTruncatedHash",
+			graffiti: []byte("Freedom To Transact TKa9f9NM220b"),
+			res:      "Graffiti: Freedom To Transact\nConsensus client: teku (version hash a9f9)\nExecution client: nethermind (version hash 220b)\n",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			res := blockGraffiti(context.Background(), test.graffiti)
+			require.Equal(t, test.res, res)
+		})
+	}
+}

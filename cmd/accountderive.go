@@ -50,6 +50,7 @@ func init() {
 	accountDeriveCmd.Flags().Bool("show-private-key", false, "show private key for derived account")
 	accountDeriveCmd.Flags().Bool("show-withdrawal-credentials", false, "show withdrawal credentials for derived account")
 	accountDeriveCmd.Flags().Bool("generate-keystore", false, "generate a keystore for the derived account")
+	accountDeriveCmd.Flags().Bool("json", false, "display the JSON keystore for the derived account on stdout")
 }
 
 func accountDeriveBindings(cmd *cobra.Command) {
@@ -60,6 +61,9 @@ func accountDeriveBindings(cmd *cobra.Command) {
 		panic(err)
 	}
 	if err := viper.BindPFlag("generate-keystore", cmd.Flags().Lookup("generate-keystore")); err != nil {
+		panic(err)
+	}
+	if err := viper.BindPFlag("json", cmd.Flags().Lookup("json")); err != nil {
 		panic(err)
 	}
 }

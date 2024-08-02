@@ -1,3 +1,6 @@
+1.35.5:
+  - allow keystore to be output to the console
+
 1.35.4:
   - provide consensus and execution client info in block info output 
 

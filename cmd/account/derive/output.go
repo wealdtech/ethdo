@@ -31,6 +31,7 @@ import (
 )
 
 type dataOut struct {
+	json                      bool
 	showPrivateKey            bool
 	showWithdrawalCredentials bool
 	generateKeystore          bool
@@ -94,10 +95,14 @@ func outputKeystore(_ context.Context, data *dataOut) (string, error) {
 		return "", errors.Wrap(err, "failed to marshal keystore JSON")
 	}
 
-	keystoreFilename := fmt.Sprintf("keystore-%s-%d.json", strings.ReplaceAll(data.path, "/", "_"), time.Now().Unix())
+	if data.json {
+		fmt.Fprintf(os.Stdout, "%s\n", string(out))
+	} else {
+		keystoreFilename := fmt.Sprintf("keystore-%s-%d.json", strings.ReplaceAll(data.path, "/", "_"), time.Now().Unix())
 
-	if err := os.WriteFile(keystoreFilename, out, 0o600); err != nil {
-		return "", errors.Wrap(err, fmt.Sprintf("failed to write %s", keystoreFilename))
+		if err := os.WriteFile(keystoreFilename, out, 0o600); err != nil {
+			return "", errors.Wrap(err, fmt.Sprintf("failed to write %s", keystoreFilename))
+		}
 	}
 	return "", nil
 }

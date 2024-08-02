@@ -22,6 +22,7 @@ import (
 
 type dataIn struct {
 	quiet bool
+	json  bool
 	// Derivation information.
 	mnemonic string
 	path     string
@@ -36,6 +37,9 @@ func input(_ context.Context) (*dataIn, error) {
 
 	// Quiet.
 	data.quiet = viper.GetBool("quiet")
+
+	// JSON.
+	data.json = viper.GetBool("json")
 
 	// Mnemonic.
 	if viper.GetString("mnemonic") == "" {

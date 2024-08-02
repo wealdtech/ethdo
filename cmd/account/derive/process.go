@@ -38,6 +38,7 @@ func process(ctx context.Context, data *dataIn) (*dataOut, error) {
 	}
 
 	results := &dataOut{
+		json:                      data.json,
 		showPrivateKey:            data.showPrivateKey,
 		showWithdrawalCredentials: data.showWithdrawalCredentials,
 		generateKeystore:          data.generateKeystore,

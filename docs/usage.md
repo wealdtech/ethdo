@@ -47,7 +47,7 @@ $ ethdo wallet batch --wallet="Validators" ---passphrase="my account secret" --b
 `ethdo wallet create` creates a new wallet with the given parameters.  Options for creating a wallet include:
 
 - `wallet`: the name of the wallet to create
-- `type`: the type of wallet to create.  This can be either "nd" for a non-deterministic wallet, where private keys are generated randomly, or "hd" for a hierarchical deterministic wallet, where private keys are generated from a seed and path as per [EIP-2333](https://eips.ethereum.org/EIPS/eip-2333) (defaults to "nd")
+- `type`: the type of wallet to create.  This can be either "nd" for a non-deterministic wallet, where private keys are generated randomly, "hd" for a hierarchical deterministic wallet, where private keys are generated from a seed and path as per [EIP-2333](https://eips.ethereum.org/EIPS/eip-2333), "keystore" for a wallet where data is written in the [EIP=2335](https://eips.ethereum.org/EIPS/eip-2335) format, or "distributed" for a wallet used by [Dirk](https://github.com/wealdtech/dirk) (defaults to "nd")
 - `wallet-passphrase`: the passphrase for of the wallet.  This is required for hierarchical deterministic wallets, to protect the seed
 - `mnemonic`: for hierarchical deterministic wallets only, use a pre-defined 24-word [BIP-39 seed phrase](https://en.bitcoin.it/wiki/Seed_phrase) to create the wallet, along with an additional "seed extension" phrase if required.  **Warning** The same mnemonic can be used to create multiple wallets, in which case they will generate the same keys.
 

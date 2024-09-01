@@ -1,4 +1,4 @@
-// Copyright © 2019, 2020 Weald Technology Trading
+// Copyright © 2019 - 2024 Weald Technology Trading
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -24,6 +24,7 @@ import (
 	distributed "github.com/wealdtech/go-eth2-wallet-distributed"
 	keystorev4 "github.com/wealdtech/go-eth2-wallet-encryptor-keystorev4"
 	hd "github.com/wealdtech/go-eth2-wallet-hd/v2"
+	keystore "github.com/wealdtech/go-eth2-wallet-keystore"
 	nd "github.com/wealdtech/go-eth2-wallet-nd/v2"
 	"golang.org/x/text/unicode/norm"
 )
@@ -40,6 +41,8 @@ func process(ctx context.Context, data *dataIn) (*dataOut, error) {
 		return processHD(ctx, data)
 	case "distributed":
 		return processDistributed(ctx, data)
+	case "keystore":
+		return processKeystore(ctx, data)
 	default:
 		return nil, errors.New("wallet type not supported")
 	}
@@ -130,5 +133,18 @@ func processDistributed(ctx context.Context, data *dataIn) (*dataOut, error) {
 		return nil, err
 	}
 
+	return results, nil
+}
+
+func processKeystore(ctx context.Context, data *dataIn) (*dataOut, error) {
+	if data == nil {
+		return nil, errors.New("no data")
+	}
+
+	results := &dataOut{}
+
+	if _, err := keystore.CreateWallet(ctx, data.walletName, data.store, keystorev4.New()); err != nil {
+		return nil, err
+	}
 	return results, nil
 }

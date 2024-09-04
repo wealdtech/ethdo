@@ -46,9 +46,17 @@ In quiet mode this will return 0 if information for the epoch is found, otherwis
 
 func init() {
 	epochCmd.AddCommand(epochSummaryCmd)
-	epochFlags(epochSummaryCmd)
+	epochSummaryFlags(epochSummaryCmd)
+}
+
+func epochSummaryFlags(cmd *cobra.Command) {
+	epochFlags(cmd)
+	cmd.Flags().StringSlice("validators", nil, "the validators for which to obtain a summary")
 }
 
 func epochSummaryBindings(cmd *cobra.Command) {
 	epochBindings(cmd)
+	if err := viper.BindPFlag("validators", cmd.Flags().Lookup("validators")); err != nil {
+		panic(err)
+	}
 }

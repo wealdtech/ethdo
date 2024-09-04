@@ -36,9 +36,11 @@ type command struct {
 	allowInsecureConnections bool
 
 	// Operation.
-	epoch      string
-	stream     bool
-	jsonOutput bool
+	epoch         string
+	validatorsStr []string
+	validators    map[phase0.ValidatorIndex]struct{}
+	stream        bool
+	jsonOutput    bool
 
 	// Data access.
 	eth2Client                 eth2client.Service
@@ -58,45 +60,61 @@ type command struct {
 }
 
 type epochSummary struct {
-	Epoch                      phase0.Epoch                 `json:"epoch"`
-	FirstSlot                  phase0.Slot                  `json:"first_slot"`
-	LastSlot                   phase0.Slot                  `json:"last_slot"`
-	Proposals                  []*epochProposal             `json:"proposals"`
-	SyncCommittee              []*epochSyncCommittee        `json:"sync_committees"`
-	ActiveValidators           int                          `json:"active_validators"`
-	ParticipatingValidators    int                          `json:"participating_validators"`
-	HeadCorrectValidators      int                          `json:"head_correct_validators"`
-	HeadTimelyValidators       int                          `json:"head_timely_validators"`
-	SourceTimelyValidators     int                          `json:"source_timely_validators"`
-	TargetCorrectValidators    int                          `json:"target_correct_validators"`
-	TargetTimelyValidators     int                          `json:"target_timely_validators"`
-	NonParticipatingValidators []*nonParticipatingValidator `json:"nonparticipating_validators"`
-	Blobs                      int                          `json:"blobs"`
+	Epoch                      phase0.Epoch          `json:"epoch"`
+	FirstSlot                  phase0.Slot           `json:"first_slot"`
+	LastSlot                   phase0.Slot           `json:"last_slot"`
+	Blocks                     int                   `json:"blocks"`
+	Proposals                  []*epochProposal      `json:"proposals"`
+	SyncCommitteeValidators    int                   `json:"sync_committee_validators"`
+	SyncCommittee              []*epochSyncCommittee `json:"sync_committees"`
+	ActiveValidators           int                   `json:"active_validators"`
+	ParticipatingValidators    int                   `json:"participating_validators"`
+	HeadCorrectValidators      int                   `json:"head_correct_validators"`
+	HeadTimelyValidators       int                   `json:"head_timely_validators"`
+	SourceTimelyValidators     int                   `json:"source_timely_validators"`
+	TargetCorrectValidators    int                   `json:"target_correct_validators"`
+	TargetTimelyValidators     int                   `json:"target_timely_validators"`
+	NonParticipatingValidators []*attestingValidator `json:"nonparticipating_validators"`
+	NonHeadCorrectValidators   []*attestingValidator `json:"nonheadcorrect_validators"`
+	NonHeadTimelyValidators    []*attestingValidator `json:"nonheadtimely_validators"`
+	NonTargetCorrectValidators []*attestingValidator `json:"nontargetcorrect_validators"`
+	NonSourceTimelyValidators  []*attestingValidator `json:"nonsourcetimely_validators"`
+	Blobs                      int                   `json:"blobs"`
 }
 
 type epochProposal struct {
-	Slot     phase0.Slot           `json:"slot"`
-	Proposer phase0.ValidatorIndex `json:"proposer"`
-	Block    bool                  `json:"block"`
+	ValidatorIndex phase0.ValidatorIndex `json:"validator_index"`
+	Slot           phase0.Slot           `json:"slot"`
+	Block          bool                  `json:"block"`
 }
 
 type epochSyncCommittee struct {
-	Index  phase0.ValidatorIndex `json:"index"`
-	Missed int                   `json:"missed"`
+	ValidatorIndex phase0.ValidatorIndex `json:"validator_index"`
+	Missed         int                   `json:"missed"`
+	MissedSlots    []phase0.Slot         `json:"missed_slots"`
 }
 
-type nonParticipatingValidator struct {
-	Validator phase0.ValidatorIndex `json:"validator_index"`
-	Slot      phase0.Slot           `json:"slot"`
-	Committee phase0.CommitteeIndex `json:"committee_index"`
+type attestingValidator struct {
+	Validator     phase0.ValidatorIndex `json:"validator_index"`
+	Slot          phase0.Slot           `json:"slot"`
+	Committee     phase0.CommitteeIndex `json:"committee_index"`
+	HeadVote      *phase0.Root          `json:"head_vote,omitempty"`
+	Head          *phase0.Root          `json:"head,omitempty"`
+	TargetVote    *phase0.Root          `json:"target_vote,omitempty"`
+	Target        *phase0.Root          `json:"target,omitempty"`
+	InclusionSlot phase0.Slot           `json:"inclusion_slot,omitempty"`
 }
 
 func newCommand(_ context.Context) (*command, error) {
 	c := &command{
-		quiet:       viper.GetBool("quiet"),
-		verbose:     viper.GetBool("verbose"),
-		debug:       viper.GetBool("debug"),
-		summary:     &epochSummary{},
+		quiet:         viper.GetBool("quiet"),
+		verbose:       viper.GetBool("verbose"),
+		debug:         viper.GetBool("debug"),
+		validatorsStr: viper.GetStringSlice("validators"),
+		summary: &epochSummary{
+			Proposals: make([]*epochProposal, 0),
+		},
+		validators:  make(map[phase0.ValidatorIndex]struct{}),
 		blocksCache: make(map[string]*spec.VersionedSignedBeaconBlock),
 	}
 

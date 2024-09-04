@@ -1,3 +1,12 @@
+1.36.1:
+  - more JSON data for epoch summary
+
+1.36.0:
+  - support keystore wallets
+
+1.35.6:
+  - provide more JSON data in "epoch summary"
+
 1.35.5:
   - allow keystore to be output to the console
 

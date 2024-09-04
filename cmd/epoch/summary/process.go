@@ -43,6 +43,14 @@ func (c *command) process(ctx context.Context) error {
 	c.summary.FirstSlot = c.chainTime.FirstSlotOfEpoch(c.summary.Epoch)
 	c.summary.LastSlot = c.chainTime.FirstSlotOfEpoch(c.summary.Epoch+1) - 1
 
+	validators, err := util.ParseValidators(ctx, c.validatorsProvider, c.validatorsStr, "head")
+	if err != nil {
+		return errors.Wrap(err, "failed to parse validators")
+	}
+	for _, validator := range validators {
+		c.validators[validator.Index] = struct{}{}
+	}
+
 	if err := c.processProposerDuties(ctx); err != nil {
 		return err
 	}
@@ -52,6 +60,7 @@ func (c *command) process(ctx context.Context) error {
 	if err := c.processSyncCommitteeDuties(ctx); err != nil {
 		return err
 	}
+
 	return c.processBlobs(ctx)
 }
 
@@ -69,10 +78,20 @@ func (c *command) processProposerDuties(ctx context.Context) error {
 			return errors.Wrap(err, fmt.Sprintf("failed to obtain block for slot %d", duty.Slot))
 		}
 		present := block != nil
+		if present {
+			c.summary.Blocks++
+		}
+
+		_, exists := c.validators[duty.ValidatorIndex]
+		if len(c.validators) > 0 && !exists {
+			// Not one of ours.
+			continue
+		}
+
 		c.summary.Proposals = append(c.summary.Proposals, &epochProposal{
-			Slot:     duty.Slot,
-			Proposer: duty.ValidatorIndex,
-			Block:    present,
+			Slot:           duty.Slot,
+			ValidatorIndex: duty.ValidatorIndex,
+			Block:          present,
 		})
 	}
 
@@ -80,14 +99,25 @@ func (c *command) processProposerDuties(ctx context.Context) error {
 }
 
 func (c *command) activeValidators(ctx context.Context) (map[phase0.ValidatorIndex]*apiv1.Validator, error) {
+	validatorIndices := make([]phase0.ValidatorIndex, 0, len(c.validators))
+	for validator := range c.validators {
+		validatorIndices = append(validatorIndices, validator)
+	}
+
 	response, err := c.validatorsProvider.Validators(ctx, &api.ValidatorsOpts{
-		State: fmt.Sprintf("%d", c.chainTime.FirstSlotOfEpoch(c.summary.Epoch)),
+		State:   "head",
+		Indices: validatorIndices,
 	})
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to obtain validators for epoch")
 	}
 	activeValidators := make(map[phase0.ValidatorIndex]*apiv1.Validator)
 	for _, validator := range response.Data {
+		_, exists := c.validators[validator.Index]
+		if len(c.validators) > 0 && !exists {
+			continue
+		}
+
 		if validator.Validator.ActivationEpoch <= c.summary.Epoch && validator.Validator.ExitEpoch > c.summary.Epoch {
 			activeValidators[validator.Index] = validator
 		}
@@ -112,18 +142,43 @@ func (c *command) processAttesterDuties(ctx context.Context) error {
 		lastSlot = c.chainTime.CurrentSlot()
 	}
 
-	var votes map[phase0.ValidatorIndex]struct{}
-	var participations map[phase0.ValidatorIndex]*nonParticipatingValidator
-	c.summary.ParticipatingValidators, c.summary.HeadCorrectValidators, c.summary.HeadTimelyValidators, c.summary.SourceTimelyValidators, c.summary.TargetCorrectValidators, c.summary.TargetTimelyValidators, votes, participations, err = c.processSlots(ctx, firstSlot, lastSlot)
+	participatingValidators, headCorrectValidators, headTimelyValidators, sourceTimelyValidators, targetCorrectValidators, targetTimelyValidators, participations, err := c.processSlots(ctx, firstSlot, lastSlot)
 	if err != nil {
 		return err
 	}
 
-	c.summary.NonParticipatingValidators = make([]*nonParticipatingValidator, 0, len(activeValidators)-len(votes))
+	c.summary.ParticipatingValidators = len(participatingValidators)
+	c.summary.HeadCorrectValidators = len(headCorrectValidators)
+	c.summary.HeadTimelyValidators = len(headTimelyValidators)
+	c.summary.SourceTimelyValidators = len(sourceTimelyValidators)
+	c.summary.TargetCorrectValidators = len(targetCorrectValidators)
+	c.summary.TargetTimelyValidators = len(targetTimelyValidators)
+
+	c.summary.NonParticipatingValidators = make([]*attestingValidator, 0, len(activeValidators)-len(participatingValidators))
 	for activeValidatorIndex := range activeValidators {
-		if _, exists := votes[activeValidatorIndex]; !exists {
+		if _, exists := participatingValidators[activeValidatorIndex]; !exists {
 			if _, exists := participations[activeValidatorIndex]; exists {
 				c.summary.NonParticipatingValidators = append(c.summary.NonParticipatingValidators, participations[activeValidatorIndex])
+			}
+		}
+		if _, exists := headCorrectValidators[activeValidatorIndex]; !exists {
+			if _, exists := participations[activeValidatorIndex]; exists {
+				c.summary.NonHeadCorrectValidators = append(c.summary.NonHeadCorrectValidators, participations[activeValidatorIndex])
+			}
+		}
+		if _, exists := headTimelyValidators[activeValidatorIndex]; !exists {
+			if _, exists := participations[activeValidatorIndex]; exists {
+				c.summary.NonHeadTimelyValidators = append(c.summary.NonHeadTimelyValidators, participations[activeValidatorIndex])
+			}
+		}
+		if _, exists := targetCorrectValidators[activeValidatorIndex]; !exists {
+			if _, exists := participations[activeValidatorIndex]; exists {
+				c.summary.NonTargetCorrectValidators = append(c.summary.NonTargetCorrectValidators, participations[activeValidatorIndex])
+			}
+		}
+		if _, exists := sourceTimelyValidators[activeValidatorIndex]; !exists {
+			if _, exists := participations[activeValidatorIndex]; exists {
+				c.summary.NonSourceTimelyValidators = append(c.summary.NonSourceTimelyValidators, participations[activeValidatorIndex])
 			}
 		}
 	}
@@ -140,18 +195,18 @@ func (c *command) processAttesterDuties(ctx context.Context) error {
 	return nil
 }
 
+//nolint:gocyclo
 func (c *command) processSlots(ctx context.Context,
 	firstSlot phase0.Slot,
 	lastSlot phase0.Slot,
 ) (
-	int,
-	int,
-	int,
-	int,
-	int,
-	int,
 	map[phase0.ValidatorIndex]struct{},
-	map[phase0.ValidatorIndex]*nonParticipatingValidator,
+	map[phase0.ValidatorIndex]struct{},
+	map[phase0.ValidatorIndex]struct{},
+	map[phase0.ValidatorIndex]struct{},
+	map[phase0.ValidatorIndex]struct{},
+	map[phase0.ValidatorIndex]struct{},
+	map[phase0.ValidatorIndex]*attestingValidator,
 	error,
 ) {
 	votes := make(map[phase0.ValidatorIndex]struct{})
@@ -161,7 +216,7 @@ func (c *command) processSlots(ctx context.Context,
 	targetCorrects := make(map[phase0.ValidatorIndex]struct{})
 	targetTimelys := make(map[phase0.ValidatorIndex]struct{})
 	allCommittees := make(map[phase0.Slot]map[phase0.CommitteeIndex][]phase0.ValidatorIndex)
-	participations := make(map[phase0.ValidatorIndex]*nonParticipatingValidator)
+	participations := make(map[phase0.ValidatorIndex]*attestingValidator)
 
 	// Need a cache of beacon block headers to reduce lookup times.
 	headersCache := util.NewBeaconBlockHeaderCache(c.beaconBlockHeadersProvider)
@@ -169,7 +224,7 @@ func (c *command) processSlots(ctx context.Context,
 	for slot := firstSlot; slot <= lastSlot; slot++ {
 		block, err := c.fetchBlock(ctx, fmt.Sprintf("%d", slot))
 		if err != nil {
-			return 0, 0, 0, 0, 0, 0, nil, nil, errors.Wrap(err, fmt.Sprintf("failed to obtain block for slot %d", slot))
+			return nil, nil, nil, nil, nil, nil, nil, errors.Wrap(err, fmt.Sprintf("failed to obtain block for slot %d", slot))
 		}
 		if block == nil {
 			// No block at this slot; that's fine.
@@ -177,11 +232,11 @@ func (c *command) processSlots(ctx context.Context,
 		}
 		slot, err := block.Slot()
 		if err != nil {
-			return 0, 0, 0, 0, 0, 0, nil, nil, err
+			return nil, nil, nil, nil, nil, nil, nil, err
 		}
 		attestations, err := block.Attestations()
 		if err != nil {
-			return 0, 0, 0, 0, 0, 0, nil, nil, err
+			return nil, nil, nil, nil, nil, nil, nil, err
 		}
 		for _, attestation := range attestations {
 			if attestation.Data.Slot < c.chainTime.FirstSlotOfEpoch(c.summary.Epoch) || attestation.Data.Slot >= c.chainTime.FirstSlotOfEpoch(c.summary.Epoch+1) {
@@ -194,18 +249,29 @@ func (c *command) processSlots(ctx context.Context,
 					State: fmt.Sprintf("%d", attestation.Data.Slot),
 				})
 				if err != nil {
-					return 0, 0, 0, 0, 0, 0, nil, nil, errors.Wrap(err, fmt.Sprintf("failed to obtain committees for slot %d", attestation.Data.Slot))
+					return nil, nil, nil, nil, nil, nil, nil, errors.Wrap(err, fmt.Sprintf("failed to obtain committees for slot %d", attestation.Data.Slot))
 				}
 				for _, beaconCommittee := range response.Data {
 					if _, exists := allCommittees[beaconCommittee.Slot]; !exists {
 						allCommittees[beaconCommittee.Slot] = make(map[phase0.CommitteeIndex][]phase0.ValidatorIndex)
 					}
+
 					allCommittees[beaconCommittee.Slot][beaconCommittee.Index] = beaconCommittee.Validators
+
 					for _, index := range beaconCommittee.Validators {
-						participations[index] = &nonParticipatingValidator{
-							Validator: index,
-							Slot:      beaconCommittee.Slot,
-							Committee: beaconCommittee.Index,
+						if len(c.validators) > 0 {
+							if _, exists := c.validators[index]; !exists {
+								// Not one of our validators.
+								continue
+							}
+						}
+
+						if _, exists := participations[index]; !exists {
+							participations[index] = &attestingValidator{
+								Validator: index,
+								Slot:      beaconCommittee.Slot,
+								Committee: beaconCommittee.Index,
+							}
 						}
 					}
 				}
@@ -214,44 +280,70 @@ func (c *command) processSlots(ctx context.Context,
 			committee := slotCommittees[attestation.Data.Index]
 
 			inclusionDistance := slot - attestation.Data.Slot
+
+			head, err := util.AttestationHead(ctx, headersCache, attestation)
+			if err != nil {
+				return nil, nil, nil, nil, nil, nil, nil, err
+			}
 			headCorrect, err := util.AttestationHeadCorrect(ctx, headersCache, attestation)
 			if err != nil {
-				return 0, 0, 0, 0, 0, 0, nil, nil, err
+				return nil, nil, nil, nil, nil, nil, nil, err
+			}
+			target, err := util.AttestationTarget(ctx, headersCache, c.chainTime, attestation)
+			if err != nil {
+				return nil, nil, nil, nil, nil, nil, nil, err
 			}
 			targetCorrect, err := util.AttestationTargetCorrect(ctx, headersCache, c.chainTime, attestation)
 			if err != nil {
-				return 0, 0, 0, 0, 0, 0, nil, nil, err
+				return nil, nil, nil, nil, nil, nil, nil, err
 			}
 
 			for i := uint64(0); i < attestation.AggregationBits.Len(); i++ {
 				if attestation.AggregationBits.BitAt(i) {
-					votes[committee[int(i)]] = struct{}{}
-					if _, exists := headCorrects[committee[int(i)]]; !exists && headCorrect {
-						headCorrects[committee[int(i)]] = struct{}{}
+					validatorIndex := committee[int(i)]
+					if len(c.validators) > 0 {
+						if _, exists := c.validators[validatorIndex]; !exists {
+							// Not one of our validators.
+							continue
+						}
 					}
-					if _, exists := headTimelys[committee[int(i)]]; !exists && headCorrect && inclusionDistance == 1 {
-						headTimelys[committee[int(i)]] = struct{}{}
+
+					// Only set the information from the first attestation we find for this validator.
+					if participations[validatorIndex].InclusionSlot == 0 {
+						participations[validatorIndex].HeadVote = &attestation.Data.BeaconBlockRoot
+						participations[validatorIndex].Head = &head
+						participations[validatorIndex].TargetVote = &attestation.Data.Target.Root
+						participations[validatorIndex].Target = &target
+						participations[validatorIndex].InclusionSlot = slot
 					}
-					if _, exists := sourceTimelys[committee[int(i)]]; !exists && inclusionDistance <= 5 {
-						sourceTimelys[committee[int(i)]] = struct{}{}
+
+					votes[validatorIndex] = struct{}{}
+					if _, exists := headCorrects[validatorIndex]; !exists && headCorrect {
+						headCorrects[validatorIndex] = struct{}{}
 					}
-					if _, exists := targetCorrects[committee[int(i)]]; !exists && targetCorrect {
-						targetCorrects[committee[int(i)]] = struct{}{}
+					if _, exists := headTimelys[validatorIndex]; !exists && headCorrect && inclusionDistance == 1 {
+						headTimelys[validatorIndex] = struct{}{}
 					}
-					if _, exists := targetTimelys[committee[int(i)]]; !exists && targetCorrect && inclusionDistance <= 32 {
-						targetTimelys[committee[int(i)]] = struct{}{}
+					if _, exists := sourceTimelys[validatorIndex]; !exists && inclusionDistance <= 5 {
+						sourceTimelys[validatorIndex] = struct{}{}
+					}
+					if _, exists := targetCorrects[validatorIndex]; !exists && targetCorrect {
+						targetCorrects[validatorIndex] = struct{}{}
+					}
+					if _, exists := targetTimelys[validatorIndex]; !exists && targetCorrect && inclusionDistance <= 32 {
+						targetTimelys[validatorIndex] = struct{}{}
 					}
 				}
 			}
 		}
 	}
-	return len(votes),
-		len(headCorrects),
-		len(headTimelys),
-		len(sourceTimelys),
-		len(targetCorrects),
-		len(targetTimelys),
-		votes,
+
+	return votes,
+		headCorrects,
+		headTimelys,
+		sourceTimelys,
+		targetCorrects,
+		targetTimelys,
 		participations,
 		nil
 }
@@ -273,7 +365,18 @@ func (c *command) processSyncCommitteeDuties(ctx context.Context) error {
 		return errors.Wrap(err, "empty sync committee")
 	}
 
+	for _, validatorIndex := range committee.Validators {
+		if len(c.validators) == 0 {
+			c.summary.SyncCommitteeValidators++
+		} else {
+			if _, exists := c.validators[validatorIndex]; exists {
+				c.summary.SyncCommitteeValidators++
+			}
+		}
+	}
+
 	missed := make(map[phase0.ValidatorIndex]int)
+	missedSlots := make(map[phase0.ValidatorIndex][]phase0.Slot)
 	for _, index := range committee.Validators {
 		missed[index] = 0
 	}
@@ -297,8 +400,14 @@ func (c *command) processSyncCommitteeDuties(ctx context.Context) error {
 			return errors.Wrapf(err, "failed to obtain sync aggregate for slot %d", slot)
 		}
 		for i := uint64(0); i < aggregate.SyncCommitteeBits.Len(); i++ {
+			validatorIndex := committee.Validators[int(i)]
+			if _, exists := c.validators[validatorIndex]; !exists {
+				// Not one of ours.
+				continue
+			}
 			if !aggregate.SyncCommitteeBits.BitAt(i) {
-				missed[committee.Validators[int(i)]]++
+				missed[validatorIndex]++
+				missedSlots[validatorIndex] = append(missedSlots[validatorIndex], slot)
 			}
 		}
 	}
@@ -307,8 +416,9 @@ func (c *command) processSyncCommitteeDuties(ctx context.Context) error {
 	for index, count := range missed {
 		if count > 0 {
 			c.summary.SyncCommittee = append(c.summary.SyncCommittee, &epochSyncCommittee{
-				Index:  index,
-				Missed: count,
+				ValidatorIndex: index,
+				Missed:         count,
+				MissedSlots:    missedSlots[index],
 			})
 		}
 	}
@@ -320,7 +430,7 @@ func (c *command) processSyncCommitteeDuties(ctx context.Context) error {
 			return missedDiff > 0
 		}
 		// Then order by validator index.
-		return c.summary.SyncCommittee[i].Index < c.summary.SyncCommittee[j].Index
+		return c.summary.SyncCommittee[i].ValidatorIndex < c.summary.SyncCommittee[j].ValidatorIndex
 	})
 
 	return nil
@@ -378,10 +488,10 @@ func (c *command) setup(ctx context.Context) error {
 }
 
 func (c *command) processBlobs(ctx context.Context) error {
-	for slot := c.summary.FirstSlot; slot <= c.summary.LastSlot; slot++ {
-		block, err := c.fetchBlock(ctx, fmt.Sprintf("%d", slot))
+	for _, proposal := range c.summary.Proposals {
+		block, err := c.fetchBlock(ctx, fmt.Sprintf("%d", proposal.Slot))
 		if err != nil {
-			return errors.Wrap(err, fmt.Sprintf("failed to obtain block for slot %d", slot))
+			return errors.Wrap(err, fmt.Sprintf("failed to obtain block for slot %d", proposal.Slot))
 		}
 		if block == nil {
 			continue

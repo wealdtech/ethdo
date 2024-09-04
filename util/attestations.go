@@ -21,6 +21,35 @@ import (
 	"github.com/wealdtech/ethdo/services/chaintime"
 )
 
+// AttestationHead returns the head for which the attestation should have voted.
+func AttestationHead(ctx context.Context,
+	headersCache *BeaconBlockHeaderCache,
+	attestation *phase0.Attestation,
+) (
+	phase0.Root,
+	error,
+) {
+	slot := attestation.Data.Slot
+	for {
+		header, err := headersCache.Fetch(ctx, slot)
+		if err != nil {
+			return phase0.Root{}, err
+		}
+		if header == nil {
+			// No block.
+			slot--
+			continue
+		}
+		if !header.Canonical {
+			// Not canonical.
+			slot--
+			continue
+		}
+
+		return header.Root, nil
+	}
+}
+
 // AttestationHeadCorrect returns true if the given attestation had the correct head.
 func AttestationHeadCorrect(ctx context.Context,
 	headersCache *BeaconBlockHeaderCache,
@@ -46,6 +75,37 @@ func AttestationHeadCorrect(ctx context.Context,
 			continue
 		}
 		return bytes.Equal(header.Root[:], attestation.Data.BeaconBlockRoot[:]), nil
+	}
+}
+
+// AttestationTarget returns the target for which the attestation should have voted.
+func AttestationTarget(ctx context.Context,
+	headersCache *BeaconBlockHeaderCache,
+	chainTime chaintime.Service,
+	attestation *phase0.Attestation,
+) (
+	phase0.Root,
+	error,
+) {
+	// Start with first slot of the target epoch.
+	slot := chainTime.FirstSlotOfEpoch(attestation.Data.Target.Epoch)
+	for {
+		header, err := headersCache.Fetch(ctx, slot)
+		if err != nil {
+			return phase0.Root{}, err
+		}
+		if header == nil {
+			// No block.
+			slot--
+			continue
+		}
+		if !header.Canonical {
+			// Not canonical.
+			slot--
+			continue
+		}
+
+		return header.Root, nil
 	}
 }
 

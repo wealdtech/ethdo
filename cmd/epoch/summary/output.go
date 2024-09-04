@@ -50,7 +50,7 @@ func (c *command) outputTxt(_ context.Context) (string, error) {
 	missedProposals := make([]string, 0, len(c.summary.Proposals))
 	for _, proposal := range c.summary.Proposals {
 		if !proposal.Block {
-			missedProposals = append(missedProposals, fmt.Sprintf("\n    Slot %d (validator %d)", proposal.Slot, proposal.Proposer))
+			missedProposals = append(missedProposals, fmt.Sprintf("\n    Slot %d (validator %d)", proposal.Slot, proposal.ValidatorIndex))
 		} else {
 			proposedBlocks++
 		}
@@ -64,7 +64,7 @@ func (c *command) outputTxt(_ context.Context) (string, error) {
 			builder.WriteString("\n    Slot ")
 			builder.WriteString(fmt.Sprintf("%d (%d/%d)", proposal.Slot, uint64(proposal.Slot)%uint64(len(c.summary.Proposals)), len(c.summary.Proposals)))
 			builder.WriteString(" validator ")
-			builder.WriteString(fmt.Sprintf("%d", proposal.Proposer))
+			builder.WriteString(fmt.Sprintf("%d", proposal.ValidatorIndex))
 			builder.WriteString(" not proposed or not included")
 		}
 	}
@@ -98,7 +98,7 @@ func (c *command) outputTxt(_ context.Context) (string, error) {
 		if c.verbose {
 			for _, syncCommittee := range c.summary.SyncCommittee {
 				builder.WriteString("\n    Validator ")
-				builder.WriteString(fmt.Sprintf("%d", syncCommittee.Index))
+				builder.WriteString(fmt.Sprintf("%d", syncCommittee.ValidatorIndex))
 				builder.WriteString(" included ")
 				builder.WriteString(fmt.Sprintf("%d/%d", proposedBlocks-syncCommittee.Missed, proposedBlocks))
 				builder.WriteString(fmt.Sprintf(" (%0.2f%%)", 100.0*float64(proposedBlocks-syncCommittee.Missed)/float64(proposedBlocks)))

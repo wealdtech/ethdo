@@ -289,7 +289,7 @@ func outputBlockSyncAggregate(ctx context.Context, eth2Client eth2client.Service
 						res.WriteString(fmt.Sprintf("  Error: failed to obtain sync committee: %v\n", err))
 					} else {
 						res.WriteString("  Contributing validators:")
-						for i := uint64(0); i < syncAggregate.SyncCommitteeBits.Len(); i++ {
+						for i := range syncAggregate.SyncCommitteeBits.Len() {
 							if syncAggregate.SyncCommitteeBits.BitAt(i) {
 								res.WriteString(fmt.Sprintf(" %d", syncCommitteeResponse.Data.Validators[i]))
 							}
@@ -791,7 +791,7 @@ func outputCapellaBlockExecutionPayload(_ context.Context,
 		res.WriteString("  Execution block number: ")
 		res.WriteString(fmt.Sprintf("%d\n", payload.BlockNumber))
 		baseFeePerGasBEBytes := make([]byte, len(payload.BaseFeePerGas))
-		for i := 0; i < 32; i++ {
+		for i := range 32 {
 			baseFeePerGasBEBytes[i] = payload.BaseFeePerGas[32-1-i]
 		}
 		baseFeePerGas := new(big.Int).SetBytes(baseFeePerGasBEBytes)
@@ -953,7 +953,7 @@ func outputBellatrixBlockExecutionPayload(_ context.Context,
 		res.WriteString("  Execution block number: ")
 		res.WriteString(fmt.Sprintf("%d\n", payload.BlockNumber))
 		baseFeePerGasBEBytes := make([]byte, len(payload.BaseFeePerGas))
-		for i := 0; i < 32; i++ {
+		for i := range 32 {
 			baseFeePerGasBEBytes[i] = payload.BaseFeePerGas[32-1-i]
 		}
 		baseFeePerGas := new(big.Int).SetBytes(baseFeePerGasBEBytes)
@@ -1016,7 +1016,7 @@ func bitlistToString(input bitfield.Bitlist) string {
 	bits := int(input.Len())
 
 	res := ""
-	for i := 0; i < bits; i++ {
+	for i := range bits {
 		if input.BitAt(uint64(i)) {
 			res = fmt.Sprintf("%s✓", res)
 		} else {
@@ -1033,7 +1033,7 @@ func bitvectorToString(input bitfield.Bitvector512) string {
 	bits := int(input.Len())
 
 	res := strings.Builder{}
-	for i := 0; i < bits; i++ {
+	for i := range bits {
 		if input.BitAt(uint64(i)) {
 			res.WriteString("✓")
 		} else {
@@ -1049,7 +1049,7 @@ func bitvectorToString(input bitfield.Bitvector512) string {
 func attestingIndices(input bitfield.Bitlist, indices []phase0.ValidatorIndex) string {
 	bits := int(input.Len())
 	res := ""
-	for i := 0; i < bits; i++ {
+	for i := range bits {
 		if input.BitAt(uint64(i)) {
 			res = fmt.Sprintf("%s%d ", res, indices[i])
 		}

@@ -188,7 +188,8 @@ func headEventHandler(event *apiv1.Event) {
 		err = outputCapellaBlock(ctx, jsonOutput, sszOutput, block.Capella)
 	case spec.DataVersionDeneb:
 		var blobSidecars []*deneb.BlobSidecar
-		kzgCommitments, err := block.BlobKZGCommitments()
+		var kzgCommitments []deneb.KZGCommitment
+		kzgCommitments, err = block.BlobKZGCommitments()
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Failed to obtain KZG commitments: %v\n", err)
 			return

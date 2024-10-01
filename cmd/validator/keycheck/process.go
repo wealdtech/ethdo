@@ -101,7 +101,7 @@ func checkMnemonic(ctx context.Context, debug bool, validatorWithdrawalCredentia
 	// Create seed from mnemonic and passphrase.
 	seed := bip39.NewSeed(mnemonic, mnemonicPassphrase)
 	// Check first 1024 indices.
-	for i := 0; i < 1024; i++ {
+	for i := range 1024 {
 		path := fmt.Sprintf("m/12381/3600/%d/0", i)
 		if debug {
 			fmt.Printf("Checking path %s\n", path)

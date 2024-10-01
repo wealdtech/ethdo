@@ -128,7 +128,7 @@ func (c *command) analyzeAttestations(ctx context.Context, block *spec.Versioned
 
 			// Count new votes.
 			analysis.PossibleVotes = int(attestation.AggregationBits.Len())
-			for j := uint64(0); j < attestation.AggregationBits.Len(); j++ {
+			for j := range attestation.AggregationBits.Len() {
 				if attestation.AggregationBits.BitAt(j) {
 					analysis.Votes++
 					if blockVotes[data.Slot][data.Index].BitAt(j) {
@@ -269,7 +269,7 @@ func (c *command) processParentBlock(_ context.Context, block *spec.VersionedSig
 		if !exists {
 			c.votes[data.Slot][data.Index] = bitfield.NewBitlist(attestation.AggregationBits.Len())
 		}
-		for j := uint64(0); j < attestation.AggregationBits.Len(); j++ {
+		for j := range attestation.AggregationBits.Len() {
 			if attestation.AggregationBits.BitAt(j) {
 				c.votes[data.Slot][data.Index].SetBitAt(j, true)
 			}

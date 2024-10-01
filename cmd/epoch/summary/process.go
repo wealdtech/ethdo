@@ -298,7 +298,7 @@ func (c *command) processSlots(ctx context.Context,
 				return nil, nil, nil, nil, nil, nil, nil, err
 			}
 
-			for i := uint64(0); i < attestation.AggregationBits.Len(); i++ {
+			for i := range attestation.AggregationBits.Len() {
 				if attestation.AggregationBits.BitAt(i) {
 					validatorIndex := committee[int(i)]
 					if len(c.validators) > 0 {
@@ -399,7 +399,7 @@ func (c *command) processSyncCommitteeDuties(ctx context.Context) error {
 		if err != nil {
 			return errors.Wrapf(err, "failed to obtain sync aggregate for slot %d", slot)
 		}
-		for i := uint64(0); i < aggregate.SyncCommitteeBits.Len(); i++ {
+		for i := range aggregate.SyncCommitteeBits.Len() {
 			validatorIndex := committee.Validators[int(i)]
 			if _, exists := c.validators[validatorIndex]; !exists {
 				// Not one of ours.

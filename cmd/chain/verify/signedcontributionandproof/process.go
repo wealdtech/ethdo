@@ -221,7 +221,7 @@ func (c *command) confirmContributionSignature(ctx context.Context) error {
 
 	subCommittee := c.syncCommittee.ValidatorAggregates[c.item.Message.Contribution.SubcommitteeIndex]
 	includedIndices := make([]phase0.ValidatorIndex, 0, len(subCommittee))
-	for i := uint64(0); i < c.item.Message.Contribution.AggregationBits.Len(); i++ {
+	for i := range c.item.Message.Contribution.AggregationBits.Len() {
 		if c.item.Message.Contribution.AggregationBits.BitAt(i) {
 			includedIndices = append(includedIndices, subCommittee[int(i)])
 		}

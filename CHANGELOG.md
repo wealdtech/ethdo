@@ -1,5 +1,6 @@
 1.36.1:
   - more JSON data for epoch summary
+  - fix crash when block ifno had no blobs
 
 1.36.0:
   - support keystore wallets

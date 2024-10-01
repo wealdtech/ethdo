@@ -114,13 +114,20 @@ func process(ctx context.Context, data *dataIn) (*dataOut, error) {
 			return nil, errors.Wrap(err, "failed to output block")
 		}
 	case spec.DataVersionDeneb:
-		blobSidecarsResponse, err := results.eth2Client.(eth2client.BlobSidecarsProvider).BlobSidecars(ctx, &api.BlobSidecarsOpts{
-			Block: data.blockID,
-		})
+		var blobSidecars []*deneb.BlobSidecar
+		kzgCommitments, err := block.BlobKZGCommitments()
 		if err != nil {
-			return nil, errors.Wrap(err, "failed to obtain blob sidecars")
+			return nil, err
 		}
-		blobSidecars := blobSidecarsResponse.Data
+		if len(kzgCommitments) > 0 {
+			blobSidecarsResponse, err := results.eth2Client.(eth2client.BlobSidecarsProvider).BlobSidecars(ctx, &api.BlobSidecarsOpts{
+				Block: data.blockID,
+			})
+			if err != nil {
+				return nil, errors.Wrap(err, "failed to obtain blob sidecars")
+			}
+			blobSidecars = blobSidecarsResponse.Data
+		}
 		if err := outputDenebBlock(ctx, data.jsonOutput, data.sszOutput, block.Deneb, blobSidecars); err != nil {
 			return nil, errors.Wrap(err, "failed to output block")
 		}
@@ -180,13 +187,24 @@ func headEventHandler(event *apiv1.Event) {
 	case spec.DataVersionCapella:
 		err = outputCapellaBlock(ctx, jsonOutput, sszOutput, block.Capella)
 	case spec.DataVersionDeneb:
-		var blobSidecarsResponse *api.Response[[]*deneb.BlobSidecar]
-		blobSidecarsResponse, err = results.eth2Client.(eth2client.BlobSidecarsProvider).BlobSidecars(ctx, &api.BlobSidecarsOpts{
-			Block: blockID,
-		})
-		if err == nil {
-			err = outputDenebBlock(context.Background(), jsonOutput, sszOutput, block.Deneb, blobSidecarsResponse.Data)
+		var blobSidecars []*deneb.BlobSidecar
+		kzgCommitments, err := block.BlobKZGCommitments()
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Failed to obtain KZG commitments: %v\n", err)
+			return
 		}
+		if len(kzgCommitments) > 0 {
+			var blobSidecarsResponse *api.Response[[]*deneb.BlobSidecar]
+			blobSidecarsResponse, err = results.eth2Client.(eth2client.BlobSidecarsProvider).BlobSidecars(ctx, &api.BlobSidecarsOpts{
+				Block: blockID,
+			})
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Failed to obtain blob sidecars: %v\n", err)
+				return
+			}
+			blobSidecars = blobSidecarsResponse.Data
+		}
+		err = outputDenebBlock(context.Background(), jsonOutput, sszOutput, block.Deneb, blobSidecars)
 	default:
 		err = errors.New("unknown block version")
 	}

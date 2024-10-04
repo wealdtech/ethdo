@@ -170,7 +170,7 @@ func validatorDepositDataOutputJSON(datum *dataOut) (string, error) {
 	if datum.depositDataRoot == nil {
 		return "", errors.New("deposit data root required")
 	}
-	if datum.depositDataRoot == nil {
+	if datum.depositMessageRoot == nil {
 		return "", errors.New("deposit message root required")
 	}
 	if datum.forkVersion == nil {

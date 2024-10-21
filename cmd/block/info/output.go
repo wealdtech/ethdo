@@ -1095,8 +1095,9 @@ func blockGraffiti(_ context.Context, graffiti []byte) string {
 		"GE": "go-ethereum",
 		"NM": "nethermind",
 		"RH": "reth",
+		"TR": "trin-execution",
 	}
-	executionRegex := regexp.MustCompile(`(BU|EG|EJ|GE|NM|RH)([0-9a-f]*)`)
+	executionRegex := regexp.MustCompile(`(BU|EG|EJ|GE|NM|RH|TR)([0-9a-f]*)`)
 	executionData := executionRegex.Find(parts[len(parts)-1])
 
 	if len(consensusData) == 0 && len(executionData) == 0 {

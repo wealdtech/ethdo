@@ -1,3 +1,6 @@
+1.36.2:
+  - avoid crash when signing and verifing signatures using keys rather than accounts
+
 1.36.1:
   - more JSON data for epoch summary
   - fix crash when block ifno had no blobs

@@ -19,6 +19,7 @@ import (
 	"os"
 
 	spec "github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/wealdtech/ethdo/util"
@@ -59,6 +60,8 @@ In quiet mode this will return 0 if the data can be signed, otherwise 1.`,
 			account, err = util.ParseAccount(ctx, viper.GetString("account"), util.GetPassphrases(), true)
 		case viper.GetString("private-key") != "":
 			account, err = util.ParseAccount(ctx, viper.GetString("private-key"), nil, true)
+		default:
+			err = errors.New("account or private key must be supplied")
 		}
 		errCheck(err, "Failed to obtain account")
 

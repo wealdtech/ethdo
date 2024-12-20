@@ -137,7 +137,6 @@ linters:
     - dupl
     - err113
     - errorlint
-    - execinquery
     - exhaustive
     - exhaustruct
     - exportloopref
@@ -150,7 +149,6 @@ linters:
     - gocognit
     - goconst
     - goheader
-    - gomnd
     - ireturn
     - lll
     - maintidx

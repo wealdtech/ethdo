@@ -5,6 +5,7 @@ on:
     tags:
       - 'v*'
       - 't*'
+  workflow_dispatch:
 
 jobs:
   # Set variables that will be available to all builds.

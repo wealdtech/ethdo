@@ -113,7 +113,7 @@ If using the filesystem store, the additional parameter `base-dir` can be suppli
 >
 > This will allow you to use `ethdo` with or without docker, with the same location for wallets and accounts.
 
-All ethdo comands take the following parameters:
+All ethdo commands take the following parameters:
 
   - `store`: the name of the storage system for wallets.  This can be one of "filesystem" (for local storage of the wallet) or "s3" (for remote storage of the wallet on [Amazon's S3](https://aws.amazon.com/s3/) storage system), and defaults to "filesystem"
   - `storepassphrase`: the passphrase for the store.  If this is empty the store is unencrypted

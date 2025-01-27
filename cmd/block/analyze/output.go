@@ -34,20 +34,20 @@ func (c *command) output(ctx context.Context) (string, error) {
 }
 
 type attestationAnalysisJSON struct {
-	Head          string           `json:"head"`
-	Target        string           `json:"target"`
-	Distance      int              `json:"distance"`
-	Duplicate     *attestationData `json:"duplicate,omitempty"`
-	NewVotes      int              `json:"new_votes"`
-	Votes         int              `json:"votes"`
-	PossibleVotes int              `json:"possible_votes"`
-	HeadCorrect   bool             `json:"head_correct"`
-	HeadTimely    bool             `json:"head_timely"`
-	SourceTimely  bool             `json:"source_timely"`
-	TargetCorrect bool             `json:"target_correct"`
-	TargetTimely  bool             `json:"target_timely"`
-	Score         float64          `json:"score"`
-	Value         float64          `json:"value"`
+	Head          string               `json:"head"`
+	Target        string               `json:"target"`
+	Distance      int                  `json:"distance"`
+	Duplicate     *attestationDataInfo `json:"duplicate,omitempty"`
+	NewVotes      int                  `json:"new_votes"`
+	Votes         int                  `json:"votes"`
+	PossibleVotes int                  `json:"possible_votes"`
+	HeadCorrect   bool                 `json:"head_correct"`
+	HeadTimely    bool                 `json:"head_timely"`
+	SourceTimely  bool                 `json:"source_timely"`
+	TargetCorrect bool                 `json:"target_correct"`
+	TargetTimely  bool                 `json:"target_timely"`
+	Score         float64              `json:"score"`
+	Value         float64              `json:"value"`
 }
 
 func (a *attestationAnalysis) MarshalJSON() ([]byte, error) {

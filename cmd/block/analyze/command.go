@@ -55,7 +55,7 @@ type command struct {
 	weightDenominator  uint64
 
 	// Processing.
-	priorAttestations map[string]*attestationData
+	priorAttestations map[string]*attestationDataInfo
 	// Head roots provides the root of the head slot at given slots.
 	headRoots map[phase0.Slot]phase0.Root
 	// Target roots provides the root of the target epoch at given slots.
@@ -77,20 +77,20 @@ type blockAnalysis struct {
 }
 
 type attestationAnalysis struct {
-	Head          phase0.Root      `json:"head"`
-	Target        phase0.Root      `json:"target"`
-	Distance      int              `json:"distance"`
-	Duplicate     *attestationData `json:"duplicate,omitempty"`
-	NewVotes      int              `json:"new_votes"`
-	Votes         int              `json:"votes"`
-	PossibleVotes int              `json:"possible_votes"`
-	HeadCorrect   bool             `json:"head_correct"`
-	HeadTimely    bool             `json:"head_timely"`
-	SourceTimely  bool             `json:"source_timely"`
-	TargetCorrect bool             `json:"target_correct"`
-	TargetTimely  bool             `json:"target_timely"`
-	Score         float64          `json:"score"`
-	Value         float64          `json:"value"`
+	Head          phase0.Root          `json:"head"`
+	Target        phase0.Root          `json:"target"`
+	Distance      int                  `json:"distance"`
+	Duplicate     *attestationDataInfo `json:"duplicate,omitempty"`
+	NewVotes      int                  `json:"new_votes"`
+	Votes         int                  `json:"votes"`
+	PossibleVotes int                  `json:"possible_votes"`
+	HeadCorrect   bool                 `json:"head_correct"`
+	HeadTimely    bool                 `json:"head_timely"`
+	SourceTimely  bool                 `json:"source_timely"`
+	TargetCorrect bool                 `json:"target_correct"`
+	TargetTimely  bool                 `json:"target_timely"`
+	Score         float64              `json:"score"`
+	Value         float64              `json:"value"`
 }
 
 type syncCommitteeAnalysis struct {
@@ -100,7 +100,7 @@ type syncCommitteeAnalysis struct {
 	Value                 float64 `json:"value"`
 }
 
-type attestationData struct {
+type attestationDataInfo struct {
 	Block phase0.Slot `json:"block"`
 	Index int         `json:"index"`
 }
@@ -110,7 +110,7 @@ func newCommand(_ context.Context) (*command, error) {
 		quiet:             viper.GetBool("quiet"),
 		verbose:           viper.GetBool("verbose"),
 		debug:             viper.GetBool("debug"),
-		priorAttestations: make(map[string]*attestationData),
+		priorAttestations: make(map[string]*attestationDataInfo),
 		headRoots:         make(map[phase0.Slot]phase0.Root),
 		targetRoots:       make(map[phase0.Slot]phase0.Root),
 		votes:             make(map[phase0.Slot]map[phase0.CommitteeIndex]bitfield.Bitlist),

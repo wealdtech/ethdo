@@ -1,3 +1,6 @@
+electra:
+  - update to handle versioned attestations from go-eth2-client electra branch
+
 1.36.2:
   - avoid crash when signing and verifing signatures using keys rather than accounts
 

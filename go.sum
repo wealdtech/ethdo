@@ -1,5 +1,7 @@
 github.com/attestantio/go-eth2-client v0.22.0 h1:KmF9kPNNWWGfE7l1BP7pXps4EOXgKnYeFGR0/WbyFhY=
 github.com/attestantio/go-eth2-client v0.22.0/go.mod h1:d7ZPNrMX8jLfIgML5u7QZxFo2AukLM+5m08iMaLdqb8=
+github.com/attestantio/go-eth2-client v0.23.1-0.20250127091537-251e60f042d4 h1:ePstQwO3RoDX2am93bvtUNLsMtxlikx9kPJDdzr9sk8=
+github.com/attestantio/go-eth2-client v0.23.1-0.20250127091537-251e60f042d4/go.mod h1:vy5jU/uDZ2+RcVzq5BfnG+bQ3/6uu9DGwCrGsPtjJ1A=
 github.com/aws/aws-sdk-go v1.55.5 h1:KKUZBfBoyqy5d3swXyiC7Q76ic40rYcbqH7qjh59kzU=
 github.com/aws/aws-sdk-go v1.55.5/go.mod h1:eRwEWoyTWFMVYVQzKMNHWP5/RV4xIUGMQfXQHfHkpNU=
 github.com/beorn7/perks v1.0.1 h1:VlbKKnNfV8bJzeqoa4cOKqO6bYr3WgKZxO8Z16+hsOM=

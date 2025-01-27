@@ -63,8 +63,12 @@ func (c *command) process(ctx context.Context) error {
 	// Calculate how many parents we need to fetch.
 	minSlot := slot
 	for _, attestation := range attestations {
-		if attestation.Data.Slot < minSlot {
-			minSlot = attestation.Data.Slot
+		attestData, err := attestation.Data()
+		if err != nil {
+			return errors.Wrap(err, "failed to obtain attestation data")
+		}
+		if attestData.Slot < minSlot {
+			minSlot = attestData.Slot
 		}
 	}
 	if c.debug {
@@ -103,10 +107,14 @@ func (c *command) analyzeAttestations(ctx context.Context, block *spec.Versioned
 		if c.debug {
 			fmt.Printf("Processing attestation %d\n", i)
 		}
+		attestData, err := attestation.Data()
+		if err != nil {
+			return errors.Wrap(err, "failed to obtain attestation data")
+		}
 		analysis := &attestationAnalysis{
-			Head:     attestation.Data.BeaconBlockRoot,
-			Target:   attestation.Data.Target.Root,
-			Distance: int(slot - attestation.Data.Slot),
+			Head:     attestData.BeaconBlockRoot,
+			Target:   attestData.Target.Root,
+			Distance: int(slot - attestData.Slot),
 		}
 
 		root, err := attestation.HashTreeRoot()
@@ -116,45 +124,47 @@ func (c *command) analyzeAttestations(ctx context.Context, block *spec.Versioned
 		if info, exists := c.priorAttestations[fmt.Sprintf("%#x", root)]; exists {
 			analysis.Duplicate = info
 		} else {
-			data := attestation.Data
-			_, exists := blockVotes[data.Slot]
-			if !exists {
-				blockVotes[data.Slot] = make(map[phase0.CommitteeIndex]bitfield.Bitlist)
+			aggregationBits, err := attestation.AggregationBits()
+			if err != nil {
+				return err
 			}
-			_, exists = blockVotes[data.Slot][data.Index]
+			_, exists := blockVotes[attestData.Slot]
 			if !exists {
-				blockVotes[data.Slot][data.Index] = bitfield.NewBitlist(attestation.AggregationBits.Len())
+				blockVotes[attestData.Slot] = make(map[phase0.CommitteeIndex]bitfield.Bitlist)
+			}
+			_, exists = blockVotes[attestData.Slot][attestData.Index]
+			if !exists {
+				blockVotes[attestData.Slot][attestData.Index] = bitfield.NewBitlist(aggregationBits.Len())
 			}
 
 			// Count new votes.
-			analysis.PossibleVotes = int(attestation.AggregationBits.Len())
-			for j := range attestation.AggregationBits.Len() {
-				if attestation.AggregationBits.BitAt(j) {
+			analysis.PossibleVotes = int(aggregationBits.Len())
+			for j := range aggregationBits.Len() {
+				if aggregationBits.BitAt(j) {
 					analysis.Votes++
-					if blockVotes[data.Slot][data.Index].BitAt(j) {
+					if blockVotes[attestData.Slot][attestData.Index].BitAt(j) {
 						// Already attested to in this block; skip.
 						continue
 					}
-					if c.votes[data.Slot][data.Index].BitAt(j) {
+					if c.votes[attestData.Slot][attestData.Index].BitAt(j) {
 						// Already attested to in a previous block; skip.
 						continue
 					}
 					analysis.NewVotes++
-					blockVotes[data.Slot][data.Index].SetBitAt(j, true)
+					blockVotes[attestData.Slot][attestData.Index].SetBitAt(j, true)
 				}
 			}
 			// Calculate head correct.
-			var err error
 			analysis.HeadCorrect, err = c.calcHeadCorrect(ctx, attestation)
 			if err != nil {
 				return err
 			}
 
 			// Calculate head timely.
-			analysis.HeadTimely = analysis.HeadCorrect && attestation.Data.Slot == slot-1
+			analysis.HeadTimely = analysis.HeadCorrect && attestData.Slot == slot-1
 
 			// Calculate source timely.
-			analysis.SourceTimely = attestation.Data.Slot >= slot-5
+			analysis.SourceTimely = attestData.Slot >= slot-5
 
 			// Calculate target correct.
 			analysis.TargetCorrect, err = c.calcTargetCorrect(ctx, attestation)
@@ -164,7 +174,7 @@ func (c *command) analyzeAttestations(ctx context.Context, block *spec.Versioned
 
 			// Calculate target timely.
 			if block.Version < spec.DataVersionDeneb {
-				analysis.TargetTimely = attestation.Data.Slot >= slot-32
+				analysis.TargetTimely = attestData.Slot >= slot-32
 			} else {
 				analysis.TargetTimely = true
 			}
@@ -260,17 +270,24 @@ func (c *command) processParentBlock(_ context.Context, block *spec.VersionedSig
 			Index: i,
 		}
 
-		data := attestation.Data
+		data, err := attestation.Data()
+		if err != nil {
+			return err
+		}
 		_, exists := c.votes[data.Slot]
 		if !exists {
 			c.votes[data.Slot] = make(map[phase0.CommitteeIndex]bitfield.Bitlist)
 		}
 		_, exists = c.votes[data.Slot][data.Index]
-		if !exists {
-			c.votes[data.Slot][data.Index] = bitfield.NewBitlist(attestation.AggregationBits.Len())
+		aggregationBits, err := attestation.AggregationBits()
+		if err != nil {
+			return err
 		}
-		for j := range attestation.AggregationBits.Len() {
-			if attestation.AggregationBits.BitAt(j) {
+		if !exists {
+			c.votes[data.Slot][data.Index] = bitfield.NewBitlist(aggregationBits.Len())
+		}
+		for j := range aggregationBits.Len() {
+			if aggregationBits.BitAt(j) {
 				c.votes[data.Slot][data.Index].SetBitAt(j, true)
 			}
 		}
@@ -385,8 +402,12 @@ func (c *command) setup(ctx context.Context) error {
 	return nil
 }
 
-func (c *command) calcHeadCorrect(ctx context.Context, attestation *phase0.Attestation) (bool, error) {
-	slot := attestation.Data.Slot
+func (c *command) calcHeadCorrect(ctx context.Context, attestation *spec.VersionedAttestation) (bool, error) {
+	attestData, err := attestation.Data()
+	if err != nil {
+		return false, errors.Wrap(err, "failed to obtain attestation data")
+	}
+	slot := attestData.Slot
 	root, exists := c.headRoots[slot]
 	if !exists {
 		for {
@@ -413,20 +434,24 @@ func (c *command) calcHeadCorrect(ctx context.Context, attestation *phase0.Attes
 				slot--
 				continue
 			}
-			c.headRoots[attestation.Data.Slot] = response.Data.Root
+			c.headRoots[attestData.Slot] = response.Data.Root
 			root = response.Data.Root
 			break
 		}
 	}
 
-	return bytes.Equal(root[:], attestation.Data.BeaconBlockRoot[:]), nil
+	return bytes.Equal(root[:], attestData.BeaconBlockRoot[:]), nil
 }
 
-func (c *command) calcTargetCorrect(ctx context.Context, attestation *phase0.Attestation) (bool, error) {
-	root, exists := c.targetRoots[attestation.Data.Slot]
+func (c *command) calcTargetCorrect(ctx context.Context, attestation *spec.VersionedAttestation) (bool, error) {
+	attestData, err := attestation.Data()
+	if err != nil {
+		return false, errors.Wrap(err, "failed to obtain attestation data")
+	}
+	root, exists := c.targetRoots[attestData.Slot]
 	if !exists {
 		// Start with first slot of the target epoch.
-		slot := c.chainTime.FirstSlotOfEpoch(attestation.Data.Target.Epoch)
+		slot := c.chainTime.FirstSlotOfEpoch(attestData.Target.Epoch)
 		for {
 			response, err := c.blockHeadersProvider.BeaconBlockHeader(ctx, &api.BeaconBlockHeaderOpts{
 				Block: fmt.Sprintf("%d", slot),
@@ -450,12 +475,12 @@ func (c *command) calcTargetCorrect(ctx context.Context, attestation *phase0.Att
 				slot--
 				continue
 			}
-			c.targetRoots[attestation.Data.Slot] = response.Data.Root
+			c.targetRoots[attestData.Slot] = response.Data.Root
 			root = response.Data.Root
 			break
 		}
 	}
-	return bytes.Equal(root[:], attestation.Data.Target.Root[:]), nil
+	return bytes.Equal(root[:], attestData.Target.Root[:]), nil
 }
 
 func (c *command) analyzeSyncCommittees(_ context.Context, block *spec.VersionedSignedBeaconBlock) error {

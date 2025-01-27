@@ -119,7 +119,7 @@ func NewAttestationSubmitter() eth2client.AttestationsSubmitter {
 }
 
 // SubmitAttestations is a mock.
-func (m *AttestationsSubmitter) SubmitAttestations(_ context.Context, _ []*phase0.Attestation) error {
+func (m *AttestationsSubmitter) SubmitAttestations(_ context.Context, _ *api.SubmitAttestationsOpts) error {
 	return nil
 }
 
@@ -145,7 +145,7 @@ func NewAggregateAttestationsSubmitter() eth2client.AggregateAttestationsSubmitt
 }
 
 // SubmitAggregateAttestations is a mock.
-func (m *AggregateAttestationsSubmitter) SubmitAggregateAttestations(_ context.Context, _ []*phase0.SignedAggregateAndProof) error {
+func (m *AggregateAttestationsSubmitter) SubmitAggregateAttestations(_ context.Context, _ *api.SubmitAggregateAttestationsOpts) error {
 	return nil
 }
 

@@ -5,7 +5,7 @@ go 1.22.7
 toolchain go1.23.2
 
 require (
-	github.com/attestantio/go-eth2-client v0.22.0
+	github.com/attestantio/go-eth2-client v0.23.1-0.20250127091537-251e60f042d4
 	github.com/ferranbt/fastssz v0.1.4
 	github.com/gofrs/uuid v4.4.0+incompatible
 	github.com/google/uuid v1.6.0

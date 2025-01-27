@@ -15,6 +15,12 @@ coverage.html
 # Project-local glide cache, RE: https://github.com/Masterminds/glide/issues/736
 .glide/
 
+# Intellij
+.idea/
+
+# Makefile
+Makefile
+
 # Vim
 *.sw?
 

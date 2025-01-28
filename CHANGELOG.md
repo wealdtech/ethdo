@@ -1,3 +1,6 @@
+1.36.5:
+  - avoid corner case mnemonic derivation with 25th word
+
 1.36.2:
   - avoid crash when signing and verifing signatures using keys rather than accounts
 

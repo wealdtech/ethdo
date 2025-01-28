@@ -1,3 +1,4 @@
+// Copyright © 2020 - 2025 Weald Technology Trading
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -54,6 +55,12 @@ func ParseAccount(ctx context.Context,
 			// It is possible that this is actually a path to a keystore, so try that instead.
 			if _, statErr := os.Stat(accountStr); statErr == nil {
 				account, err = parseAccountFromKeystorePath(ctx, accountStr, supplementary, unlock)
+			}
+		}
+		if err != nil {
+			if strings.Count(accountStr, " ") > 7 {
+				// It is also possible that this is a mnemonic with "/" in the additional word, so try that as well.
+				account, err = parseAccountFromMnemonic(ctx, accountStr, supplementary, unlock)
 			}
 		}
 		if err != nil {

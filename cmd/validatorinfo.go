@@ -1,4 +1,4 @@
-// Copyright © 2020 - 2022 Weald Technology Trading
+// Copyright © 2020 - 2025 Weald Technology Trading
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -67,7 +67,7 @@ In quiet mode this will return 0 if the validator information can be obtained, o
 			os.Exit(_exitFailure)
 		}
 
-		validator, err := util.ParseValidator(ctx, eth2Client.(eth2client.ValidatorsProvider), viper.GetString("validator"), "head")
+		validator, err := util.ParseValidator(ctx, eth2Client.(eth2client.ValidatorsProvider), viper.GetString("validator"), viper.GetString("blockid"))
 		errCheck(err, "Failed to obtain validator")
 
 		if viper.GetBool("verbose") {
@@ -185,12 +185,16 @@ func graphData(network string, validatorPubKey []byte) (uint64, spec.Gwei, error
 
 func init() {
 	validatorCmd.AddCommand(validatorInfoCmd)
-	validatorInfoCmd.Flags().String("validator", "", "Public key for which to obtain status")
+	validatorInfoCmd.Flags().String("validator", "", "ID of the validator")
+	validatorInfoCmd.Flags().String("blockid", "head", "the block at which to fetch the information")
 	validatorFlags(validatorInfoCmd)
 }
 
 func validatorInfoBindings(cmd *cobra.Command) {
 	if err := viper.BindPFlag("validator", cmd.Flags().Lookup("validator")); err != nil {
+		panic(err)
+	}
+	if err := viper.BindPFlag("blockid", cmd.Flags().Lookup("blockid")); err != nil {
 		panic(err)
 	}
 }

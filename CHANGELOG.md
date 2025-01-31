@@ -1,3 +1,6 @@
+1.36.6:
+  - allow specification of blockid for validator info
+
 1.36.5:
   - avoid corner case mnemonic derivation with 25th word
 

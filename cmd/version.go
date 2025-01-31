@@ -1,4 +1,4 @@
-// Copyright © 2019 - 2024 Weald Technology Trading.
+// Copyright © 2019 - 2025 Weald Technology Trading.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -24,7 +24,7 @@ import (
 
 // ReleaseVersion is the release version of the codebase.
 // Usually overridden by tag names when building binaries.
-var ReleaseVersion = "local build (latest release 1.36.5)"
+var ReleaseVersion = "local build (latest release 1.36.6)"
 
 // versionCmd represents the version command.
 var versionCmd = &cobra.Command{

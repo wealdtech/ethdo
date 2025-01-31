@@ -24,6 +24,7 @@ import (
 type dataOut struct {
 	format                string
 	account               string
+	path                  string
 	validatorPubKey       *spec.BLSPubKey
 	withdrawalCredentials []byte
 	amount                spec.Gwei

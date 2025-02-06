@@ -1,4 +1,4 @@
-// Copyright © 2020 Weald Technology Trading
+// Copyright © 2020 - 2025 Weald Technology Trading
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -74,6 +74,18 @@ func TestParseAccount(t *testing.T) {
 			accountStr:     "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon art",
 			supplementary:  []string{"m/12381/3600/0/0"},
 			expectedPubkey: "0x99b1f1d84d76185466d86c34bde1101316afddae76217aa86cd066979b19858c2c9d9e56eebc1e067ac54277a61790db",
+		},
+		{
+			name:           "ShortMnemonic",
+			accountStr:     "aban aban aban aban aban aban aban aban aban aban aban aban aban aban aban aban aban aban aban aban aban aban aban art",
+			supplementary:  []string{"m/12381/3600/0/0"},
+			expectedPubkey: "0x99b1f1d84d76185466d86c34bde1101316afddae76217aa86cd066979b19858c2c9d9e56eebc1e067ac54277a61790db",
+		},
+		{
+			name:           "ShortMnemonicWith25th",
+			accountStr:     `aban aban aban aban aban aban aban aban aban aban aban aban aban aban aban aban aban aban aban aban aban aban aban art !"£$%^&*()<>,./?;:'@#~]}[{-_=+`,
+			supplementary:  []string{"m/12381/3600/0/0"},
+			expectedPubkey: "0xa9264986cbde1f05d4c37ed57b03c476f360f0c64cf4a41752c3d352f60caebb6555c5522f0f962962a619336e1539f2",
 		},
 		{
 			name:             "MnemonicUnlocked",

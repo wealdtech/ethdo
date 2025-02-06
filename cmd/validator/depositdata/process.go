@@ -17,6 +17,8 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
+	"sort"
+	"strconv"
 	"strings"
 
 	spec "github.com/attestantio/go-eth2-client/spec/phase0"
@@ -80,7 +82,7 @@ func process(data *dataIn) ([]*dataOut, error) {
 		copy(depositDataRoot[:], root[:])
 
 		validatorWallet := validatorAccount.(e2wtypes.AccountWalletProvider).Wallet()
-		results = append(results, &dataOut{
+		result := &dataOut{
 			format:                data.format,
 			account:               fmt.Sprintf("%s/%s", validatorWallet.Name(), validatorAccount.Name()),
 			validatorPubKey:       &pubKey,
@@ -90,8 +92,53 @@ func process(data *dataIn) ([]*dataOut, error) {
 			forkVersion:           data.forkVersion,
 			depositMessageRoot:    &depositMessageRoot,
 			depositDataRoot:       &depositDataRoot,
+		}
+		if pathProvider, isPathProvider := validatorAccount.(e2wtypes.AccountPathProvider); isPathProvider {
+			result.path = pathProvider.Path()
+		}
+		results = append(results, result)
+	}
+	if len(results) == 0 {
+		return results, nil
+	}
+
+	// Order the results
+	if results[0].path != "" {
+		// Order accounts by their path components.
+		sort.Slice(results, func(i int, j int) bool {
+			iBits := strings.Split(results[i].path, "/")
+			jBits := strings.Split(results[j].path, "/")
+			for index := range iBits {
+				if iBits[index] == "m" && jBits[index] == "m" {
+					continue
+				}
+				if len(jBits) <= index {
+					return false
+				}
+				iBit, err := strconv.ParseUint(iBits[index], 10, 64)
+				if err != nil {
+					return true
+				}
+				jBit, err := strconv.ParseUint(jBits[index], 10, 64)
+				if err != nil {
+					return false
+				}
+				if iBit < jBit {
+					return true
+				}
+				if iBit > jBit {
+					return false
+				}
+			}
+			return len(jBits) > len(iBits)
+		})
+	} else {
+		// Order accounts by their name.
+		sort.Slice(results, func(i int, j int) bool {
+			return strings.Compare(results[i].account, results[j].account) < 0
 		})
 	}
+
 	return results, nil
 }
 

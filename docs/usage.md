@@ -682,6 +682,7 @@ $ ethdo validator exit --private-key=0x01e748d098d3bcb477d636f19d510399ae18205fa
 `ethdo validator info` provides information for a given validator.  Options include:
 
 - `validator`: the validator for which to obtain information, as a [validator specifier](https://github.com/wealdtech/ethdo#validator-specifier)
+- `blockid`: the ID (slot, root, 'head') of the block at which to obtain information
 
 ```sh
 $ ethdo validator info --validator=Validators/1

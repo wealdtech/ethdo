@@ -1,5 +1,12 @@
 electra:
-  - update to handle versioned attestations from go-eth2-client electra branch
+- update to handle versioned attestations from go-eth2-client electra branch
+
+1.36.6:
+  - allow specification of blockid for validator info
+  - validator depositdata orders deposits from an HD wallet by path
+
+1.36.5:
+  - avoid corner case mnemonic derivation with 25th word
 
 1.36.2:
   - avoid crash when signing and verifing signatures using keys rather than accounts

@@ -18,22 +18,41 @@ import (
 	"testing"
 	"time"
 
+	"github.com/attestantio/go-eth2-client/api"
+	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
+	"github.com/attestantio/go-eth2-client/mock"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
 	"github.com/wealdtech/ethdo/services/chaintime"
 	"github.com/wealdtech/ethdo/services/chaintime/standard"
-	"github.com/wealdtech/ethdo/testing/mock"
 )
 
 func TestService(t *testing.T) {
-	genesisTime := time.Now()
-	slotDuration := 12 * time.Second
-	slotsPerEpoch := uint64(32)
-	epochsPerSyncCommitteePeriod := uint64(256)
+	ctx := context.Background()
 
-	mockGenesisProvider := mock.NewGenesisProvider(genesisTime)
-	mockSpecProvider := mock.NewSpecProvider(slotDuration, slotsPerEpoch, epochsPerSyncCommitteePeriod)
+	mockClient, err := mock.New(ctx)
+	require.NoError(t, err)
+	// genesis is 1 day ago.
+	genesisTime := time.Now().AddDate(0, 0, -1)
+	mockClient.GenesisFunc = func(context.Context, *api.GenesisOpts) (*api.Response[*apiv1.Genesis], error) {
+		return &api.Response[*apiv1.Genesis]{
+			Data: &apiv1.Genesis{
+				GenesisTime: genesisTime,
+			},
+			Metadata: make(map[string]any),
+		}, nil
+	}
+	mockClient.SpecFunc = func(context.Context, *api.SpecOpts) (*api.Response[map[string]any], error) {
+		return &api.Response[map[string]any]{
+			Data: map[string]any{
+				"SECONDS_PER_SLOT":                 time.Second * 12,
+				"SLOTS_PER_EPOCH":                  uint64(32),
+				"EPOCHS_PER_SYNC_COMMITTEE_PERIOD": uint64(256),
+			},
+			Metadata: make(map[string]any),
+		}, nil
+	}
 
 	tests := []struct {
 		name   string
@@ -44,7 +63,7 @@ func TestService(t *testing.T) {
 			name: "GenesisProviderMissing",
 			params: []standard.Parameter{
 				standard.WithLogLevel(zerolog.Disabled),
-				standard.WithSpecProvider(mockSpecProvider),
+				standard.WithSpecProvider(mockClient),
 			},
 			err: "problem with parameters: no genesis provider specified",
 		},
@@ -52,7 +71,7 @@ func TestService(t *testing.T) {
 			name: "SpecProviderMissing",
 			params: []standard.Parameter{
 				standard.WithLogLevel(zerolog.Disabled),
-				standard.WithGenesisProvider(mockGenesisProvider),
+				standard.WithGenesisProvider(mockClient),
 			},
 			err: "problem with parameters: no spec provider specified",
 		},
@@ -60,8 +79,8 @@ func TestService(t *testing.T) {
 			name: "Good",
 			params: []standard.Parameter{
 				standard.WithLogLevel(zerolog.Disabled),
-				standard.WithGenesisProvider(mockGenesisProvider),
-				standard.WithSpecProvider(mockSpecProvider),
+				standard.WithGenesisProvider(mockClient),
+				standard.WithSpecProvider(mockClient),
 			},
 		},
 	}
@@ -80,7 +99,14 @@ func TestService(t *testing.T) {
 
 // createService is a helper that creates a mock chaintime service.
 func createService(genesisTime time.Time) (chaintime.Service, time.Duration, uint64, uint64, []*phase0.Fork, error) {
-	slotDuration := 12 * time.Second
+	ctx := context.Background()
+
+	mockClient, err := mock.New(ctx)
+	if err != nil {
+		return nil, 0, 0, 0, nil, err
+	}
+
+	secondsPerSlot := time.Second * 12
 	slotsPerEpoch := uint64(32)
 	epochsPerSyncCommitteePeriod := uint64(256)
 	forkSchedule := []*phase0.Fork{
@@ -96,13 +122,36 @@ func createService(genesisTime time.Time) (chaintime.Service, time.Duration, uin
 		},
 	}
 
-	mockGenesisProvider := mock.NewGenesisProvider(genesisTime)
-	mockSpecProvider := mock.NewSpecProvider(slotDuration, slotsPerEpoch, epochsPerSyncCommitteePeriod)
-	s, err := standard.New(context.Background(),
-		standard.WithGenesisProvider(mockGenesisProvider),
-		standard.WithSpecProvider(mockSpecProvider),
+	mockClient.GenesisFunc = func(context.Context, *api.GenesisOpts) (*api.Response[*apiv1.Genesis], error) {
+		return &api.Response[*apiv1.Genesis]{
+			Data: &apiv1.Genesis{
+				GenesisTime: genesisTime,
+			},
+			Metadata: make(map[string]any),
+		}, nil
+	}
+	mockClient.SpecFunc = func(context.Context, *api.SpecOpts) (*api.Response[map[string]any], error) {
+		return &api.Response[map[string]any]{
+			Data: map[string]any{
+				"SECONDS_PER_SLOT":                 secondsPerSlot,
+				"SLOTS_PER_EPOCH":                  slotsPerEpoch,
+				"EPOCHS_PER_SYNC_COMMITTEE_PERIOD": epochsPerSyncCommitteePeriod,
+			},
+			Metadata: make(map[string]any),
+		}, nil
+	}
+	mockClient.ForkScheduleFunc = func(context.Context, *api.ForkScheduleOpts) (*api.Response[[]*phase0.Fork], error) {
+		return &api.Response[[]*phase0.Fork]{
+			Data:     forkSchedule,
+			Metadata: make(map[string]any),
+		}, nil
+	}
+
+	s, err := standard.New(ctx,
+		standard.WithGenesisProvider(mockClient),
+		standard.WithSpecProvider(mockClient),
 	)
-	return s, slotDuration, slotsPerEpoch, epochsPerSyncCommitteePeriod, forkSchedule, err
+	return s, secondsPerSlot, slotsPerEpoch, epochsPerSyncCommitteePeriod, forkSchedule, err
 }
 
 func TestGenesisTime(t *testing.T) {

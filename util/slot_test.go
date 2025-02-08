@@ -18,28 +18,44 @@ import (
 	"testing"
 	"time"
 
+	"github.com/attestantio/go-eth2-client/api"
+	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
+	"github.com/attestantio/go-eth2-client/mock"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
 	standardchaintime "github.com/wealdtech/ethdo/services/chaintime/standard"
-	"github.com/wealdtech/ethdo/testing/mock"
 	"github.com/wealdtech/ethdo/util"
 )
 
 func TestParseSlot(t *testing.T) {
 	ctx := context.Background()
 
+	mockClient, err := mock.New(ctx)
+	require.NoError(t, err)
 	// genesis is 1 day ago.
 	genesisTime := time.Now().AddDate(0, 0, -1)
-	slotDuration := 12 * time.Second
-	slotsPerSlot := uint64(32)
-	epochsPerSyncCommitteePeriod := uint64(256)
-	mockGenesisProvider := mock.NewGenesisProvider(genesisTime)
-	mockSpecProvider := mock.NewSpecProvider(slotDuration, slotsPerSlot, epochsPerSyncCommitteePeriod)
+	mockClient.GenesisFunc = func(context.Context, *api.GenesisOpts) (*api.Response[*apiv1.Genesis], error) {
+		return &api.Response[*apiv1.Genesis]{
+			Data: &apiv1.Genesis{
+				GenesisTime: genesisTime,
+			},
+			Metadata: make(map[string]any),
+		}, nil
+	}
+	mockClient.SpecFunc = func(context.Context, *api.SpecOpts) (*api.Response[map[string]any], error) {
+		return &api.Response[map[string]any]{
+			Data: map[string]any{
+				"SECONDS_PER_SLOT": time.Second * 12,
+				"SLOTS_PER_EPOCH":  uint64(32),
+			},
+			Metadata: make(map[string]any),
+		}, nil
+	}
 	chainTime, err := standardchaintime.New(context.Background(),
 		standardchaintime.WithLogLevel(zerolog.Disabled),
-		standardchaintime.WithGenesisProvider(mockGenesisProvider),
-		standardchaintime.WithSpecProvider(mockSpecProvider),
+		standardchaintime.WithGenesisProvider(mockClient),
+		standardchaintime.WithSpecProvider(mockClient),
 	)
 	require.NoError(t, err)
 

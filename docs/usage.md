@@ -659,6 +659,7 @@ $ ethdo validator credentials set --validator=Validators/1 --withdrawal-address=
 - `withdrawaladdress` specify the Ethereum execution address to be used for the withdrawal credentials (if withdrawalpubkey is not supplied)
 - `withdrawalpubkey` specify the public key to be used for the withdrawal credentials (if withdrawalaccount is not supplied)
 - `validatoraccount` specify the account to be used for the validator
+- `compounding` specify if this validator should be compounding, retaining Ether above 32 ETH by default to compound rewards
 - `depositvalue` specify the amount of the deposit
 - `forkversion` specify the fork version for the deposit signature; this defaults to mainnet.  Note that supplying an incorrect value could result in the loss of your deposit, so only supply this value if you are sure you know what you are doing.  You can find the value for other chains by fetching the value supplied in "Genesis fork version" of the `ethdo chain info` command
 - `raw` generate raw hex output that can be supplied as the data to an Ethereum 1 deposit transaction

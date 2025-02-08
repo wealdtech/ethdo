@@ -70,6 +70,14 @@ In quiet mode this will return 0 if the validator information can be obtained, o
 		validator, err := util.ParseValidator(ctx, eth2Client.(eth2client.ValidatorsProvider), viper.GetString("validator"), viper.GetString("blockid"))
 		errCheck(err, "Failed to obtain validator")
 
+		if viper.GetBool("json") {
+			data, err := json.Marshal(validator)
+			errCheck(err, "failed to marshal JSON")
+			fmt.Fprintf(os.Stdout, "%s", string(data))
+
+			return
+		}
+
 		if viper.GetBool("verbose") {
 			network, err := util.Network(ctx, eth2Client)
 			errCheck(err, "Failed to obtain network")

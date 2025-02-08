@@ -16,6 +16,8 @@ package depositdata
 import (
 	"context"
 	"encoding/hex"
+	"fmt"
+	"os"
 	"strings"
 	"time"
 
@@ -29,6 +31,7 @@ import (
 )
 
 type dataIn struct {
+	debug             bool
 	format            string
 	timeout           time.Duration
 	withdrawalAccount string
@@ -39,13 +42,16 @@ type dataIn struct {
 	forkVersion       *spec.Version
 	domain            *spec.Domain
 	passphrases       []string
+	compounding       bool
 }
 
 func input() (*dataIn, error) {
 	var err error
 	data := &dataIn{
+		debug:       viper.GetBool("debug"),
 		forkVersion: &spec.Version{},
 		domain:      &spec.Domain{},
+		compounding: viper.GetBool("compounding"),
 	}
 
 	if viper.GetString("validatoraccount") == "" {
@@ -97,6 +103,9 @@ func input() (*dataIn, error) {
 	if withdrawalDetailsPresent > 1 {
 		return nil, errors.New("only one of withdrawal account, public key or address is allowed")
 	}
+	if data.compounding && data.withdrawalAddress == "" {
+		return nil, errors.New("a compounding validator must be created with a withdrawal address")
+	}
 
 	if viper.GetString("depositvalue") == "" {
 		return nil, errors.New("deposit value is required")
@@ -106,10 +115,6 @@ func input() (*dataIn, error) {
 		return nil, errors.Wrap(err, "deposit value is invalid")
 	}
 	data.amount = spec.Gwei(amount)
-	// This is hard-coded, to allow deposit data to be generated without a connection to the beacon node.
-	if data.amount < 1000000000 { // MIN_DEPOSIT_AMOUNT
-		return nil, errors.New("deposit value must be at least 1 Ether")
-	}
 
 	data.forkVersion, err = inputForkVersion(ctx)
 	if err != nil {
@@ -117,6 +122,12 @@ func input() (*dataIn, error) {
 	}
 
 	copy(data.domain[:], e2types.Domain(e2types.DomainDeposit, data.forkVersion[:], e2types.ZeroGenesisValidatorsRoot))
+	if data.debug {
+		fmt.Fprintf(os.Stderr, "Deposit domain is %#x\n", e2types.DomainDeposit)
+		fmt.Fprintf(os.Stderr, "Fork version is %#x\n", *data.forkVersion)
+		fmt.Fprintf(os.Stderr, "Genesis validators root is %#x\n", e2types.ZeroGenesisValidatorsRoot)
+		fmt.Fprintf(os.Stderr, "Signature domain is %#x\n", *data.domain)
+	}
 
 	return data, nil
 }

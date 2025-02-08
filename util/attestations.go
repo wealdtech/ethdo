@@ -35,6 +35,7 @@ func AttestationHead(ctx context.Context,
 	if err != nil {
 		return phase0.Root{}, errors.Wrap(err, "failed to obtain attestation data")
 	}
+
 	slot := attestationData.Slot
 	for {
 		header, err := headersCache.Fetch(ctx, slot)
@@ -68,6 +69,7 @@ func AttestationHeadCorrect(ctx context.Context,
 	if err != nil {
 		return false, errors.Wrap(err, "failed to obtain attestation data")
 	}
+
 	slot := attestationData.Slot
 	for {
 		header, err := headersCache.Fetch(ctx, slot)
@@ -84,6 +86,7 @@ func AttestationHeadCorrect(ctx context.Context,
 			slot--
 			continue
 		}
+
 		return bytes.Equal(header.Root[:], attestationData.BeaconBlockRoot[:]), nil
 	}
 }
@@ -101,6 +104,7 @@ func AttestationTarget(ctx context.Context,
 	if err != nil {
 		return phase0.Root{}, errors.Wrap(err, "failed to obtain attestation data")
 	}
+
 	// Start with first slot of the target epoch.
 	slot := chainTime.FirstSlotOfEpoch(attestationData.Target.Epoch)
 	for {
@@ -136,6 +140,7 @@ func AttestationTargetCorrect(ctx context.Context,
 	if err != nil {
 		return false, errors.Wrap(err, "failed to obtain attestation data")
 	}
+
 	// Start with first slot of the target epoch.
 	slot := chainTime.FirstSlotOfEpoch(attestationData.Target.Epoch)
 	for {
@@ -153,6 +158,7 @@ func AttestationTargetCorrect(ctx context.Context,
 			slot--
 			continue
 		}
+
 		return bytes.Equal(header.Root[:], attestationData.Target.Root[:]), nil
 	}
 }

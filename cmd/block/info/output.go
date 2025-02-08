@@ -32,6 +32,7 @@ import (
 	"github.com/attestantio/go-eth2-client/spec/bellatrix"
 	"github.com/attestantio/go-eth2-client/spec/capella"
 	"github.com/attestantio/go-eth2-client/spec/deneb"
+	"github.com/attestantio/go-eth2-client/spec/electra"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 	"github.com/prysmaticlabs/go-bitfield"
@@ -133,7 +134,61 @@ func outputBlockAttestations(ctx context.Context, eth2Client eth2client.Service,
 				res.WriteString(fmt.Sprintf("    Attesters: %d/%d\n", att.AggregationBits.Count(), att.AggregationBits.Len()))
 				res.WriteString(fmt.Sprintf("    Aggregation bits: %s\n", bitlistToString(att.AggregationBits)))
 				if _, exists := committees[att.Data.Index]; exists {
-					res.WriteString(fmt.Sprintf("    Attesting indices: %s\n", attestingIndices(att.AggregationBits, committees[att.Data.Index])))
+					res.WriteString(fmt.Sprintf("    Attesting indices: %s\n", attestingIndices(att.AggregationBits, committees, []int{int(att.Data.Index)})))
+				}
+				res.WriteString(fmt.Sprintf("    Slot: %d\n", att.Data.Slot))
+				res.WriteString(fmt.Sprintf("    Beacon block root: %#x\n", att.Data.BeaconBlockRoot))
+				res.WriteString(fmt.Sprintf("    Source epoch: %d\n", att.Data.Source.Epoch))
+				res.WriteString(fmt.Sprintf("    Source root: %#x\n", att.Data.Source.Root))
+				res.WriteString(fmt.Sprintf("    Target epoch: %d\n", att.Data.Target.Epoch))
+				res.WriteString(fmt.Sprintf("    Target root: %#x\n", att.Data.Target.Root))
+			}
+		}
+	}
+
+	return res.String(), nil
+}
+
+func outputElectraBlockAttestations(ctx context.Context, eth2Client eth2client.Service, verbose bool, attestations []*electra.Attestation) (string, error) {
+	res := strings.Builder{}
+
+	validatorCommittees := make(map[phase0.Slot]map[phase0.CommitteeIndex][]phase0.ValidatorIndex)
+	res.WriteString(fmt.Sprintf("Attestations: %d\n", len(attestations)))
+	if verbose {
+		beaconCommitteesProvider, isProvider := eth2Client.(eth2client.BeaconCommitteesProvider)
+		if isProvider {
+			for i, att := range attestations {
+				res.WriteString(fmt.Sprintf("  %d:\n", i))
+
+				// Fetch committees for this epoch if not already obtained.
+				committees, exists := validatorCommittees[att.Data.Slot]
+				if !exists {
+					response, err := beaconCommitteesProvider.BeaconCommittees(ctx, &api.BeaconCommitteesOpts{
+						State: fmt.Sprintf("%d", att.Data.Slot),
+					})
+					if err != nil {
+						// Failed to get it; create an empty committee to stop us continually attempting to re-fetch.
+						validatorCommittees[att.Data.Slot] = make(map[phase0.CommitteeIndex][]phase0.ValidatorIndex)
+					} else {
+						for _, beaconCommittee := range response.Data {
+							if _, exists := validatorCommittees[beaconCommittee.Slot]; !exists {
+								validatorCommittees[beaconCommittee.Slot] = make(map[phase0.CommitteeIndex][]phase0.ValidatorIndex)
+							}
+							validatorCommittees[beaconCommittee.Slot][beaconCommittee.Index] = beaconCommittee.Validators
+						}
+					}
+					committees = validatorCommittees[att.Data.Slot]
+				}
+
+				committeeIndices := make([]phase0.CommitteeIndex, 0)
+				for _, committeeIndex := range att.CommitteeBits.BitIndices() {
+					committeeIndices = append(committeeIndices, phase0.CommitteeIndex(committeeIndex))
+				}
+				res.WriteString(fmt.Sprintf("    Committee indices: %d\n", committeeIndices))
+				res.WriteString(fmt.Sprintf("    Attesters: %d/%d\n", att.AggregationBits.Count(), att.AggregationBits.Len()))
+				res.WriteString(fmt.Sprintf("    Aggregation bits: %s\n", bitlistToString(att.AggregationBits)))
+				if _, exists := committees[att.Data.Index]; exists {
+					res.WriteString(fmt.Sprintf("    Attesting indices: %s\n", attestingIndices(att.AggregationBits, committees, att.CommitteeBits.BitIndices())))
 				}
 				res.WriteString(fmt.Sprintf("    Slot: %d\n", att.Data.Slot))
 				res.WriteString(fmt.Sprintf("    Beacon block root: %#x\n", att.Data.BeaconBlockRoot))
@@ -149,6 +204,56 @@ func outputBlockAttestations(ctx context.Context, eth2Client eth2client.Service,
 }
 
 func outputBlockAttesterSlashings(ctx context.Context, eth2Client eth2client.Service, verbose bool, attesterSlashings []*phase0.AttesterSlashing) (string, error) {
+	res := strings.Builder{}
+
+	res.WriteString(fmt.Sprintf("Attester slashings: %d\n", len(attesterSlashings)))
+	if verbose {
+		for i, slashing := range attesterSlashings {
+			// Say what was slashed.
+			att1 := slashing.Attestation1
+			att2 := slashing.Attestation2
+			slashedIndices := intersection(att1.AttestingIndices, att2.AttestingIndices)
+			if len(slashedIndices) == 0 {
+				continue
+			}
+
+			res.WriteString(fmt.Sprintf("  %d:\n", i))
+			res.WriteString(fmt.Sprintln("    Slashed validators:"))
+			response, err := eth2Client.(eth2client.ValidatorsProvider).Validators(ctx, &api.ValidatorsOpts{
+				State:   "head",
+				Indices: slashedIndices,
+			})
+			if err != nil {
+				return "", errors.Wrap(err, "failed to obtain beacon committees")
+			}
+			for k, v := range response.Data {
+				res.WriteString(fmt.Sprintf("      %#x (%d)\n", v.Validator.PublicKey[:], k))
+			}
+
+			// Say what caused the slashing.
+			if att1.Data.Target.Epoch == att2.Data.Target.Epoch {
+				res.WriteString(fmt.Sprintf("    Double voted for same target epoch (%d):\n", att1.Data.Target.Epoch))
+				if !bytes.Equal(att1.Data.Target.Root[:], att2.Data.Target.Root[:]) {
+					res.WriteString(fmt.Sprintf("      Attestation 1 target epoch root: %#x\n", att1.Data.Target.Root))
+					res.WriteString(fmt.Sprintf("      Attestation 2target epoch root: %#x\n", att2.Data.Target.Root))
+				}
+				if !bytes.Equal(att1.Data.BeaconBlockRoot[:], att2.Data.BeaconBlockRoot[:]) {
+					res.WriteString(fmt.Sprintf("      Attestation 1 beacon block root: %#x\n", att1.Data.BeaconBlockRoot))
+					res.WriteString(fmt.Sprintf("      Attestation 2 beacon block root: %#x\n", att2.Data.BeaconBlockRoot))
+				}
+			} else if att1.Data.Source.Epoch < att2.Data.Source.Epoch &&
+				att1.Data.Target.Epoch > att2.Data.Target.Epoch {
+				res.WriteString("    Surround voted:\n")
+				res.WriteString(fmt.Sprintf("      Attestation 1 vote: %d->%d\n", att1.Data.Source.Epoch, att1.Data.Target.Epoch))
+				res.WriteString(fmt.Sprintf("      Attestation 2 vote: %d->%d\n", att2.Data.Source.Epoch, att2.Data.Target.Epoch))
+			}
+		}
+	}
+
+	return res.String(), nil
+}
+
+func outputElectraBlockAttesterSlashings(ctx context.Context, eth2Client eth2client.Service, verbose bool, attesterSlashings []*electra.AttesterSlashing) (string, error) {
 	res := strings.Builder{}
 
 	res.WriteString(fmt.Sprintf("Attester slashings: %d\n", len(attesterSlashings)))
@@ -502,7 +607,117 @@ func outputDenebBlockText(ctx context.Context,
 	}
 	res.WriteString(tmp)
 
-	tmp, err = outputDenebBlobInfo(ctx, data.verbose, signedBlock.Message.Body, blobs)
+	tmp, err = outputBlobInfo(ctx, data.verbose, blobs)
+	if err != nil {
+		return "", err
+	}
+	res.WriteString(tmp)
+
+	return res.String(), nil
+}
+
+func outputElectraBlockText(ctx context.Context,
+	data *dataOut,
+	signedBlock *electra.SignedBeaconBlock,
+	blobs []*deneb.BlobSidecar,
+) (
+	string,
+	error,
+) {
+	if signedBlock == nil {
+		return "", errors.New("no block supplied")
+	}
+
+	body := signedBlock.Message.Body
+
+	res := strings.Builder{}
+
+	// General info.
+	blockRoot, err := signedBlock.Message.HashTreeRoot()
+	if err != nil {
+		return "", errors.Wrap(err, "failed to obtain block root")
+	}
+	bodyRoot, err := signedBlock.Message.Body.HashTreeRoot()
+	if err != nil {
+		return "", errors.Wrap(err, "failed to generate body root")
+	}
+
+	tmp, err := outputBlockGeneral(ctx,
+		data.verbose,
+		signedBlock.Message.Slot,
+		signedBlock.Message.ProposerIndex,
+		blockRoot,
+		bodyRoot,
+		signedBlock.Message.ParentRoot,
+		signedBlock.Message.StateRoot,
+		signedBlock.Message.Body.Graffiti[:],
+		data.genesisTime,
+		data.slotDuration,
+		data.slotsPerEpoch)
+	if err != nil {
+		return "", err
+	}
+	res.WriteString(tmp)
+
+	// Eth1 data.
+	if data.verbose {
+		tmp, err := outputBlockETH1Data(ctx, body.ETH1Data)
+		if err != nil {
+			return "", err
+		}
+		res.WriteString(tmp)
+	}
+
+	// Sync aggregate.
+	tmp, err = outputBlockSyncAggregate(ctx, data.eth2Client, data.verbose, signedBlock.Message.Body.SyncAggregate, phase0.Epoch(uint64(signedBlock.Message.Slot)/data.slotsPerEpoch))
+	if err != nil {
+		return "", err
+	}
+	res.WriteString(tmp)
+
+	// Attestations.
+	tmp, err = outputElectraBlockAttestations(ctx, data.eth2Client, data.verbose, signedBlock.Message.Body.Attestations)
+	if err != nil {
+		return "", err
+	}
+	res.WriteString(tmp)
+
+	// Attester slashings.
+	tmp, err = outputElectraBlockAttesterSlashings(ctx, data.eth2Client, data.verbose, signedBlock.Message.Body.AttesterSlashings)
+	if err != nil {
+		return "", err
+	}
+	res.WriteString(tmp)
+
+	res.WriteString(fmt.Sprintf("Proposer slashings: %d\n", len(body.ProposerSlashings)))
+	// Add verbose proposer slashings.
+
+	// Voluntary exits.
+	tmp, err = outputBlockVoluntaryExits(ctx, data.eth2Client, data.verbose, signedBlock.Message.Body.VoluntaryExits)
+	if err != nil {
+		return "", err
+	}
+	res.WriteString(tmp)
+
+	tmp, err = outputBlockBLSToExecutionChanges(ctx, data.eth2Client, data.verbose, signedBlock.Message.Body.BLSToExecutionChanges)
+	if err != nil {
+		return "", err
+	}
+	res.WriteString(tmp)
+
+	tmp, err = outputDenebBlockExecutionPayload(ctx, data.verbose, signedBlock.Message.Body.ExecutionPayload)
+	if err != nil {
+		return "", err
+	}
+	res.WriteString(tmp)
+
+	tmp, err = outputElectraBlockExecutionRequests(ctx, data.verbose, signedBlock.Message.Body.ExecutionRequests)
+	if err != nil {
+		return "", err
+	}
+	res.WriteString(tmp)
+
+	tmp, err = outputBlobInfo(ctx, data.verbose, blobs)
 	if err != nil {
 		return "", err
 	}
@@ -897,30 +1112,69 @@ func outputDenebBlockExecutionPayload(_ context.Context,
 	return res.String(), nil
 }
 
-func outputDenebBlobInfo(_ context.Context,
+func outputElectraBlockExecutionRequests(_ context.Context,
 	verbose bool,
-	body *deneb.BeaconBlockBody,
+	executionRequests *electra.ExecutionRequests,
+) (
+	string,
+	error,
+) {
+	if executionRequests == nil {
+		return "", nil
+	}
+
+	res := strings.Builder{}
+	res.WriteString("Deposit requests: ")
+	res.WriteString(fmt.Sprintf("%d\n", len(executionRequests.Deposits)))
+	if verbose {
+		for i, deposit := range executionRequests.Deposits {
+			res.WriteString(fmt.Sprintf("%3d:\n", i))
+			res.WriteString(fmt.Sprintf("    Public key: %#x\n", deposit.Pubkey))
+			res.WriteString(fmt.Sprintf("    Withdrawal credentials: %#x\n", deposit.WithdrawalCredentials))
+			res.WriteString(fmt.Sprintf("    Amount: %s\n", string2eth.GWeiToString(uint64(deposit.Amount), true)))
+		}
+	}
+	res.WriteString("Withdrawal requests: ")
+	res.WriteString(fmt.Sprintf("%d\n", len(executionRequests.Withdrawals)))
+	if verbose {
+		for i, withdrawal := range executionRequests.Withdrawals {
+			res.WriteString(fmt.Sprintf("%3d:\n", i))
+			res.WriteString(fmt.Sprintf("    Source address: %#x\n", withdrawal.SourceAddress))
+			res.WriteString(fmt.Sprintf("    Validator public key: %#x\n", withdrawal.ValidatorPubkey))
+			res.WriteString(fmt.Sprintf("    Amount: %s\n", string2eth.GWeiToString(uint64(withdrawal.Amount), true)))
+		}
+	}
+	res.WriteString("Consolidation requests: ")
+	res.WriteString(fmt.Sprintf("%d\n", len(executionRequests.Consolidations)))
+	if verbose {
+		for i, consolidation := range executionRequests.Consolidations {
+			res.WriteString(fmt.Sprintf("%3d:\n", i))
+			res.WriteString(fmt.Sprintf("    Source address: %#x\n", consolidation.SourceAddress))
+			res.WriteString(fmt.Sprintf("    Source public key: %#x\n", consolidation.SourcePubkey))
+			res.WriteString(fmt.Sprintf("    Target public key: %#x\n", consolidation.TargetPubkey))
+		}
+	}
+
+	return res.String(), nil
+}
+
+func outputBlobInfo(_ context.Context,
+	verbose bool,
 	blobs []*deneb.BlobSidecar,
 ) (
 	string,
 	error,
 ) {
-	if body == nil {
-		return "", nil
-	}
-
-	if !verbose {
-		return fmt.Sprintf("Blobs: %d\n", len(body.BlobKZGCommitments)), nil
-	}
-
 	res := strings.Builder{}
 
-	for i, blob := range blobs {
-		if i == 0 {
-			res.WriteString("Blobs\n")
+	res.WriteString(fmt.Sprintf("Blobs: %d\n", len(blobs)))
+
+	if verbose {
+		for i, blob := range blobs {
+			res.WriteString(fmt.Sprintf("%3d:\n", i))
+			res.WriteString(fmt.Sprintf("    KZG proof: %s\n", blob.KZGProof.String()))
+			res.WriteString(fmt.Sprintf("    KZG commitment: %s\n", blob.KZGCommitment.String()))
 		}
-		res.WriteString(fmt.Sprintf("  Index: %d\n", blob.Index))
-		res.WriteString(fmt.Sprintf("  KZG commitment: %s\n", body.BlobKZGCommitments[i].String()))
 	}
 
 	return res.String(), nil
@@ -1046,15 +1300,28 @@ func bitvectorToString(input bitfield.Bitvector512) string {
 	return res.String()
 }
 
-func attestingIndices(input bitfield.Bitlist, indices []phase0.ValidatorIndex) string {
+func attestingIndices(input bitfield.Bitlist,
+	committees map[phase0.CommitteeIndex][]phase0.ValidatorIndex,
+	includedCommittees []int,
+) string {
 	bits := int(input.Len())
-	res := ""
+
+	// Build up the validator list from the included committees.
+	validatorIndices := make([]phase0.ValidatorIndex, 0)
+	for _, committeeIndex := range includedCommittees {
+		validatorIndices = append(validatorIndices, committees[phase0.CommitteeIndex(committeeIndex)]...)
+	}
+
+	res := strings.Builder{}
+
 	for i := range bits {
 		if input.BitAt(uint64(i)) {
-			res = fmt.Sprintf("%s%d ", res, indices[i])
+			// Work out the committee and offset given the index.
+			res.WriteString(fmt.Sprintf("%d ", validatorIndices[i]))
 		}
 	}
-	return strings.TrimSpace(res)
+
+	return strings.TrimSpace(res.String())
 }
 
 func blockGraffiti(_ context.Context, graffiti []byte) string {

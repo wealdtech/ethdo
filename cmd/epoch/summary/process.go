@@ -509,6 +509,8 @@ func (c *command) processBlobs(ctx context.Context) error {
 			// No blobs in these forks.
 		case spec.DataVersionDeneb:
 			c.summary.Blobs += len(block.Deneb.Message.Body.BlobKZGCommitments)
+		case spec.DataVersionElectra:
+			c.summary.Blobs += len(block.Electra.Message.Body.BlobKZGCommitments)
 		default:
 			return fmt.Errorf("unhandled block version %v", block.Version)
 		}

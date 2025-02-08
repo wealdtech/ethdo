@@ -100,8 +100,9 @@ func process(ctx context.Context, data *dataIn) (*dataOut, error) {
 			}
 			aggregationBits, err := attestation.AggregationBits()
 			if err != nil {
-				return nil, errors.Wrap(err, "failed to obtain aggregation bits")
+				return nil, errors.Wrap(err, "failed to obtain attestation aggregation bits")
 			}
+
 			if attestationData.Slot == duty.Slot &&
 				attestationData.Index == duty.CommitteeIndex &&
 				aggregationBits.BitAt(duty.ValidatorCommitteeIndex) {
@@ -142,6 +143,7 @@ func calcHeadCorrect(ctx context.Context, data *dataIn, attestation *spec.Versio
 	if err != nil {
 		return false, errors.Wrap(err, "failed to obtain attestation data")
 	}
+
 	slot := attestationData.Slot
 	for {
 		response, err := data.eth2Client.(eth2client.BeaconBlockHeadersProvider).BeaconBlockHeader(ctx, &api.BeaconBlockHeaderOpts{
@@ -162,6 +164,7 @@ func calcHeadCorrect(ctx context.Context, data *dataIn, attestation *spec.Versio
 			slot--
 			continue
 		}
+
 		return bytes.Equal(response.Data.Root[:], attestationData.BeaconBlockRoot[:]), nil
 	}
 }
@@ -171,6 +174,7 @@ func calcTargetCorrect(ctx context.Context, data *dataIn, attestation *spec.Vers
 	if err != nil {
 		return false, errors.Wrap(err, "failed to obtain attestation data")
 	}
+
 	// Start with first slot of the target epoch.
 	slot := data.chainTime.FirstSlotOfEpoch(attestationData.Target.Epoch)
 	for {
@@ -192,6 +196,7 @@ func calcTargetCorrect(ctx context.Context, data *dataIn, attestation *spec.Vers
 			slot--
 			continue
 		}
+
 		return bytes.Equal(response.Data.Root[:], attestationData.Target.Root[:]), nil
 	}
 }

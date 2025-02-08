@@ -42,6 +42,21 @@ func process(data *dataIn) ([]*dataOut, error) {
 		return nil, err
 	}
 
+	// These values are hard-coded, to allow deposit data to be generated without a connection to the beacon node.
+	if data.amount < 1000000000 { // MIN_DEPOSIT_AMOUNT
+		return nil, errors.New("deposit value must be at least 1 Ether")
+	}
+	switch data.compounding {
+	case false:
+		if data.amount > 32000000000 {
+			return nil, errors.New("deposit value exceeds maximum for a non-compounding validator")
+		}
+	case true:
+		if data.amount > 2048000000000 {
+			return nil, errors.New("deposit value exceeds maximum for a compounding validator")
+		}
+	}
+
 	for _, validatorAccount := range data.validatorAccounts {
 		validatorPubKey, err := ethdoutil.BestPublicKey(validatorAccount)
 		if err != nil {
@@ -192,7 +207,11 @@ func createWithdrawalCredentials(data *dataIn) ([]byte, error) {
 		withdrawalCredentials = make([]byte, 32)
 		copy(withdrawalCredentials[12:32], withdrawalAddressBytes)
 		// This is hard-coded, to allow deposit data to be generated without a connection to the beacon node.
-		withdrawalCredentials[0] = byte(1) // ETH1_ADDRESS_WITHDRAWAL_PREFIX
+		if data.compounding {
+			withdrawalCredentials[0] = byte(2) // COMPOUNDING_WITHDRAWAL_PREFIX
+		} else {
+			withdrawalCredentials[0] = byte(1) // ETH1_ADDRESS_WITHDRAWAL_PREFIX
+		}
 	default:
 		return nil, errors.New("withdrawal account, public key or address is required")
 	}

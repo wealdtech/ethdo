@@ -62,4 +62,6 @@ type Service interface {
 	CapellaInitialEpoch() phase0.Epoch
 	// DenebInitialEpoch provides the epoch at which the Deneb hard fork takes place.
 	DenebInitialEpoch() phase0.Epoch
+	// ElectraInitialEpoch provides the epoch at which the Electra hard fork takes place.
+	ElectraInitialEpoch() phase0.Epoch
 }

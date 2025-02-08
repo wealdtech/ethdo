@@ -191,17 +191,6 @@ func TestInput(t *testing.T) {
 			err: "deposit value is required",
 		},
 		{
-			name: "DepositValueTooSmall",
-			vars: map[string]interface{}{
-				"timeout":           "10s",
-				"validatoraccount":  "Test/Interop 0",
-				"withdrawalaccount": "Test/Interop 0",
-				"depositvalue":      "1000 Wei",
-				"forkversion":       "0x01020304",
-			},
-			err: "deposit value must be at least 1 Ether",
-		},
-		{
 			name: "DepositValueInvalid",
 			vars: map[string]interface{}{
 				"timeout":           "10s",

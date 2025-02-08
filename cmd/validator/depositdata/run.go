@@ -37,7 +37,7 @@ func Run(cmd *cobra.Command) (string, error) {
 		case errors.Is(err, context.DeadlineExceeded):
 			return "", errors.New("operation timed out; try increasing with --timeout option")
 		default:
-			return "", errors.Join(errors.New("failed to process"), err)
+			return "", err
 		}
 	}
 

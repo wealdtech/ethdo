@@ -1,5 +1,6 @@
-electra:
-- update to handle versioned attestations from go-eth2-client electra branch
+1.37.0:
+ - support Electra
+ - add `--compounding` flag when creating validator deposit data
 
 1.36.6:
   - allow specification of blockid for validator info

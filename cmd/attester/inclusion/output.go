@@ -19,6 +19,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/attestantio/go-eth2-client/spec"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 )
@@ -27,7 +28,7 @@ type dataOut struct {
 	debug            bool
 	quiet            bool
 	verbose          bool
-	attestation      *phase0.Attestation
+	attestation      *spec.VersionedAttestation
 	slot             phase0.Slot
 	attestationIndex uint64
 	inclusionDelay   phase0.Slot

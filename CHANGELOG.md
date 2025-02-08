@@ -1,3 +1,6 @@
+electra:
+- update to handle versioned attestations from go-eth2-client electra branch
+
 1.36.6:
   - allow specification of blockid for validator info
   - validator depositdata orders deposits from an HD wallet by path

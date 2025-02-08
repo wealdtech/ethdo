@@ -239,17 +239,21 @@ func (c *command) processSlots(ctx context.Context,
 			return nil, nil, nil, nil, nil, nil, nil, err
 		}
 		for _, attestation := range attestations {
-			if attestation.Data.Slot < c.chainTime.FirstSlotOfEpoch(c.summary.Epoch) || attestation.Data.Slot >= c.chainTime.FirstSlotOfEpoch(c.summary.Epoch+1) {
+			attestationData, err := attestation.Data()
+			if err != nil {
+				return nil, nil, nil, nil, nil, nil, nil, errors.Wrap(err, "failed to obtain attestation data")
+			}
+			if attestationData.Slot < c.chainTime.FirstSlotOfEpoch(c.summary.Epoch) || attestationData.Slot >= c.chainTime.FirstSlotOfEpoch(c.summary.Epoch+1) {
 				// Outside of this epoch's range.
 				continue
 			}
-			slotCommittees, exists := allCommittees[attestation.Data.Slot]
+			slotCommittees, exists := allCommittees[attestationData.Slot]
 			if !exists {
 				response, err := c.beaconCommitteesProvider.BeaconCommittees(ctx, &api.BeaconCommitteesOpts{
-					State: fmt.Sprintf("%d", attestation.Data.Slot),
+					State: fmt.Sprintf("%d", attestationData.Slot),
 				})
 				if err != nil {
-					return nil, nil, nil, nil, nil, nil, nil, errors.Wrap(err, fmt.Sprintf("failed to obtain committees for slot %d", attestation.Data.Slot))
+					return nil, nil, nil, nil, nil, nil, nil, errors.Wrap(err, fmt.Sprintf("failed to obtain committees for slot %d", attestationData.Slot))
 				}
 				for _, beaconCommittee := range response.Data {
 					if _, exists := allCommittees[beaconCommittee.Slot]; !exists {
@@ -275,11 +279,11 @@ func (c *command) processSlots(ctx context.Context,
 						}
 					}
 				}
-				slotCommittees = allCommittees[attestation.Data.Slot]
+				slotCommittees = allCommittees[attestationData.Slot]
 			}
-			committee := slotCommittees[attestation.Data.Index]
+			committee := slotCommittees[attestationData.Index]
 
-			inclusionDistance := slot - attestation.Data.Slot
+			inclusionDistance := slot - attestationData.Slot
 
 			head, err := util.AttestationHead(ctx, headersCache, attestation)
 			if err != nil {
@@ -298,8 +302,12 @@ func (c *command) processSlots(ctx context.Context,
 				return nil, nil, nil, nil, nil, nil, nil, err
 			}
 
-			for i := range attestation.AggregationBits.Len() {
-				if attestation.AggregationBits.BitAt(i) {
+			aggregationBits, err := attestation.AggregationBits()
+			if err != nil {
+				return nil, nil, nil, nil, nil, nil, nil, errors.Wrap(err, "failed to obtain aggregation bits")
+			}
+			for i := range aggregationBits.Len() {
+				if aggregationBits.BitAt(i) {
 					validatorIndex := committee[int(i)]
 					if len(c.validators) > 0 {
 						if _, exists := c.validators[validatorIndex]; !exists {
@@ -310,9 +318,9 @@ func (c *command) processSlots(ctx context.Context,
 
 					// Only set the information from the first attestation we find for this validator.
 					if participations[validatorIndex].InclusionSlot == 0 {
-						participations[validatorIndex].HeadVote = &attestation.Data.BeaconBlockRoot
+						participations[validatorIndex].HeadVote = &attestationData.BeaconBlockRoot
 						participations[validatorIndex].Head = &head
-						participations[validatorIndex].TargetVote = &attestation.Data.Target.Root
+						participations[validatorIndex].TargetVote = &attestationData.Target.Root
 						participations[validatorIndex].Target = &target
 						participations[validatorIndex].InclusionSlot = slot
 					}

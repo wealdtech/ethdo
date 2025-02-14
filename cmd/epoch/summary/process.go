@@ -281,66 +281,17 @@ func (c *command) processSlots(ctx context.Context,
 				}
 				slotCommittees = allCommittees[attestationData.Slot]
 			}
-			committee := slotCommittees[attestationData.Index]
-
-			inclusionDistance := slot - attestationData.Slot
-
-			head, err := util.AttestationHead(ctx, headersCache, attestation)
-			if err != nil {
-				return nil, nil, nil, nil, nil, nil, nil, err
-			}
-			headCorrect, err := util.AttestationHeadCorrect(ctx, headersCache, attestation)
-			if err != nil {
-				return nil, nil, nil, nil, nil, nil, nil, err
-			}
-			target, err := util.AttestationTarget(ctx, headersCache, c.chainTime, attestation)
-			if err != nil {
-				return nil, nil, nil, nil, nil, nil, nil, err
-			}
-			targetCorrect, err := util.AttestationTargetCorrect(ctx, headersCache, c.chainTime, attestation)
-			if err != nil {
-				return nil, nil, nil, nil, nil, nil, nil, err
-			}
-
-			aggregationBits, err := attestation.AggregationBits()
-			if err != nil {
-				return nil, nil, nil, nil, nil, nil, nil, errors.Wrap(err, "failed to obtain aggregation bits")
-			}
-			for i := range aggregationBits.Len() {
-				if aggregationBits.BitAt(i) {
-					validatorIndex := committee[int(i)]
-					if len(c.validators) > 0 {
-						if _, exists := c.validators[validatorIndex]; !exists {
-							// Not one of our validators.
-							continue
-						}
-					}
-
-					// Only set the information from the first attestation we find for this validator.
-					if participations[validatorIndex].InclusionSlot == 0 {
-						participations[validatorIndex].HeadVote = &attestationData.BeaconBlockRoot
-						participations[validatorIndex].Head = &head
-						participations[validatorIndex].TargetVote = &attestationData.Target.Root
-						participations[validatorIndex].Target = &target
-						participations[validatorIndex].InclusionSlot = slot
-					}
-
-					votes[validatorIndex] = struct{}{}
-					if _, exists := headCorrects[validatorIndex]; !exists && headCorrect {
-						headCorrects[validatorIndex] = struct{}{}
-					}
-					if _, exists := headTimelys[validatorIndex]; !exists && headCorrect && inclusionDistance == 1 {
-						headTimelys[validatorIndex] = struct{}{}
-					}
-					if _, exists := sourceTimelys[validatorIndex]; !exists && inclusionDistance <= 5 {
-						sourceTimelys[validatorIndex] = struct{}{}
-					}
-					if _, exists := targetCorrects[validatorIndex]; !exists && targetCorrect {
-						targetCorrects[validatorIndex] = struct{}{}
-					}
-					if _, exists := targetTimelys[validatorIndex]; !exists && targetCorrect && inclusionDistance <= 32 {
-						targetTimelys[validatorIndex] = struct{}{}
-					}
+			if attestation.Version >= spec.DataVersionElectra {
+				participations, votes, headCorrects, headTimelys, sourceTimelys, targetCorrects, targetTimelys, err = c.extractElectraAttestationData(
+					ctx, attestation, attestationData, slotCommittees, slot, headersCache, participations, votes, headCorrects, headTimelys, sourceTimelys, targetCorrects, targetTimelys)
+				if err != nil {
+					return nil, nil, nil, nil, nil, nil, nil, err
+				}
+			} else {
+				participations, votes, headCorrects, headTimelys, sourceTimelys, targetCorrects, targetTimelys, err = c.extractPhase0AttestationData(
+					ctx, attestation, attestationData, slotCommittees, slot, headersCache, participations, votes, headCorrects, headTimelys, sourceTimelys, targetCorrects, targetTimelys)
+				if err != nil {
+					return nil, nil, nil, nil, nil, nil, nil, err
 				}
 			}
 		}
@@ -354,6 +305,201 @@ func (c *command) processSlots(ctx context.Context,
 		targetTimelys,
 		participations,
 		nil
+}
+
+func (c *command) extractPhase0AttestationData(ctx context.Context,
+	attestation *spec.VersionedAttestation,
+	attestationData *phase0.AttestationData,
+	slotCommittees map[phase0.CommitteeIndex][]phase0.ValidatorIndex,
+	slot phase0.Slot,
+	headersCache *util.BeaconBlockHeaderCache,
+	participations map[phase0.ValidatorIndex]*attestingValidator,
+	votes map[phase0.ValidatorIndex]struct{},
+	headCorrects map[phase0.ValidatorIndex]struct{},
+	headTimelys map[phase0.ValidatorIndex]struct{},
+	sourceTimelys map[phase0.ValidatorIndex]struct{},
+	targetCorrects map[phase0.ValidatorIndex]struct{},
+	targetTimelys map[phase0.ValidatorIndex]struct{},
+) (
+	map[phase0.ValidatorIndex]*attestingValidator,
+	map[phase0.ValidatorIndex]struct{},
+	map[phase0.ValidatorIndex]struct{},
+	map[phase0.ValidatorIndex]struct{},
+	map[phase0.ValidatorIndex]struct{},
+	map[phase0.ValidatorIndex]struct{},
+	map[phase0.ValidatorIndex]struct{},
+	error,
+) {
+	committee := slotCommittees[attestationData.Index]
+
+	inclusionDistance := slot - attestationData.Slot
+
+	head, err := util.AttestationHead(ctx, headersCache, attestation)
+	if err != nil {
+		return nil, nil, nil, nil, nil, nil, nil, err
+	}
+	headCorrect, err := util.AttestationHeadCorrect(ctx, headersCache, attestation)
+	if err != nil {
+		return nil, nil, nil, nil, nil, nil, nil, err
+	}
+	target, err := util.AttestationTarget(ctx, headersCache, c.chainTime, attestation)
+	if err != nil {
+		return nil, nil, nil, nil, nil, nil, nil, err
+	}
+	targetCorrect, err := util.AttestationTargetCorrect(ctx, headersCache, c.chainTime, attestation)
+	if err != nil {
+		return nil, nil, nil, nil, nil, nil, nil, err
+	}
+
+	aggregationBits, err := attestation.AggregationBits()
+	if err != nil {
+		return nil, nil, nil, nil, nil, nil, nil, errors.Wrap(err, "failed to obtain aggregation bits")
+	}
+	for i := range aggregationBits.Len() {
+		if aggregationBits.BitAt(i) {
+			validatorIndex := committee[int(i)]
+			if len(c.validators) > 0 {
+				if _, exists := c.validators[validatorIndex]; !exists {
+					// Not one of our validators.
+					continue
+				}
+			}
+
+			// Only set the information from the first attestation we find for this validator.
+			if participations[validatorIndex].InclusionSlot == 0 {
+				participations[validatorIndex].HeadVote = &attestationData.BeaconBlockRoot
+				participations[validatorIndex].Head = &head
+				participations[validatorIndex].TargetVote = &attestationData.Target.Root
+				participations[validatorIndex].Target = &target
+				participations[validatorIndex].InclusionSlot = slot
+			}
+
+			votes[validatorIndex] = struct{}{}
+			if _, exists := headCorrects[validatorIndex]; !exists && headCorrect {
+				headCorrects[validatorIndex] = struct{}{}
+			}
+			if _, exists := headTimelys[validatorIndex]; !exists && headCorrect && inclusionDistance == 1 {
+				headTimelys[validatorIndex] = struct{}{}
+			}
+			if _, exists := sourceTimelys[validatorIndex]; !exists && inclusionDistance <= 5 {
+				sourceTimelys[validatorIndex] = struct{}{}
+			}
+			if _, exists := targetCorrects[validatorIndex]; !exists && targetCorrect {
+				targetCorrects[validatorIndex] = struct{}{}
+			}
+			if _, exists := targetTimelys[validatorIndex]; !exists && targetCorrect && inclusionDistance <= 32 {
+				targetTimelys[validatorIndex] = struct{}{}
+			}
+		}
+	}
+	return participations, votes, headCorrects, headTimelys, sourceTimelys, targetCorrects, targetTimelys, err
+}
+
+func (c *command) extractElectraAttestationData(ctx context.Context,
+	attestation *spec.VersionedAttestation,
+	attestationData *phase0.AttestationData,
+	slotCommittees map[phase0.CommitteeIndex][]phase0.ValidatorIndex,
+	slot phase0.Slot,
+	headersCache *util.BeaconBlockHeaderCache,
+	participations map[phase0.ValidatorIndex]*attestingValidator,
+	votes map[phase0.ValidatorIndex]struct{},
+	headCorrects map[phase0.ValidatorIndex]struct{},
+	headTimelys map[phase0.ValidatorIndex]struct{},
+	sourceTimelys map[phase0.ValidatorIndex]struct{},
+	targetCorrects map[phase0.ValidatorIndex]struct{},
+	targetTimelys map[phase0.ValidatorIndex]struct{},
+) (
+	map[phase0.ValidatorIndex]*attestingValidator,
+	map[phase0.ValidatorIndex]struct{},
+	map[phase0.ValidatorIndex]struct{},
+	map[phase0.ValidatorIndex]struct{},
+	map[phase0.ValidatorIndex]struct{},
+	map[phase0.ValidatorIndex]struct{},
+	map[phase0.ValidatorIndex]struct{},
+	error,
+) {
+	committeeBits, err := attestation.CommitteeBits()
+	if err != nil {
+		return nil, nil, nil, nil, nil, nil, nil, errors.Wrap(err, "failed to obtain committee bits")
+	}
+	for _, committeeIndex := range committeeBits.BitIndices() {
+		committee := slotCommittees[phase0.CommitteeIndex(committeeIndex)]
+
+		inclusionDistance := slot - attestationData.Slot
+
+		head, err := util.AttestationHead(ctx, headersCache, attestation)
+		if err != nil {
+			return nil, nil, nil, nil, nil, nil, nil, err
+		}
+		headCorrect, err := util.AttestationHeadCorrect(ctx, headersCache, attestation)
+		if err != nil {
+			return nil, nil, nil, nil, nil, nil, nil, err
+		}
+		target, err := util.AttestationTarget(ctx, headersCache, c.chainTime, attestation)
+		if err != nil {
+			return nil, nil, nil, nil, nil, nil, nil, err
+		}
+		targetCorrect, err := util.AttestationTargetCorrect(ctx, headersCache, c.chainTime, attestation)
+		if err != nil {
+			return nil, nil, nil, nil, nil, nil, nil, err
+		}
+
+		aggregationBits, err := attestation.AggregationBits()
+		if err != nil {
+			return nil, nil, nil, nil, nil, nil, nil, errors.Wrap(err, "failed to obtain aggregation bits")
+		}
+		// Calculate the offset for the committee so we can extract the validator from the aggregate_bits.
+		committeeOffset := calcCommitteeOffset(phase0.CommitteeIndex(committeeIndex), slotCommittees)
+
+		// Range over the committee rather than the aggregate_bits as it's the smaller set.
+		for i := range committee {
+			aggregateIndex := committeeOffset + uint64(i)
+			if aggregationBits.BitAt(aggregateIndex) {
+				validatorIndex := committee[i]
+				if len(c.validators) > 0 {
+					if _, exists := c.validators[validatorIndex]; !exists {
+						// Not one of our validators.
+						continue
+					}
+				}
+
+				// Only set the information from the first attestation we find for this validator.
+				if participations[validatorIndex].InclusionSlot == 0 {
+					participations[validatorIndex].HeadVote = &attestationData.BeaconBlockRoot
+					participations[validatorIndex].Head = &head
+					participations[validatorIndex].TargetVote = &attestationData.Target.Root
+					participations[validatorIndex].Target = &target
+					participations[validatorIndex].InclusionSlot = slot
+				}
+
+				votes[validatorIndex] = struct{}{}
+				if _, exists := headCorrects[validatorIndex]; !exists && headCorrect {
+					headCorrects[validatorIndex] = struct{}{}
+				}
+				if _, exists := headTimelys[validatorIndex]; !exists && headCorrect && inclusionDistance == 1 {
+					headTimelys[validatorIndex] = struct{}{}
+				}
+				if _, exists := sourceTimelys[validatorIndex]; !exists && inclusionDistance <= 5 {
+					sourceTimelys[validatorIndex] = struct{}{}
+				}
+				if _, exists := targetCorrects[validatorIndex]; !exists && targetCorrect {
+					targetCorrects[validatorIndex] = struct{}{}
+				}
+				if _, exists := targetTimelys[validatorIndex]; !exists && targetCorrect && inclusionDistance <= 32 {
+					targetTimelys[validatorIndex] = struct{}{}
+				}
+			}
+		}
+	}
+	return participations, votes, headCorrects, headTimelys, sourceTimelys, targetCorrects, targetTimelys, err
+}
+
+func calcCommitteeOffset(committeeIndex phase0.CommitteeIndex, slotCommittees map[phase0.CommitteeIndex][]phase0.ValidatorIndex) uint64 {
+	var total uint64
+	for i := range committeeIndex {
+		total += uint64(len(slotCommittees[i]))
+	}
+	return total
 }
 
 func (c *command) processSyncCommitteeDuties(ctx context.Context) error {

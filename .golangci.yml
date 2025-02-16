@@ -74,8 +74,9 @@ run:
 
 # output configuration options
 output:
-  - format: colored-line-number
-    path: stderr
+  formats:
+    - format: colored-line-number
+      path: stderr
 
 # All available settings of specific linters.
 linters-settings:
@@ -112,7 +113,6 @@ linters:
     - errorlint
     - exhaustive
     - exhaustruct
-    - exportloopref
     - forbidigo
     - forcetypeassert
     - funlen
@@ -135,6 +135,7 @@ linters:
     - promlinter
     - rowserrcheck
     - sqlclosecheck
+    - tenv
     - unparam
     - varnamelen
     - wastedassign

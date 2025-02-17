@@ -10,7 +10,7 @@ require (
 	github.com/gofrs/uuid v4.4.0+incompatible
 	github.com/google/uuid v1.6.0
 	github.com/hako/durafmt v0.0.0-20210608085754-5c1018a4e16b
-	github.com/herumi/bls-eth-go-binary v1.36.1
+	github.com/herumi/bls-eth-go-binary v1.36.4
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/nbutton23/zxcvbn-go v0.0.0-20210217022336-fa2cb2858354
 	github.com/pkg/errors v0.9.1
@@ -31,7 +31,7 @@ require (
 	github.com/wealdtech/go-eth2-wallet-dirk v1.5.1
 	github.com/wealdtech/go-eth2-wallet-distributed v1.2.1
 	github.com/wealdtech/go-eth2-wallet-encryptor-keystorev4 v1.4.1
-	github.com/wealdtech/go-eth2-wallet-hd/v2 v2.7.0
+	github.com/wealdtech/go-eth2-wallet-hd/v2 v2.7.1
 	github.com/wealdtech/go-eth2-wallet-keystore v1.0.0
 	github.com/wealdtech/go-eth2-wallet-nd/v2 v2.5.0
 	github.com/wealdtech/go-eth2-wallet-store-filesystem v1.18.1

@@ -48,8 +48,8 @@ github.com/hako/durafmt v0.0.0-20210608085754-5c1018a4e16b h1:wDUNC2eKiL35DbLvsD
 github.com/hako/durafmt v0.0.0-20210608085754-5c1018a4e16b/go.mod h1:VzxiSdG6j1pi7rwGm/xYI5RbtpBgM8sARDXlvEvxlu0=
 github.com/hashicorp/hcl v1.0.0 h1:0Anlzjpi4vEasTeNFn2mLJgTSwt0+6sfsiTG8qcWGx4=
 github.com/hashicorp/hcl v1.0.0/go.mod h1:E5yfLk+7swimpb2L/Alb/PJmXilQ/rhwaUYs4T20WEQ=
-github.com/herumi/bls-eth-go-binary v1.36.1 h1:SfLjxbO1fWkKtKS7J3Ezd1/5QXrcaTZgWynxdSe10hQ=
-github.com/herumi/bls-eth-go-binary v1.36.1/go.mod h1:luAnRm3OsMQeokhGzpYmc0ZKwawY7o87PUEP11Z7r7U=
+github.com/herumi/bls-eth-go-binary v1.36.4 h1:yff41RSbfyZwfE1NF/qddP5nXhgdU0c3RGOpYOoM7YM=
+github.com/herumi/bls-eth-go-binary v1.36.4/go.mod h1:luAnRm3OsMQeokhGzpYmc0ZKwawY7o87PUEP11Z7r7U=
 github.com/holiman/uint256 v1.3.2 h1:a9EgMPSC1AAaj1SZL5zIQD3WbwTuHrMGOerLjGmM/TA=
 github.com/holiman/uint256 v1.3.2/go.mod h1:EOMSn4q6Nyt9P6efbI3bueV4e1b3dGlUCXeiRV4ng7E=
 github.com/huandu/go-assert v1.1.5 h1:fjemmA7sSfYHJD7CUqs9qTwwfdNAx7/j2/ZlHXzNB3c=
@@ -178,8 +178,8 @@ github.com/wealdtech/go-eth2-wallet-encryptor-keystorev4 v1.4.1 h1:9j7bpwjT9wmwB
 github.com/wealdtech/go-eth2-wallet-encryptor-keystorev4 v1.4.1/go.mod h1:+tI1VD76E1WINI+Nstg7RVGpUolL5ql10nu2YztMO/4=
 github.com/wealdtech/go-eth2-wallet-encryptor-unencrypted v1.0.2 h1:IMIyl70hbJlxOkgTcCK//3vKe5ylhGIk6oUlIlK9xp0=
 github.com/wealdtech/go-eth2-wallet-encryptor-unencrypted v1.0.2/go.mod h1:T8nyAscWIWNcNa6EG/19PwH/OCt2Ly7Orn5okmiuSP4=
-github.com/wealdtech/go-eth2-wallet-hd/v2 v2.7.0 h1:5g4emFacTf+sX6zx6SbZIZGR7Jx5Xr/Xdb7sXnEXlWk=
-github.com/wealdtech/go-eth2-wallet-hd/v2 v2.7.0/go.mod h1:aWgnEi07w1L9wMBRB69sYvoEONppAUly6FDQRWQGqH8=
+github.com/wealdtech/go-eth2-wallet-hd/v2 v2.7.1 h1:CrcPeJhMcNxSW+GAJwtpXz3mtGJjx4p9ykLlKvwZZZ4=
+github.com/wealdtech/go-eth2-wallet-hd/v2 v2.7.1/go.mod h1:aWgnEi07w1L9wMBRB69sYvoEONppAUly6FDQRWQGqH8=
 github.com/wealdtech/go-eth2-wallet-keystore v1.0.0 h1:DYR6TAyi7RxXoAanLSPdiufGxCX617BQwWOdCxHqHX4=
 github.com/wealdtech/go-eth2-wallet-keystore v1.0.0/go.mod h1:6DGINunnasS9y9F7KH3ya2h74fHWgSCfP3dAJWe4A6U=
 github.com/wealdtech/go-eth2-wallet-nd/v2 v2.5.0 h1:vphAFklkYMRJVo9f5rVWly7PECHrLS4yarjemBa7fRM=

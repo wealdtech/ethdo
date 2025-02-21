@@ -45,7 +45,7 @@ var depositVerifyCmd = &cobra.Command{
 	Short: "Verify deposit data matches the provided data",
 	Long: `Verify deposit data matches the provided input data.  For example:
 
-    ethdo deposit verify --data=depositdata.json --withdrawalaccount=primary/current --value="32 Ether"
+    ethdo deposit verify --data=depositdata.json --withdrawalaccount=primary/current --depositvalue="32 Ether"
 
 The deposit data is compared to the supplied withdrawal account/public key, validator public key, and value to ensure they match.
 

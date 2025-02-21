@@ -26,7 +26,7 @@ var validatorDepositDataCmd = &cobra.Command{
 	Short: "Generate deposit data for one or more validators",
 	Long: `Generate data for deposits to the Ethereum 1 validator contract.  For example:
 
-    ethdo validator depositdata --validatoraccount=primary/validator --withdrawalaccount=primary/current --value="32 Ether"
+    ethdo validator depositdata --validatoraccount=primary/validator --withdrawalaccount=primary/current --depositvalue="32 Ether"
 
 If validatoraccount is provided with an account path it will generate deposit data for all matching accounts.
 

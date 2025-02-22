@@ -34,7 +34,7 @@ func epochFlags(cmd *cobra.Command) {
 }
 
 func epochBindings(cmd *cobra.Command) {
-	if err := viper.BindPFlag("validators", cmd.Flags().Lookup("validators")); err != nil {
+	if err := viper.BindPFlag("epoch", cmd.Flags().Lookup("epoch")); err != nil {
 		panic(err)
 	}
 }

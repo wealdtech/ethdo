@@ -607,7 +607,7 @@ func outputDenebBlockText(ctx context.Context,
 	}
 	res.WriteString(tmp)
 
-	tmp, err = outputBlobInfo(ctx, data.verbose, blobs)
+	tmp, err = outputBlobInfo(ctx, data.verbose, signedBlock.Message.Body.BlobKZGCommitments, blobs)
 	if err != nil {
 		return "", err
 	}
@@ -717,7 +717,7 @@ func outputElectraBlockText(ctx context.Context,
 	}
 	res.WriteString(tmp)
 
-	tmp, err = outputBlobInfo(ctx, data.verbose, blobs)
+	tmp, err = outputBlobInfo(ctx, data.verbose, signedBlock.Message.Body.BlobKZGCommitments, blobs)
 	if err != nil {
 		return "", err
 	}
@@ -1160,6 +1160,7 @@ func outputElectraBlockExecutionRequests(_ context.Context,
 
 func outputBlobInfo(_ context.Context,
 	verbose bool,
+	commitments []deneb.KZGCommitment,
 	blobs []*deneb.BlobSidecar,
 ) (
 	string,
@@ -1167,13 +1168,16 @@ func outputBlobInfo(_ context.Context,
 ) {
 	res := strings.Builder{}
 
-	res.WriteString(fmt.Sprintf("Blobs: %d\n", len(blobs)))
-
-	if verbose {
-		for i, blob := range blobs {
-			res.WriteString(fmt.Sprintf("%3d:\n", i))
-			res.WriteString(fmt.Sprintf("    KZG proof: %s\n", blob.KZGProof.String()))
-			res.WriteString(fmt.Sprintf("    KZG commitment: %s\n", blob.KZGCommitment.String()))
+	if len(blobs) == 0 && len(commitments) > 0 {
+		res.WriteString(fmt.Sprintf("Blobs: %d (but no blobs obtained from the beacon node)\n", len(commitments)))
+	} else {
+		res.WriteString(fmt.Sprintf("Blobs: %d\n", len(blobs)))
+		if verbose {
+			for i, blob := range blobs {
+				res.WriteString(fmt.Sprintf("%3d:\n", i))
+				res.WriteString(fmt.Sprintf("    KZG proof: %s\n", blob.KZGProof.String()))
+				res.WriteString(fmt.Sprintf("    KZG commitment: %s\n", blob.KZGCommitment.String()))
+			}
 		}
 	}
 

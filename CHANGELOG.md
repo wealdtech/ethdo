@@ -1,3 +1,7 @@
+1.37.1:
+ - handle missing blobs for block info
+ - fix `--epoch` flag for epoch summary
+
 1.37.0:
  - support Electra
  - add `--compounding` flag when creating validator deposit data

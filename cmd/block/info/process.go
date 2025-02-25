@@ -168,9 +168,13 @@ func processDenebBlock(ctx context.Context,
 			Block: data.blockID,
 		})
 		if err != nil {
-			return errors.Wrap(err, "failed to obtain blob sidecars")
+			var apiErr *api.Error
+			if errors.As(err, &apiErr) && apiErr.StatusCode != http.StatusNotFound {
+				return errors.Wrap(err, "failed to obtain blob sidecars")
+			}
+		} else {
+			blobSidecars = blobSidecarsResponse.Data
 		}
-		blobSidecars = blobSidecarsResponse.Data
 	}
 	if err := outputDenebBlock(ctx, data.jsonOutput, data.sszOutput, block.Deneb, blobSidecars); err != nil {
 		return errors.Wrap(err, "failed to output block")
@@ -193,9 +197,13 @@ func processElectraBlock(ctx context.Context,
 			Block: data.blockID,
 		})
 		if err != nil {
-			return errors.Wrap(err, "failed to obtain blob sidecars")
+			var apiErr *api.Error
+			if errors.As(err, &apiErr) && apiErr.StatusCode != http.StatusNotFound {
+				return errors.Wrap(err, "failed to obtain blob sidecars")
+			}
+		} else {
+			blobSidecars = blobSidecarsResponse.Data
 		}
-		blobSidecars = blobSidecarsResponse.Data
 	}
 	if err := outputElectraBlock(ctx, data.jsonOutput, data.sszOutput, block.Electra, blobSidecars); err != nil {
 		return errors.Wrap(err, "failed to output block")

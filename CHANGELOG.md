@@ -1,3 +1,6 @@
+1.37.2:
+ - add "block trail"
+
 1.37.1:
  - handle missing blobs for block info
  - fix `--epoch` flag for epoch summary

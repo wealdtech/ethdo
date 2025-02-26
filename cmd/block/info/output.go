@@ -79,9 +79,9 @@ func outputBlockGeneral(ctx context.Context,
 	res.WriteString(fmt.Sprintf("Epoch: %d\n", phase0.Epoch(uint64(slot)/slotsPerEpoch)))
 	res.WriteString(fmt.Sprintf("Timestamp: %v\n", time.Unix(genesisTime.Unix()+int64(slot)*int64(slotDuration.Seconds()), 0)))
 	res.WriteString(fmt.Sprintf("Block root: %#x\n", blockRoot))
+	res.WriteString(fmt.Sprintf("Parent root: %#x\n", parentRoot))
 	if verbose {
 		res.WriteString(fmt.Sprintf("Body root: %#x\n", bodyRoot))
-		res.WriteString(fmt.Sprintf("Parent root: %#x\n", parentRoot))
 		res.WriteString(fmt.Sprintf("State root: %#x\n", stateRoot))
 	}
 	res.WriteString(blockGraffiti(ctx, graffiti))

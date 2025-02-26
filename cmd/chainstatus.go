@@ -65,6 +65,12 @@ In quiet mode this will return 0 if the chain status can be obtained, otherwise 
 		errCheck(err, "Failed to obtain finality information")
 		finality := finalityResponse.Data
 
+		blockProvider, isProvider := eth2Client.(eth2client.SignedBeaconBlockProvider)
+		assert(isProvider, "beacon node does not provide signed beacon blocks; cannot report on chain status")
+		blockResponse, err := blockProvider.SignedBeaconBlock(ctx, &api.SignedBeaconBlockOpts{Block: "head"})
+		errCheck(err, "Failed to obtain block information")
+		block := blockResponse.Data
+
 		slot := chainTime.CurrentSlot()
 
 		nextSlot := slot + 1
@@ -78,10 +84,26 @@ In quiet mode this will return 0 if the chain status can be obtained, otherwise 
 		nextEpochStartSlot := chainTime.FirstSlotOfEpoch(nextEpoch)
 		nextEpochTimestamp := chainTime.StartOfEpoch(nextEpoch)
 
+		headSlot, err := block.Slot()
+		errCheck(err, "Failed to obtain block slot")
+
 		res := strings.Builder{}
 
 		res.WriteString("Current slot: ")
 		res.WriteString(fmt.Sprintf("%d", slot))
+		res.WriteString("\n")
+
+		res.WriteString("Head slot: ")
+		res.WriteString(fmt.Sprintf("%d", headSlot))
+		if headSlot != slot {
+			if slot-headSlot == 1 {
+				res.WriteString("(1 slot behind)")
+			} else {
+				res.WriteString(" (")
+				res.WriteString(fmt.Sprintf("%d", slot-headSlot))
+				res.WriteString(" slots behind)")
+			}
+		}
 		res.WriteString("\n")
 
 		res.WriteString("Current epoch: ")

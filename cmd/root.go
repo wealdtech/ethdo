@@ -52,6 +52,7 @@ var bindings = map[string]func(cmd *cobra.Command){
 	"attester/inclusion": attesterInclusionBindings,
 	"block/analyze":      blockAnalyzeBindings,
 	"block/info":         blockInfoBindings,
+	"block/trail":        blockTrailBindings,
 	"chain/eth1votes":    chainEth1VotesBindings,
 	"chain/info":         chainInfoBindings,
 	"chain/queues":       chainQueuesBindings,

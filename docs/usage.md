@@ -371,6 +371,18 @@ Deposits: 0
 Voluntary exits: 0
 ```
 
+#### `trail`
+
+`ethdo block trail` tracks back from the provided block to see if it is in a chain descending from the a target block.  Options include:
+
+- `blockid`: the ID (slot, root, 'head') of the block to trail from; defaults to head
+- `target`: the target block (slot, block hash, 'justified', 'finalized') to check; defaults to 'justified'
+- `max-blocks`: the maximum number of blocks to look at to find the target
+
+```sh
+$ ethdo block trail
+Target 'justified' found at a distance of 54 block(s)
+```
 ### `chain` commands
 
 Chain commands focus on providing information about Ethereum consensus chains.

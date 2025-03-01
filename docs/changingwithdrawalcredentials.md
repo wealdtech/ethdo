@@ -13,7 +13,7 @@ A validator is a logical entity that secures the Ethereum beacon chain (and henc
 Withdrawal credentials, held as part of a validator's on-chain definition, define where consensus rewards will be sent.
 
 ### Private key
-A private key is a hexadecimal string (_e.g._ 0x010203…a1a2a3) that can be used to generate a public key and (in the case of the execution chain) Ethereum address.
+A private key is a hexadecimal string (0xad431d251C4f404d5599B9f0cA4633d1ecC1D9bC) that can be used to generate a public key and (in the case of the execution chain) Ethereum address.
 
 ### Mnemonic
 A mnemonic is a 24-word phrase that can be used to generate multiple private keys with the use of _paths_.  Mnemonics are supported in the following languages:

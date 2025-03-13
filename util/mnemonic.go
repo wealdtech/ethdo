@@ -73,7 +73,7 @@ func SeedFromMnemonic(mnemonic string) ([]byte, error) {
 	return nil, errors.New("mnemonic is invalid")
 }
 
-// expandMnmenonic expands mnemonics from their 4-letter versions.
+// expandMnemonic expands mnemonics from their 4-letter versions.
 func expandMnemonic(input string) string {
 	wordList := bip39.GetWordList()
 	truncatedWords := make(map[string]string, len(wordList))

@@ -97,7 +97,7 @@ In quiet mode this will return 0 if the chain status can be obtained, otherwise 
 		res.WriteString(fmt.Sprintf("%d", headSlot))
 		if headSlot != slot {
 			if slot-headSlot == 1 {
-				res.WriteString("(1 slot behind)")
+				res.WriteString(" (1 slot behind)")
 			} else {
 				res.WriteString(" (")
 				res.WriteString(fmt.Sprintf("%d", slot-headSlot))

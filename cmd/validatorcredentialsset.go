@@ -28,14 +28,16 @@ var validatorCredentialsSetCmd = &cobra.Command{
 
     ethdo validator credentials set --validator=primary/validator --withdrawal-address=0x00...13 --private-key=0x00...1f
 
+Note that to change credentials the private key to the existing BLS withdrawal credentials must be available, either directly as an account or private key, or via the mnemonic that was used when generating the initial deposits.
+
 The validator account can be specified in one of a number of ways:
 
   - mnemonic using --mnemonic; this will scan the mnemonic and generate all applicable operations
   - mnemonic and path to the validator key using --mnemonic and --path; this will generate a single operation
   - mnemonic and validator index or public key --mnemonic and --validator; this will generate a single operation
-  - mnemonic and withdrawal private key using --mnemonic and --private-key; this will generate all applicable operations
-  - validator and withdrawal private key using --validator and --private-key; this will generate a single operation
-  - account and withdrawal account using --account and --withdrawal-account; this will generate a single operation
+  - mnemonic and existing BLS withdrawal private key using --mnemonic and --private-key; this will generate all applicable operations
+  - validator and existing BLS withdrawal private key using --validator and --private-key; this will generate a single operation
+  - account and existing BLS withdrawal account using --account and --withdrawal-account; this will generate a single operation
 
 In quiet mode this will return 0 if the credentials operation has been generated (and successfully broadcast if online), otherwise 1.`,
 	RunE: func(cmd *cobra.Command, _ []string) error {

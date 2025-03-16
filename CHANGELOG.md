@@ -1,3 +1,6 @@
+1.37.3:
+ - add "hoodi" to the list of supported networks
+
 1.37.2:
  - add "block trail"
 

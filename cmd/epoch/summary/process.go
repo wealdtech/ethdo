@@ -556,8 +556,10 @@ func (c *command) processSyncCommitteeDuties(ctx context.Context) error {
 		for i := range aggregate.SyncCommitteeBits.Len() {
 			validatorIndex := committee.Validators[int(i)]
 			if _, exists := c.validators[validatorIndex]; !exists {
-				// Not one of ours.
-				continue
+				if len(c.validators) > 0 {
+					// Not one of ours.
+					continue
+				}
 			}
 			if !aggregate.SyncCommitteeBits.BitAt(i) {
 				missed[validatorIndex]++

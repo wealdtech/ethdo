@@ -57,6 +57,11 @@ func ParseValidators(ctx context.Context, validatorsProvider eth2client.Validato
 		}
 	}
 
+	if len(validators) == 0 && len(indices) == 0 {
+		// Nothing to obtain.
+		return validators, nil
+	}
+
 	response, err := validatorsProvider.Validators(ctx, &api.ValidatorsOpts{State: stateID, Indices: indices})
 	if err != nil {
 		return nil, errors.Wrap(err, fmt.Sprintf("failed to obtain validators %v", indices))

@@ -15,9 +15,11 @@ package epochsummary
 
 import (
 	"context"
+	"math/big"
 	"time"
 
 	eth2client "github.com/attestantio/go-eth2-client"
+	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
 	"github.com/attestantio/go-eth2-client/spec"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
@@ -52,6 +54,16 @@ type command struct {
 	beaconCommitteesProvider   eth2client.BeaconCommitteesProvider
 	beaconBlockHeadersProvider eth2client.BeaconBlockHeadersProvider
 
+	// Intermediate data.
+	validatorInfo           map[phase0.ValidatorIndex]*apiv1.Validator
+	participatingValidators map[phase0.ValidatorIndex]struct{}
+	headCorrectValidators   map[phase0.ValidatorIndex]struct{}
+	headTimelyValidators    map[phase0.ValidatorIndex]struct{}
+	sourceTimelyValidators  map[phase0.ValidatorIndex]struct{}
+	targetCorrectValidators map[phase0.ValidatorIndex]struct{}
+	targetTimelyValidators  map[phase0.ValidatorIndex]struct{}
+	participations          map[phase0.ValidatorIndex]*attestingValidator
+
 	// Caches.
 	blocksCache map[string]*spec.VersionedSignedBeaconBlock
 
@@ -68,12 +80,19 @@ type epochSummary struct {
 	SyncCommitteeValidators    int                   `json:"sync_committee_validators"`
 	SyncCommittee              []*epochSyncCommittee `json:"sync_committees"`
 	ActiveValidators           int                   `json:"active_validators"`
+	ActiveBalance              *big.Int              `json:"active_balance"`
 	ParticipatingValidators    int                   `json:"participating_validators"`
+	ParticipatingBalance       *big.Int              `json:"participating_balance"`
 	HeadCorrectValidators      int                   `json:"head_correct_validators"`
+	HeadCorrectBalance         *big.Int              `json:"head_correct_balance"`
 	HeadTimelyValidators       int                   `json:"head_timely_validators"`
+	HeadTimelyBalance          *big.Int              `json:"head_timely_balance"`
 	SourceTimelyValidators     int                   `json:"source_timely_validators"`
+	SourceTimelyBalance        *big.Int              `json:"source_timely_balance"`
 	TargetCorrectValidators    int                   `json:"target_correct_validators"`
+	TargetCorrectBalance       *big.Int              `json:"target_correct_balance"`
 	TargetTimelyValidators     int                   `json:"target_timely_validators"`
+	TargetTimelyBalance        *big.Int              `json:"target_timely_balance"`
 	NonParticipatingValidators []*attestingValidator `json:"nonparticipating_validators"`
 	NonHeadCorrectValidators   []*attestingValidator `json:"nonheadcorrect_validators"`
 	NonHeadTimelyValidators    []*attestingValidator `json:"nonheadtimely_validators"`
@@ -95,14 +114,15 @@ type epochSyncCommittee struct {
 }
 
 type attestingValidator struct {
-	Validator     phase0.ValidatorIndex `json:"validator_index"`
-	Slot          phase0.Slot           `json:"slot"`
-	Committee     phase0.CommitteeIndex `json:"committee_index"`
-	HeadVote      *phase0.Root          `json:"head_vote,omitempty"`
-	Head          *phase0.Root          `json:"head,omitempty"`
-	TargetVote    *phase0.Root          `json:"target_vote,omitempty"`
-	Target        *phase0.Root          `json:"target,omitempty"`
-	InclusionSlot phase0.Slot           `json:"inclusion_slot,omitempty"`
+	Validator        phase0.ValidatorIndex `json:"validator_index"`
+	EffectiveBalance phase0.Gwei           `json:"effective_balance"`
+	Slot             phase0.Slot           `json:"slot"`
+	Committee        phase0.CommitteeIndex `json:"committee_index"`
+	HeadVote         *phase0.Root          `json:"head_vote,omitempty"`
+	Head             *phase0.Root          `json:"head,omitempty"`
+	TargetVote       *phase0.Root          `json:"target_vote,omitempty"`
+	Target           *phase0.Root          `json:"target,omitempty"`
+	InclusionSlot    phase0.Slot           `json:"inclusion_slot,omitempty"`
 }
 
 func newCommand(_ context.Context) (*command, error) {
@@ -112,10 +132,24 @@ func newCommand(_ context.Context) (*command, error) {
 		debug:         viper.GetBool("debug"),
 		validatorsStr: viper.GetStringSlice("validators"),
 		summary: &epochSummary{
-			Proposals: make([]*epochProposal, 0),
+			Proposals:            make([]*epochProposal, 0),
+			ActiveBalance:        big.NewInt(0),
+			ParticipatingBalance: big.NewInt(0),
+			HeadCorrectBalance:   big.NewInt(0),
+			HeadTimelyBalance:    big.NewInt(0),
+			SourceTimelyBalance:  big.NewInt(0),
+			TargetCorrectBalance: big.NewInt(0),
+			TargetTimelyBalance:  big.NewInt(0),
 		},
-		validators:  make(map[phase0.ValidatorIndex]struct{}),
-		blocksCache: make(map[string]*spec.VersionedSignedBeaconBlock),
+		validators:              make(map[phase0.ValidatorIndex]struct{}),
+		participatingValidators: make(map[phase0.ValidatorIndex]struct{}),
+		headCorrectValidators:   make(map[phase0.ValidatorIndex]struct{}),
+		headTimelyValidators:    make(map[phase0.ValidatorIndex]struct{}),
+		sourceTimelyValidators:  make(map[phase0.ValidatorIndex]struct{}),
+		targetCorrectValidators: make(map[phase0.ValidatorIndex]struct{}),
+		targetTimelyValidators:  make(map[phase0.ValidatorIndex]struct{}),
+		participations:          make(map[phase0.ValidatorIndex]*attestingValidator),
+		blocksCache:             make(map[string]*spec.VersionedSignedBeaconBlock),
 	}
 
 	// Timeout.

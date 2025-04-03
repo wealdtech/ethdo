@@ -1,4 +1,4 @@
-// Copyright © 2022 Weald Technology Trading.
+// Copyright © 2022, 2025 Weald Technology Trading.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -17,6 +17,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"math/big"
 	"strings"
 )
 
@@ -69,12 +70,80 @@ func (c *command) outputTxt(_ context.Context) (string, error) {
 		}
 	}
 
-	builder.WriteString(fmt.Sprintf("\n  Attestations: %d/%d (%0.2f%%)", c.summary.ParticipatingValidators, c.summary.ActiveValidators, 100.0*float64(c.summary.ParticipatingValidators)/float64(c.summary.ActiveValidators)))
-	builder.WriteString(fmt.Sprintf("\n    Source timely: %d/%d (%0.2f%%)", c.summary.SourceTimelyValidators, c.summary.ActiveValidators, 100.0*float64(c.summary.SourceTimelyValidators)/float64(c.summary.ActiveValidators)))
-	builder.WriteString(fmt.Sprintf("\n    Target correct: %d/%d (%0.2f%%)", c.summary.TargetCorrectValidators, c.summary.ActiveValidators, 100.0*float64(c.summary.TargetCorrectValidators)/float64(c.summary.ActiveValidators)))
-	builder.WriteString(fmt.Sprintf("\n    Target timely: %d/%d (%0.2f%%)", c.summary.TargetTimelyValidators, c.summary.ActiveValidators, 100.0*float64(c.summary.TargetTimelyValidators)/float64(c.summary.ActiveValidators)))
-	builder.WriteString(fmt.Sprintf("\n    Head correct: %d/%d (%0.2f%%)", c.summary.HeadCorrectValidators, c.summary.ActiveValidators, 100.0*float64(c.summary.HeadCorrectValidators)/float64(c.summary.ActiveValidators)))
-	builder.WriteString(fmt.Sprintf("\n    Head timely: %d/%d (%0.2f%%)", c.summary.HeadTimelyValidators, c.summary.ActiveValidators, 100.0*float64(c.summary.HeadTimelyValidators)/float64(c.summary.ActiveValidators)))
+	gweiToEth := big.NewInt(1e9)
+	mul := big.NewInt(10000)
+	participatingBalancePct := new(big.Int).Div(new(big.Int).Mul(c.summary.ParticipatingBalance, mul), c.summary.ActiveBalance)
+	builder.WriteString(fmt.Sprintf("\n  Attesting balance: %s/%s (%0.2f%%)",
+		new(big.Int).Div(c.summary.ParticipatingBalance, gweiToEth).String(),
+		new(big.Int).Div(c.summary.ActiveBalance, gweiToEth).String(),
+		float64(participatingBalancePct.Uint64())/100.0,
+	))
+
+	sourceTimelyBalancePct := new(big.Int).Div(new(big.Int).Mul(c.summary.SourceTimelyBalance, mul), c.summary.ActiveBalance)
+	builder.WriteString(fmt.Sprintf("\n    Source timely: %s/%s (%0.2f%%)",
+		new(big.Int).Div(c.summary.SourceTimelyBalance, gweiToEth).String(),
+		new(big.Int).Div(c.summary.ActiveBalance, gweiToEth).String(),
+		float64(sourceTimelyBalancePct.Uint64())/100.0,
+	))
+
+	targetCorrectBalancePct := new(big.Int).Div(new(big.Int).Mul(c.summary.TargetCorrectBalance, mul), c.summary.ActiveBalance)
+	builder.WriteString(fmt.Sprintf("\n    Target correct: %s/%s (%0.2f%%)",
+		new(big.Int).Div(c.summary.TargetCorrectBalance, gweiToEth).String(),
+		new(big.Int).Div(c.summary.ActiveBalance, gweiToEth).String(),
+		float64(targetCorrectBalancePct.Uint64())/100.0,
+	))
+
+	targetTimelyBalancePct := new(big.Int).Div(new(big.Int).Mul(c.summary.TargetTimelyBalance, mul), c.summary.ActiveBalance)
+	builder.WriteString(fmt.Sprintf("\n    Target timely: %s/%s (%0.2f%%)",
+		new(big.Int).Div(c.summary.TargetTimelyBalance, gweiToEth).String(),
+		new(big.Int).Div(c.summary.ActiveBalance, gweiToEth).String(),
+		float64(targetTimelyBalancePct.Uint64())/100.0,
+	))
+
+	headCorrectBalancePct := new(big.Int).Div(new(big.Int).Mul(c.summary.HeadCorrectBalance, mul), c.summary.ActiveBalance)
+	builder.WriteString(fmt.Sprintf("\n    Head correct: %s/%s (%0.2f%%)",
+		new(big.Int).Div(c.summary.HeadCorrectBalance, gweiToEth).String(),
+		new(big.Int).Div(c.summary.ActiveBalance, gweiToEth).String(),
+		float64(headCorrectBalancePct.Uint64())/100.0,
+	))
+
+	headTimelyBalancePct := new(big.Int).Div(new(big.Int).Mul(c.summary.HeadTimelyBalance, mul), c.summary.ActiveBalance)
+	builder.WriteString(fmt.Sprintf("\n    Head timely: %s/%s (%0.2f%%)",
+		new(big.Int).Div(c.summary.HeadTimelyBalance, gweiToEth).String(),
+		new(big.Int).Div(c.summary.ActiveBalance, gweiToEth).String(),
+		float64(headTimelyBalancePct.Uint64())/100.0,
+	))
+
+	builder.WriteString(fmt.Sprintf("\n  Attesting validators: %d/%d (%0.2f%%)",
+		c.summary.ParticipatingValidators,
+		c.summary.ActiveValidators,
+		100.0*float64(c.summary.ParticipatingValidators)/float64(c.summary.ActiveValidators),
+	))
+	builder.WriteString(fmt.Sprintf("\n    Source timely: %d/%d (%0.2f%%)",
+		c.summary.SourceTimelyValidators,
+		c.summary.ActiveValidators,
+		100.0*float64(c.summary.SourceTimelyValidators)/float64(c.summary.ActiveValidators),
+	))
+	builder.WriteString(fmt.Sprintf("\n    Target correct: %d/%d (%0.2f%%)",
+		c.summary.TargetCorrectValidators,
+		c.summary.ActiveValidators,
+		100.0*float64(c.summary.TargetCorrectValidators)/float64(c.summary.ActiveValidators),
+	))
+	builder.WriteString(fmt.Sprintf("\n    Target timely: %d/%d (%0.2f%%)",
+		c.summary.TargetTimelyValidators,
+		c.summary.ActiveValidators,
+		100.0*float64(c.summary.TargetTimelyValidators)/float64(c.summary.ActiveValidators),
+	))
+	builder.WriteString(fmt.Sprintf("\n    Head correct: %d/%d (%0.2f%%)",
+		c.summary.HeadCorrectValidators,
+		c.summary.ActiveValidators,
+		100.0*float64(c.summary.HeadCorrectValidators)/float64(c.summary.ActiveValidators),
+	))
+	builder.WriteString(fmt.Sprintf("\n    Head timely: %d/%d (%0.2f%%)",
+		c.summary.HeadTimelyValidators,
+		c.summary.ActiveValidators,
+		100.0*float64(c.summary.HeadTimelyValidators)/float64(c.summary.ActiveValidators),
+	))
 	if c.verbose {
 		// Sort list by validator index.
 		for _, validator := range c.summary.NonParticipatingValidators {

@@ -72,32 +72,35 @@ In quiet mode this will return 0 if the exit is verified correctly, otherwise 1.
 		errCheck(err, "Failed to obtain beacon chain genesis")
 		genesis := genesisResponse.Data
 
-		response, err := eth2Client.(consensusclient.ForkProvider).Fork(ctx, &api.ForkOpts{State: "head"})
-		errCheck(err, "Failed to obtain fork information")
+		response, err := eth2Client.(consensusclient.SpecProvider).Spec(ctx, &api.SpecOpts{})
+		errCheck(err, "Failed to obtain spec information")
 
-		// Check against current and prior fork versions.
+		// Check against Capella fork version (EIP-7044)
 		signatureBytes := make([]byte, 96)
 		copy(signatureBytes, signedOp.Signature[:])
 		sig, err := e2types.BLSSignatureFromBytes(signatureBytes)
 		errCheck(err, "Invalid signature")
 
-		verified := false
-
-		// Try with the current fork.
 		domain := phase0.Domain{}
-		currentExitDomain, err := e2types.ComputeDomain(e2types.DomainVoluntaryExit, response.Data.CurrentVersion[:], genesis.GenesisValidatorsRoot[:])
-		errCheck(err, "Failed to compute domain")
-		copy(domain[:], currentExitDomain)
-		verified, err = util.VerifyRoot(account, opRoot, domain, sig)
-		errCheck(err, "Failed to verify voluntary exit")
-		if !verified {
-			// Try again with the previous fork.
-			previousExitDomain, err := e2types.ComputeDomain(e2types.DomainVoluntaryExit, response.Data.PreviousVersion[:], genesis.GenesisValidatorsRoot[:])
-			copy(domain[:], previousExitDomain)
-			errCheck(err, "Failed to compute domain")
-			verified, err = util.VerifyRoot(account, opRoot, domain, sig)
-			errCheck(err, "Failed to verify voluntary exit")
+		forkRaw, ok := response.Data["CAPELLA_FORK_VERSION"]
+		if !ok {
+			err = errors.New("failed to obtain Capella fork version")
 		}
+		errCheck(err, "Failed to obtain fork version")
+
+		fork, ok := forkRaw.(phase0.Version)
+		if !ok {
+			err = errors.New("fork version is not of a valid type")
+		}
+		errCheck(err, "Failed to obtain fork version")
+
+		exitDomain, err := e2types.ComputeDomain(e2types.DomainVoluntaryExit, fork[:], genesis.GenesisValidatorsRoot[:])
+		errCheck(err, "Failed to compute domain")
+
+		copy(domain[:], exitDomain)
+		verified, err := util.VerifyRoot(account, opRoot, domain, sig)
+		errCheck(err, "Failed to verify voluntary exit")
+
 		assert(verified, "Voluntary exit failed to verify against current and previous fork versions")
 
 		outputIf(viper.GetBool("verbose"), "Verified")

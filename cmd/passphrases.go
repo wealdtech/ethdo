@@ -17,7 +17,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-// getWalletPassphrases() fetches the wallet passphrase supplied by the user.
+// getWalletPassphrase() fetches the wallet passphrase supplied by the user.
 func getWalletPassphrase() string {
 	return viper.GetString("wallet-passphrase")
 }

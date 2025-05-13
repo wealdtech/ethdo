@@ -27,13 +27,13 @@ require (
 	github.com/wealdtech/go-ecodec v1.1.4
 	github.com/wealdtech/go-eth2-types/v2 v2.8.2
 	github.com/wealdtech/go-eth2-util v1.8.2
-	github.com/wealdtech/go-eth2-wallet v1.17.0
+	github.com/wealdtech/go-eth2-wallet v1.17.2
 	github.com/wealdtech/go-eth2-wallet-dirk v1.5.1
-	github.com/wealdtech/go-eth2-wallet-distributed v1.2.1
+	github.com/wealdtech/go-eth2-wallet-distributed v1.2.2
 	github.com/wealdtech/go-eth2-wallet-encryptor-keystorev4 v1.4.1
-	github.com/wealdtech/go-eth2-wallet-hd/v2 v2.7.1
-	github.com/wealdtech/go-eth2-wallet-keystore v1.0.0
-	github.com/wealdtech/go-eth2-wallet-nd/v2 v2.5.0
+	github.com/wealdtech/go-eth2-wallet-hd/v2 v2.7.2
+	github.com/wealdtech/go-eth2-wallet-keystore v1.0.2
+	github.com/wealdtech/go-eth2-wallet-nd/v2 v2.5.1
 	github.com/wealdtech/go-eth2-wallet-store-filesystem v1.18.1
 	github.com/wealdtech/go-eth2-wallet-store-s3 v1.12.0
 	github.com/wealdtech/go-eth2-wallet-store-scratch v1.7.2

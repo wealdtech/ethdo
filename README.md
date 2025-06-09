@@ -1,7 +1,6 @@
 [![Tag](https://img.shields.io/github/tag/wealdtech/ethdo.svg)](https://github.com/wealdtech/ethdo/releases/)
 [![License](https://img.shields.io/github/license/wealdtech/ethdo.svg)](LICENSE)
 [![GoDoc](https://godoc.org/github.com/wealdtech/ethdo?status.svg)](https://godoc.org/github.com/wealdtech/ethdo)
-[![Travis CI](https://img.shields.io/travis/wealdtech/ethdo.svg)](https://travis-ci.org/wealdtech/ethdo)
 
 A command-line tool for managing common tasks in Ethereum 2.
 

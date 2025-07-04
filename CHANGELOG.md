@@ -1,4 +1,11 @@
 dev:
+
+1.38.0:
+ - update latest version of go-eth2-client to support complex Spec types
+ - adapt event handling to use new event handler structures in go-eth2-client  
+
+1.37.4:
+ - add support for eip-7044 in exit verify command
  - provide ETH values as well as validator numbers in "epoch summary"
 
 1.37.3:

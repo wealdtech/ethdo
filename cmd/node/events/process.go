@@ -19,7 +19,8 @@ import (
 	"fmt"
 
 	eth2client "github.com/attestantio/go-eth2-client"
-	api "github.com/attestantio/go-eth2-client/api/v1"
+	"github.com/attestantio/go-eth2-client/api"
+	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
 	"github.com/pkg/errors"
 )
 
@@ -28,7 +29,10 @@ func process(ctx context.Context, data *dataIn) error {
 		return errors.New("no data")
 	}
 
-	err := data.eth2Client.(eth2client.EventsProvider).Events(ctx, data.topics, eventHandler)
+	err := data.eth2Client.(eth2client.EventsProvider).Events(ctx, &api.EventsOpts{
+		Topics:  data.topics,
+		Handler: eventHandler,
+	})
 	if err != nil {
 		return errors.Wrap(err, "failed to connect for events")
 	}
@@ -38,7 +42,7 @@ func process(ctx context.Context, data *dataIn) error {
 	return nil
 }
 
-func eventHandler(event *api.Event) {
+func eventHandler(event *apiv1.Event) {
 	if event.Data == nil {
 		return
 	}

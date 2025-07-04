@@ -103,7 +103,10 @@ func process(ctx context.Context, data *dataIn) (*dataOut, error) {
 		if !jsonOutput && !sszOutput {
 			fmt.Println("")
 		}
-		err := data.eth2Client.(eth2client.EventsProvider).Events(ctx, []string{"head"}, headEventHandler)
+		err := data.eth2Client.(eth2client.EventsProvider).Events(ctx, &api.EventsOpts{
+			Topics:      []string{"head"},
+			HeadHandler: headEventHandler,
+		})
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to start block stream")
 		}
@@ -212,15 +215,8 @@ func processElectraBlock(ctx context.Context,
 	return nil
 }
 
-func headEventHandler(event *apiv1.Event) {
-	ctx := context.Background()
-
-	// Only interested in head events.
-	if event.Topic != "head" {
-		return
-	}
-
-	blockID := fmt.Sprintf("%#x", event.Data.(*apiv1.HeadEvent).Block[:])
+func headEventHandler(ctx context.Context, headEvent *apiv1.HeadEvent) {
+	blockID := fmt.Sprintf("%#x", headEvent.Block[:])
 	blockResponse, err := results.eth2Client.(eth2client.SignedBeaconBlockProvider).SignedBeaconBlock(ctx, &api.SignedBeaconBlockOpts{
 		Block: blockID,
 	})

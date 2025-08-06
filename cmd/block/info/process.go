@@ -90,6 +90,8 @@ func process(ctx context.Context, data *dataIn) (*dataOut, error) {
 		err = processDenebBlock(ctx, data, block)
 	case spec.DataVersionElectra:
 		err = processElectraBlock(ctx, data, block)
+	case spec.DataVersionFulu:
+		err = processFuluBlock(ctx, data, block)
 	default:
 		return nil, errors.New("unknown block version")
 	}
@@ -215,6 +217,35 @@ func processElectraBlock(ctx context.Context,
 	return nil
 }
 
+func processFuluBlock(ctx context.Context,
+	data *dataIn,
+	block *spec.VersionedSignedBeaconBlock,
+) error {
+	var blobSidecars []*deneb.BlobSidecar
+	kzgCommitments, err := block.BlobKZGCommitments()
+	if err != nil {
+		return err
+	}
+	if len(kzgCommitments) > 0 {
+		blobSidecarsResponse, err := results.eth2Client.(eth2client.BlobSidecarsProvider).BlobSidecars(ctx, &api.BlobSidecarsOpts{
+			Block: data.blockID,
+		})
+		if err != nil {
+			var apiErr *api.Error
+			if errors.As(err, &apiErr) && apiErr.StatusCode != http.StatusNotFound {
+				return errors.Wrap(err, "failed to obtain blob sidecars")
+			}
+		} else {
+			blobSidecars = blobSidecarsResponse.Data
+		}
+	}
+	if err := outputFuluBlock(ctx, data.jsonOutput, data.sszOutput, block.Fulu, blobSidecars); err != nil {
+		return errors.Wrap(err, "failed to output block")
+	}
+
+	return nil
+}
+
 func headEventHandler(ctx context.Context, headEvent *apiv1.HeadEvent) {
 	blockID := fmt.Sprintf("%#x", headEvent.Block[:])
 	blockResponse, err := results.eth2Client.(eth2client.SignedBeaconBlockProvider).SignedBeaconBlock(ctx, &api.SignedBeaconBlockOpts{
@@ -263,6 +294,46 @@ func headEventHandler(ctx context.Context, headEvent *apiv1.HeadEvent) {
 			blobSidecars = blobSidecarsResponse.Data
 		}
 		err = outputDenebBlock(context.Background(), jsonOutput, sszOutput, block.Deneb, blobSidecars)
+	case spec.DataVersionElectra:
+		var blobSidecars []*deneb.BlobSidecar
+		var kzgCommitments []deneb.KZGCommitment
+		kzgCommitments, err = block.BlobKZGCommitments()
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Failed to obtain KZG commitments: %v\n", err)
+			return
+		}
+		if len(kzgCommitments) > 0 {
+			var blobSidecarsResponse *api.Response[[]*deneb.BlobSidecar]
+			blobSidecarsResponse, err = results.eth2Client.(eth2client.BlobSidecarsProvider).BlobSidecars(ctx, &api.BlobSidecarsOpts{
+				Block: blockID,
+			})
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Failed to obtain blob sidecars: %v\n", err)
+				return
+			}
+			blobSidecars = blobSidecarsResponse.Data
+		}
+		err = outputElectraBlock(context.Background(), jsonOutput, sszOutput, block.Electra, blobSidecars)
+	case spec.DataVersionFulu:
+		var blobSidecars []*deneb.BlobSidecar
+		var kzgCommitments []deneb.KZGCommitment
+		kzgCommitments, err = block.BlobKZGCommitments()
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Failed to obtain KZG commitments: %v\n", err)
+			return
+		}
+		if len(kzgCommitments) > 0 {
+			var blobSidecarsResponse *api.Response[[]*deneb.BlobSidecar]
+			blobSidecarsResponse, err = results.eth2Client.(eth2client.BlobSidecarsProvider).BlobSidecars(ctx, &api.BlobSidecarsOpts{
+				Block: blockID,
+			})
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Failed to obtain blob sidecars: %v\n", err)
+				return
+			}
+			blobSidecars = blobSidecarsResponse.Data
+		}
+		err = outputFuluBlock(context.Background(), jsonOutput, sszOutput, block.Fulu, blobSidecars)
 	default:
 		err = errors.New("unknown block version")
 	}
@@ -396,6 +467,35 @@ func outputDenebBlock(ctx context.Context,
 }
 
 func outputElectraBlock(ctx context.Context,
+	jsonOutput bool,
+	sszOutput bool,
+	signedBlock *electra.SignedBeaconBlock,
+	blobs []*deneb.BlobSidecar,
+) error {
+	switch {
+	case jsonOutput:
+		data, err := json.Marshal(signedBlock)
+		if err != nil {
+			return errors.Wrap(err, "failed to generate JSON")
+		}
+		fmt.Printf("%s\n", string(data))
+	case sszOutput:
+		data, err := signedBlock.MarshalSSZ()
+		if err != nil {
+			return errors.Wrap(err, "failed to generate SSZ")
+		}
+		fmt.Printf("%x\n", data)
+	default:
+		data, err := outputElectraBlockText(ctx, results, signedBlock, blobs)
+		if err != nil {
+			return errors.Wrap(err, "failed to generate text")
+		}
+		fmt.Print(data)
+	}
+	return nil
+}
+
+func outputFuluBlock(ctx context.Context,
 	jsonOutput bool,
 	sszOutput bool,
 	signedBlock *electra.SignedBeaconBlock,

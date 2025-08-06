@@ -100,6 +100,9 @@ func (c *command) process(ctx context.Context) error {
 	case spec.DataVersionElectra:
 		c.incumbent = state.Electra.ETH1Data
 		c.eth1DataVotes = state.Electra.ETH1DataVotes
+	case spec.DataVersionFulu:
+		c.incumbent = state.Fulu.ETH1Data
+		c.eth1DataVotes = state.Fulu.ETH1DataVotes
 	default:
 		return fmt.Errorf("unhandled beacon state version %v", state.Version)
 	}

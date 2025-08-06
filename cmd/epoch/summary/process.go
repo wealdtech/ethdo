@@ -529,6 +529,8 @@ func (c *command) processBlobs(ctx context.Context) error {
 			c.summary.Blobs += len(block.Deneb.Message.Body.BlobKZGCommitments)
 		case spec.DataVersionElectra:
 			c.summary.Blobs += len(block.Electra.Message.Body.BlobKZGCommitments)
+		case spec.DataVersionFulu:
+			c.summary.Blobs += len(block.Fulu.Message.Body.BlobKZGCommitments)
 		default:
 			return fmt.Errorf("unhandled block version %v", block.Version)
 		}

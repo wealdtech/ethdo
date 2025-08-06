@@ -528,6 +528,13 @@ func (c *command) analyzeSyncCommittees(_ context.Context, block *spec.Versioned
 		c.analysis.SyncCommitee.Value = c.analysis.SyncCommitee.Score * float64(c.analysis.SyncCommitee.Contributions)
 		c.analysis.Value += c.analysis.SyncCommitee.Value
 		return nil
+	case spec.DataVersionFulu:
+		c.analysis.SyncCommitee.Contributions = int(block.Fulu.Message.Body.SyncAggregate.SyncCommitteeBits.Count())
+		c.analysis.SyncCommitee.PossibleContributions = int(block.Fulu.Message.Body.SyncAggregate.SyncCommitteeBits.Len())
+		c.analysis.SyncCommitee.Score = float64(c.syncRewardWeight) / float64(c.weightDenominator)
+		c.analysis.SyncCommitee.Value = c.analysis.SyncCommitee.Score * float64(c.analysis.SyncCommitee.Contributions)
+		c.analysis.Value += c.analysis.SyncCommitee.Value
+		return nil
 	default:
 		return fmt.Errorf("unsupported block version %d", block.Version)
 	}

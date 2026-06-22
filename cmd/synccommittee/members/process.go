@@ -35,9 +35,13 @@ func process(ctx context.Context, data *dataIn) (*dataOut, error) {
 		return nil, err
 	}
 
+	state := "head"
+	if data.epoch != "" {
+		slot := data.chainTime.FirstSlotOfEpoch(epoch)
+		state = fmt.Sprintf("%d", slot)
+	}
 	syncCommitteeResponse, err := data.eth2Client.(eth2client.SyncCommitteesProvider).SyncCommittee(ctx, &api.SyncCommitteeOpts{
-		State: "head",
-		Epoch: &epoch,
+		State: state,
 	})
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to obtain sync committee information")

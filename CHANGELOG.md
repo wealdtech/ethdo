@@ -1,5 +1,8 @@
 dev:
  
+1.39.1:
+ - refactor sync committee to use slot endpoint rather than epoch query param
+
 1.39.0:
  - support Fulu 
 

@@ -253,6 +253,10 @@ func addPersistentFlags() {
 	if err := viper.BindPFlag("allow-insecure-connections", RootCmd.PersistentFlags().Lookup("allow-insecure-connections")); err != nil {
 		panic(err)
 	}
+	RootCmd.PersistentFlags().Bool("custom-spec-support", false, "use dynamic SSZ to support non-mainnet presets (e.g. Gnosis); slower than the static decoder")
+	if err := viper.BindPFlag("custom-spec-support", RootCmd.PersistentFlags().Lookup("custom-spec-support")); err != nil {
+		panic(err)
+	}
 }
 
 // initConfig reads in config file and ENV variables if set.

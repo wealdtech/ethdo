@@ -253,7 +253,7 @@ func addPersistentFlags() {
 	if err := viper.BindPFlag("allow-insecure-connections", RootCmd.PersistentFlags().Lookup("allow-insecure-connections")); err != nil {
 		panic(err)
 	}
-	RootCmd.PersistentFlags().Bool("custom-spec-support", false, "use dynamic SSZ to support non-mainnet presets (e.g. Gnosis); slower than the static decoder")
+	RootCmd.PersistentFlags().Bool("custom-spec-support", false, "use dynamic SSZ decoding for non-mainnet presets such as Gnosis (slower; currently honoured only by 'validator exit')")
 	if err := viper.BindPFlag("custom-spec-support", RootCmd.PersistentFlags().Lookup("custom-spec-support")); err != nil {
 		panic(err)
 	}

@@ -595,10 +595,11 @@ func (c *command) setup(ctx context.Context) error {
 	// Connect to the consensus node.
 	var err error
 	c.consensusClient, err = util.ConnectToBeaconNode(ctx, &util.ConnectOpts{
-		Address:       c.connection,
-		Timeout:       c.timeout,
-		AllowInsecure: c.allowInsecureConnections,
-		LogFallback:   !c.quiet,
+		Address:           c.connection,
+		Timeout:           c.timeout,
+		AllowInsecure:     c.allowInsecureConnections,
+		CustomSpecSupport: c.customSpecSupport,
+		LogFallback:       !c.quiet,
 	})
 	if err != nil {
 		return err

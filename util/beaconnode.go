@@ -37,11 +37,13 @@ var defaultBeaconNodeAddresses = []string{
 // fallbackBeaconNode is used if no other connection is supplied.
 var fallbackBeaconNode = "http://mainnet-consensus.attestant.io/"
 
+// ConnectOpts are the options for connecting to a beacon node.
 type ConnectOpts struct {
-	Address       string
-	Timeout       time.Duration
-	AllowInsecure bool
-	LogFallback   bool
+	Address           string
+	Timeout           time.Duration
+	AllowInsecure     bool
+	CustomSpecSupport bool
+	LogFallback       bool
 }
 
 // ConnectToBeaconNode connects to a beacon node at the given address.
@@ -56,12 +58,22 @@ func ConnectToBeaconNode(ctx context.Context, opts *ConnectOpts) (eth2client.Ser
 
 	if opts.Address != "" {
 		// We have an explicit address; use it.
-		return connectToBeaconNode(ctx, opts.Address, opts.Timeout, opts.AllowInsecure)
+		return connectToBeaconNode(ctx, &beaconNodeConnection{
+			address:           opts.Address,
+			timeout:           opts.Timeout,
+			allowInsecure:     opts.AllowInsecure,
+			customSpecSupport: opts.CustomSpecSupport,
+		})
 	}
 
 	// Try the defaults.
 	for _, address := range defaultBeaconNodeAddresses {
-		client, err := connectToBeaconNode(ctx, address, opts.Timeout, opts.AllowInsecure)
+		client, err := connectToBeaconNode(ctx, &beaconNodeConnection{
+			address:           address,
+			timeout:           opts.Timeout,
+			allowInsecure:     opts.AllowInsecure,
+			customSpecSupport: opts.CustomSpecSupport,
+		})
 		if err == nil {
 			return client, nil
 		}
@@ -71,7 +83,12 @@ func ConnectToBeaconNode(ctx context.Context, opts *ConnectOpts) (eth2client.Ser
 	if opts.LogFallback {
 		fmt.Fprintf(os.Stderr, "No connection supplied with --connection parameter and no local beacon node found, attempting to use mainnet fallback\n")
 	}
-	client, err := connectToBeaconNode(ctx, fallbackBeaconNode, opts.Timeout, true)
+	client, err := connectToBeaconNode(ctx, &beaconNodeConnection{
+		address:           fallbackBeaconNode,
+		timeout:           opts.Timeout,
+		allowInsecure:     true,
+		customSpecSupport: opts.CustomSpecSupport,
+	})
 	if err == nil {
 		return client, nil
 	}
@@ -79,11 +96,20 @@ func ConnectToBeaconNode(ctx context.Context, opts *ConnectOpts) (eth2client.Ser
 	return nil, errors.New("failed to connect to any beacon node")
 }
 
-func connectToBeaconNode(ctx context.Context, address string, timeout time.Duration, allowInsecure bool) (eth2client.Service, error) {
+// beaconNodeConnection holds the parameters for a single beacon node connection attempt.
+type beaconNodeConnection struct {
+	address           string
+	timeout           time.Duration
+	allowInsecure     bool
+	customSpecSupport bool
+}
+
+func connectToBeaconNode(ctx context.Context, conn *beaconNodeConnection) (eth2client.Service, error) {
+	address := conn.address
 	if !strings.HasPrefix(address, "http") {
 		address = fmt.Sprintf("http://%s", address)
 	}
-	if !allowInsecure {
+	if !conn.allowInsecure {
 		// Ensure the connection is either secure or local.
 		connectionURL, err := url.Parse(address)
 		if err != nil {
@@ -100,7 +126,8 @@ func connectToBeaconNode(ctx context.Context, address string, timeout time.Durat
 	eth2Client, err := http.New(ctx,
 		http.WithLogLevel(zerolog.Disabled),
 		http.WithAddress(address),
-		http.WithTimeout(timeout),
+		http.WithTimeout(conn.timeout),
+		http.WithCustomSpecSupport(conn.customSpecSupport),
 	)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to connect to beacon node")

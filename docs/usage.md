@@ -501,6 +501,7 @@ Deposit commands focus on information about deposit data information in a JSON f
 
 - `data`: either a path to the JSON file, the JSON itself, or a hex string representing a deposit transaction
 - `withdrawalpubkey`: the public key of the withdrawal for the deposit.  If no value is supplied then withdrawal credentials for deposits will not be checked
+- `compounding`: verify compounding (`0x02`) withdrawal credentials instead of `0x01`. Requires `withdrawaladdress` and cannot be combined with `withdrawalpubkey`
 - `validatorpubkey`: the public key of the validator for the deposit.  If no value is supplied then validator public keys will not be checked
 - `depositvalue`: the value of the Ether being deposited.  If no value is supplied then deposit values will not be checked.
 

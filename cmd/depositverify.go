@@ -38,6 +38,7 @@ var (
 	depositVerifyValidatorPubKey   string
 	depositVerifyDepositAmount     string
 	depositVerifyForkVersion       string
+	depositVerifyCompounding       bool
 )
 
 var depositVerifyCmd = &cobra.Command{
@@ -83,6 +84,9 @@ In quiet mode this will return 0 if the data is verified correctly, otherwise 1.
 			}
 		}
 
+		assert(!depositVerifyCompounding || depositVerifyWithdrawalPubKey == "", "--compounding cannot be used with --withdrawalpubkey")
+		assert(!depositVerifyCompounding || depositVerifyWithdrawalAddress != "", "--compounding requires --withdrawaladdress")
+
 		var withdrawalCredentials []byte
 		if depositVerifyWithdrawalPubKey != "" {
 			withdrawalPubKeyBytes, err := hex.DecodeString(strings.TrimPrefix(depositVerifyWithdrawalPubKey, "0x"))
@@ -98,6 +102,9 @@ In quiet mode this will return 0 if the data is verified correctly, otherwise 1.
 			assert(len(withdrawalAddressBytes) == 20, "address should be 20 bytes")
 			withdrawalCredentials = make([]byte, 32)
 			withdrawalCredentials[0] = 0x01 // ETH1_ADDRESS_WITHDRAWAL_PREFIX
+			if depositVerifyCompounding {
+				withdrawalCredentials[0] = 0x02 // COMPOUNDING_WITHDRAWAL_PREFIX
+			}
 			copy(withdrawalCredentials[12:], withdrawalAddressBytes)
 		}
 		outputIf(viper.GetBool("debug"), fmt.Sprintf("Withdrawal credentials are %#x", withdrawalCredentials))
@@ -337,4 +344,5 @@ func init() {
 	depositVerifyCmd.Flags().StringVar(&depositVerifyDepositAmount, "depositvalue", "32 Ether", "Value of the amount to be deposited")
 	depositVerifyCmd.Flags().StringVar(&depositVerifyValidatorPubKey, "validatorpubkey", "", "Public key(s) of the account(s) that will be carrying out validation")
 	depositVerifyCmd.Flags().StringVar(&depositVerifyForkVersion, "forkversion", "0x00000000", "Fork version of the chain of the deposit")
+	depositVerifyCmd.Flags().BoolVar(&depositVerifyCompounding, "compounding", false, "Verify compounding (0x02) withdrawal credentials (requires --withdrawaladdress)")
 }

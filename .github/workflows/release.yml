@@ -45,13 +45,13 @@ jobs:
     needs: [create_release, env_vars]
     steps:
       - name: Set up Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v7
         with:
           cache: false
           go-version: '^1.22'
 
       - name: Check out repository into the Go module directory
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Select correct tag
         run: git checkout ${{ github.ref_name }}
@@ -121,13 +121,13 @@ jobs:
     needs: [create_release, env_vars]
     steps:
       - name: Set up Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v7
         with:
           cache: false
           go-version: '^1.22'
 
       - name: Check out repository into the Go module directory
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Select correct tag
         run: git checkout ${{ github.ref_name }}
@@ -167,13 +167,13 @@ jobs:
     needs: [create_release, env_vars]
     steps:
       - name: Set up Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v7
         with:
           cache: false
           go-version: '^1.22'
 
       - name: Check out repository into the Go module directory
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Select correct tag
         run: git checkout ${{ github.ref_name }}
